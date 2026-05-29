@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.controller;
+package fpt.swp391.GlucoTrackAlert.controller.error;
 
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.stereotype.Controller;

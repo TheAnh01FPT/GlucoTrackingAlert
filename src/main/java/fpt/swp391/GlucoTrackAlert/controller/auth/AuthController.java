@@ -1,7 +1,7 @@
-package fpt.swp391.GlucoTrackAlert.controller;
+package fpt.swp391.GlucoTrackAlert.controller.auth;
 
-import fpt.swp391.GlucoTrackAlert.dto.LoginRequest;
-import fpt.swp391.GlucoTrackAlert.dto.RegisterRequest;
+import fpt.swp391.GlucoTrackAlert.dto.login.LoginRequest;
+import fpt.swp391.GlucoTrackAlert.dto.register.RegisterRequest;
 import fpt.swp391.GlucoTrackAlert.model.User;
 import fpt.swp391.GlucoTrackAlert.service.UserService;
 import jakarta.validation.Valid;

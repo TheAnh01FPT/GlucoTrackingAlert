@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.service.impl;
+package fpt.swp391.GlucoTrackAlert.service.impl.register;
 
 import fpt.swp391.GlucoTrackAlert.service.EmailService;
 import org.springframework.mail.SimpleMailMessage;

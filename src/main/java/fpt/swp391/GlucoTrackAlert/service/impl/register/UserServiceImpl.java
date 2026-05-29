@@ -1,12 +1,12 @@
-package fpt.swp391.GlucoTrackAlert.service.impl;
+package fpt.swp391.GlucoTrackAlert.service.impl.register;
 
-import fpt.swp391.GlucoTrackAlert.dto.RegisterRequest;
+import fpt.swp391.GlucoTrackAlert.dto.register.RegisterRequest;
 import fpt.swp391.GlucoTrackAlert.model.EmailVerificationToken;
 import fpt.swp391.GlucoTrackAlert.model.Role;
 import fpt.swp391.GlucoTrackAlert.model.User;
 import fpt.swp391.GlucoTrackAlert.repository.EmailVerificationTokenRepository;
-import fpt.swp391.GlucoTrackAlert.repository.RoleRepository;
-import fpt.swp391.GlucoTrackAlert.repository.UserRepository;
+import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
+import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.UserService;
 import fpt.swp391.GlucoTrackAlert.service.EmailService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
