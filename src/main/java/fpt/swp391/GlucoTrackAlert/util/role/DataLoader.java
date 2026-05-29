@@ -1,7 +1,7 @@
-package fpt.swp391.GlucoTrackAlert.util;
+package fpt.swp391.GlucoTrackAlert.util.role;
 
 import fpt.swp391.GlucoTrackAlert.model.Role;
-import fpt.swp391.GlucoTrackAlert.repository.RoleRepository;
+import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

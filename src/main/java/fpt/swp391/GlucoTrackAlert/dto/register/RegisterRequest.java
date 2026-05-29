@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.dto;
+package fpt.swp391.GlucoTrackAlert.dto.register;
 
 import lombok.*;
 import jakarta.validation.constraints.*;
