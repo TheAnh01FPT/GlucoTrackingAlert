@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.config;
+package fpt.swp391.GlucoTrackAlert.config.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
