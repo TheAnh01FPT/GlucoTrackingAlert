@@ -18,6 +18,8 @@ public class RegisterRequest {
     private String password;
 
     @NotBlank
-    private String role; // e.g., PATIENT, DOCTOR, GUEST
-}
+    private String fullName;
 
+    @NotBlank
+    private String phone;
+}
