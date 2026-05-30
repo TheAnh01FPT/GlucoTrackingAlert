@@ -8,19 +8,22 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 // 1. Tắt CSRF theo cú pháp mới của Spring Boot 3.x
                 .csrf(csrf -> csrf.disable())
 
-                // 2. Mở khóa toàn bộ các đường dẫn (bao gồm cả giao diện UI và API) để dev không bị chặn
+                // 2. Mở khóa các đường dẫn công khai (auth, giao diện, tài nguyên tĩnh)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+                        .anyRequest().authenticated()
                 )
 
                 // 3. Cấu hình Session Stateless
@@ -29,7 +32,10 @@ public class SecurityConfig {
                 )
 
                 // 4. Cho phép hiển thị H2 Console trong thẻ iframe
-                .headers(headers -> headers.frameOptions(frame -> frame.disable()));
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                
+                // 5. Thêm filter kiểm tra JWT trước filter xác thực mật khẩu
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -1,6 +1,6 @@
-package fpt.swp391.GlucoTrackAlert.repository;
+package fpt.swp391.GlucoTrackAlert.repository.register;
 
-import fpt.swp391.GlucoTrackAlert.model.EmailVerificationToken;
+import fpt.swp391.GlucoTrackAlert.model.register.EmailVerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
