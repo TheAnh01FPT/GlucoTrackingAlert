@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <title>GlucoTrackAlert - Đăng ký</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; }
         h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #7f8c8d; font-size: 14px;}
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        label { display: block; margin-bottom: 5px; color: #7f8c8d; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { width: 100%; padding: 10px; background-color: #2ecc71; border: none; color: white; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
         button:hover { background-color: #27ae60; }
         .message { margin-top: 15px; text-align: center; font-size: 14px; padding: 10px; border-radius: 4px; display: none; }
@@ -20,25 +20,28 @@
     </style>
 </head>
 <body>
-
 <div class="form-container">
     <h2>Đăng Ký Tài Khoản</h2>
     <form id="registerForm">
         <div class="form-group">
+            <label>Họ và tên</label>
+            <input type="text" id="fullName" required placeholder="Nhập họ và tên">
+        </div>
+        <div class="form-group">
             <label>Email</label>
             <input type="email" id="email" required placeholder="Nhập email của bạn">
+        </div>
+        <div class="form-group">
+            <label>Số điện thoại</label>
+            <input type="tel" id="phone" required placeholder="Nhập số điện thoại">
         </div>
         <div class="form-group">
             <label>Mật khẩu (tối thiểu 6 ký tự)</label>
             <input type="password" id="password" required placeholder="Nhập mật khẩu">
         </div>
         <div class="form-group">
-            <label>Vai trò (Role)</label>
-            <select id="role">
-                <option value="PATIENT">Bệnh nhân (PATIENT)</option>
-                <option value="DOCTOR">Bác sĩ (DOCTOR)</option>
-                <option value="RELATIVE">Người nhà (RELATIVE)</option>
-            </select>
+            <label>Xác nhận mật khẩu</label>
+            <input type="password" id="confirmPassword" required placeholder="Nhập lại mật khẩu">
         </div>
         <button type="submit">Đăng ký</button>
     </form>
@@ -52,16 +55,24 @@
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
+        const fullName = document.getElementById('fullName').value;
         const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
         const password = document.getElementById('password').value;
-        const role = document.getElementById('role').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
         const messageBox = document.getElementById('messageBox');
 
-        // Gửi dữ liệu thô JSON xuống API Backend của bạn
+        if (password !== confirmPassword) {
+            messageBox.style.display = 'block';
+            messageBox.className = 'message error';
+            messageBox.innerText = "Mật khẩu xác nhận không khớp!";
+            return;
+        }
+
         fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-            body: JSON.stringify({ email: email, password: password, role: role })
+            body: JSON.stringify({ fullName, email, phone, password })
         })
             .then(async response => {
                 const text = await response.text();
@@ -75,7 +86,7 @@
                     messageBox.innerText = text || "Đăng ký thất bại.";
                 }
             })
-            .catch(err => {
+            .catch(() => {
                 messageBox.style.display = 'block';
                 messageBox.className = 'message error';
                 messageBox.innerText = "Không thể kết nối đến server.";
