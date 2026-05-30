@@ -69,8 +69,12 @@
                 setTimeout(() => {
                     if (data.role === 'ADMIN') {
                         window.location.href = '/admin/dashboard';
+                    } else if (data.role === 'PATIENT') {
+                        window.location.href = '/patient/homepage';
+                    } else if (data.role === 'DOCTOR') {
+                        window.location.href = '/doctor/homepage';
                     } else {
-                        window.location.href = '/admin/dashboard';
+                        window.location.href = '/login';
                     }
                 }, 1000);
             } else {
