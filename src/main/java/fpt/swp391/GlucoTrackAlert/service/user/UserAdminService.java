@@ -1,7 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.service.user;
 
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
-import fpt.swp391.GlucoTrackAlert.model.User;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
 import java.util.List;
 
 public interface UserAdminService {

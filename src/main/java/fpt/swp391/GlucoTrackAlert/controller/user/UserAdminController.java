@@ -1,7 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.controller.user;
 
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
-import fpt.swp391.GlucoTrackAlert.model.User;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

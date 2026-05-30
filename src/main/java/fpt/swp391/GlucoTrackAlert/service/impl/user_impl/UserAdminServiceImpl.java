@@ -1,8 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.service.impl.user_impl;
 
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
-import fpt.swp391.GlucoTrackAlert.model.Role;
-import fpt.swp391.GlucoTrackAlert.model.User;
+import fpt.swp391.GlucoTrackAlert.model.role.Role;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
