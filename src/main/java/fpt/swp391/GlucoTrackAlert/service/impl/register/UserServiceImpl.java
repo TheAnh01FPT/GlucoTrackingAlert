@@ -52,15 +52,14 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new Exception("Email already in use");
         }
-        if ("ADMIN".equalsIgnoreCase(request.getRole())) {
-            throw new Exception("Registration as ADMIN is not allowed");
-        }
-        Role role = roleRepository.findByName(request.getRole())
+        Role role = roleRepository.findByName("PATIENT")
                 .orElseThrow(() -> new Exception("Role not found"));
 
         User u = User.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
                 .role(role)
                 .status("pending_verification")
                 .emailVerified(false)
