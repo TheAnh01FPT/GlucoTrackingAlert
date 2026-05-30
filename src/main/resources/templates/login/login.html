@@ -12,7 +12,9 @@
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { width: 100%; padding: 10px; background-color: #3498db; border: none; color: white; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
         button:hover { background-color: #2980b9; }
-        .message { margin-top: 15px; text-align: center; font-size: 14px; padding: 10px; border-radius: 4px; display: none; background-color: #f8d7da; color: #721c24; }
+        .message { margin-top: 15px; text-align: center; font-size: 14px; padding: 10px; border-radius: 4px; display: none; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
         .switch-link { text-align: center; margin-top: 15px; font-size: 13px; }
         .switch-link a { color: #2ecc71; text-decoration: none; }
     </style>
@@ -50,12 +52,38 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email, password: password })
         })
-            .then(async response => {
+        .then(async response => {
+            messageBox.style.display = 'block';
+            if (response.ok) {
+                const data = await response.json();
+                messageBox.className = 'message success';
+                messageBox.innerText = 'Đăng nhập thành công! Đang chuyển hướng...';
+
+                // Lưu JWT token vào localStorage và Cookie
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('email', data.email);
+                localStorage.setItem('role', data.role);
+                document.cookie = `jwt=${data.token}; path=/; max-age=86400; SameSite=Strict`;
+
+                // Redirect theo role sau 1 giây
+                setTimeout(() => {
+                    if (data.role === 'ADMIN') {
+                        window.location.href = '/admin/dashboard';
+                    } else {
+                        window.location.href = '/admin/dashboard';
+                    }
+                }, 1000);
+            } else {
                 const text = await response.text();
-                messageBox.style.display = 'block';
-                // Vì hàm login của bạn đang để lỗi 501 chưa cài đặt nên tạm thời nó sẽ nhảy vào đây thông báo
-                messageBox.innerText = text;
-            });
+                messageBox.className = 'message error';
+                messageBox.innerText = text || 'Đăng nhập thất bại.';
+            }
+        })
+        .catch(err => {
+            messageBox.style.display = 'block';
+            messageBox.className = 'message error';
+            messageBox.innerText = 'Không thể kết nối đến server.';
+        });
     });
 </script>
 </body>

@@ -2,7 +2,7 @@ package fpt.swp391.GlucoTrackAlert.controller.dashboard;
 
 import fpt.swp391.GlucoTrackAlert.dto.role.RoleRequest;
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
-import fpt.swp391.GlucoTrackAlert.model.User;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.service.role.RoleService;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
 import org.springframework.stereotype.Controller;

@@ -1,9 +1,10 @@
 package fpt.swp391.GlucoTrackAlert.controller.auth;
 
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginRequest;
+import fpt.swp391.GlucoTrackAlert.dto.login.LoginResponse;
 import fpt.swp391.GlucoTrackAlert.dto.register.RegisterRequest;
-import fpt.swp391.GlucoTrackAlert.model.User;
-import fpt.swp391.GlucoTrackAlert.service.UserService;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,9 +40,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        // simple login implementation: authenticate by matching email and password
-        // we will implement a basic login here for demonstration; for production use JWT
-        return ResponseEntity.status(501).body("Login not implemented yet. Use /api/auth/login to implement authentication (JWT)");
+        try {
+            LoginResponse response = userService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 }
-

@@ -1,7 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.service.impl.role;
 
 import fpt.swp391.GlucoTrackAlert.dto.role.RoleRequest;
-import fpt.swp391.GlucoTrackAlert.model.Role;
+import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.service.role.RoleService;
 import org.springframework.stereotype.Service;
