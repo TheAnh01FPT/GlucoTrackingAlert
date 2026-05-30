@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.model;
+package fpt.swp391.GlucoTrackAlert.model.role;
 
 import jakarta.persistence.*;
 import lombok.*;
