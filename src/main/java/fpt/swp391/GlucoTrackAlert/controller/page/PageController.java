@@ -15,4 +15,14 @@ public class PageController {
     public String registerPage() {
         return "register/register";
     }
+
+    @GetMapping("/patient/homepage")
+    public String patientDashboard() {
+        return "homepage/homepage";
+    }
+
+    @GetMapping("/doctor/homepage")
+    public String doctorDashboard() {
+        return "doctor/dashboard";
+    }
 }
