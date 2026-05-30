@@ -1,5 +1,6 @@
-package fpt.swp391.GlucoTrackAlert.model;
+package fpt.swp391.GlucoTrackAlert.model.register;
 
+import fpt.swp391.GlucoTrackAlert.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

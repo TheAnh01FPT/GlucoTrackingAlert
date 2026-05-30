@@ -1,7 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.controller.role;
 
 import fpt.swp391.GlucoTrackAlert.dto.role.RoleRequest;
-import fpt.swp391.GlucoTrackAlert.model.Role;
+import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.service.role.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
