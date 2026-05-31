@@ -5,12 +5,10 @@ import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.service.role.RoleService;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -19,31 +17,29 @@ public class WebViewController {
     private final UserAdminService userAdminService;
     private final RoleService roleService;
 
-    // Inject 2 Service chuẩn của bạn vào
     public WebViewController(UserAdminService userAdminService, RoleService roleService) {
         this.userAdminService = userAdminService;
         this.roleService = roleService;
     }
 
-    // Giao diện tổng hợp: Đổ dữ liệu thật từ Service ra View
     @GetMapping("/dashboard")
-    public String showDashboard(Model model) {
-        // Chỉ lấy ra danh sách User thuộc nhóm PATIENT hoặc DOCTOR để hiển thị lên bảng
-        List<User> allUsers = userAdminService.getAllUsers();
-        List<User> filteredUsers = allUsers.stream()
-                .filter(user -> user.getRole() != null &&
-                        (user.getRole().getName().equalsIgnoreCase("PATIENT") ||
-                                user.getRole().getName().equalsIgnoreCase("DOCTOR")))
-                .collect(Collectors.toList());
+    public String showDashboard(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
 
-        model.addAttribute("users", filteredUsers);
+        Page<User> userPage = userAdminService.getUsersPaged(page, size);
 
-        // Giữ lại tất cả role để phục vụ việc hiển thị danh sách cấu hình phía dưới nếu cần
+        model.addAttribute("users", userPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", userPage.getTotalPages());
+        model.addAttribute("totalItems", userPage.getTotalElements());
+        model.addAttribute("pageSize", size);
         model.addAttribute("roles", roleService.getAllRoles());
 
         return "user/user-management";
     }
-    // ================= XỬ LÝ CRUD USER =================
+
     @PostMapping("/users/save")
     public String saveUser(@RequestParam(required = false) Long id,
                            @RequestParam String email,
@@ -66,7 +62,7 @@ public class WebViewController {
                 userAdminService.createUserByAdmin(request);
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Bạn có thể bổ sung RedirectAttributes để bắn thông báo lỗi ra UI nếu muốn
+            e.printStackTrace();
         }
         return "redirect:/admin/dashboard";
     }
@@ -81,7 +77,6 @@ public class WebViewController {
         return "redirect:/admin/dashboard";
     }
 
-    // ================= XỬ LÝ CRUD ROLE =================
     @PostMapping("/roles/save")
     public String saveRole(@RequestParam(required = false) Long id,
                            @RequestParam String name,

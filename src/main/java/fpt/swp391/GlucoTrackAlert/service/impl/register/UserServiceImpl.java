@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.Random;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    @Value("${app.frontend-url:http://localhost:8080}")
+    @Value("${app.frontend-url:http://localhost:8081}")
     private String frontendUrl;
 
     public UserServiceImpl(UserRepository userRepository,
@@ -50,8 +50,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User register(RegisterRequest request) throws Exception {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email already in use");
+            throw new Exception("Email đã được sử dụng");
         }
+
         Role role = roleRepository.findByName("PATIENT")
                 .orElseThrow(() -> new Exception("Role not found"));
 
@@ -68,33 +69,36 @@ public class UserServiceImpl implements UserService {
                 .build();
         User saved = userRepository.save(u);
 
-        // create verification token
-        String token = UUID.randomUUID().toString();
+        // Tạo OTP 6 số
+        String otp = String.format("%06d", new Random().nextInt(999999));
         EmailVerificationToken ev = EmailVerificationToken.builder()
                 .user(saved)
-                .verificationToken(token)
-                .expiredAt(LocalDateTime.now().plusDays(1))
+                .verificationToken(otp)
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
                 .status("pending")
                 .createdAt(LocalDateTime.now())
                 .build();
         tokenRepository.save(ev);
 
-        // send email - sử dụng frontendUrl từ config
-        String link = frontendUrl + "/api/auth/verify?token=" + token;
-        String body = buildVerificationEmail(saved.getEmail(), link);
-        emailService.sendHtmlMessage(saved.getEmail(), "Xác nhận tài khoản GlucoTrackAlert", body);
+        // Gửi email chứa OTP
+        String body = buildOtpEmail(saved.getFullName(), otp);
+        emailService.sendHtmlMessage(saved.getEmail(), "Mã xác nhận tài khoản GlucoTrackAlert", body);
 
         return saved;
     }
 
     @Override
     @Transactional
-    public User activateUser(String token) throws Exception {
-        EmailVerificationToken ev = tokenRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new Exception("Invalid token"));
+    public User activateUser(String otp) throws Exception {
+        EmailVerificationToken ev = tokenRepository.findByVerificationToken(otp)
+                .orElseThrow(() -> new Exception("Mã OTP không hợp lệ"));
         if (ev.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new Exception("Token expired");
+            throw new Exception("Mã OTP đã hết hạn");
         }
+        if (!"pending".equals(ev.getStatus())) {
+            throw new Exception("Mã OTP đã được sử dụng");
+        }
+
         User u = ev.getUser();
         u.setEmailVerified(true);
         u.setStatus("active");
@@ -109,31 +113,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginResponse login(LoginRequest request) throws Exception {
-        // 1. Tìm user theo email
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
 
-        // 2. Kiểm tra email đã xác thực chưa
         if (!user.getEmailVerified()) {
             throw new Exception("Tài khoản chưa xác thực email. Vui lòng kiểm tra hộp thư.");
         }
 
-        // 3. Kiểm tra tài khoản có active không
         if (!"active".equalsIgnoreCase(user.getStatus())) {
             throw new Exception("Tài khoản đã bị khóa hoặc chưa kích hoạt.");
         }
 
-        // 4. Kiểm tra mật khẩu
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new Exception("Mật khẩu không chính xác");
         }
 
-        // 5. Cập nhật last_login_at
         user.setLastLoginAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        // 6. Tạo JWT token
         String roleName = user.getRole() != null ? user.getRole().getName() : "UNKNOWN";
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
@@ -144,23 +142,23 @@ public class UserServiceImpl implements UserService {
                 .message("Đăng nhập thành công")
                 .build();
     }
-    private String buildVerificationEmail(String email, String link) {
+
+    private String buildOtpEmail(String fullName, String otp) {
         return """
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert</h2>
-            <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
-            <p style="color: #555;">Cảm ơn bạn đã đăng ký tài khoản. Vui lòng nhấn nút bên dưới để xác nhận email và kích hoạt tài khoản:</p>
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="%s"
-                   style="background-color: #2ecc71; color: white; padding: 14px 28px;
-                          text-decoration: none; border-radius: 5px; font-size: 16px;
-                          display: inline-block;">
-                    ✅ Xác nhận tài khoản
-                </a>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert</h2>
+                <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
+                <p style="color: #555;">Mã xác nhận tài khoản của bạn là:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="background-color: #f4f7f6; color: #2c3e50; padding: 14px 28px;
+                          border-radius: 5px; font-size: 32px; font-weight: bold;
+                          letter-spacing: 8px; border: 2px dashed #2ecc71;">
+                        %s
+                    </span>
+                </div>
+                <p style="color: #999; font-size: 13px; text-align: center;">Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
+                <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không đăng ký tài khoản này, hãy bỏ qua email này.</p>
             </div>
-            <p style="color: #999; font-size: 13px;">Link này sẽ hết hạn sau <strong>24 giờ</strong>.</p>
-            <p style="color: #999; font-size: 13px;">Nếu bạn không đăng ký tài khoản này, hãy bỏ qua email này.</p>
-        </div>
-        """.formatted(email, link);
+            """.formatted(fullName, otp);
     }
 }
