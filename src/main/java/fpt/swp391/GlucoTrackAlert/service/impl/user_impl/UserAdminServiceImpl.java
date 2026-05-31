@@ -6,11 +6,17 @@ import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserAdminServiceImpl implements UserAdminService {
@@ -33,6 +39,22 @@ public class UserAdminServiceImpl implements UserAdminService {
     }
 
     @Override
+    public Page<User> getUsersPaged(int page, int size) {
+        // Lấy tất cả user rồi filter PATIENT/DOCTOR, sau đó phân trang thủ công
+        List<User> filtered = userRepository.findAll().stream()
+                .filter(u -> u.getRole() != null &&
+                        (u.getRole().getName().equalsIgnoreCase("PATIENT") ||
+                                u.getRole().getName().equalsIgnoreCase("DOCTOR")))
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, filtered.size());
+        List<User> pageContent = (start >= filtered.size()) ? List.of() : filtered.subList(start, end);
+
+        return new PageImpl<>(pageContent, PageRequest.of(page, size), filtered.size());
+    }
+
+    @Override
     public List<User> getUsersFilteredByRole(Long roleId) {
         return userRepository.findByRoleId(roleId);
     }
@@ -50,14 +72,13 @@ public class UserAdminServiceImpl implements UserAdminService {
             throw new Exception("Tài khoản email '" + request.getEmail() + "' đã tồn tại trên hệ thống.");
         }
 
-        // CHỈ CHO PHÉP PATIENT HOẶC DOCTOR
         String inputRole = request.getRoleName().toUpperCase().trim();
         if (!inputRole.equals("PATIENT") && !inputRole.equals("DOCTOR")) {
             throw new Exception("Hệ thống quản trị chỉ cho phép tạo tài khoản với vai trò PATIENT hoặc DOCTOR.");
         }
 
         Role role = roleRepository.findByName(inputRole)
-                .orElseThrow(() -> new Exception("Không tìm thấy cấu hình vai trò: " + inputRole + " trong cơ sở dữ liệu."));
+                .orElseThrow(() -> new Exception("Không tìm thấy cấu hình vai trò: " + inputRole));
 
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new Exception("Mật khẩu khởi tạo không được phép bỏ trống.");
@@ -87,7 +108,6 @@ public class UserAdminServiceImpl implements UserAdminService {
             throw new Exception("Email mới '" + request.getEmail() + "' đã được sử dụng bởi một tài khoản khác.");
         }
 
-        // CHỈ CHO PHÉP PATIENT HOẶC DOCTOR
         String inputRole = request.getRoleName().toUpperCase().trim();
         if (!inputRole.equals("PATIENT") && !inputRole.equals("DOCTOR")) {
             throw new Exception("Hệ thống quản trị chỉ cho phép cập nhật vai trò sang PATIENT hoặc DOCTOR.");
@@ -117,7 +137,7 @@ public class UserAdminServiceImpl implements UserAdminService {
         try {
             userRepository.delete(user);
         } catch (Exception e) {
-            throw new Exception("Không thể thực hiện xóa cứng tài khoản do người dùng đã phát sinh các dữ liệu liên kết y tế (Hồ sơ Patients, Doctors hoặc Nhật ký đo đường huyết).");
+            throw new Exception("Không thể xóa tài khoản do đã phát sinh dữ liệu liên kết.");
         }
     }
 }

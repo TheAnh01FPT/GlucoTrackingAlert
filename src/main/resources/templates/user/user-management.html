@@ -133,6 +133,33 @@
         </tr>
         </tbody>
     </table>
+    <!-- Paging -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+    <span style="font-size: 13px; color: #64748b;">
+        Hiển thị trang <strong th:text="${currentPage + 1}"></strong>
+        / <strong th:text="${totalPages}"></strong>
+        (Tổng <strong th:text="${totalItems}"></strong> tài khoản)
+    </span>
+        <div style="display: flex; gap: 8px;">
+            <a th:if="${currentPage > 0}"
+               th:href="@{/admin/dashboard(page=${currentPage - 1}, size=${pageSize})}"
+               style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
+                ← Trước
+            </a>
+            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:href="@{/admin/dashboard(page=${i}, size=${pageSize})}"
+                   th:text="${i + 1}"
+                   th:style="${i == currentPage} ? 'padding: 7px 14px; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px; text-decoration: none;'
+                                             : 'padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;'">
+                </a>
+            </th:block>
+            <a th:if="${currentPage < totalPages - 1}"
+               th:href="@{/admin/dashboard(page=${currentPage + 1}, size=${pageSize})}"
+               style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
+                Sau →
+            </a>
+        </div>
+    </div>
 </div>
 
 <script>

@@ -21,18 +21,18 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
-            User u = userService.register(request);
-            return ResponseEntity.ok("Registered. Please check your email to verify.");
+            userService.register(request);
+            return ResponseEntity.ok("Mã xác nhận đã được gửi đến email của bạn.");
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
-    @GetMapping("/verify")
-    public ResponseEntity<?> verify(@RequestParam("token") String token) {
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestParam("otp") String otp) {
         try {
-            User u = userService.activateUser(token);
-            return ResponseEntity.ok("Email verified. You can login now.");
+            userService.activateUser(otp);
+            return ResponseEntity.ok("Xác nhận thành công! Bạn có thể đăng nhập.");
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
