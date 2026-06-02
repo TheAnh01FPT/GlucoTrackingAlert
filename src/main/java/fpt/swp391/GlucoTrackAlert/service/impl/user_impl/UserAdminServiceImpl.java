@@ -129,15 +129,15 @@ public class UserAdminServiceImpl implements UserAdminService {
         return userRepository.save(user);
     }
 
-    @Override
-    @Transactional
-    public void deleteUserByAdmin(Long id) throws Exception {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new Exception("Không tìm thấy người dùng có mã số ID để xóa."));
-        try {
-            userRepository.delete(user);
-        } catch (Exception e) {
-            throw new Exception("Không thể xóa tài khoản do đã phát sinh dữ liệu liên kết.");
-        }
-    }
+//    @Override
+//    @Transactional
+//    public void deleteUserByAdmin(Long id) throws Exception {
+//        User user = userRepository.findById(id)
+//                .orElseThrow(() -> new Exception("Không tìm thấy người dùng có mã số ID để xóa."));
+//        try {
+//            userRepository.delete(user);
+//        } catch (Exception e) {
+//            throw new Exception("Không thể xóa tài khoản do đã phát sinh dữ liệu liên kết.");
+//        }
+//    }
 }
