@@ -1,6 +1,4 @@
 package fpt.swp391.GlucoTrackAlert.controller.dashboard;
-
-import fpt.swp391.GlucoTrackAlert.dto.role.RoleRequest;
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.service.role.RoleService;
@@ -67,44 +65,4 @@ public class WebViewController {
         return "redirect:/admin/dashboard";
     }
 
-    @GetMapping("/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id) {
-        try {
-            userAdminService.deleteUserByAdmin(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "redirect:/admin/dashboard";
-    }
-
-    @PostMapping("/roles/save")
-    public String saveRole(@RequestParam(required = false) Long id,
-                           @RequestParam String name,
-                           @RequestParam String description) {
-        try {
-            RoleRequest request = RoleRequest.builder()
-                    .name(name.trim())
-                    .description(description.trim())
-                    .build();
-
-            if (id != null) {
-                roleService.updateRole(id, request);
-            } else {
-                roleService.createRole(request);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "redirect:/admin/dashboard";
-    }
-
-    @GetMapping("/roles/delete/{id}")
-    public String deleteRole(@PathVariable Long id) {
-        try {
-            roleService.deleteRole(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "redirect:/admin/dashboard";
-    }
 }
