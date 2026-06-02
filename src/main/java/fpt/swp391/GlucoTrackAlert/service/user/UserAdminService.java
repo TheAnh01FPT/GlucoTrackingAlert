@@ -12,5 +12,5 @@ public interface UserAdminService {
     User getUserById(Long id) throws Exception;
     User createUserByAdmin(UserAdminRequest request) throws Exception;
     User updateUserByAdmin(Long id, UserAdminRequest request) throws Exception;
-    void deleteUserByAdmin(Long id) throws Exception;
+
 }
