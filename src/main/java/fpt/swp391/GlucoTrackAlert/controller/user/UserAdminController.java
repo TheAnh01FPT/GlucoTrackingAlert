@@ -58,13 +58,4 @@ public class UserAdminController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        try {
-            userAdminService.deleteUserByAdmin(id);
-            return ResponseEntity.ok("Xóa thông tin tài khoản người dùng ra khỏi hệ thống thành công!");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
 }
