@@ -38,8 +38,6 @@
         .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 4px; margin-right: 5px; text-decoration: none; font-weight: 500; }
         .btn-edit { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
         .btn-edit:hover { background-color: #e2e8f0; }
-        .btn-delete { background-color: #fee2e2; color: #ef4444; }
-        .btn-delete:hover { background-color: #fca5a5; }
 
         .form-actions { display: flex; align-items: flex-end; }
         .cancel-edit { color: #64748b; font-size: 13px; margin-left: 10px; cursor: pointer; text-decoration: underline; display: none; }
@@ -102,7 +100,7 @@
             <th style="width: 20%;">Vai trò (Role)</th>
             <th style="width: 15%;">Trạng thái</th>
             <th style="width: 15%;">Xác thực Email</th>
-            <th style="width: 10%;">Hành động</th>
+            <th style="width: 6%;">Hành động</th>
         </tr>
         </thead>
         <tbody>
@@ -124,8 +122,6 @@
             <td>
                 <a href="#" class="btn-sm btn-edit"
                    th:onclick="fillUserToForm([[${user.id}]], [[${user.email}]], [[${user.status}]], [[${user.role != null ? user.role.name : ''}]], [[${user.emailVerified}]])">Sửa</a>
-                <a th:href="@{/admin/users/delete/{id}(id=${user.id})}" class="btn-sm btn-delete"
-                   onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?');">Xóa</a>
             </td>
         </tr>
         <tr th:if="${#lists.isEmpty(users)}">
@@ -133,6 +129,33 @@
         </tr>
         </tbody>
     </table>
+    <!-- Paging -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+    <span style="font-size: 13px; color: #64748b;">
+        Hiển thị trang <strong th:text="${currentPage + 1}"></strong>
+        / <strong th:text="${totalPages}"></strong>
+        (Tổng <strong th:text="${totalItems}"></strong> tài khoản)
+    </span>
+        <div style="display: flex; gap: 8px;">
+            <a th:if="${currentPage > 0}"
+               th:href="@{/admin/dashboard(page=${currentPage - 1}, size=${pageSize})}"
+               style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
+                ← Trước
+            </a>
+            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:href="@{/admin/dashboard(page=${i}, size=${pageSize})}"
+                   th:text="${i + 1}"
+                   th:style="${i == currentPage} ? 'padding: 7px 14px; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px; text-decoration: none;'
+                                             : 'padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;'">
+                </a>
+            </th:block>
+            <a th:if="${currentPage < totalPages - 1}"
+               th:href="@{/admin/dashboard(page=${currentPage + 1}, size=${pageSize})}"
+               style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
+                Sau →
+            </a>
+        </div>
+    </div>
 </div>
 
 <script>
