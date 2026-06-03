@@ -45,14 +45,24 @@ public class DailyHealthLogController {
 
     @GetMapping
     public String getLogs(@RequestParam(required = false) Long userId,
-                          @RequestParam(defaultValue = "0") int page,
-                          @RequestParam(defaultValue = "10") int size,
-                          Model model) {
-        List<Patient> patients = patientRepository.findAllByStatus("active");
-        if (patients.isEmpty()) {
-            patients = patientRepository.findAll();
+            @RequestParam(required = false) String patientType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        List<Patient> patients;
+        if (patientType != null && !patientType.isEmpty()) {
+            patients = patientRepository.findAllByStatusAndPatientType("active", patientType);
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAllByStatus("active");
+            }
+        } else {
+            patients = patientRepository.findAllByStatus("active");
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAll();
+            }
         }
         model.addAttribute("patients", patients);
+        model.addAttribute("patientType", patientType);
 
         Long selectedPatientId = resolvePatientId(userId);
         if (selectedPatientId == null && !patients.isEmpty()) {
@@ -65,15 +75,93 @@ public class DailyHealthLogController {
             model.addAttribute("logs", logsPage.getContent());
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", logsPage.getTotalPages());
-            model.addAttribute("selectedUserId", selectedPatientId); // bound to the view's query params
+            model.addAttribute("totalElements", logsPage.getTotalElements());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("selectedUserId", selectedPatientId);
         } else {
             model.addAttribute("logs", Collections.emptyList());
             model.addAttribute("currentPage", 0);
             model.addAttribute("totalPages", 0);
+            model.addAttribute("totalElements", 0L);
+            model.addAttribute("pageSize", size);
             model.addAttribute("selectedUserId", null);
         }
 
         return "healthlog/list";
+    }
+
+    @GetMapping("/doctor-view")
+    public String getDoctorView(@RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String patientType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        List<Patient> patients;
+        if (patientType != null && !patientType.isEmpty()) {
+            patients = patientRepository.findAllByStatusAndPatientType("active", patientType);
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAllByStatus("active");
+            }
+        } else {
+            patients = patientRepository.findAllByStatus("active");
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAll();
+            }
+        }
+        model.addAttribute("patients", patients);
+        model.addAttribute("patientType", patientType);
+
+        Long selectedPatientId = resolvePatientId(userId);
+        if (selectedPatientId == null && !patients.isEmpty()) {
+            selectedPatientId = patients.get(0).getId();
+        }
+
+        Patient selectedPatient = null;
+        if (selectedPatientId != null) {
+            Optional<Patient> patientOpt = patientRepository.findById(selectedPatientId);
+            if (patientOpt.isPresent()) {
+                selectedPatient = patientOpt.get();
+            }
+            
+            Pageable pageable = PageRequest.of(page, size);
+            Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(selectedPatientId, pageable);
+            model.addAttribute("logs", logsPage.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", logsPage.getTotalPages());
+            model.addAttribute("totalElements", logsPage.getTotalElements());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("selectedUserId", selectedPatientId);
+        } else {
+            model.addAttribute("logs", Collections.emptyList());
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalElements", 0L);
+            model.addAttribute("pageSize", size);
+            model.addAttribute("selectedUserId", null);
+        }
+        
+        model.addAttribute("selectedPatient", selectedPatient);
+        return "healthlog/doctor-view";
+    }
+
+    @GetMapping("/my-logs")
+    public String getMyLogs(@RequestParam Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        Long patientId = resolvePatientId(userId);
+        if (patientId == null) {
+            patientId = userId;
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(patientId, pageable);
+        model.addAttribute("logs", logsPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", logsPage.getTotalPages());
+        model.addAttribute("totalElements", logsPage.getTotalElements());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("userId", userId);
+        return "healthlog/patient-logs";
     }
 
     @GetMapping("/{id}")
@@ -106,7 +194,7 @@ public class DailyHealthLogController {
     @GetMapping("/{id}/edit")
     public String editLogForm(@PathVariable Long id, Model model) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
-        
+
         DailyHealthLogRequest request = new DailyHealthLogRequest();
         request.setLogDate(response.getLogDate());
         request.setBloodSugar(response.getBloodSugar());
@@ -117,7 +205,7 @@ public class DailyHealthLogController {
         request.setSugarConsumptionLevel(response.getSugarConsumptionLevel());
         request.setSymptoms(response.getSymptoms());
         request.setNote(response.getNote());
-        
+
         model.addAttribute("log", request);
         model.addAttribute("userId", response.getPatientId());
         model.addAttribute("action", "/health-logs/" + id + "/edit?userId=" + response.getPatientId());
@@ -126,8 +214,8 @@ public class DailyHealthLogController {
 
     @PostMapping("/{id}/edit")
     public String updateLog(@PathVariable Long id,
-                            @RequestParam Long userId,
-                            @ModelAttribute("log") DailyHealthLogRequest request) {
+            @RequestParam Long userId,
+            @ModelAttribute("log") DailyHealthLogRequest request) {
         dailyHealthLogService.updateLog(id, request);
         return "redirect:/health-logs?userId=" + userId;
     }
@@ -140,9 +228,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/chart")
     public String getChart(@RequestParam(required = false) Long userId,
-                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-                           Model model) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Model model) {
         List<Patient> patients = patientRepository.findAllByStatus("active");
         if (patients.isEmpty()) {
             patients = patientRepository.findAll();
@@ -158,7 +246,8 @@ public class DailyHealthLogController {
         LocalDate startDate = from != null ? from : endDate.minusDays(30);
 
         if (selectedPatientId != null) {
-            List<DailyHealthLogResponse> chartData = dailyHealthLogService.getChartData(selectedPatientId, startDate, endDate);
+            List<DailyHealthLogResponse> chartData = dailyHealthLogService.getChartData(selectedPatientId, startDate,
+                    endDate);
             model.addAttribute("chartData", chartData);
             model.addAttribute("selectedUserId", selectedPatientId);
         } else {
