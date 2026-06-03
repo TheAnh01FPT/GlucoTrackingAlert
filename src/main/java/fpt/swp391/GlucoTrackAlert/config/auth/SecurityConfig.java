@@ -20,9 +20,11 @@ public class SecurityConfig {
                 // 1. Tắt CSRF theo cú pháp mới của Spring Boot 3.x
                 .csrf(csrf -> csrf.disable())
 
-                // 2. Mở khóa các đường dẫn công khai (auth, giao diện, tài nguyên tĩnh)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/patient/**", "/api/patient/**").hasRole("PATIENT")
+                        .requestMatchers("/doctor/**", "/api/doctor/**").hasRole("DOCTOR")
                         .anyRequest().authenticated()
                 )
 

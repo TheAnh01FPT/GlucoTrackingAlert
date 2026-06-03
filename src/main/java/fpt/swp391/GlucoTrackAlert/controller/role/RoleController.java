@@ -1,6 +1,4 @@
 package fpt.swp391.GlucoTrackAlert.controller.role;
-
-import fpt.swp391.GlucoTrackAlert.dto.role.RoleRequest;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.service.role.RoleService;
 import jakarta.validation.Valid;
@@ -31,36 +29,6 @@ public class RoleController {
             return ResponseEntity.ok(role);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<?> createRole(@Valid @RequestBody RoleRequest request) {
-        try {
-            Role createdRole = roleService.createRole(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdRole);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
-        try {
-            Role updatedRole = roleService.updateRole(id, request);
-            return ResponseEntity.ok(updatedRole);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteRole(@PathVariable Long id) {
-        try {
-            roleService.deleteRole(id);
-            return ResponseEntity.ok("Xóa cấu hình vai trò thành công!");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 }
