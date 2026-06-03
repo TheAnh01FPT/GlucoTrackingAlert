@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlucoTrackAlert - Nhật Ký Sức Khỏe Bệnh Nhân</title>
+    <title>GlucoTrackAlert - Theo Dõi Sức Khỏe Bệnh Nhân</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -111,6 +111,15 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Page Title */
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            margin-top: 0;
+        }
+
         /* Upper Action Bar */
         .action-bar {
             display: flex;
@@ -129,7 +138,8 @@
         .user-selector-container {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .user-selector-label {
@@ -156,6 +166,7 @@
             background-size: 1rem;
             -webkit-appearance: none;
             appearance: none;
+            min-width: 200px;
         }
 
         .user-select:focus {
@@ -164,30 +175,82 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
         }
 
-        .btn {
-            display: inline-flex;
+        /* Patient Info Card */
+        .patient-info-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .patient-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .patient-info-main {
+            flex: 1;
+        }
+
+        .patient-info-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
-            border-radius: 10px;
+        }
+
+        .patient-info-details {
+            display: flex;
+            gap: 2rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .patient-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .patient-info-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
             font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        .patient-info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        /* Patient Type Badges */
+        .patient-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 8px;
+            vertical-align: middle;
         }
+
+        .badge-adult { background-color: #e0e7ff; color: #4338ca; }
+        .badge-elderly { background-color: #fef3c7; color: #b45309; }
+        .badge-pregnant { background-color: #fce7f3; color: #be185d; }
+        .badge-child { background-color: #d1fae5; color: #065f46; }
 
         /* Health Stats Card Grid */
         .stats-grid {
@@ -355,14 +418,8 @@
             cursor: pointer;
         }
 
-        .btn-view { background-color: #eff6ff; color: #3b82f6; }
-        .btn-view:hover { background-color: #dbeafe; transform: scale(1.1); }
-        
-        .btn-edit { background-color: #fef3c7; color: #d97706; }
-        .btn-edit:hover { background-color: #fde68a; transform: scale(1.1); }
-
-        .btn-delete { background-color: #fee2e2; color: #ef4444; }
-        .btn-delete:hover { background-color: #fca5a5; transform: scale(1.1); }
+        .btn-view { background-color: #fee2e2; color: #ef4444; }
+        .btn-view:hover { background-color: #fca5a5; transform: scale(1.1); }
 
         /* Pagination container */
         .pagination-container {
@@ -426,24 +483,6 @@
             display: block;
         }
 
-        /* Patient Type Badges */
-        .patient-type-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.2rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 0.15rem 0.45rem;
-            border-radius: 6px;
-            margin-left: 0.35rem;
-            vertical-align: middle;
-        }
-
-        .badge-adult { background-color: #e0e7ff; color: #4338ca; }
-        .badge-elderly { background-color: #fef3c7; color: #b45309; }
-        .badge-pregnant { background-color: #fce7f3; color: #be185d; }
-        .badge-child { background-color: #d1fae5; color: #065f46; }
-
         /* Page size selector */
         .page-size-selector {
             display: flex;
@@ -479,50 +518,74 @@
 
     <!-- Header Navigation -->
     <header class="navbar">
-        <a href="/health-logs" class="navbar-brand">
+        <a href="/health-logs/doctor-view" class="navbar-brand">
             🩸 GlucoTrackAlert
         </a>
         <nav class="navbar-menu">
-            <a href="/health-logs" class="navbar-link active">Nhật Ký Đo</a>
+            <a href="/health-logs/doctor-view" class="navbar-link active">Xem Nhật Ký Bệnh Nhân</a>
             <a th:href="@{/health-logs/chart(userId=${selectedUserId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            <a href="/admin/dashboard" class="navbar-admin">🛡️ Quản Trị Hệ Thống</a>
+            <a href="/admin/dashboard" class="navbar-admin">🛡️ Quản Trị</a>
         </nav>
     </header>
 
     <!-- Main Content -->
     <main class="main-container">
 
-        <!-- Selector Bar -->
+        <!-- Page Title -->
+        <h1 class="page-title">Theo Dõi Sức Khỏe Bệnh Nhân 👨‍⚕️</h1>
+
+        <!-- Filter Bar -->
         <section class="action-bar">
             <div class="user-selector-container">
-                <label class="user-selector-label" for="patientTypeSelect">Lọc theo loại:</label>
-                <select id="patientTypeSelect" class="user-select" onchange="filterByPatientType()">
-                    <option value="" th:selected="${patientType == null or patientType == ''}">Tất cả bệnh nhân</option>
-                    <option value="adult" th:selected="${patientType == 'adult'}">🧑 Người trưởng thành</option>
-                    <option value="elderly" th:selected="${patientType == 'elderly'}">👴 Người cao tuổi</option>
-                    <option value="pregnant" th:selected="${patientType == 'pregnant'}">🤰 Phụ nữ có thai</option>
-                    <option value="child" th:selected="${patientType == 'child'}">👶 Trẻ em</option>
-                </select>
+                <div>
+                    <label class="user-selector-label" for="patientTypeSelect">Lọc theo loại:</label>
+                    <select id="patientTypeSelect" class="user-select" onchange="filterByPatientType()">
+                        <option value="" th:selected="${patientType == null or patientType == ''}">Tất cả bệnh nhân</option>
+                        <option value="adult" th:selected="${patientType == 'adult'}">🧑 Người trưởng thành</option>
+                        <option value="elderly" th:selected="${patientType == 'elderly'}">👴 Người cao tuổi</option>
+                        <option value="pregnant" th:selected="${patientType == 'pregnant'}">🤰 Phụ nữ có thai</option>
+                        <option value="child" th:selected="${patientType == 'child'}">👶 Trẻ em</option>
+                    </select>
+                </div>
 
-                <label class="user-selector-label" for="patientSelect" style="margin-left: 1rem;">Bệnh Nhân Đang Xem:</label>
-                <select id="patientSelect" class="user-select" onchange="selectPatient()">
-                    <option th:each="patient : ${patients}"
-                            th:value="${patient.id}"
-                            th:selected="${patient.id == selectedUserId}"
-                            th:text="${patient.fullName + (patient.patientType == 'adult' ? ' 🧑' : (patient.patientType == 'elderly' ? ' 👴' : (patient.patientType == 'pregnant' ? ' 🤰' : (patient.patientType == 'child' ? ' 👶' : ''))))}">Patient Name</option>
-                </select>
-            </div>
-            
-            <div class="actions">
-                <a th:if="${selectedUserId != null}"
-                   th:href="@{/health-logs/create(userId=${selectedUserId})}"
-                   class="btn btn-primary">
-                    ➕ Ghi Nhật Ký Mới
-                </a>
+                <div>
+                    <label class="user-selector-label" for="patientSelect">Bệnh Nhân Đang Xem:</label>
+                    <select id="patientSelect" class="user-select" onchange="selectPatient()">
+                        <option th:each="patient : ${patients}"
+                                th:value="${patient.id}"
+                                th:selected="${patient.id == selectedUserId}"
+                                th:text="${patient.fullName + (patient.patientType == 'adult' ? ' 🧑' : (patient.patientType == 'elderly' ? ' 👴' : (patient.patientType == 'pregnant' ? ' 🤰' : (patient.patientType == 'child' ? ' 👶' : ''))))}">Patient Name</option>
+                    </select>
+                </div>
             </div>
         </section>
 
-        <!-- Dynamic Statistics Row (Computed locally or template-driven for the current page logs) -->
+        <!-- Patient Information Card -->
+        <section class="patient-info-card" th:if="${selectedPatient != null}">
+            <div class="patient-info-header">
+                <div class="patient-info-main">
+                    <h2 class="patient-info-name">
+                        <span th:text="${selectedPatient.fullName}">Nguyễn Văn A</span>
+                        <span th:class="${'patient-type-badge badge-' + selectedPatient.patientType}"
+                              th:text="${selectedPatient.patientType == 'adult' ? '🧑 Người trưởng thành' : (selectedPatient.patientType == 'elderly' ? '👴 Người cao tuổi' : (selectedPatient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (selectedPatient.patientType == 'child' ? '👶 Trẻ em' : '')))}">
+                            Adult
+                        </span>
+                    </h2>
+                    <div class="patient-info-details">
+                        <div class="patient-info-item">
+                            <span class="patient-info-label">Tuổi</span>
+                            <span class="patient-info-value" th:text="${selectedPatient.age != null ? selectedPatient.age : '--'}">25</span>
+                        </div>
+                        <div class="patient-info-item">
+                            <span class="patient-info-label">Giới tính</span>
+                            <span class="patient-info-value" th:text="${selectedPatient.gender != null ? (selectedPatient.gender.equalsIgnoreCase('male') ? '👨 Nam' : '👩 Nữ') : '--'}">Nam</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Statistics Row -->
         <section class="stats-grid" th:if="${!#lists.isEmpty(logs)}">
             <div class="stat-card">
                 <div class="stat-icon stat-icon-blood">🩸</div>
@@ -572,7 +635,7 @@
                             <th>Mức Đường Tiêu Thụ</th>
                             <th>Triệu Chứng</th>
                             <th>Ghi Chú</th>
-                            <th style="width: 120px;">Hành Động</th>
+                            <th style="width: 100px;">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -623,15 +686,8 @@
                             
                             <td>
                                 <div class="action-links">
-                                    <!-- View Detail -->
-                                    <a th:href="@{/health-logs/{id}(id=${log.id})}" class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
-                                    <!-- Edit -->
-                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id})}" class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
-                                    <!-- Delete -->
-                                    <form th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${selectedUserId})}" method="POST" 
-                                          style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
-                                        <button type="submit" class="btn-action btn-delete" title="Xóa Nhật Ký">🗑️</button>
-                                    </form>
+                                    <!-- View Detail only -->
+                                    <a th:href="@{/health-logs/{id}(id=${log.id})}" class="btn-action btn-view" title="Xem Chi Tiết">🔴</a>
                                 </div>
                             </td>
                         </tr>
@@ -641,7 +697,7 @@
                                 <div class="empty-state">
                                     <span class="empty-state-icon">📋</span>
                                     <h3>Chưa Có Nhật Ký Sức Khỏe Nào</h3>
-                                    <p>Hãy bắt đầu thêm nhật ký đầu tiên cho bệnh nhân này để theo dõi sức khỏe tốt hơn.</p>
+                                    <p>Bệnh nhân này chưa có nhật ký sức khỏe nào.</p>
                                 </div>
                             </td>
                         </tr>
@@ -658,19 +714,19 @@
                 </div>
 
                 <div class="pagination-buttons" th:if="${totalPages > 1}">
-                    <a th:href="@{/health-logs(page=${currentPage - 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                    <a th:href="@{/health-logs/doctor-view(page=${currentPage - 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
                        th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
                         &laquo; Trước
                     </a>
                     
                     <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                       th:href="@{/health-logs(page=${i}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                       th:href="@{/health-logs/doctor-view(page=${i}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
                        th:text="${i + 1}"
                        th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
                         1
                     </a>
                     
-                    <a th:href="@{/health-logs(page=${currentPage + 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                    <a th:href="@{/health-logs/doctor-view(page=${currentPage + 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
                        th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
                         Sau &raquo;
                     </a>
@@ -694,7 +750,7 @@
         /*<![CDATA[*/
         function filterByPatientType() {
             var patientType = document.getElementById('patientTypeSelect').value;
-            var url = '/health-logs?patientType=' + encodeURIComponent(patientType);
+            var url = '/health-logs/doctor-view?patientType=' + encodeURIComponent(patientType);
             location.href = url;
         }
 
@@ -702,7 +758,7 @@
             var userId = document.getElementById('patientSelect').value;
             var patientType = /*[[${patientType}]]*/ '';
             var pageSize = /*[[${pageSize}]]*/ 10;
-            var url = '/health-logs?userId=' + userId + '&size=' + pageSize;
+            var url = '/health-logs/doctor-view?userId=' + userId + '&size=' + pageSize;
             if (patientType) {
                 url += '&patientType=' + encodeURIComponent(patientType);
             }
@@ -713,7 +769,7 @@
             var size = document.getElementById('pageSizeSelect').value;
             var userId = /*[[${selectedUserId}]]*/ '';
             var patientType = /*[[${patientType}]]*/ '';
-            var url = '/health-logs?page=0&size=' + size;
+            var url = '/health-logs/doctor-view?page=0&size=' + size;
             if (userId) {
                 url += '&userId=' + userId;
             }

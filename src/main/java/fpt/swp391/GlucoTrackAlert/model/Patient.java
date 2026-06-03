@@ -60,6 +60,9 @@ public class Patient {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "patient_type", length = 20)
+    private String patientType; // elderly, adult, pregnant, child
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
