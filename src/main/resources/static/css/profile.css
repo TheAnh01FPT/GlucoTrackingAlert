@@ -1,0 +1,307 @@
+/* Import Outfit & Inter Fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --bg-gradient: linear-gradient(135deg, #f0f7f7 0%, #e6f0fa 100%);
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --primary-color: #0d8a8a;
+    --primary-hover: #0a6b6b;
+    --primary-light: #e6f4f4;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --accent-blue: #0284c7;
+    
+    /* BMI Status Colors */
+    --bmi-underweight: #eab308;
+    --bmi-normal: #10b981;
+    --bmi-overweight: #f97316;
+    --bmi-obese: #ef4444;
+    
+    --shadow-premium: 0 10px 30px -5px rgba(0, 138, 138, 0.08), 0 8px 20px -6px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 20px 40px -5px rgba(0, 138, 138, 0.15), 0 12px 25px -6px rgba(0, 0, 0, 0.06);
+    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    background-attachment: fixed;
+}
+
+/* Container for App */
+.profile-wrapper {
+    width: 100%;
+    max-width: 900px;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--shadow-premium);
+    transition: var(--transition-smooth);
+}
+
+.profile-wrapper:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+/* Header Section */
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 20px;
+}
+
+.brand-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0d8a8a 0%, #0284c7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    font-size: 32px;
+}
+
+.action-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d8a8a 0%, #0a7c7c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(13, 138, 138, 0.25);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0a7c7c 0%, #086363 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(13, 138, 138, 0.35);
+}
+
+.btn-secondary {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-main);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+/* Layout Grid */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 768px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Glass Card Component */
+.info-card {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    padding: 28px;
+    transition: var(--transition-smooth);
+}
+
+.info-card:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+.card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Details list styling */
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--text-main);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* BMI Card Specifics */
+.bmi-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.bmi-value-large {
+    font-family: 'Outfit', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--primary-color);
+    line-height: 1;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.bmi-badge {
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.bmi-underweight { background-color: var(--bmi-underweight); }
+.bmi-normal { background-color: var(--bmi-normal); }
+.bmi-overweight { background-color: var(--bmi-overweight); }
+.bmi-obese { background-color: var(--bmi-obese); }
+
+.bmi-range-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    position: relative;
+    margin-top: 15px;
+}
+
+.bmi-marker {
+    width: 14px;
+    height: 14px;
+    background: var(--primary-color);
+    border: 3px solid white;
+    border-radius: 50%;
+    position: absolute;
+    top: -4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: var(--transition-smooth);
+}
+
+/* Form inputs styling */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.7);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--text-main);
+    transition: var(--transition-smooth);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(13, 138, 138, 0.1);
+}
+
+.form-input-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* Error message notification banner */
+.error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Validation error message styling below inputs */
+.error-text {
+    color: #ef4444;
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-top: 6px;
+    display: block;
+}
