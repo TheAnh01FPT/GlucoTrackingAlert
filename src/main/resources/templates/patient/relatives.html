@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách Người thân | GlucoTrack</title>
+    <link rel="stylesheet" th:href="@{/css/relatives.css}">
+</head>
+<body>
+
+    <div class="relatives-container">
+        <!-- Header -->
+        <div class="relatives-header">
+            <h1 class="brand-title">
+                <span class="brand-icon">🩸</span> GlucoTrack
+            </h1>
+            <div class="actions-nav">
+                <!-- Back to Home Button -->
+                <a th:href="@{/patient/home}" class="action-btn btn-secondary">
+                    🏠 Trang chủ
+                </a>
+                <a th:href="@{/patient/profile}" class="action-btn btn-secondary">
+                    👤 Hồ sơ của tôi
+                </a>
+                <a th:href="@{/patient/relatives/new}" class="action-btn btn-primary">
+                    ➕ Thêm người thân
+                </a>
+            </div>
+        </div>
+
+        <h2 class="panel-title" th:text="'👪 Danh sách người thân của bệnh nhân: ' + ${patient.fullName}">
+            👪 Danh sách người thân
+        </h2>
+
+        <!-- Empty State (No relatives added yet) -->
+        <div class="empty-state" th:if="${#lists.isEmpty(relatives)}">
+            <div class="empty-icon">👥</div>
+            <div class="empty-title">Chưa có người thân nào</div>
+            <div class="empty-desc">
+                Hãy thêm thông tin người thân (bố, mẹ, vợ, chồng, con...) để hệ thống tự động gửi email cảnh báo khẩn cấp khi chỉ số đường huyết hoặc huyết áp của bạn vượt ngưỡng an toàn.
+            </div>
+            <a th:href="@{/patient/relatives/new}" class="action-btn btn-primary">
+                ➕ Thêm người thân đầu tiên
+            </a>
+        </div>
+
+        <!-- Relatives Cards Grid -->
+        <div class="relatives-grid" th:unless="${#lists.isEmpty(relatives)}">
+            <div class="relative-card" th:each="rel : ${relatives}">
+                <!-- Card Header -->
+                <div class="relative-card-header">
+                    <div class="relative-name" th:text="${rel.fullName}">Nguyễn Thị B</div>
+                    <span class="relationship-badge" th:text="${rel.relationship}">Mẹ</span>
+                </div>
+
+                <!-- Card Details -->
+                <div class="card-detail-item">
+                    <span class="card-detail-icon">🎂</span>
+                    <span th:text="${rel.age != null ? rel.age + ' tuổi' : 'Chưa cập nhật tuổi'}">55 tuổi</span>
+                </div>
+                <div class="card-detail-item">
+                    <span class="card-detail-icon">📞</span>
+                    <span th:text="${rel.phone != null ? rel.phone : 'Chưa cập nhật số điện thoại'}">0912345678</span>
+                </div>
+                <div class="card-detail-item">
+                    <span class="card-detail-icon">✉️</span>
+                    <span th:text="${rel.email}">email@example.com</span>
+                </div>
+
+                <!-- Toggle Alert Email Switch (UC-34) -->
+                <div class="notify-toggle-bar">
+                    <span class="toggle-label">🔔 Gửi cảnh báo email</span>
+                    
+                    <a th:if="${rel.notifyEnabled}" 
+                       th:href="@{/patient/relatives/toggle/{id}(id=${rel.id}, enabled=false)}" 
+                       class="switch-btn switch-on">
+                        ĐANG BẬT
+                    </a>
+                    
+                    <a th:unless="${rel.notifyEnabled}" 
+                       th:href="@{/patient/relatives/toggle/{id}(id=${rel.id}, enabled=true)}" 
+                       class="switch-btn switch-off">
+                        ĐANG TẮT
+                    </a>
+                </div>
+
+                <!-- Action Button Controls -->
+                <div class="card-actions">
+                    <a th:href="@{/patient/relatives/edit/{id}(id=${rel.id})}" 
+                       class="action-icon-btn btn-edit-icon" title="Chỉnh sửa thông tin">
+                        ✏️
+                    </a>
+                    <a th:href="@{/patient/relatives/delete/{id}(id=${rel.id})}" 
+                       class="action-icon-btn btn-delete-icon" title="Xóa người thân"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa thông tin người thân này không?')">
+                        🗑️
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
