@@ -8,8 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class GlucoTrackAlertApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(GlucoTrackAlertApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(GlucoTrackAlertApplication.class, args);
+    }
 }
