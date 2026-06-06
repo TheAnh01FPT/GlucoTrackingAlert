@@ -21,8 +21,15 @@ public class PageController {
         return "homepage/homepage";
     }
 
+    // Sửa lỗi: template doctor/dashboard không tồn tại, dùng chung homepage
     @GetMapping("/doctor/homepage")
     public String doctorDashboard() {
-        return "doctor/dashboard";
+        return "homepage/homepage";
     }
+
+    @GetMapping("/meal-logs")
+    public String mealLogsPage() {
+        return "meal-logs";
+    }
+
 }
