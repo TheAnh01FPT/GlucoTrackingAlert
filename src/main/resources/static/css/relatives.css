@@ -1,0 +1,361 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --bg-gradient: linear-gradient(135deg, #f0f7f7 0%, #e6f0fa 100%);
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --primary-color: #0d8a8a;
+    --primary-hover: #0a6b6b;
+    --primary-light: #e6f4f4;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    
+    --shadow-premium: 0 10px 30px -5px rgba(0, 138, 138, 0.08), 0 8px 20px -6px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 20px 40px -5px rgba(0, 138, 138, 0.15), 0 12px 25px -6px rgba(0, 0, 0, 0.06);
+    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    background-attachment: fixed;
+}
+
+.relatives-container {
+    width: 100%;
+    max-width: 950px;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--shadow-premium);
+    transition: var(--transition-smooth);
+}
+
+.relatives-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 20px;
+}
+
+.brand-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0d8a8a 0%, #0284c7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    font-size: 32px;
+}
+
+.actions-nav {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    padding: 12px 22px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d8a8a 0%, #0a7c7c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(13, 138, 138, 0.25);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0a7c7c 0%, #086363 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(13, 138, 138, 0.35);
+}
+
+.btn-secondary {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-main);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+/* Sub-panel Title */
+.panel-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Empty State Styling */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 2px dashed rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.empty-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.empty-desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto 20px auto;
+}
+
+/* Relatives Grid */
+.relatives-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .relatives-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Relative Glass Card */
+.relative-card {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.01);
+}
+
+.relative-card:hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(13, 138, 138, 0.05);
+}
+
+.relative-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.relative-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.relationship-badge {
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 12px;
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+/* Switch styling for notification toggle */
+.notify-toggle-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 10px 16px;
+    border-radius: 12px;
+    margin-top: 15px;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.toggle-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Action button icons */
+.card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+    padding-top: 14px;
+}
+
+.action-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.btn-edit-icon {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+.btn-edit-icon:hover {
+    background: #dcfce7;
+    transform: scale(1.05);
+}
+
+.btn-delete-icon {
+    background: #fef2f2;
+    color: #dc2626;
+}
+.btn-delete-icon:hover {
+    background: #fee2e2;
+    transform: scale(1.05);
+}
+
+/* Styled Switch toggle button */
+.switch-btn {
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+}
+.switch-on {
+    background: #10b981;
+    color: white;
+}
+.switch-off {
+    background: #cbd5e1;
+    color: #475569;
+}
+
+/* Detail items list inside card */
+.card-detail-item {
+    display: flex;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.card-detail-icon {
+    opacity: 0.8;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.7);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--text-main);
+    transition: var(--transition-smooth);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(13, 138, 138, 0.1);
+}
+
+.form-input-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.error-text {
+    color: #ef4444;
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-top: 6px;
+    display: block;
+}
+
+.error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
