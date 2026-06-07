@@ -9,8 +9,16 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "patients")
+<<<<<<< HEAD
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
+=======
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+>>>>>>> a1aaa242d7291ef7cdf29e1bb5acf5dea9d311b0
 public class Patient {
 
     @Id
@@ -51,9 +59,12 @@ public class Patient {
     @Builder.Default
     private String status = "active";
 
+<<<<<<< HEAD
     @Column(name = "patient_type", length = 20)
     private String patientType;
 
+=======
+>>>>>>> a1aaa242d7291ef7cdf29e1bb5acf5dea9d311b0
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -63,7 +74,10 @@ public class Patient {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+<<<<<<< HEAD
         updatedAt = LocalDateTime.now();
+=======
+>>>>>>> a1aaa242d7291ef7cdf29e1bb5acf5dea9d311b0
     }
 
     @PreUpdate
