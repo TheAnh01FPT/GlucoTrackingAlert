@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ sức khỏe bệnh nhân | GlucoTrack</title>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+</head>
+<body>
+
+    <div class="profile-wrapper">
+        <!-- Header -->
+        <div class="profile-header">
+            <h1 class="brand-title">
+                <span class="brand-icon">🩸</span> GlucoTrack
+            </h1>
+            <div style="display: flex; gap: 12px;">
+                <!-- Back to Home Button -->
+                <a th:href="@{/patient/home}" class="action-btn btn-secondary">
+                    🏠 Trang chủ
+                </a>
+                <a th:href="@{/patient/profile/edit}" class="action-btn btn-primary">
+                    ✏️ Chỉnh sửa hồ sơ
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="profile-grid">
+            
+            <!-- Left Card: Personal Profile -->
+            <div class="info-card">
+                <h2 class="card-title">👤 Thông tin cá nhân</h2>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Họ và tên</span>
+                    <span class="detail-value" th:text="${profile.fullName}">Nguyen Van A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email tài khoản</span>
+                    <span class="detail-value" th:text="${profile.email}">email@example.com</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Ngày sinh</span>
+                    <span class="detail-value" th:text="${profile.dateOfBirth}">1995-10-15</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tuổi</span>
+                    <span class="detail-value" th:text="${profile.age != null ? profile.age + ' tuổi' : 'Chưa cập nhật'}">30 tuổi</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Giới tính</span>
+                    <span class="detail-value" th:text="${profile.gender != null ? profile.gender : 'Chưa cập nhật'}">Nam</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Số điện thoại</span>
+                    <span class="detail-value" th:text="${profile.phone != null ? profile.phone : 'Chưa cập nhật'}">0987654321</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Địa chỉ</span>
+                    <span class="detail-value" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Đà Nẵng</span>
+                </div>
+            </div>
+
+            <!-- Right Card: Health Indicators & BMI -->
+            <div class="info-card">
+                <h2 class="card-title">⚖️ Chỉ số cơ thể & BMI</h2>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Chiều cao</span>
+                    <span class="detail-value" th:text="${profile.heightCm != null ? profile.heightCm + ' cm' : 'Chưa nhập'}">170 cm</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Cân nặng</span>
+                    <span class="detail-value" th:text="${profile.weightKg != null ? profile.weightKg + ' kg' : 'Chưa nhập'}">65 kg</span>
+                </div>
+
+                <!-- BMI Evaluation Box -->
+                <div class="bmi-box" th:if="${profile.bmi != null}">
+                    <span class="detail-label">Chỉ số khối cơ thể (BMI)</span>
+                    <div class="bmi-value-large" th:text="${profile.bmi}">22.49</div>
+                    
+                    <!-- Conditions for BMI Badges -->
+                    <div th:if="${profile.bmi < 18.5}" class="bmi-badge bmi-underweight">Thiếu cân (Underweight)</div>
+                    <div th:if="${profile.bmi >= 18.5 && profile.bmi < 25}" class="bmi-badge bmi-normal">Bình thường (Normal)</div>
+                    <div th:if="${profile.bmi >= 25 && profile.bmi < 30}" class="bmi-badge bmi-overweight">Thừa cân (Overweight)</div>
+                    <div th:if="${profile.bmi >= 30}" class="bmi-badge bmi-obese">Béo phì (Obese)</div>
+                    
+                    <!-- Interactive Visual Range Bar -->
+                    <div class="bmi-range-bar">
+                        <div class="bmi-marker" 
+                             th:with="pos=${(profile.bmi - 15) / 20 * 100}"
+                             th:style="'left: ' + ${pos < 0 ? 0 : (pos > 100 ? 100 : pos)} + '%'">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bmi-box" th:unless="${profile.bmi != null}">
+                    <span class="detail-label">BMI</span>
+                    <p style="margin-top: 10px; color: var(--text-muted); font-style: italic; font-size: 14px;">
+                        Hãy cập nhật chiều cao và cân nặng để tính BMI tự động.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
