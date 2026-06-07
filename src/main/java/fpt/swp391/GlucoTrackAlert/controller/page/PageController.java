@@ -18,7 +18,7 @@ public class PageController {
 
     @GetMapping("/patient/homepage")
     public String patientDashboard() {
-        return "homepage/homepage";
+        return "patient/home";
     }
 
     @GetMapping("/doctor/homepage")
