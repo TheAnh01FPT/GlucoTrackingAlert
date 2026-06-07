@@ -644,13 +644,13 @@
                             
                             <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">30/05/2026</td>
                             
-                            <!-- Blood Sugar status badge coloring -->
+                            <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
                             <td>
                                 <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
-                                <span th:if="${log.bloodSugar != null}" 
-                                      th:class="${log.bloodSugar > 7.0 || log.bloodSugar < 3.9} ? 'value-badge badge-danger' : 'value-badge badge-success'"
-                                      th:text="${log.bloodSugar}">
-                                    5.6
+                                <span th:if="${log.bloodSugar != null}"
+                                      th:class="${log.bloodSugarStatus == 'normal' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'warning' ? 'value-badge badge-warning' : 'value-badge badge-danger')}"
+                                      th:text="${log.bloodSugar}"
+                                      th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
                                 </span>
                             </td>
                             

@@ -3,10 +3,11 @@ package fpt.swp391.GlucoTrackAlert.service.impl;
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogRequest;
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
 import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
-import fpt.swp391.GlucoTrackAlert.model.Patient;
+import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
+import fpt.swp391.GlucoTrackAlert.util.BloodSugarThreshold;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -97,8 +98,10 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .symptoms(log.getSymptoms())
                 .note(log.getNote())
                 .createdAt(log.getCreatedAt())
-                .updatedAt(log.getUpdatedAt())
-                .build();
+            .updatedAt(log.getUpdatedAt())
+            .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
+            .bloodSugarStatus(BloodSugarThreshold.evaluate(log.getBloodSugar(), log.getPatient() != null ? log.getPatient().getPatientType() : null))
+            .build();
     }
 
     private DailyHealthLog toEntity(DailyHealthLogRequest request) {

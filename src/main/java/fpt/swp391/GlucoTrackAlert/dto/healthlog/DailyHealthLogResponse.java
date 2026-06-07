@@ -23,6 +23,8 @@ public class DailyHealthLogResponse {
     private String sugarConsumptionLevel;
     private String symptoms;
     private String note;
+    private String bloodSugarStatus;
+    private String patientType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
