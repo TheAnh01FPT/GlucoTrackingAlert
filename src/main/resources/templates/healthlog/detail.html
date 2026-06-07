@@ -341,7 +341,7 @@
 
             <div class="detail-body">
                 <!-- Smart Alert Banners -->
-                <div th:if="${log.bloodSugar != null && log.bloodSugar > 7.0}" class="alert-banner alert-banner-danger">
+                <div th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'danger')}" class="alert-banner alert-banner-danger">
                     <span>⚠️</span>
                     <div>
                         <strong>Cảnh Báo: Chỉ Số Đường Huyết Cao</strong>
@@ -368,7 +368,7 @@
                     </div>
                 </div>
 
-                <div th:if="${log.bloodSugar != null && log.bloodSugar >= 3.9 && log.bloodSugar <= 7.0 && (log.systolic == null || log.systolic <= 130)}" 
+                <div th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'normal') && (log.systolic == null || log.systolic <= 130)}" 
                      class="alert-banner alert-banner-success">
                     <span>✔</span>
                     <div>
@@ -385,7 +385,9 @@
                         <div class="metric-icon">🩸</div>
                         <div class="metric-details">
                             <span class="metric-name">Đường Huyết</span>
-                            <span class="metric-value" th:text="${log.bloodSugar != null ? log.bloodSugar + ' mmol/L' : '--'}">5.60 mmol/L</span>
+                                <span class="metric-value" th:text="${log.bloodSugar != null ? log.bloodSugar + ' mmol/L' : '--'}"
+                                    th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
+                                </span>
                         </div>
                     </div>
 

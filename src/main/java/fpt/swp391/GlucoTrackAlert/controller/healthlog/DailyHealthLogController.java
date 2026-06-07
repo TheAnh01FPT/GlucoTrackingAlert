@@ -2,7 +2,7 @@ package fpt.swp391.GlucoTrackAlert.controller.healthlog;
 
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogRequest;
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
-import fpt.swp391.GlucoTrackAlert.model.Patient;
+import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -78,6 +81,7 @@ public class DailyHealthLogController {
             model.addAttribute("totalElements", logsPage.getTotalElements());
             model.addAttribute("pageSize", size);
             model.addAttribute("selectedUserId", selectedPatientId);
+            model.addAttribute("selectedPatientId", selectedPatientId);
         } else {
             model.addAttribute("logs", Collections.emptyList());
             model.addAttribute("currentPage", 0);
@@ -85,6 +89,7 @@ public class DailyHealthLogController {
             model.addAttribute("totalElements", 0L);
             model.addAttribute("pageSize", size);
             model.addAttribute("selectedUserId", null);
+            model.addAttribute("selectedPatientId", null);
         }
 
         return "healthlog/list";
@@ -122,7 +127,7 @@ public class DailyHealthLogController {
             if (patientOpt.isPresent()) {
                 selectedPatient = patientOpt.get();
             }
-            
+
             Pageable pageable = PageRequest.of(page, size);
             Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(selectedPatientId, pageable);
             model.addAttribute("logs", logsPage.getContent());
@@ -131,6 +136,7 @@ public class DailyHealthLogController {
             model.addAttribute("totalElements", logsPage.getTotalElements());
             model.addAttribute("pageSize", size);
             model.addAttribute("selectedUserId", selectedPatientId);
+            model.addAttribute("selectedPatientId", selectedPatientId);
         } else {
             model.addAttribute("logs", Collections.emptyList());
             model.addAttribute("currentPage", 0);
@@ -138,8 +144,9 @@ public class DailyHealthLogController {
             model.addAttribute("totalElements", 0L);
             model.addAttribute("pageSize", size);
             model.addAttribute("selectedUserId", null);
+            model.addAttribute("selectedPatientId", null);
         }
-        
+
         model.addAttribute("selectedPatient", selectedPatient);
         return "healthlog/doctor-view";
     }
@@ -182,12 +189,27 @@ public class DailyHealthLogController {
     }
 
     @PostMapping("/create")
-    public String createLog(@RequestParam Long userId, @ModelAttribute("log") DailyHealthLogRequest request) {
+    public String createLog(@RequestParam Long userId,
+            @RequestParam(required = false) String source,
+            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
+            redirectAttributes.addFlashAttribute("log", request);
+            return "redirect:/health-logs/create?userId=" + userId;
+        }
+
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
-            throw new RuntimeException("Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
+            return "redirect:/health-logs?userId=" + userId;
         }
+
         dailyHealthLogService.createLog(patientId, request);
+        if ("my-logs".equals(source)) {
+            return "redirect:/health-logs/my-logs?userId=" + userId;
+        }
         return "redirect:/health-logs?userId=" + userId;
     }
 
@@ -215,14 +237,31 @@ public class DailyHealthLogController {
     @PostMapping("/{id}/edit")
     public String updateLog(@PathVariable Long id,
             @RequestParam Long userId,
-            @ModelAttribute("log") DailyHealthLogRequest request) {
+            @RequestParam(required = false) String source,
+            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
+            redirectAttributes.addFlashAttribute("log", request);
+            return "redirect:/health-logs/" + id + "/edit?userId=" + userId;
+        }
+
         dailyHealthLogService.updateLog(id, request);
+        if ("my-logs".equals(source)) {
+            return "redirect:/health-logs/my-logs?userId=" + userId;
+        }
         return "redirect:/health-logs?userId=" + userId;
     }
 
     @PostMapping("/{id}/delete")
-    public String deleteLog(@PathVariable Long id, @RequestParam Long userId) {
+    public String deleteLog(@PathVariable Long id,
+            @RequestParam Long userId,
+            @RequestParam(required = false) String source) {
         dailyHealthLogService.deleteLog(id);
+        if ("my-logs".equals(source)) {
+            return "redirect:/health-logs/my-logs?userId=" + userId;
+        }
         return "redirect:/health-logs?userId=" + userId;
     }
 
@@ -250,9 +289,11 @@ public class DailyHealthLogController {
                     endDate);
             model.addAttribute("chartData", chartData);
             model.addAttribute("selectedUserId", selectedPatientId);
+            model.addAttribute("selectedPatientId", selectedPatientId);
         } else {
             model.addAttribute("chartData", Collections.emptyList());
             model.addAttribute("selectedUserId", null);
+            model.addAttribute("selectedPatientId", null);
         }
 
         model.addAttribute("from", startDate);

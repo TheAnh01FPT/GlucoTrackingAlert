@@ -1,6 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.model;
 
 import jakarta.persistence.*;
+import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;

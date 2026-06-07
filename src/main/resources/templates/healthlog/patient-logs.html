@@ -434,7 +434,7 @@
                 📋 Nhật Ký Sức Khỏe Của Tôi
             </div>
             <div class="actions">
-                <a th:href="@{/health-logs/create(userId=${userId})}"
+                <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}"
                    class="btn btn-primary">
                     ➕ Ghi Nhật Ký Mới
                 </a>
@@ -500,23 +500,13 @@
                             
                             <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">30/05/2026</td>
                             
-                            <!-- Blood Sugar status badge coloring -->
+                            <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
                             <td>
                                 <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
-                                <span th:if="${log.bloodSugar != null && log.bloodSugar < 5.6}" 
-                                      class="value-badge badge-success"
-                                      th:text="${log.bloodSugar}">
-                                    4.5
-                                </span>
-                                <span th:if="${log.bloodSugar != null && log.bloodSugar >= 5.6 && log.bloodSugar <= 7.0}" 
-                                      class="value-badge badge-warning"
-                                      th:text="${log.bloodSugar}">
-                                    6.0
-                                </span>
-                                <span th:if="${log.bloodSugar != null && log.bloodSugar > 7.0}" 
-                                      class="value-badge badge-danger"
-                                      th:text="${log.bloodSugar}">
-                                    8.0
+                                <span th:if="${log.bloodSugar != null}"
+                                      th:class="${log.bloodSugarStatus == 'normal' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'warning' ? 'value-badge badge-warning' : 'value-badge badge-danger')}"
+                                      th:text="${log.bloodSugar}"
+                                      th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
                                 </span>
                             </td>
                             
@@ -555,9 +545,9 @@
                                     <!-- View Detail -->
                                     <a th:href="@{/health-logs/{id}(id=${log.id})}" class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
                                     <!-- Edit -->
-                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id})}" class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
+                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
                                     <!-- Delete -->
-                                    <form th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId})}" method="POST" 
+                                    <form th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}" method="POST"
                                           style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
                                         <button type="submit" class="btn-action btn-delete" title="Xóa Nhật Ký">🗑️</button>
                                     </form>
