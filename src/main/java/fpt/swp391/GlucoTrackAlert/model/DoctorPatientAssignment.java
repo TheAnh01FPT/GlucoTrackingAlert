@@ -1,5 +1,6 @@
 package fpt.swp391.GlucoTrackAlert.model;
 
+import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,10 +11,6 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
-
-// ==========================================
-// DoctorPatientAssignment.java
-// ==========================================
 
 @Entity
 @Table(name = "doctor_patient_assignments")

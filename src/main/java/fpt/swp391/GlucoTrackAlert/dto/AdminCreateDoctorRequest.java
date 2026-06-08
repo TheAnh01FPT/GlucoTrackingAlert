@@ -34,4 +34,10 @@ public class AdminCreateDoctorRequest {
     private String phone;
     private String introduction;
     private String avatarUrl;
+
+    /** Số căn cước công dân */
+    private String nationalId;
+
+    /** Số chứng chỉ hành nghề */
+    private String practiceLicense;
 }

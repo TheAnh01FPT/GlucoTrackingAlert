@@ -4,13 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * DTO nhận data từ form Admin khi thêm / sửa bác sĩ.
- * userId bắt buộc khi tạo mới (phải chọn user đã có trong hệ thống).
+ * DTO nhận data từ form Admin khi thêm / sửa bác sĩ. userId bắt buộc khi tạo
+ * mới (phải chọn user đã có trong hệ thống).
  */
 @Getter
 @Setter
 public class DoctorRequest {
-    private Integer userId;        // bắt buộc khi tạo mới
+
     private String fullName;
     private String specialization;
     private String degree;

@@ -1,7 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.controller;
 
-import fpt.swp391.GlucoTrackAlert.model.User;
-import fpt.swp391.GlucoTrackAlert.repository.UserRepository;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

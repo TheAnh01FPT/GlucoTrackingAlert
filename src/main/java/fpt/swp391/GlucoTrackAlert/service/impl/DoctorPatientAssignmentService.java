@@ -2,8 +2,11 @@ package fpt.swp391.GlucoTrackAlert.service.impl;
 
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
+import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
+import java.util.Map;
+import java.util.HashMap;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
-import fpt.swp391.GlucoTrackAlert.service.EmailService;
+import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -21,19 +24,14 @@ public class DoctorPatientAssignmentService {
     private final DoctorPatientAssignmentRepository assignmentRepository;
     private final EmailService emailService;
 
-    // Giờ làm việc lấy từ WorkShift – single source of truth cho toàn hệ thống
     private static final LocalTime WORK_START = WorkShift.START;
     private static final LocalTime WORK_END = WorkShift.END;
     private static final ScheduledExecutorService scheduler
             = Executors.newSingleThreadScheduledExecutor();
 
-    /**
-     * Số bệnh nhân active tối đa mà 1 bác sĩ được phép chăm sóc
-     */
     private static final int MAX_PATIENTS_PER_DOCTOR = 5;
 
     public DoctorPatientAssignment assignDoctor(DoctorPatientAssignment assignment) {
-        // Kiểm tra giới hạn 5 bệnh nhân/bác sĩ
         if (assignment.getDoctor() != null) {
             long activeCount = assignmentRepository.countByDoctorIdAndStatus(
                     assignment.getDoctor().getId(), "active");
@@ -45,15 +43,12 @@ public class DoctorPatientAssignmentService {
             }
         }
 
-        // Kiểm tra bệnh nhân đã có bác sĩ active chưa
         if (assignment.getPatient() != null
                 && assignmentRepository.existsByPatientIdAndStatus(
                         assignment.getPatient().getId(), "active")) {
             throw new RuntimeException("Trùng bệnh nhân: Bệnh nhân ID " + assignment.getPatient().getId() + " đã được phân công cho một bác sĩ khác đang hoạt động. Vui lòng hủy phân công cũ trước.");
         }
 
-        // Nếu đã từng có record (inactive) cho cặp bác sĩ - bệnh nhân này
-        // → reactivate thay vì INSERT mới (tránh duplicate key trên unique index)
         if (assignment.getDoctor() != null && assignment.getPatient() != null) {
             java.util.Optional<DoctorPatientAssignment> existing
                     = assignmentRepository.findByDoctorIdAndPatientId(
@@ -64,7 +59,7 @@ public class DoctorPatientAssignmentService {
                 old.setAssignedAt(LocalDateTime.now());
                 old.setNote(assignment.getNote());
                 DoctorPatientAssignment saved = assignmentRepository.save(old);
-                sendAssignmentNotification(saved); // gửi email khi reactivate
+                sendAssignmentNotification(saved);
                 return saved;
             }
         }
@@ -99,7 +94,6 @@ public class DoctorPatientAssignmentService {
         if (inWorkHours) {
             emailService.sendSimpleMessage(toEmail, subject, body);
         } else {
-            // Delay đến 08:00 sáng hôm sau
             LocalDateTime next8am = LocalDate.now().plusDays(1).atTime(WORK_START);
             long delaySec = java.time.Duration.between(LocalDateTime.now(), next8am).getSeconds();
             final String dest = toEmail;
@@ -117,7 +111,7 @@ public class DoctorPatientAssignmentService {
                 = assignmentRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Assignment not found"));
 
-        Integer targetPatientId = updatedAssignment.getPatient() != null
+        Long targetPatientId = updatedAssignment.getPatient() != null
                 ? updatedAssignment.getPatient().getId()
                 : (assignment.getPatient() != null ? assignment.getPatient().getId() : null);
 
@@ -128,9 +122,7 @@ public class DoctorPatientAssignmentService {
         boolean becomingActive = "active".equals(updatedAssignment.getStatus())
                 && !"active".equals(assignment.getStatus());
 
-        // Kiểm tra trùng nếu: đổi sang bệnh nhân khác, HOẶC reactivate lại record đã hủy
         if ((patientChanged || becomingActive) && targetPatientId != null) {
-            // Tìm record active khác (không phải chính record này)
             boolean conflict = assignmentRepository
                     .findByPatientIdAndStatus(targetPatientId, "active")
                     .stream()
@@ -153,6 +145,26 @@ public class DoctorPatientAssignmentService {
                         .orElseThrow(() -> new RuntimeException("Assignment not found"));
         assignment.setStatus("inactive");
         assignmentRepository.save(assignment);
+    }
+
+    public List<Map<String, Object>> getPatientsByDoctor(Integer doctorId) {
+        return assignmentRepository
+                .findByDoctorIdAndStatus(doctorId, "active")
+                .stream()
+                .map(a -> {
+                    Patient p = a.getPatient();
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", p.getId());
+                    map.put("fullName", p.getFullName());
+                    map.put("phone", p.getPhone());
+                    map.put("gender", p.getGender());
+                    map.put("age", p.getAge());
+                    map.put("address", p.getAddress());
+                    map.put("status", p.getStatus());
+                    map.put("email", p.getUser() != null ? p.getUser().getEmail() : null);
+                    return map;
+                })
+                .toList();
     }
 
     public void hardDeleteAssignment(Integer id) {

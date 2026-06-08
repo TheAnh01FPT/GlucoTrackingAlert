@@ -1,6 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,11 +13,11 @@ import java.time.LocalDateTime;
 @Setter
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Doctor {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // Liên kết users (user_id NOT NULL UNIQUE)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -34,6 +35,11 @@ public class Doctor {
     private String introduction;
 
     private String avatarUrl;
+
+    @Column(unique = true)
+    private String nationalId;       // Căn cước công dân
+
+    private String practiceLicense;  // Chứng chỉ hành nghề
     private String status = "active";
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

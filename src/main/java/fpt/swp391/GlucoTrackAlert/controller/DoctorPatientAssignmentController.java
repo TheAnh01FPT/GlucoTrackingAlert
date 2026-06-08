@@ -1,5 +1,6 @@
 package fpt.swp391.GlucoTrackAlert.controller;
 
+import fpt.swp391.GlucoTrackAlert.dto.AssignmentResponse;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;
 import java.util.List;
@@ -16,11 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// ==========================================
-// 12. CRUD PHÂN CÔNG BÁC SĨ
-// DoctorPatientAssignmentController.java
-// ==========================================
-
 @RestController
 @RequestMapping("/api/assignments")
 @RequiredArgsConstructor
@@ -28,50 +24,47 @@ public class DoctorPatientAssignmentController {
 
     private final DoctorPatientAssignmentService assignmentService;
 
-    // CREATE ASSIGNMENT
     @PostMapping
-    public ResponseEntity<DoctorPatientAssignment> assignDoctor(
+    public ResponseEntity<AssignmentResponse> assignDoctor(
             @RequestBody DoctorPatientAssignment assignment
     ) {
         return ResponseEntity.ok(
-                assignmentService.assignDoctor(assignment)
+                AssignmentResponse.from(assignmentService.assignDoctor(assignment))
         );
     }
 
-    // GET ALL ASSIGNMENTS
     @GetMapping
-    public ResponseEntity<List<DoctorPatientAssignment>> getAllAssignments() {
+    public ResponseEntity<List<AssignmentResponse>> getAllAssignments() {
         return ResponseEntity.ok(
                 assignmentService.getAllAssignments()
+                        .stream()
+                        .map(AssignmentResponse::from)
+                        .toList()
         );
     }
 
-    // UPDATE ASSIGNMENT
     @PutMapping("/{id}")
-    public ResponseEntity<DoctorPatientAssignment> updateAssignment(
+    public ResponseEntity<AssignmentResponse> updateAssignment(
             @PathVariable Integer id,
             @RequestBody DoctorPatientAssignment assignment
     ) {
         return ResponseEntity.ok(
-                assignmentService.updateAssignment(id, assignment)
+                AssignmentResponse.from(assignmentService.updateAssignment(id, assignment))
         );
     }
 
-    // DELETE ASSIGNMENT (soft - chuyển inactive)
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAssignment(@PathVariable Integer id) {
         assignmentService.deleteAssignment(id);
         return ResponseEntity.ok("Assignment deleted");
     }
 
-    // HARD DELETE (xóa hẳn khỏi DB - chỉ cho phép với record đã inactive)
     @DeleteMapping("/{id}/permanent")
     public ResponseEntity<String> hardDeleteAssignment(@PathVariable Integer id) {
         assignmentService.hardDeleteAssignment(id);
         return ResponseEntity.ok("Assignment permanently deleted");
     }
 
-    // Trả về lỗi dạng plain text thay vì redirect sang /error HTML page
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

@@ -21,8 +21,18 @@ public class PageController {
         return "homepage/homepage";
     }
 
-    @GetMapping("/doctor/homepage")
+    @GetMapping({"/doctor/homepage", "/doctor/home"})
     public String doctorDashboard() {
-        return "doctor/dashboard";
+        return "doctor-home";
+    }
+
+    @GetMapping("/doctor/my-patients")
+    public String doctorMyPatients() {
+        return "my-patients";
+    }
+
+    @GetMapping("/doctor/settings")
+    public String doctorSettings() {
+        return "settings";
     }
 }

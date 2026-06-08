@@ -1,9 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.controller;
 
-import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
-import fpt.swp391.GlucoTrackAlert.model.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
+import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,33 +10,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// ==========================================
-// 13. DOCTOR XEM DANH SÁCH BỆNH NHÂN
-// DoctorPatientController.java
-// ==========================================
-
 @RestController
 @RequestMapping("/api/doctor")
 @RequiredArgsConstructor
 public class DoctorPatientController {
 
-    private final DoctorPatientAssignmentRepository assignmentRepository;
+    private final DoctorPatientAssignmentService assignmentService;
 
     @GetMapping("/{doctorId}/patients")
-    public ResponseEntity<List<Patient>> getPatientsByDoctor(
+    public ResponseEntity<List<Map<String, Object>>> getPatientsByDoctor(
             @PathVariable Integer doctorId
     ) {
-
-        List<DoctorPatientAssignment> assignments =
-                assignmentRepository.findByDoctorIdAndStatus(
-                        doctorId,
-                        "active"
-                );
-
-        List<Patient> patients = assignments.stream()
-                .map(DoctorPatientAssignment::getPatient)
-                .toList();
-
-        return ResponseEntity.ok(patients);
+        return ResponseEntity.ok(assignmentService.getPatientsByDoctor(doctorId));
     }
 }
