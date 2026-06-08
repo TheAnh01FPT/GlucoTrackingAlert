@@ -709,7 +709,7 @@
                             <td>
                                 <div class="action-links">
                                     <!-- View Detail -->
-                                    <a th:href="@{/health-logs/{id}(id=${log.id})}" class="btn-action btn-view"
+                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${selectedUserId}, source='my-logs')}" class="btn-action btn-view"
                                         title="Xem Chi Tiết">👁️</a>
                                     <!-- Edit -->
                                     <a th:href="@{/health-logs/{id}/edit(id=${log.id})}" class="btn-action btn-edit"

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,6 +51,33 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .navbar-brand:hover {
+            opacity: 0.9;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .navbar-link:hover,
+        .navbar-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         /* Main Container */
@@ -61,8 +89,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .back-nav {
@@ -130,6 +165,7 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
+
             .form-group-full {
                 grid-column: span 1;
             }
@@ -238,18 +274,23 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Header Navigation -->
     <header class="navbar">
-        <div class="navbar-brand">
+        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
             🩸 GlucoTrackAlert
-        </div>
+        </a>
+        <nav class="navbar-menu">
+            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
+            <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+        </nav>
     </header>
 
     <main class="main-container">
         <!-- Back navigation link -->
-        <a th:href="@{/health-logs(userId=${userId})}" class="back-nav">
+        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="back-nav">
             ← Hủy bỏ & Quay lại
         </a>
 
@@ -257,7 +298,9 @@
         <div class="form-card">
             <div class="form-header">
                 <div>
-                    <h1 class="form-title" th:text="${action.contains('edit') ? '✏️ Cập Nhật Chỉ Số Sức Khỏe' : '➕ Ghi Nhận Chỉ Số Sức Khỏe'}">Ghi Nhận Chỉ Số Sức Khỏe</h1>
+                    <h1 class="form-title"
+                        th:text="${action.contains('edit') ? '✏️ Cập Nhật Chỉ Số Sức Khỏe' : '➕ Ghi Nhận Chỉ Số Sức Khỏe'}">
+                        Ghi Nhận Chỉ Số Sức Khỏe</h1>
                     <div class="form-subtitle">Điền đầy đủ thông tin bên dưới để lưu trữ dữ liệu theo dõi y khoa.</div>
                 </div>
                 <div style="font-size: 2rem;">📝</div>
@@ -265,9 +308,9 @@
 
             <div class="form-body">
                 <form th:action="@{${action}}" th:object="${log}" method="POST">
-                    
+
                     <div class="form-grid">
-                        
+
                         <!-- Log Date -->
                         <div class="form-group form-group-full">
                             <label class="form-label" for="logDate">Ngày Ghi Nhật Ký *</label>
@@ -278,8 +321,8 @@
                         <div class="form-group">
                             <label class="form-label" for="bloodSugar">Đường Huyết (mmol/L)</label>
                             <div class="input-wrapper">
-                                <input type="number" step="0.01" id="bloodSugar" th:field="*{bloodSugar}" 
-                                       class="form-input form-input-unit" placeholder="Ví dụ: 5.60" min="0" max="50" />
+                                <input type="number" step="0.01" id="bloodSugar" th:field="*{bloodSugar}"
+                                    class="form-input form-input-unit" placeholder="Ví dụ: 5.60" min="0" max="50" />
                                 <span class="input-unit">mmol/L</span>
                             </div>
                         </div>
@@ -288,8 +331,8 @@
                         <div class="form-group">
                             <label class="form-label" for="sleepHours">Giờ Ngủ (tiếng)</label>
                             <div class="input-wrapper">
-                                <input type="number" step="0.01" id="sleepHours" th:field="*{sleepHours}" 
-                                       class="form-input form-input-unit" placeholder="Ví dụ: 7.50" min="0" max="24" />
+                                <input type="number" step="0.01" id="sleepHours" th:field="*{sleepHours}"
+                                    class="form-input form-input-unit" placeholder="Ví dụ: 7.50" min="0" max="24" />
                                 <span class="input-unit">giờ</span>
                             </div>
                         </div>
@@ -298,8 +341,8 @@
                         <div class="form-group">
                             <label class="form-label" for="systolic">Huyết Áp Tâm Thu (Systolic)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="systolic" th:field="*{systolic}" 
-                                       class="form-input form-input-unit" placeholder="Ví dụ: 120" min="50" max="250" />
+                                <input type="number" id="systolic" th:field="*{systolic}"
+                                    class="form-input form-input-unit" placeholder="Ví dụ: 120" min="50" max="250" />
                                 <span class="input-unit">mmHg</span>
                             </div>
                         </div>
@@ -308,8 +351,8 @@
                         <div class="form-group">
                             <label class="form-label" for="diastolic">Huyết Áp Tâm Trương (Diastolic)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="diastolic" th:field="*{diastolic}" 
-                                       class="form-input form-input-unit" placeholder="Ví dụ: 80" min="30" max="150" />
+                                <input type="number" id="diastolic" th:field="*{diastolic}"
+                                    class="form-input form-input-unit" placeholder="Ví dụ: 80" min="30" max="150" />
                                 <span class="input-unit">mmHg</span>
                             </div>
                         </div>
@@ -318,8 +361,8 @@
                         <div class="form-group">
                             <label class="form-label" for="waterMl">Lượng Nước Tiêu Thụ (ml)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="waterMl" th:field="*{waterMl}" 
-                                       class="form-input form-input-unit" placeholder="Ví dụ: 2000" min="0" max="20000" />
+                                <input type="number" id="waterMl" th:field="*{waterMl}"
+                                    class="form-input form-input-unit" placeholder="Ví dụ: 2000" min="0" max="20000" />
                                 <span class="input-unit">ml</span>
                             </div>
                         </div>
@@ -337,22 +380,22 @@
                         <!-- Symptoms -->
                         <div class="form-group form-group-full">
                             <label class="form-label" for="symptoms">Triệu Chứng Ghi Nhận</label>
-                            <textarea id="symptoms" th:field="*{symptoms}" class="form-input" 
-                                      placeholder="Ví dụ: Đau đầu, mệt mỏi, thèm ngọt, chóng mặt,..."></textarea>
+                            <textarea id="symptoms" th:field="*{symptoms}" class="form-input"
+                                placeholder="Ví dụ: Đau đầu, mệt mỏi, thèm ngọt, chóng mặt,..."></textarea>
                         </div>
 
                         <!-- Note -->
                         <div class="form-group form-group-full">
                             <label class="form-label" for="note">Ghi Chú Nhắc Nhở</label>
-                            <textarea id="note" th:field="*{note}" class="form-input" 
-                                      placeholder="Ví dụ: Thực đơn hôm nay có nhiều rau xanh, tập thể dục nhẹ nhàng..."></textarea>
+                            <textarea id="note" th:field="*{note}" class="form-input"
+                                placeholder="Ví dụ: Thực đơn hôm nay có nhiều rau xanh, tập thể dục nhẹ nhàng..."></textarea>
                         </div>
 
                     </div>
 
                     <!-- Actions -->
                     <div class="form-actions">
-                        <a th:href="@{/health-logs(userId=${userId})}" class="btn btn-cancel">Hủy Bỏ</a>
+                        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="btn btn-cancel">Hủy Bỏ</a>
                         <button type="submit" class="btn btn-submit">💾 Lưu Chỉ Số Sức Khỏe</button>
                     </div>
 
@@ -362,4 +405,5 @@
     </main>
 
 </body>
+
 </html>

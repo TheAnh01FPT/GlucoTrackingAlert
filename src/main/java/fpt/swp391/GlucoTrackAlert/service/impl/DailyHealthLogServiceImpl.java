@@ -87,6 +87,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         return DailyHealthLogResponse.builder()
                 .id(log.getId())
                 .patientId(log.getPatient() != null ? log.getPatient().getId() : null)
+                .userId(log.getPatient() != null && log.getPatient().getUser() != null
+                    ? log.getPatient().getUser().getId() : null)
                 .patientName(log.getPatient() != null ? log.getPatient().getFullName() : null)
                 .logDate(log.getLogDate())
                 .bloodSugar(log.getBloodSugar())
@@ -98,10 +100,11 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .symptoms(log.getSymptoms())
                 .note(log.getNote())
                 .createdAt(log.getCreatedAt())
-            .updatedAt(log.getUpdatedAt())
-            .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
-            .bloodSugarStatus(BloodSugarThreshold.evaluate(log.getBloodSugar(), log.getPatient() != null ? log.getPatient().getPatientType() : null))
-            .build();
+                .updatedAt(log.getUpdatedAt())
+                .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
+                .bloodSugarStatus(BloodSugarThreshold.evaluate(log.getBloodSugar(),
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null))
+                .build();
     }
 
     private DailyHealthLog toEntity(DailyHealthLogRequest request) {

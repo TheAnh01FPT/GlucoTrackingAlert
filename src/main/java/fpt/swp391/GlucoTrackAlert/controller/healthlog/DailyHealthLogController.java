@@ -4,6 +4,10 @@ import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogRequest;
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
+import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,6 +33,7 @@ public class DailyHealthLogController {
 
     private final DailyHealthLogService dailyHealthLogService;
     private final PatientRepository patientRepository;
+    private final UserRepository userRepository;
 
     private Long resolvePatientId(Long userId) {
         if (userId == null) {
@@ -44,6 +49,38 @@ public class DailyHealthLogController {
             return userId;
         }
         return null;
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return null;
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        return user != null ? user.getId() : null;
+    }
+
+    private Long getCurrentPatientId() {
+        Long userId = getCurrentUserId();
+        if (userId == null) return null;
+        Optional<Patient> patientOpt = patientRepository.findByUserId(userId);
+        return patientOpt.map(Patient::getId).orElse(null);
+    }
+
+    private boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+    }
+
+    private boolean checkOwnership(Long logPatientId) {
+        Long currentPatientId = getCurrentPatientId();
+        if (currentPatientId != null && currentPatientId.equals(logPatientId)) {
+            return true;
+        }
+        if (hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR")) {
+            return true;
+        }
+        return false;
     }
 
     @GetMapping
@@ -171,9 +208,23 @@ public class DailyHealthLogController {
         return "healthlog/patient-logs";
     }
 
-    @GetMapping("/{id}")
-    public String getLogById(@PathVariable Long id, Model model) {
-        DailyHealthLogResponse log = dailyHealthLogService.getLogById(id);
+    @GetMapping("/detail")
+    public String getLogById(@RequestParam Long logId,
+                             @RequestParam(required = false) Long userId,
+                             @RequestParam(required = false) String source,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        DailyHealthLogResponse log = dailyHealthLogService.getLogById(logId);
+        if (log == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
+            return "redirect:/health-logs";
+        }
+        if (!checkOwnership(log.getPatientId())) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập nhật ký này");
+            Long curUserId = getCurrentUserId();
+            if (curUserId == null) curUserId = userId;
+            return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
+        }
         model.addAttribute("log", log);
         return "healthlog/detail";
     }
@@ -184,7 +235,7 @@ public class DailyHealthLogController {
         request.setLogDate(LocalDate.now());
         model.addAttribute("log", request);
         model.addAttribute("userId", userId);
-        model.addAttribute("action", "/health-logs/create?userId=" + userId);
+        model.addAttribute("action", "/health-logs/create?userId=" + userId + "&source=my-logs");
         return "healthlog/form";
     }
 
@@ -197,12 +248,20 @@ public class DailyHealthLogController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
             redirectAttributes.addFlashAttribute("log", request);
-            return "redirect:/health-logs/create?userId=" + userId;
+            String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
+            if ("my-logs".equals(source)) {
+                redirectUrl += "&source=my-logs";
+            }
+            return redirectUrl;
         }
 
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
+            redirectAttributes.addFlashAttribute("error",
+                    "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
+            if ("my-logs".equals(source)) {
+                return "redirect:/health-logs/my-logs?userId=" + userId;
+            }
             return "redirect:/health-logs?userId=" + userId;
         }
 
@@ -214,8 +273,21 @@ public class DailyHealthLogController {
     }
 
     @GetMapping("/{id}/edit")
-    public String editLogForm(@PathVariable Long id, Model model) {
+    public String editLogForm(@PathVariable Long id,
+            @RequestParam(required = false) String source,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
+
+        if (response == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
+            return "redirect:/health-logs";
+        }
+        if (!checkOwnership(response.getPatientId())) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập nhật ký này");
+            Long curUserId = getCurrentUserId();
+            return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
+        }
 
         DailyHealthLogRequest request = new DailyHealthLogRequest();
         request.setLogDate(response.getLogDate());
@@ -229,8 +301,12 @@ public class DailyHealthLogController {
         request.setNote(response.getNote());
 
         model.addAttribute("log", request);
-        model.addAttribute("userId", response.getPatientId());
-        model.addAttribute("action", "/health-logs/" + id + "/edit?userId=" + response.getPatientId());
+        model.addAttribute("userId", response.getUserId());
+        String actionUrl = "/health-logs/" + id + "/edit?userId=" + response.getUserId();
+        if ("my-logs".equals(source)) {
+            actionUrl += "&source=my-logs";
+        }
+        model.addAttribute("action", actionUrl);
         return "healthlog/form";
     }
 
@@ -244,7 +320,25 @@ public class DailyHealthLogController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
             redirectAttributes.addFlashAttribute("log", request);
-            return "redirect:/health-logs/" + id + "/edit?userId=" + userId;
+            String redirectUrl = "redirect:/health-logs/" + id + "/edit?userId=" + userId;
+            if ("my-logs".equals(source)) {
+                redirectUrl += "&source=my-logs";
+            }
+            return redirectUrl;
+        }
+
+        DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
+        if (response == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
+            return "redirect:/health-logs";
+        }
+        if (!checkOwnership(response.getPatientId())) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập nhật ký này");
+            Long curUserId = getCurrentUserId();
+            if ("my-logs".equals(source)) {
+                return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : userId);
+            }
+            return "redirect:/health-logs?userId=" + (curUserId != null ? curUserId : userId);
         }
 
         dailyHealthLogService.updateLog(id, request);
@@ -257,7 +351,19 @@ public class DailyHealthLogController {
     @PostMapping("/{id}/delete")
     public String deleteLog(@PathVariable Long id,
             @RequestParam Long userId,
-            @RequestParam(required = false) String source) {
+            @RequestParam(required = false) String source,
+            RedirectAttributes redirectAttributes) {
+        DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
+        if (response == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
+            return "redirect:/health-logs";
+        }
+        if (!checkOwnership(response.getPatientId())) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập nhật ký này");
+            Long curUserId = getCurrentUserId();
+            return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : userId);
+        }
+
         dailyHealthLogService.deleteLog(id);
         if ("my-logs".equals(source)) {
             return "redirect:/health-logs/my-logs?userId=" + userId;
@@ -299,5 +405,25 @@ public class DailyHealthLogController {
         model.addAttribute("from", startDate);
         model.addAttribute("to", endDate);
         return "healthlog/chart";
+    }
+
+    @GetMapping("/my-chart")
+    public String getMyChart(@RequestParam Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Model model) {
+        Long patientId = resolvePatientId(userId);
+        if (patientId == null)
+            patientId = userId;
+
+        LocalDate endDate = to != null ? to : LocalDate.now();
+        LocalDate startDate = from != null ? from : endDate.minusDays(30);
+
+        List<DailyHealthLogResponse> chartData = dailyHealthLogService.getChartData(patientId, startDate, endDate);
+        model.addAttribute("chartData", chartData);
+        model.addAttribute("userId", userId);
+        model.addAttribute("from", startDate);
+        model.addAttribute("to", endDate);
+        return "healthlog/my-chart";
     }
 }

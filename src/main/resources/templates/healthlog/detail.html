@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,8 +86,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .back-nav {
@@ -203,7 +211,7 @@
             justify-content: center;
             background-color: white;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         .metric-details {
@@ -310,22 +318,23 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Header Navigation -->
     <header class="navbar">
-        <a href="/health-logs" class="navbar-brand">
+        <a th:href="@{/health-logs/my-logs(userId=${log.userId})}" class="navbar-brand">
             🩸 GlucoTrackAlert
         </a>
         <nav class="navbar-menu">
-            <a href="/health-logs" class="navbar-link">Nhật Ký Đo</a>
-            <a th:href="@{/health-logs/chart(userId=${log.patientId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            <a th:href="@{/health-logs/my-logs(userId=${log.userId})}" class="navbar-link">Nhật Ký Đo</a>
+            <a th:href="@{/health-logs/my-chart(userId=${log.userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
         </nav>
     </header>
 
     <main class="main-container">
         <!-- Back navigation link -->
-        <a th:href="@{/health-logs(userId=${log.patientId})}" class="back-nav">
+        <a th:href="@{/health-logs/my-logs(userId=${log.userId})}" class="back-nav">
             ← Quay Lại Lịch Sử
         </a>
 
@@ -334,28 +343,33 @@
             <div class="detail-header">
                 <div>
                     <h1 class="detail-title">Nhật Ký Chỉ Số Y Tế</h1>
-                    <div class="detail-subtitle" th:text="${'Bệnh nhân: ' + log.patientName + ' | Ngày ghi: ' + #temporals.format(log.logDate, 'dd/MM/yyyy')}">30/05/2026</div>
+                    <div class="detail-subtitle"
+                        th:text="${'Bệnh nhân: ' + log.patientName + ' | Ngày ghi: ' + #temporals.format(log.logDate, 'dd/MM/yyyy')}">
+                        30/05/2026</div>
                 </div>
                 <div style="font-size: 2rem;">🗓️</div>
             </div>
 
             <div class="detail-body">
                 <!-- Smart Alert Banners -->
-                <div th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'danger')}" class="alert-banner alert-banner-danger">
+                <div th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'danger')}"
+                    class="alert-banner alert-banner-danger">
                     <span>⚠️</span>
                     <div>
                         <strong>Cảnh Báo: Chỉ Số Đường Huyết Cao</strong>
-                        <br/>
-                        Đường huyết ghi nhận đạt <span th:text="${log.bloodSugar}">7.50</span> mmol/L. Vui lòng giảm lượng đường tiêu thụ và tham vấn bác sĩ.
+                        <br />
+                        Đường huyết ghi nhận đạt <span th:text="${log.bloodSugar}">7.50</span> mmol/L. Vui lòng giảm
+                        lượng đường tiêu thụ và tham vấn bác sĩ.
                     </div>
                 </div>
-                
+
                 <div th:if="${log.bloodSugar != null && log.bloodSugar < 3.9}" class="alert-banner alert-banner-danger">
                     <span>⚠️</span>
                     <div>
                         <strong>Cảnh Báo: Chỉ Số Đường Huyết Thấp (Hạ Đường Huyết)</strong>
-                        <br/>
-                        Đường huyết ở mức nguy hiểm: <span th:text="${log.bloodSugar}">3.50</span> mmol/L. Hãy bổ sung đường nhanh và nghỉ ngơi ngay lập tức.
+                        <br />
+                        Đường huyết ở mức nguy hiểm: <span th:text="${log.bloodSugar}">3.50</span> mmol/L. Hãy bổ sung
+                        đường nhanh và nghỉ ngơi ngay lập tức.
                     </div>
                 </div>
 
@@ -363,17 +377,18 @@
                     <span>⚠️</span>
                     <div>
                         <strong>Lưu Ý: Huyết Áp Tâm Thu Cao</strong>
-                        <br/>
-                        Huyết áp ghi nhận: <span th:text="${log.systolic + '/' + log.diastolic}">135/85</span> mmHg. Tránh căng thẳng và làm việc quá sức.
+                        <br />
+                        Huyết áp ghi nhận: <span th:text="${log.systolic + '/' + log.diastolic}">135/85</span> mmHg.
+                        Tránh căng thẳng và làm việc quá sức.
                     </div>
                 </div>
 
-                <div th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'normal') && (log.systolic == null || log.systolic <= 130)}" 
-                     class="alert-banner alert-banner-success">
+                <div th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'normal') && (log.systolic == null || log.systolic <= 130)}"
+                    class="alert-banner alert-banner-success">
                     <span>✔</span>
                     <div>
                         <strong>Các Chỉ Số Trong Ngưỡng Bình Thường</strong>
-                        <br/>
+                        <br />
                         Tuyệt vời! Các chỉ số y tế đều nằm trong khoảng an toàn.
                     </div>
                 </div>
@@ -385,9 +400,10 @@
                         <div class="metric-icon">🩸</div>
                         <div class="metric-details">
                             <span class="metric-name">Đường Huyết</span>
-                                <span class="metric-value" th:text="${log.bloodSugar != null ? log.bloodSugar + ' mmol/L' : '--'}"
-                                    th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
-                                </span>
+                            <span class="metric-value"
+                                th:text="${log.bloodSugar != null ? log.bloodSugar + ' mmol/L' : '--'}"
+                                th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
+                            </span>
                         </div>
                     </div>
 
@@ -396,7 +412,9 @@
                         <div class="metric-icon">💓</div>
                         <div class="metric-details">
                             <span class="metric-name">Huyết Áp</span>
-                            <span class="metric-value" th:text="${log.systolic != null ? log.systolic + '/' + log.diastolic + ' mmHg' : '--'}">120/80 mmHg</span>
+                            <span class="metric-value"
+                                th:text="${log.systolic != null ? log.systolic + '/' + log.diastolic + ' mmHg' : '--'}">120/80
+                                mmHg</span>
                         </div>
                     </div>
 
@@ -405,7 +423,8 @@
                         <div class="metric-icon">🛌</div>
                         <div class="metric-details">
                             <span class="metric-name">Giờ Ngủ</span>
-                            <span class="metric-value" th:text="${log.sleepHours != null ? log.sleepHours + ' giờ' : '--'}">8.00 giờ</span>
+                            <span class="metric-value"
+                                th:text="${log.sleepHours != null ? log.sleepHours + ' giờ' : '--'}">8.00 giờ</span>
                         </div>
                     </div>
 
@@ -414,7 +433,8 @@
                         <div class="metric-icon">🥛</div>
                         <div class="metric-details">
                             <span class="metric-name">Nước Tiêu Thụ</span>
-                            <span class="metric-value" th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</span>
+                            <span class="metric-value"
+                                th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</span>
                         </div>
                     </div>
 
@@ -423,7 +443,8 @@
                         <div class="metric-icon">🍬</div>
                         <div class="metric-details">
                             <span class="metric-name">Đường Tiêu Thụ</span>
-                            <span class="metric-value" th:text="${log.sugarConsumptionLevel != null ? log.sugarConsumptionLevel : '--'}">low</span>
+                            <span class="metric-value"
+                                th:text="${log.sugarConsumptionLevel != null ? log.sugarConsumptionLevel : '--'}">low</span>
                         </div>
                     </div>
                 </div>
@@ -431,7 +452,8 @@
                 <!-- Symptoms -->
                 <div class="notes-section" style="margin-bottom: 1.5rem;">
                     <h3 class="notes-title">⚠️ Triệu Chứng Cơ Thể Ghi Nhận</h3>
-                    <p class="notes-content" th:text="${log.symptoms != null && !log.symptoms.isEmpty() ? log.symptoms : 'Không có ghi nhận triệu chứng lạ.'}">
+                    <p class="notes-content"
+                        th:text="${log.symptoms != null && !log.symptoms.isEmpty() ? log.symptoms : 'Không có ghi nhận triệu chứng lạ.'}">
                         Không triệu chứng...
                     </p>
                 </div>
@@ -439,23 +461,30 @@
                 <!-- Notes Section -->
                 <div class="notes-section">
                     <h3 class="notes-title">📝 Ghi Chú & Lời Khuyên</h3>
-                    <p class="notes-content" th:text="${log.note != null && !log.note.isEmpty() ? log.note : 'Không có ghi chú thêm.'}">
+                    <p class="notes-content"
+                        th:text="${log.note != null && !log.note.isEmpty() ? log.note : 'Không có ghi chú thêm.'}">
                         Không có ghi chú thêm.
                     </p>
                 </div>
 
                 <!-- Timestamps -->
                 <div class="timestamp-info">
-                    <span>Ngày tạo: <span th:text="${#temporals.format(log.createdAt, 'dd/MM/yyyy HH:mm:ss')}">30/05/2026 12:00:00</span></span>
-                    <span>Cập nhật mới nhất: <span th:text="${#temporals.format(log.updatedAt, 'dd/MM/yyyy HH:mm:ss')}">30/05/2026 14:00:00</span></span>
+                    <span>Ngày tạo: <span
+                            th:text="${#temporals.format(log.createdAt, 'dd/MM/yyyy HH:mm:ss')}">30/05/2026
+                            12:00:00</span></span>
+                    <span>Cập nhật mới nhất: <span
+                            th:text="${#temporals.format(log.updatedAt, 'dd/MM/yyyy HH:mm:ss')}">30/05/2026
+                            14:00:00</span></span>
                 </div>
 
                 <!-- Actions Footer -->
                 <div class="detail-actions">
-                    <a th:href="@{/health-logs/{id}/edit(id=${log.id})}" class="btn btn-edit">✏️ Chỉnh Sửa Chỉ Số</a>
-                    
-                    <form th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${log.patientId})}" method="POST"
-                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký sức khỏe này?');">
+                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${log.userId}, source='my-logs')}"
+                        class="btn btn-edit">✏️ Chỉnh Sửa Chỉ Số</a>
+
+                    <form
+                        th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${log.userId}, source='my-logs')}"
+                        method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký sức khỏe này?');">
                         <button type="submit" class="btn btn-delete">🗑️ Xóa Nhật Ký</button>
                     </form>
                 </div>
@@ -464,4 +493,5 @@
     </main>
 
 </body>
+
 </html>
