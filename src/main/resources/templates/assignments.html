@@ -305,7 +305,7 @@
                 <small>Hệ thống quản trị</small>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+                <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
                 <a href="/admin/doctors" class="nav-item-link"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
                 <a href="/admin/assignments" class="nav-item-link active"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
                 <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
@@ -497,21 +497,35 @@
 
                             async function loadAll() {
                                 try {
+                                    const token = localStorage.getItem('token');
+                                    const authHeaders = {'Authorization': `Bearer ${token}`};
+
+                                    const fetchJson = async (url) => {
+                                        const r = await fetch(url, {headers: authHeaders});
+                                        if (!r.ok) {
+                                            const errText = await r.text();
+                                            console.error(`[loadAll] ${url} → ${r.status}:`, errText);
+                                            throw new Error(`${url} thất bại (${r.status}): ${errText}`);
+                                        }
+                                        return r.json();
+                                    };
+
                                     const [a, d, p] = await Promise.all([
-                                        fetch('/api/assignments').then(r => r.json()),
-                                        fetch('/api/doctors').then(r => r.json()),
-                                        fetch('/api/patients').then(r => r.json())
+                                        fetchJson('/api/assignments'),
+                                        fetchJson('/api/doctors'),
+                                        fetchJson('/api/patient')
                                     ]);
-                                    allAssignments = a;
-                                    allDoctors = d;
-                                    allPatients = p;
+                                    allAssignments = Array.isArray(a) ? a : [];
+                                    allDoctors     = Array.isArray(d) ? d : [];
+                                    allPatients    = Array.isArray(p) ? p : [];
                                     populateDoctorSelect();
                                     filteredList = [...allAssignments];
                                     applyFilters();
                                     updateStats(allAssignments);
-                                } catch {
+                                } catch (err) {
+                                    console.error('[loadAll] Lỗi:', err);
                                     document.getElementById('assignTable').innerHTML =
-                                            '<tr><td colspan="8" class="text-center text-danger py-4"><i class="bi bi-wifi-off me-1"></i>Không thể kết nối API</td></tr>';
+                                            `<tr><td colspan="8" class="text-center text-danger py-4"><i class="bi bi-wifi-off me-1"></i>Lỗi tải dữ liệu: ${err.message}</td></tr>`;
                                 }
                             }
 
@@ -539,16 +553,16 @@
                                 document.getElementById('totalAssign').textContent = list.length;
                                 document.getElementById('activeAssign').textContent = list.filter(a => a.status === 'active').length;
                                 document.getElementById('inactiveAssign').textContent = list.filter(a => a.status === 'inactive').length;
-                                const docs = new Set(list.filter(a => a.doctor).map(a => a.doctor.id));
+                                const docs = new Set(list.filter(a => a.doctorId).map(a => a.doctorId));
                                 document.getElementById('doctorCount').textContent = docs.size;
 
                                 // Hiển thị cảnh báo nếu có bác sĩ ngừng hoạt động còn trong danh sách
                                 const inactiveDocAssigns = list.filter(a =>
-                                    a.status === 'inactive' && a.doctor && a.note === 'Bác sĩ ngừng hoạt động - tự động hủy phân công'
+                                    a.status === 'inactive' && a.doctorId && a.note === 'Bác sĩ ngừng hoạt động - tự động hủy phân công'
                                 );
                                 const warnEl = document.getElementById('autoInactiveWarn');
                                 if (inactiveDocAssigns.length > 0) {
-                                    const doctorNames = [...new Set(inactiveDocAssigns.map(a => a.doctor?.fullName).filter(Boolean))];
+                                    const doctorNames = [...new Set(inactiveDocAssigns.map(a => a.doctorName).filter(Boolean))];
                                     warnEl.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>
                     <strong>${inactiveDocAssigns.length} phân công</strong> đã tự động hủy vì bác sĩ ngừng hoạt động
                     (${doctorNames.join(', ')}). Bệnh nhân liên quan chưa có bác sĩ chăm sóc — hãy phân công lại.`;
@@ -579,9 +593,9 @@
                                     return `
                 <tr>
                     <td class="text-muted">${offset + i + 1}</td>
-                    <td><span class="pill-doctor"><i class="bi bi-person-badge me-1"></i>${a.doctor?.fullName || 'N/A'}</span></td>
+                    <td><span class="pill-doctor"><i class="bi bi-person-badge me-1"></i>${a.doctorName || 'N/A'}</span></td>
                     <td class="link-icon"><i class="bi bi-arrow-right"></i></td>
-                    <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${a.patient?.fullName || 'N/A'}</span></td>
+                    <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${a.patientName || 'N/A'}</span></td>
                     <td style="font-size:.82rem; color:#666">${fmtDate(a.assignedAt)}</td>
                     <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${a.note || ''}">${a.note || '<span class="text-muted">–</span>'}</td>
                     <td><span class="badge-status ${isInactive ? 'badge-inactive' : 'badge-active'}">${isInactive ? 'Đã hủy' : 'Hoạt động'}</span></td>
@@ -602,8 +616,8 @@
                                 const q = document.getElementById('searchInput').value.toLowerCase();
                                 const st = document.getElementById('filterStatus').value;
                                 filteredList = allAssignments.filter(a => {
-                                    const matchQ = !q || (a.doctor?.fullName || '').toLowerCase().includes(q)
-                                            || (a.patient?.fullName || '').toLowerCase().includes(q)
+                                    const matchQ = !q || (a.doctorName || '').toLowerCase().includes(q)
+                                            || (a.patientName || '').toLowerCase().includes(q)
                                             || (a.note || '').toLowerCase().includes(q);
                                     const matchSt = !st || a.status === st;
                                     return matchQ && matchSt;
@@ -657,7 +671,8 @@
                                 document.getElementById('modalTitle').textContent = 'Thêm phân công mới';
                                 document.getElementById('saveBtnText').textContent = 'Thêm phân công';
                                 document.getElementById('assignId').value = '';
-                                document.getElementById('doctorSelect').value = '';
+                                populateDoctorSelect();
+                                document.getElementById('doctorSelect').selectedIndex = 0;
                                 populatePatientSelect();
                                 document.getElementById('note').value = '';
                                 document.getElementById('statusField').style.display = 'none';
@@ -671,20 +686,15 @@
                                 document.getElementById('note').value = a.note || '';
                                 document.getElementById('assignStatus').value = a.status || 'active';
                                 document.getElementById('statusField').style.display = 'block';
-                                populatePatientSelect(a.patient?.id);
-                                // Set doctor select to current doctor
+                                populateDoctorSelect();
+                                populatePatientSelect(a.patientId);
+                                // Set doctor bằng selectedIndex để tránh lỗi so sánh string
                                 const doctorSel = document.getElementById('doctorSelect');
-                                if (a.doctor) {
-                                    // Find matching option by doctor id
-                                    const opt = Array.from(doctorSel.options).find(o => {
-                                        try {
-                                            return JSON.parse(o.value)?.id == a.doctor.id;
-                                        } catch {
-                                            return false;
-                                        }
+                                if (a.doctorId) {
+                                    const matchIndex = Array.from(doctorSel.options).findIndex(o => {
+                                        try { return JSON.parse(o.value)?.id == a.doctorId; } catch { return false; }
                                     });
-                                    if (opt)
-                                        doctorSel.value = opt.value;
+                                    if (matchIndex >= 0) doctorSel.selectedIndex = matchIndex;
                                 }
                                 assignModal.show();
                             }
@@ -695,11 +705,19 @@
                                 if (id) {
                                     const patientRaw = document.getElementById('patientSelect').value;
                                     const doctorRaw = document.getElementById('doctorSelect').value;
+                                    if (!doctorRaw) {
+                                        showToast('Vui lòng chọn bác sĩ!', 'danger');
+                                        return;
+                                    }
+                                    if (!patientRaw) {
+                                        showToast('Vui lòng chọn bệnh nhân!', 'danger');
+                                        return;
+                                    }
                                     payload = {
                                         note: document.getElementById('note').value,
                                         status: document.getElementById('assignStatus').value,
-                                        patient: patientRaw ? JSON.parse(patientRaw) : null,
-                                        doctor: doctorRaw ? JSON.parse(doctorRaw) : null
+                                        patient: JSON.parse(patientRaw),
+                                        doctor: JSON.parse(doctorRaw)
                                     };
                                 } else {
                                     const doctorRaw = document.getElementById('doctorSelect').value;
@@ -722,7 +740,7 @@
                                 try {
                                     const url = id ? `/api/assignments/${id}` : '/api/assignments';
                                     const method = id ? 'PUT' : 'POST';
-                                    const res = await fetch(url, {method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+                                    const res = await fetch(url, {method, headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`}, body: JSON.stringify(payload)});
                                     if (!res.ok) {
                                         const err = await res.text();
                                         showToast('❌ ' + (err || 'Lưu thất bại, vui lòng thử lại!'), 'danger');
@@ -742,7 +760,7 @@
                             }
                             async function confirmDelete() {
                                 try {
-                                    const res = await fetch(`/api/assignments/${deleteTargetId}`, {method: 'DELETE'});
+                                    const res = await fetch(`/api/assignments/${deleteTargetId}`, {method: 'DELETE', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
                                     if (!res.ok)
                                         throw new Error();
                                     deleteModal.hide();
@@ -759,7 +777,7 @@
                             }
                             async function confirmHardDelete() {
                                 try {
-                                    const res = await fetch(`/api/assignments/${hardDeleteTargetId}/permanent`, {method: 'DELETE'});
+                                    const res = await fetch(`/api/assignments/${hardDeleteTargetId}/permanent`, {method: 'DELETE', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
                                     if (!res.ok)
                                         throw new Error();
                                     hardDeleteModal.hide();
@@ -770,7 +788,17 @@
                                 }
                             }
 
-                            function showToast(msg, type) {
+                            function handleAuthError(status) {
+                if (status === 401 || status === 403) {
+                    localStorage.clear();
+                    document.cookie = 'jwt=; path=/; max-age=0';
+                    window.location.href = '/login';
+                    return true;
+                }
+                return false;
+            }
+
+            function showToast(msg, type) {
                                 const el = document.getElementById('toast');
                                 el.className = `toast align-items-center text-bg-${type} border-0`;
                                 // Strip HTML tags từ server error response

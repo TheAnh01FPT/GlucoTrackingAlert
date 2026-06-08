@@ -390,7 +390,7 @@
                 <small>Hệ thống quản trị</small>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+                <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
                 <a href="/admin/doctors" class="nav-item-link active"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
                 <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
                 <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
@@ -575,7 +575,15 @@
                                     <label class="form-label">Nơi công tác</label>
                                     <input type="text" class="form-control" id="workplace" placeholder="VD: Bệnh viện Bạch Mai"/>
                                 </div>
-                                <div class="col-md-6" id="statusField" style="display:none">
+                                <div class="col-md-6">
+                                    <label class="form-label">Số CCCD <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nationalId" placeholder="VD: 001234567890" maxlength="12"/>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Số chứng chỉ hành nghề <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="practiceLicense" placeholder="VD: 027552/BYT-CCHN"/>
+                                </div>
+                        <div class="col-md-6" id="statusField" style="display:none">
                                     <label class="form-label">Trạng thái</label>
                                     <select class="form-select" id="status">
                                         <option value="active">Đang hoạt động</option>
@@ -674,7 +682,7 @@
 
                                 async function loadWorkingHours() {
                                     try {
-                                        const wh = await fetch('/api/doctors/working-hours').then(r => r.json());
+                                        const wh = await fetch('/api/doctors/working-hours', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
                                         const label = wh.fullLabel || (wh.display + '  |  ' + wh.days);
                                         document.querySelectorAll('.working-hours-label').forEach(el => el.textContent = label);
                                         document.getElementById('modalWorkingHours').textContent = label;
@@ -689,7 +697,7 @@
 
                                 async function loadDoctors() {
                                     try {
-                                        const res = await fetch('/api/doctors');
+                                        const res = await fetch('/api/doctors', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
                                         allDoctors = await res.json();
                                         filteredDoctors = [...allDoctors];
                                         updateStats(allDoctors);
@@ -834,6 +842,8 @@
                                     document.getElementById('experienceYears').value = '';
                                     document.getElementById('phone').value = '';
                                     document.getElementById('workplace').value = '';
+                                    document.getElementById('nationalId').value = '';
+                                    document.getElementById('practiceLicense').value = '';
                                     document.getElementById('introduction').value = '';
                                     document.getElementById('statusField').style.display = 'none';
                                     doctorModal.show();
@@ -850,6 +860,8 @@
                                     document.getElementById('experienceYears').value = d.experienceYears || '';
                                     document.getElementById('phone').value = d.phone || '';
                                     document.getElementById('workplace').value = d.workplace || '';
+                                    document.getElementById('nationalId').value = d.nationalId || '';
+                                    document.getElementById('practiceLicense').value = d.practiceLicense || '';
                                     document.getElementById('introduction').value = d.introduction || '';
                                     document.getElementById('status').value = d.status || 'active';
                                     document.getElementById('statusField').style.display = 'block';
@@ -881,12 +893,14 @@
                                             experienceYears: parseInt(document.getElementById('experienceYears').value) || null,
                                             phone: document.getElementById('phone').value.trim(),
                                             workplace: document.getElementById('workplace').value.trim(),
+                                            nationalId: document.getElementById('nationalId').value.trim(),
+                                            practiceLicense: document.getElementById('practiceLicense').value.trim(),
                                             introduction: document.getElementById('introduction').value.trim()
                                         };
                                         try {
                                             const res = await fetch('/api/doctors/admin-create', {
                                                 method: 'POST',
-                                                headers: {'Content-Type': 'application/json'},
+                                                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
                                                 body: JSON.stringify(payload)
                                             });
                                             if (!res.ok) {
@@ -908,13 +922,15 @@
                                             experienceYears: parseInt(document.getElementById('experienceYears').value) || null,
                                             phone: document.getElementById('phone').value.trim(),
                                             workplace: document.getElementById('workplace').value.trim(),
+                                            nationalId: document.getElementById('nationalId').value.trim(),
+                                            practiceLicense: document.getElementById('practiceLicense').value.trim(),
                                             introduction: document.getElementById('introduction').value.trim(),
                                             status: document.getElementById('status').value
                                         };
                                         try {
                                             const res = await fetch(`/api/doctors/${id}`, {
                                                 method: 'PUT',
-                                                headers: {'Content-Type': 'application/json'},
+                                                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
                                                 body: JSON.stringify(payload)
                                             });
                                             if (!res.ok) {
@@ -937,7 +953,7 @@
 
                                 async function confirmDeactivate() {
                                     try {
-                                        const res = await fetch(`/api/doctors/${deactivateTargetId}`, {method: 'DELETE'});
+                                        const res = await fetch(`/api/doctors/${deactivateTargetId}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}, method: 'DELETE'});
                                         const msg = await res.text();
                                         if (!res.ok)
                                             throw new Error(msg);
@@ -956,7 +972,7 @@
 
                                 async function confirmHardDelete() {
                                     try {
-                                        const res = await fetch(`/api/doctors/${hardDeleteTargetId}/permanent`, {method: 'DELETE'});
+                                        const res = await fetch(`/api/doctors/${hardDeleteTargetId}/permanent`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}, method: 'DELETE'});
                                         const msg = await res.text();
                                         if (!res.ok)
                                             throw new Error(msg);
@@ -971,7 +987,17 @@
                                 // ── Invite ─────────────────────────────────────────────
 
 
-                                function showToast(msg, type) {
+                                function handleAuthError(status) {
+                if (status === 401 || status === 403) {
+                    localStorage.clear();
+                    document.cookie = 'jwt=; path=/; max-age=0';
+                    window.location.href = '/login';
+                    return true;
+                }
+                return false;
+            }
+
+            function showToast(msg, type) {
                                     const el = document.getElementById('toast');
                                     el.className = `toast align-items-center text-bg-${type} border-0`;
                                     // Strip HTML tags từ server error response

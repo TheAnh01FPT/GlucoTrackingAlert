@@ -458,13 +458,25 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
+
+            function handleAuthError(status) {
+                if (status === 401 || status === 403) {
+                    localStorage.clear();
+                    document.cookie = 'jwt=; path=/; max-age=0';
+                    window.location.href = '/login';
+                    return true;
+                }
+                return false;
+            }
+
                         let allPatients = [], filteredPatients = [], currentDoctorId = null;
                         const PAT_PAGE_SIZE = 12;
                         let patPage = 1;
 
-        // Lấy doctorId từ URL: /doctor/my-patients?doctorId=1
+        // Lấy doctorId từ URL: /doctor/my-patients?doctorId=1, fallback localStorage
                         function getDoctorIdFromUrl() {
-                            return new URLSearchParams(window.location.search).get('doctorId');
+                            return new URLSearchParams(window.location.search).get('doctorId')
+                                || localStorage.getItem('doctorId');
                         }
 
                         function getInitials(name) {
@@ -475,7 +487,7 @@
 
                         async function loadDoctor(doctorId) {
                             try {
-                                const doc = await fetch(`/api/doctors/${doctorId}`).then(r => r.json());
+                                const doc = await fetch(`/api/doctors/${doctorId}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
                                 const initials = getInitials(doc.fullName);
                                 document.getElementById('drAvatar').textContent = initials;
                                 document.getElementById('drName').textContent = (doc.degree ? doc.degree + '. ' : '') + (doc.fullName || '–');
@@ -488,7 +500,7 @@
 
                         async function loadPatients(doctorId) {
                             try {
-                                allPatients = await fetch(`/api/doctor/${doctorId}/patients`).then(r => r.json());
+                                allPatients = await fetch(`/api/doctor/${doctorId}/patients`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
                                 filteredPatients = [...allPatients];
                                 updateStats(allPatients);
                                 patPage = 1;
