@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class DailyHealthLogResponse {
     private Long id;
     private Long patientId;
+    private Long userId;
     private String patientName;
     private LocalDate logDate;
     private BigDecimal bloodSugar;

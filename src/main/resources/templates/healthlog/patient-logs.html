@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -77,7 +78,8 @@
             border-radius: 8px;
         }
 
-        .navbar-link:hover, .navbar-link.active {
+        .navbar-link:hover,
+        .navbar-link.active {
             color: white;
             background-color: rgba(255, 255, 255, 0.1);
         }
@@ -91,8 +93,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Upper Action Bar */
@@ -179,10 +188,25 @@
             font-size: 1.5rem;
         }
 
-        .stat-icon-blood { background-color: #fee2e2; color: #ef4444; }
-        .stat-icon-pressure { background-color: #e0e7ff; color: #6366f1; }
-        .stat-icon-sleep { background-color: #fef3c7; color: #f59e0b; }
-        .stat-icon-water { background-color: #e0f2fe; color: #0284c7; }
+        .stat-icon-blood {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .stat-icon-pressure {
+            background-color: #e0e7ff;
+            color: #6366f1;
+        }
+
+        .stat-icon-sleep {
+            background-color: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .stat-icon-water {
+            background-color: #e0f2fe;
+            color: #0284c7;
+        }
 
         .stat-info {
             display: flex;
@@ -270,6 +294,7 @@
         .row-alert-danger {
             background-color: #fef2f2;
         }
+
         .row-alert-danger:hover td {
             background-color: #fee2e2;
         }
@@ -285,10 +310,25 @@
             border-radius: 8px;
         }
 
-        .badge-danger { background-color: #fee2e2; color: #ef4444; }
-        .badge-success { background-color: #d1fae5; color: #10b981; }
-        .badge-warning { background-color: #fef3c7; color: #d97706; }
-        .badge-neutral { background-color: #f1f5f9; color: #475569; }
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #10b981;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-neutral {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
 
         /* Actions styling */
         .action-links {
@@ -310,14 +350,35 @@
             cursor: pointer;
         }
 
-        .btn-view { background-color: #eff6ff; color: #3b82f6; }
-        .btn-view:hover { background-color: #dbeafe; transform: scale(1.1); }
-        
-        .btn-edit { background-color: #fef3c7; color: #d97706; }
-        .btn-edit:hover { background-color: #fde68a; transform: scale(1.1); }
+        .btn-view {
+            background-color: #eff6ff;
+            color: #3b82f6;
+        }
 
-        .btn-delete { background-color: #fee2e2; color: #ef4444; }
-        .btn-delete:hover { background-color: #fca5a5; transform: scale(1.1); }
+        .btn-view:hover {
+            background-color: #dbeafe;
+            transform: scale(1.1);
+        }
+
+        .btn-edit {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-edit:hover {
+            background-color: #fde68a;
+            transform: scale(1.1);
+        }
+
+        .btn-delete {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .btn-delete:hover {
+            background-color: #fca5a5;
+            transform: scale(1.1);
+        }
 
         /* Pagination container */
         .pagination-container {
@@ -412,6 +473,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Header Navigation -->
@@ -421,7 +483,7 @@
         </a>
         <nav class="navbar-menu">
             <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
-            <a th:href="@{/health-logs/chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
         </nav>
     </header>
 
@@ -434,8 +496,7 @@
                 📋 Nhật Ký Sức Khỏe Của Tôi
             </div>
             <div class="actions">
-                <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}"
-                   class="btn btn-primary">
+                <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}" class="btn btn-primary">
                     ➕ Ghi Nhật Ký Mới
                 </a>
             </div>
@@ -454,21 +515,24 @@
                 <div class="stat-icon stat-icon-pressure">💖</div>
                 <div class="stat-info">
                     <span class="stat-label">Huyết Áp Gần Nhất</span>
-                    <span class="stat-value" th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
+                    <span class="stat-value"
+                        th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-sleep">🛌</div>
                 <div class="stat-info">
                     <span class="stat-label">Giờ Ngủ Gần Nhất</span>
-                    <span class="stat-value" th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
+                    <span class="stat-value"
+                        th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-water">🥛</div>
                 <div class="stat-info">
                     <span class="stat-label">Nước Uống Gần Nhất</span>
-                    <span class="stat-value" th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500 ml</span>
+                    <span class="stat-value" th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500
+                        ml</span>
                 </div>
             </div>
         </section>
@@ -495,66 +559,76 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="log : ${logs}" 
-                            th:class="${log.bloodSugar != null && (log.bloodSugar > 7.0 || log.bloodSugar < 3.9)} ? 'row-alert-danger' : ''">
-                            
-                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">30/05/2026</td>
-                            
+                        <tr th:each="log : ${logs}"
+                            th:class="${log.bloodSugarStatus == 'danger'} ? 'row-alert-danger' : ''">
+
+                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
+                                30/05/2026</td>
+
                             <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
                             <td>
                                 <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
                                 <span th:if="${log.bloodSugar != null}"
-                                      th:class="${log.bloodSugarStatus == 'normal' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'warning' ? 'value-badge badge-warning' : 'value-badge badge-danger')}"
-                                      th:text="${log.bloodSugar}"
-                                      th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
+                                    th:class="${log.bloodSugarStatus == 'normal' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'warning' ? 'value-badge badge-warning' : 'value-badge badge-danger')}"
+                                    th:text="${log.bloodSugar}"
+                                    th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
                                 </span>
                             </td>
-                            
+
                             <!-- Blood Pressure display -->
                             <td>
-                                <span th:if="${log.systolic != null && log.diastolic != null}" 
-                                      th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
-                                      th:text="${log.systolic + '/' + log.diastolic}">
+                                <span th:if="${log.systolic != null && log.diastolic != null}"
+                                    th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
+                                    th:text="${log.systolic + '/' + log.diastolic}">
                                     120/80
                                 </span>
-                                <span th:if="${log.systolic == null || log.diastolic == null}" class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.systolic == null || log.diastolic == null}"
+                                    class="value-badge badge-neutral">--</span>
                             </td>
-                            
+
                             <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">8.0</td>
                             <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
-                            
+
                             <td>
-                                <span th:if="${log.sugarConsumptionLevel == null}" class="value-badge badge-neutral">--</span>
-                                <span th:if="${log.sugarConsumptionLevel != null}" 
-                                      th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
-                                      th:text="${log.sugarConsumptionLevel}">
+                                <span th:if="${log.sugarConsumptionLevel == null}"
+                                    class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.sugarConsumptionLevel != null}"
+                                    th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
+                                    th:text="${log.sugarConsumptionLevel}">
                                     low
                                 </span>
                             </td>
-                            
-                            <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}" style="color: var(--text-secondary); font-size: 0.85rem;">
+
+                            <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
+                                style="color: var(--text-secondary); font-size: 0.85rem;">
                                 Triệu chứng...
                             </td>
-                            
-                            <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}" style="color: var(--text-secondary); font-size: 0.85rem;">
+
+                            <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
+                                style="color: var(--text-secondary); font-size: 0.85rem;">
                                 Ghi chú...
                             </td>
-                            
+
                             <td>
                                 <div class="action-links">
                                     <!-- View Detail -->
-                                    <a th:href="@{/health-logs/{id}(id=${log.id})}" class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
+                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${userId}, source='my-logs')}" class="btn-action btn-view"
+                                        title="Xem Chi Tiết">👁️</a>
                                     <!-- Edit -->
-                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
+                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                        class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
                                     <!-- Delete -->
-                                    <form th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}" method="POST"
-                                          style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
-                                        <button type="submit" class="btn-action btn-delete" title="Xóa Nhật Ký">🗑️</button>
+                                    <form
+                                        th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                        method="POST" style="display: inline;"
+                                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
+                                        <button type="submit" class="btn-action btn-delete"
+                                            title="Xóa Nhật Ký">🗑️</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
-                        
+
                         <tr th:if="${#lists.isEmpty(logs)}">
                             <td colspan="9">
                                 <div class="empty-state">
@@ -572,25 +646,25 @@
             <div class="pagination-container" th:if="${totalPages > 0}">
                 <div class="pagination-info">
                     Hiển thị
-                    <strong th:text="${currentPage * pageSize + 1}">1</strong>-<strong th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong>
+                    <strong th:text="${currentPage * pageSize + 1}">1</strong>-<strong
+                        th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong>
                     trong tổng <strong th:text="${totalElements}">100</strong> bản ghi
                 </div>
 
                 <div class="pagination-buttons" th:if="${totalPages > 1}">
                     <a th:href="@{/health-logs/my-logs(page=${currentPage - 1}, size=${pageSize}, userId=${userId})}"
-                       th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
+                        th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
                         &laquo; Trước
                     </a>
-                    
+
                     <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                       th:href="@{/health-logs/my-logs(page=${i}, size=${pageSize}, userId=${userId})}"
-                       th:text="${i + 1}"
-                       th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
+                        th:href="@{/health-logs/my-logs(page=${i}, size=${pageSize}, userId=${userId})}"
+                        th:text="${i + 1}" th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
                         1
                     </a>
-                    
+
                     <a th:href="@{/health-logs/my-logs(page=${currentPage + 1}, size=${pageSize}, userId=${userId})}"
-                       th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
+                        th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
                         Sau &raquo;
                     </a>
                 </div>
@@ -621,4 +695,5 @@
     </script>
 
 </body>
+
 </html>
