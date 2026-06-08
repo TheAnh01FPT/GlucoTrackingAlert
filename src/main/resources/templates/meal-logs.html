@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -225,41 +225,41 @@ tbody tr.row-danger:hover{background:#fee2e2}
 
 <div class="main">
 
-  <!-- PROFILE BAR: Giới tính & Nhóm tuổi -->
+  <!-- PROFILE BAR: Lấy từ hồ sơ bệnh nhân đã đăng ký -->
+  <!-- Hidden inputs chứa giá trị profile từ server (Thymeleaf) -->
+  <input type="hidden" id="profileGender"    th:value="${gender}">
+  <input type="hidden" id="profileAgeGroup"  th:value="${ageGroup}">
+  <input type="hidden" id="profileCondition" th:value="${condition}">
+  <input type="hidden" id="profilePatientId" th:value="${patientId}">
+
   <div class="profile-bar">
     <span class="profile-icon" id="profileIcon">👤</span>
     <div>
       <div class="profile-bar-label">Hồ sơ bệnh nhân</div>
-      <div style="color:#fff;font-size:13px;margin-top:2px">Chọn đúng để tính khẩu phần chính xác hơn</div>
+      <div style="color:#fff;font-size:13px;margin-top:2px">
+        Thông tin từ hồ sơ đã đăng ký —
+        <a th:href="@{/patient/profile}" href="/patient/profile"
+           style="color:#7dd3fc;font-weight:600;text-decoration:underline">Xem / Cập nhật hồ sơ</a>
+      </div>
     </div>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-left:16px">
-      <div>
-        <div style="color:rgba(255,255,255,.7);font-size:12px;margin-bottom:4px">⚧ Giới tính</div>
-        <select class="profile-select" id="genderSelect" onchange="onGenderChange()">
-          <option value="male">👨 Nam</option>
-          <option value="female">👩 Nữ</option>
-        </select>
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-left:16px">
+      <div style="color:#fff;font-size:15px">
+        👤 <b th:text="${patientName}">Bệnh nhân</b>
       </div>
-      <div>
-        <div style="color:rgba(255,255,255,.7);font-size:12px;margin-bottom:4px">🎂 Nhóm tuổi</div>
-        <select class="profile-select" id="ageGroupSelect" onchange="onProfileChange()">
-          <option value="young">Thanh niên (18–40)</option>
-          <option value="middle">Trung niên (41–64)</option>
-          <option value="elder" selected>Cao tuổi (65+)</option>
-        </select>
+      <div style="color:rgba(255,255,255,.8);font-size:14px">
+        🎂 Tuổi: <b th:text="${age}">—</b>
       </div>
-      <div>
-        <div style="color:rgba(255,255,255,.7);font-size:12px;margin-bottom:4px">⚕️ Tình trạng đặc biệt</div>
-        <select class="profile-select" id="conditionSelect" onchange="onProfileChange()">
-          <option value="none">— Không có</option>
-          <option value="obese">⚖️ Béo phì (BMI ≥ 30)</option>
-          <option value="pregnant" id="pregnantOption" style="display:none">🤰 Đang mang thai</option>
-        </select>
+      <div style="color:rgba(255,255,255,.8);font-size:14px">
+        📊 BMI: <b th:text="${bmi}">—</b>
       </div>
     </div>
     <div class="profile-indicator" id="profileIndicator">
-      <span id="profileLabel">👴 Nam · Cao tuổi · Hệ số: ×1.00</span>
+      <span id="profileLabel">Đang tải...</span>
     </div>
+    <a th:href="@{/patient/home}" href="/patient/home"
+       style="margin-left:12px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:10px;padding:8px 16px;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap">
+      ← Về trang bệnh nhân
+    </a>
   </div>
 
   <div class="remind-banner" id="remindBanner" style="display:none">
@@ -499,25 +499,16 @@ const PROFILE_ICONS = {
   female: { young: '👧', middle: '👩', elder: '👵' }
 };
 
-function onGenderChange() {
-  // Chỉ hiện option "Mang thai" nếu là nữ
-  const gender = document.getElementById('genderSelect').value;
-  const pregOpt = document.getElementById('pregnantOption');
-  const condSel = document.getElementById('conditionSelect');
-  pregOpt.style.display = gender === 'female' ? '' : 'none';
-  if (gender === 'male' && condSel.value === 'pregnant') condSel.value = 'none';
-  onProfileChange();
-}
+// onGenderChange removed - profile loaded from patient record
 
 function getProfile() {
-  const gender    = (document.getElementById('genderSelect')   ||{value:'male'}).value;
-  const ageGroup  = (document.getElementById('ageGroupSelect') ||{value:'elder'}).value;
-  const condition = (document.getElementById('conditionSelect')||{value:'none'}).value;
+  // Doc tu hidden inputs (du lieu tu server, lay tu ho so benh nhan da dang ky)
+  const gender    = (document.getElementById('profileGender')    || {value:'male'}).value   || 'male';
+  const ageGroup  = (document.getElementById('profileAgeGroup')  || {value:'elder'}).value  || 'elder';
+  const condition = (document.getElementById('profileCondition') || {value:'none'}).value   || 'none';
   const baseFactor = PROFILE_FACTORS[gender][ageGroup];
   const mod = CONDITION_MODIFIERS[condition];
-  // factor: he so khau phan (gram) theo nhu cau nang luong
   const factor = Math.round(baseFactor * 100) / 100;
-  // sugarFactor: he so phan ung duong huyet theo sinh ly x tinh trang dac biet
   const sugarFactor = Math.round(SUGAR_RESPONSE[gender][ageGroup] * mod.factor * 100) / 100;
   return { gender, ageGroup, condition, factor, baseFactor, mod, sugarFactor };
 }
@@ -532,6 +523,8 @@ function onProfileChange() {
     baseLabel + condLabel + ' · Khẩu phần: ×' + factor.toFixed(2) + ' · Phản ứng: ×' + sugarFactor.toFixed(2);
   calcSugar();
 }
+// Goi khi trang load xong de hien thi thong tin profile
+document.addEventListener('DOMContentLoaded', function() { onProfileChange(); });
 
 // ============================================================
 // ước tính gram từ mô tả số lượng
@@ -933,7 +926,7 @@ async function addLog(){
   try{
     const prof = getProfile();
     await doSave({
-      patientId:1,
+      patientId: Number(document.getElementById('profilePatientId').value) || 1,
       foodName:food,
       quantityText:qty,
       sugarEstimation:estSugar,
@@ -985,7 +978,7 @@ async function updateLog(){
   try{
     const prof2 = getProfile();
     await doSave({
-      patientId:1,
+      patientId: Number(document.getElementById('profilePatientId').value) || 1,
       foodName:food,
       quantityText:qty,
       sugarEstimation:Number(document.getElementById('sugarEstimation').value)||0,
