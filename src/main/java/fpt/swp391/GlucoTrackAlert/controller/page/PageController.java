@@ -23,7 +23,13 @@ public class PageController {
     public String registerPage() { return "register/register"; }
 
     @GetMapping("/patient/homepage")
+<<<<<<< HEAD
     public String patientDashboard() { return "homepage/homepage"; }
+=======
+    public String patientDashboard() {
+        return "patient/home";
+    }
+>>>>>>> c545ee98a670e61bfc41298782e381f13be98b14
 
     @GetMapping("/doctor/homepage")
     public String doctorDashboard() { return "homepage/homepage"; }
