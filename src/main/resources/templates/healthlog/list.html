@@ -660,7 +660,9 @@
                             th:class="${log.bloodSugarStatus == 'danger'} ? 'row-alert-danger' : ''">
 
                             <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
-                                30/05/2026</td>
+                                30/05/2026
+                                <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">UID: <span th:text="${log.userId}"></span></div>
+                            </td>
 
                             <!-- Blood Sugar status badge coloring -->
                             <td>
@@ -709,14 +711,14 @@
                             <td>
                                 <div class="action-links">
                                     <!-- View Detail -->
-                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${selectedUserId}, source='my-logs')}" class="btn-action btn-view"
+                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${log.userId}, source='my-logs')}" class="btn-action btn-view"
                                         title="Xem Chi Tiết">👁️</a>
                                     <!-- Edit -->
-                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id})}" class="btn-action btn-edit"
+                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${log.userId}, source='my-logs')}" class="btn-action btn-edit"
                                         title="Sửa Chỉ Số">✏️</a>
                                     <!-- Delete -->
                                     <form
-                                        th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${selectedUserId})}"
+                                        th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${log.userId}, source='my-logs')}"
                                         method="POST" style="display: inline;"
                                         onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
                                         <button type="submit" class="btn-action btn-delete"

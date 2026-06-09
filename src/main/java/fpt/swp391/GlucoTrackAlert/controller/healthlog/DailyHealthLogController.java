@@ -39,21 +39,18 @@ public class DailyHealthLogController {
         if (userId == null) {
             return null;
         }
-        // Try to find patient by user ID first
+        // Resolve by treating the parameter as a user ID and finding the linked patient.
+        // Do NOT treat the parameter as a patient ID to avoid ambiguous collisions between
+        // user IDs and patient IDs (was causing redirects to the wrong patient).
         Optional<Patient> patientOpt = patientRepository.findByUserId(userId);
-        if (patientOpt.isPresent()) {
-            return patientOpt.get().getId();
-        }
-        // Fallback to checking if patient ID itself was passed
-        if (patientRepository.existsById(userId)) {
-            return userId;
-        }
-        return null;
+        return patientOpt.map(Patient::getId).orElse(null);
     }
 
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return null;
+        if (auth == null) {
+            return null;
+        }
         String email = auth.getName();
         User user = userRepository.findByEmail(email).orElse(null);
         return user != null ? user.getId() : null;
@@ -61,14 +58,18 @@ public class DailyHealthLogController {
 
     private Long getCurrentPatientId() {
         Long userId = getCurrentUserId();
-        if (userId == null) return null;
+        if (userId == null) {
+            return null;
+        }
         Optional<Patient> patientOpt = patientRepository.findByUserId(userId);
         return patientOpt.map(Patient::getId).orElse(null);
     }
 
     private boolean hasRole(String role) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return false;
+        if (auth == null) {
+            return false;
+        }
         return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
     }
 
@@ -89,6 +90,14 @@ public class DailyHealthLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
+        // Prevent non-admin/doctor users from viewing other patients by forcing
+        // `userId` to the current logged-in user when the caller is not admin/doctor.
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            Long cur = getCurrentUserId();
+            if (cur != null) {
+                userId = cur;
+            }
+        }
         List<Patient> patients;
         if (patientType != null && !patientType.isEmpty()) {
             patients = patientRepository.findAllByStatusAndPatientType("active", patientType);
@@ -104,7 +113,7 @@ public class DailyHealthLogController {
         model.addAttribute("patients", patients);
         model.addAttribute("patientType", patientType);
 
-        Long selectedPatientId = resolvePatientId(userId);
+        Long selectedPatientId = userId; // userId từ dropdown đã là patient.id rồi
         if (selectedPatientId == null && !patients.isEmpty()) {
             selectedPatientId = patients.get(0).getId();
         }
@@ -153,7 +162,15 @@ public class DailyHealthLogController {
         model.addAttribute("patients", patients);
         model.addAttribute("patientType", patientType);
 
-        Long selectedPatientId = resolvePatientId(userId);
+        // Only allow passing arbitrary userId when caller is admin/doctor.
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            Long cur = getCurrentUserId();
+            if (cur != null) {
+                userId = cur;
+            }
+        }
+
+        Long selectedPatientId = userId; // userId từ dropdown đã là patient.id rồi
         if (selectedPatientId == null && !patients.isEmpty()) {
             selectedPatientId = patients.get(0).getId();
         }
@@ -193,9 +210,18 @@ public class DailyHealthLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
+        // If caller is not admin/doctor and the requested userId is not their own,
+        // redirect to login to prevent tampering with the `userId` query parameter.
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            Long curUserId = getCurrentUserId();
+            if (curUserId == null || !curUserId.equals(userId)) {
+                return "redirect:/login";
+            }
+        }
+
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
-            patientId = userId;
+            return "redirect:/login"; // hoặc trang lỗi
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(patientId, pageable);
@@ -210,10 +236,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/detail")
     public String getLogById(@RequestParam Long logId,
-                             @RequestParam(required = false) Long userId,
-                             @RequestParam(required = false) String source,
-                             Model model,
-                             RedirectAttributes redirectAttributes) {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String source,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse log = dailyHealthLogService.getLogById(logId);
         if (log == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
@@ -222,10 +248,13 @@ public class DailyHealthLogController {
         if (!checkOwnership(log.getPatientId())) {
             redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập nhật ký này");
             Long curUserId = getCurrentUserId();
-            if (curUserId == null) curUserId = userId;
+            if (curUserId == null) {
+                curUserId = userId;
+            }
             return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
         }
         model.addAttribute("log", log);
+        model.addAttribute("source", source); 
         return "healthlog/detail";
     }
 
@@ -274,6 +303,7 @@ public class DailyHealthLogController {
 
     @GetMapping("/{id}/edit")
     public String editLogForm(@PathVariable Long id,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String source,
             Model model,
             RedirectAttributes redirectAttributes) {
@@ -301,8 +331,8 @@ public class DailyHealthLogController {
         request.setNote(response.getNote());
 
         model.addAttribute("log", request);
-        model.addAttribute("userId", response.getUserId());
-        String actionUrl = "/health-logs/" + id + "/edit?userId=" + response.getUserId();
+        model.addAttribute("userId", userId != null ? userId : response.getUserId());
+        String actionUrl = "/health-logs/" + id + "/edit?userId=" + (userId != null ? userId : response.getUserId());
         if ("my-logs".equals(source)) {
             actionUrl += "&source=my-logs";
         }
@@ -382,6 +412,14 @@ public class DailyHealthLogController {
         }
         model.addAttribute("patients", patients);
 
+        // Non-admin/doctor cannot change which patient's chart they view.
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            Long cur = getCurrentUserId();
+            if (cur != null) {
+                userId = cur;
+            }
+        }
+
         Long selectedPatientId = resolvePatientId(userId);
         if (selectedPatientId == null && !patients.isEmpty()) {
             selectedPatientId = patients.get(0).getId();
@@ -413,8 +451,9 @@ public class DailyHealthLogController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             Model model) {
         Long patientId = resolvePatientId(userId);
-        if (patientId == null)
+        if (patientId == null) {
             patientId = userId;
+        }
 
         LocalDate endDate = to != null ? to : LocalDate.now();
         LocalDate startDate = from != null ? from : endDate.minusDays(30);

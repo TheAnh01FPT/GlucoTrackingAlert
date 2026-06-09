@@ -28,4 +28,5 @@ public class DailyHealthLogResponse {
     private String patientType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
 }
