@@ -61,6 +61,9 @@ public class PatientWebController {
                     .address(profile.getAddress())
                     .heightCm(profile.getHeightCm())
                     .weightKg(profile.getWeightKg())
+                    .identityCard(profile.getIdentityCard())
+                    .insuranceNumber(profile.getInsuranceNumber())
+                    .isPregnant(profile.getIsPregnant())
                     .build();
             model.addAttribute("profileForm", request);
             model.addAttribute("isNew", false);
