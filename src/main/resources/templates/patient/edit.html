@@ -16,7 +16,7 @@
             </h1>
             <div style="display: flex; gap: 12px;">
                 <!-- Back to Home Button -->
-                <a th:href="@{/patient/home}" class="action-btn btn-secondary">
+                <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">
                     🏠 Trang chủ
                 </a>
                 <!-- Only show "Quay lại hồ sơ" if profile already exists -->
@@ -75,6 +75,18 @@
                         <input type="tel" id="phone" th:field="*{phone}" class="form-input" placeholder="Nhập số điện thoại">
                         <span class="error-text" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Lỗi số điện thoại</span>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="identityCard">Căn cước công dân (CCCD)</label>
+                        <input type="text" id="identityCard" th:field="*{identityCard}" class="form-input" placeholder="Nhập số CCCD">
+                        <span class="error-text" th:if="${#fields.hasErrors('identityCard')}" th:errors="*{identityCard}">Lỗi CCCD</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="insuranceNumber">Mã bảo hiểm y tế (BHYT)</label>
+                        <input type="text" id="insuranceNumber" th:field="*{insuranceNumber}" class="form-input" placeholder="Nhập mã số BHYT">
+                        <span class="error-text" th:if="${#fields.hasErrors('insuranceNumber')}" th:errors="*{insuranceNumber}">Lỗi BHYT</span>
+                    </div>
                 </div>
 
                 <!-- Right Side Form Fields -->
@@ -99,6 +111,15 @@
                         </div>
                     </div>
 
+                    <div class="form-group" id="pregnancyGroup" style="display: none;">
+                        <label class="form-label" for="isPregnant">Tình trạng thai sản</label>
+                        <select id="isPregnant" th:field="*{isPregnant}" class="form-input">
+                            <option value="false">Không có thai (Hoặc không áp dụng)</option>
+                            <option value="true">Đang có thai (Pregnant)</option>
+                        </select>
+                        <span class="error-text" th:if="${#fields.hasErrors('isPregnant')}" th:errors="*{isPregnant}">Lỗi tình trạng thai sản</span>
+                    </div>
+
                     <!-- Notice message -->
                     <div style="background: var(--primary-light); padding: 18px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--primary-color);">
                         <p style="font-size: 13px; color: var(--primary-color); font-weight: 600; line-height: 1.5;">
@@ -118,5 +139,29 @@
         </form>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var genderSelect = document.getElementById("gender");
+            var pregnancyGroup = document.getElementById("pregnancyGroup");
+            var isPregnantSelect = document.getElementById("isPregnant");
+
+            function togglePregnancyField() {
+                if (genderSelect && genderSelect.value === "Nữ") {
+                    pregnancyGroup.style.display = "block";
+                } else {
+                    pregnancyGroup.style.display = "none";
+                    if (isPregnantSelect) {
+                        isPregnantSelect.value = "false";
+                    }
+                }
+            }
+
+            if (genderSelect) {
+                genderSelect.addEventListener("change", togglePregnancyField);
+                // Run on page load
+                togglePregnancyField();
+            }
+        });
+    </script>
 </body>
 </html>
