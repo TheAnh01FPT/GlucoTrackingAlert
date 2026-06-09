@@ -38,4 +38,14 @@ public class PatientProfileRequest {
     @DecimalMin(value = "10.0", message = "Cân nặng tối thiểu là 10 kg")
     @DecimalMax(value = "300.0", message = "Cân nặng tối đa là 300 kg")
     private BigDecimal weightKg;
+
+    @Size(max = 20, message = "Số căn cước công dân không được vượt quá 20 ký tự")
+    @Pattern(regexp = "^$|[0-9]{12}$", message = "Số căn cước công dân phải gồm đúng 12 chữ số")
+    private String identityCard;
+
+    @Size(max = 50, message = "Mã bảo hiểm y tế không được vượt quá 50 ký tự")
+    @Pattern(regexp = "^$|[0-9]{10}$", message = "Mã số bảo hiểm y tế phải gồm đúng 10 chữ số")
+    private String insuranceNumber;
+
+    private Boolean isPregnant;
 }
