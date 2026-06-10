@@ -10,6 +10,8 @@ import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepo
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.PasswordResetTokenRepository;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.model.user.PasswordResetToken;
@@ -26,6 +28,7 @@ import java.util.Random;
 
 @Service
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmailVerificationTokenRepository tokenRepository;
@@ -33,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final DoctorRepository doctorRepository;
 
     @Value("${app.frontend-url:http://localhost:8081}")
     private String frontendUrl;
@@ -44,6 +48,12 @@ public class UserServiceImpl implements UserService {
                            EmailService emailService,
                            BCryptPasswordEncoder passwordEncoder,
                            JwtUtil jwtUtil) {
+            RoleRepository roleRepository,
+            EmailVerificationTokenRepository tokenRepository,
+            EmailService emailService,
+            BCryptPasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil,
+            DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
@@ -51,6 +61,7 @@ public class UserServiceImpl implements UserService {
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.doctorRepository = doctorRepository;
     }
 
     @Override
@@ -142,10 +153,20 @@ public class UserServiceImpl implements UserService {
         String roleName = user.getRole() != null ? user.getRole().getName() : "UNKNOWN";
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
+        Long doctorId = null;
+        if ("DOCTOR".equals(roleName)) {
+            doctorId = doctorRepository.findAll().stream()
+                    .filter(d -> d.getUser().getId().equals(user.getId()))
+                    .findFirst()
+                    .map(d -> d.getId().longValue())
+                    .orElse(null);
+        }
+
         return LoginResponse.builder()
                 .token(token)
                 .email(user.getEmail())
                 .role(roleName)
+                .doctorId(doctorId)
                 .message("Đăng nhập thành công")
                 .build();
     }
@@ -240,5 +261,31 @@ public class UserServiceImpl implements UserService {
                 <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và bảo mật tài khoản của bạn.</p>
             </div>
             """.formatted(fullName, otp);
+    }
+}
+    @Override
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản"));
+
+        oldPassword = oldPassword.trim();
+        newPassword = newPassword.trim();
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu hiện tại không đúng");
+        }
+
+        if (newPassword.length() < 6) {
+            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu mới không được trùng mật khẩu hiện tại");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(java.time.LocalDateTime.now());
+        userRepository.save(user);
     }
 }

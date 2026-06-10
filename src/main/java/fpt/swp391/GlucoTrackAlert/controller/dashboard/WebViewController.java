@@ -38,6 +38,16 @@ public class WebViewController {
         return "user/user-management";
     }
 
+    @GetMapping("/doctors")
+    public String showDoctorsPage(Model model) {
+        return "doctors";
+    }
+
+    @GetMapping("/assignments")
+    public String showAssignmentsPage(Model model) {
+        return "assignments";
+    }
+
     @PostMapping("/users/save")
     public String saveUser(@RequestParam(required = false) Long id,
                            @RequestParam String email,
