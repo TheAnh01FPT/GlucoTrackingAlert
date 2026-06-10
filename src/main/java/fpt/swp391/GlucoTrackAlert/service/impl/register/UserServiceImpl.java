@@ -47,13 +47,8 @@ public class UserServiceImpl implements UserService {
                            PasswordResetTokenRepository passwordResetTokenRepository,
                            EmailService emailService,
                            BCryptPasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil) {
-            RoleRepository roleRepository,
-            EmailVerificationTokenRepository tokenRepository,
-            EmailService emailService,
-            BCryptPasswordEncoder passwordEncoder,
-            JwtUtil jwtUtil,
-            DoctorRepository doctorRepository) {
+                           JwtUtil jwtUtil,
+                           DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
@@ -262,7 +257,6 @@ public class UserServiceImpl implements UserService {
             </div>
             """.formatted(fullName, otp);
     }
-}
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
