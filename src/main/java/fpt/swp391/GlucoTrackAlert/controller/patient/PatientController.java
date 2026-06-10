@@ -4,6 +4,7 @@ import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileRequest;
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,11 @@ public class PatientController {
         this.patientService = patientService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<PatientProfileResponse>> getAllPatients() {
+        return ResponseEntity.ok(patientService.getAllPatients());
+    }
+
     @PostMapping
     public ResponseEntity<?> createProfile(@Valid @RequestBody PatientProfileRequest request, BindingResult result) {
         if (result.hasErrors()) {
@@ -40,9 +46,9 @@ public class PatientController {
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<?> updateProfile(@PathVariable Long userId, 
-                                           @Valid @RequestBody PatientProfileRequest request, 
-                                           BindingResult result) {
+    public ResponseEntity<?> updateProfile(@PathVariable Long userId,
+            @Valid @RequestBody PatientProfileRequest request,
+            BindingResult result) {
         if (result.hasErrors()) {
             String errors = result.getFieldErrors().stream()
                     .map(error -> error.getField() + ": " + error.getDefaultMessage())
