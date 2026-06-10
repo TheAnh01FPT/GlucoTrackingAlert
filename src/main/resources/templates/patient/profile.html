@@ -16,7 +16,7 @@
             </h1>
             <div style="display: flex; gap: 12px;">
                 <!-- Back to Home Button -->
-                <a th:href="@{/patient/home}" class="action-btn btn-secondary">
+                <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">
                     🏠 Trang chủ
                 </a>
                 <a th:href="@{/patient/profile/edit}" class="action-btn btn-primary">
@@ -59,6 +59,18 @@
                 <div class="detail-item">
                     <span class="detail-label">Địa chỉ</span>
                     <span class="detail-value" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Đà Nẵng</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Số CCCD</span>
+                    <span class="detail-value" th:text="${profile.identityCard != null && !profile.identityCard.isEmpty() ? profile.identityCard : 'Chưa cập nhật'}">Chưa cập nhật</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Mã BHYT</span>
+                    <span class="detail-value" th:text="${profile.insuranceNumber != null && !profile.insuranceNumber.isEmpty() ? profile.insuranceNumber : 'Chưa cập nhật'}">Chưa cập nhật</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Phân loại bệnh nhân</span>
+                    <span class="detail-value" th:text="${profile.patientType == 'pregnant' ? 'Phụ nữ có thai' : (profile.patientType == 'elderly' ? 'Người cao tuổi' : (profile.patientType == 'child' ? 'Trẻ em' : 'Người trưởng thành'))}">Người trưởng thành</span>
                 </div>
             </div>
 
