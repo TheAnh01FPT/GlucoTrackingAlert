@@ -67,7 +67,12 @@ public class AuthController {
         try {
             userService.resetPassword(request);
             return ResponseEntity.ok("Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập ngay.");
-     @PostMapping("/change-password")
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
             Principal principal,
             @RequestBody Map<String, String> body) {
