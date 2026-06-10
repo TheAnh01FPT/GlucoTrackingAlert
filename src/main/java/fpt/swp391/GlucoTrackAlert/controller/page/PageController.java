@@ -1,37 +1,37 @@
 package fpt.swp391.GlucoTrackAlert.controller.page;
 
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
+import fpt.swp391.GlucoTrackAlert.dto.relative.RelativeResponse;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
+import fpt.swp391.GlucoTrackAlert.service.relative.RelativeService;
 import org.springframework.beans.factory.annotation.Autowired;
-<<<<<<< HEAD
-=======
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
->>>>>>> 63fc967ead7618bdcf459ccfb93361dac43855b4
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @Controller
 public class PageController {
 
-<<<<<<< HEAD
-    @Autowired private PatientService patientService;
-    @Autowired private UserRepository userRepository;
-=======
     private final PatientService patientService;
     private final UserRepository userRepository;
+    private final RelativeService relativeService;
 
     @Autowired
-    public PageController(PatientService patientService, UserRepository userRepository) {
+    public PageController(PatientService patientService,
+                          UserRepository userRepository,
+                          RelativeService relativeService) {
         this.patientService = patientService;
         this.userRepository = userRepository;
+        this.relativeService = relativeService;
     }
->>>>>>> 63fc967ead7618bdcf459ccfb93361dac43855b4
 
     @GetMapping("/login")
     public String loginPage() { return "login/login"; }
@@ -40,37 +40,22 @@ public class PageController {
     public String registerPage() { return "register/register"; }
 
     @GetMapping("/patient/homepage")
-<<<<<<< HEAD
-<<<<<<< HEAD
-    public String patientDashboard() { return "homepage/homepage"; }
-=======
-    public String patientDashboard() {
-=======
     public String patientDashboard(@RequestParam(value = "userId", required = false) Long userId, Model model) {
-        // Resolve user dynamically from SecurityContext if not provided in URL
         if (userId == null) {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
                 String email = (String) auth.getPrincipal();
                 User user = userRepository.findByEmail(email).orElse(null);
-                if (user != null) {
-                    userId = user.getId();
-                }
+                if (user != null) userId = user.getId();
             }
         }
-        
-        // Fallback default
-        if (userId == null) {
-            userId = 1L;
-        }
+        if (userId == null) userId = 1L;
 
         model.addAttribute("userId", userId);
-        
         try {
             User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 model.addAttribute("userEmail", user.getEmail());
-                
                 try {
                     PatientProfileResponse profile = patientService.getProfileByUserId(userId);
                     model.addAttribute("patientName", profile.getFullName());
@@ -85,11 +70,8 @@ public class PageController {
             model.addAttribute("userEmail", "Lỗi kết nối");
             model.addAttribute("patientName", "Khách");
         }
-        
->>>>>>> 63fc967ead7618bdcf459ccfb93361dac43855b4
         return "patient/home";
     }
->>>>>>> c545ee98a670e61bfc41298782e381f13be98b14
 
     @GetMapping("/doctor/homepage")
     public String doctorDashboard() { return "homepage/homepage"; }
@@ -111,6 +93,9 @@ public class PageController {
             if (profile.getBmi() != null && profile.getBmi().doubleValue() >= 30) {
                 condition = "obese";
             }
+            if (Boolean.TRUE.equals(profile.getIsPregnant())) {
+                condition = "pregnant";
+            }
 
             String gender = "male";
             if (profile.getGender() != null) {
@@ -120,6 +105,9 @@ public class PageController {
                 }
             }
 
+            // Lấy danh sách người thân (dùng patient.id, không phải user.id)
+            List<RelativeResponse> relatives = relativeService.getRelativesByPatientId(profile.getId());
+
             model.addAttribute("patientId",   user.getId());
             model.addAttribute("patientName", profile.getFullName());
             model.addAttribute("gender",      gender);
@@ -127,6 +115,7 @@ public class PageController {
             model.addAttribute("condition",   condition);
             model.addAttribute("age",         age);
             model.addAttribute("bmi",         profile.getBmi() != null ? profile.getBmi().toString() : "—");
+            model.addAttribute("relatives",   relatives);
 
         } catch (Exception e) {
             model.addAttribute("patientId",   1L);
@@ -136,6 +125,7 @@ public class PageController {
             model.addAttribute("condition",   "none");
             model.addAttribute("age",         65);
             model.addAttribute("bmi",         "—");
+            model.addAttribute("relatives",   List.of());
         }
         return "meal-logs";
     }
