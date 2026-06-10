@@ -2,6 +2,8 @@ package fpt.swp391.GlucoTrackAlert.controller.auth;
 
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginRequest;
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginResponse;
+import fpt.swp391.GlucoTrackAlert.dto.login.ForgotPasswordRequest;
+import fpt.swp391.GlucoTrackAlert.dto.login.ResetPasswordRequest;
 import fpt.swp391.GlucoTrackAlert.dto.register.RegisterRequest;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
@@ -43,6 +45,26 @@ public class AuthController {
         try {
             LoginResponse response = userService.login(request);
             return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            userService.forgotPassword(request);
+            return ResponseEntity.ok("Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn.");
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            userService.resetPassword(request);
+            return ResponseEntity.ok("Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập ngay.");
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
