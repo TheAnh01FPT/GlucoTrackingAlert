@@ -56,6 +56,16 @@ public class Patient {
     @Builder.Default
     private String status = "active";
 
+    @Column(name = "identity_card", length = 20)
+    private String identityCard;
+
+    @Column(name = "insurance_number", length = 50)
+    private String insuranceNumber;
+
+    @Column(name = "is_pregnant")
+    @Builder.Default
+    private Boolean isPregnant = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
