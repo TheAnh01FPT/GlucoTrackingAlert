@@ -24,6 +24,10 @@ public class PatientProfileResponse {
     private BigDecimal weightKg;
     private BigDecimal bmi;
     private String status;
+    private String identityCard;
+    private String insuranceNumber;
+    private String patientType;
+    private Boolean isPregnant;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

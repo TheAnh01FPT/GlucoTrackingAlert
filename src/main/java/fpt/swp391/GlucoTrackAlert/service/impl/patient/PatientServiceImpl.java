@@ -47,6 +47,11 @@ public class PatientServiceImpl implements PatientService {
             throw new RuntimeException("Patient profile already exists for user ID: " + request.getUserId());
         }
 
+        boolean isPregnantVal = false;
+        if ("Nữ".equalsIgnoreCase(request.getGender()) && request.getIsPregnant() != null) {
+            isPregnantVal = request.getIsPregnant();
+        }
+
         Patient patient = Patient.builder()
                 .user(user)
                 .fullName(request.getFullName())
@@ -56,6 +61,9 @@ public class PatientServiceImpl implements PatientService {
                 .address(request.getAddress())
                 .heightCm(request.getHeightCm())
                 .weightKg(request.getWeightKg())
+                .identityCard(request.getIdentityCard())
+                .insuranceNumber(request.getInsuranceNumber())
+                .isPregnant(isPregnantVal)
                 .status("active")
                 .build();
 
@@ -78,6 +86,14 @@ public class PatientServiceImpl implements PatientService {
         patient.setAddress(request.getAddress());
         patient.setHeightCm(request.getHeightCm());
         patient.setWeightKg(request.getWeightKg());
+        patient.setIdentityCard(request.getIdentityCard());
+        patient.setInsuranceNumber(request.getInsuranceNumber());
+        
+        boolean isPregnantVal = false;
+        if ("Nữ".equalsIgnoreCase(request.getGender()) && request.getIsPregnant() != null) {
+            isPregnantVal = request.getIsPregnant();
+        }
+        patient.setIsPregnant(isPregnantVal);
 
         calculateAgeAndBmi(patient);
 
@@ -114,6 +130,19 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
+    private String determinePatientType(Patient patient) {
+        if (patient.getAge() != null && patient.getAge() < 18) {
+            return "child";
+        }
+        if (patient.getAge() != null && patient.getAge() >= 60) {
+            return "elderly";
+        }
+        if ("Nữ".equalsIgnoreCase(patient.getGender()) && Boolean.TRUE.equals(patient.getIsPregnant())) {
+            return "pregnant";
+        }
+        return "adult";
+    }
+
     private PatientProfileResponse mapToResponse(Patient patient) {
         return PatientProfileResponse.builder()
                 .id(patient.getId())
@@ -129,6 +158,10 @@ public class PatientServiceImpl implements PatientService {
                 .weightKg(patient.getWeightKg())
                 .bmi(patient.getBmi())
                 .status(patient.getStatus())
+                .identityCard(patient.getIdentityCard())
+                .insuranceNumber(patient.getInsuranceNumber())
+                .patientType(determinePatientType(patient))
+                .isPregnant(patient.getIsPregnant())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
                 .build();
