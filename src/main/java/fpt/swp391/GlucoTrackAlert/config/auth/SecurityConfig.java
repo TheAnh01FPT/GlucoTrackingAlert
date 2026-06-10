@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -17,26 +16,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-                // 1. Tắt CSRF theo cú pháp mới của Spring Boot 3.x
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/patient/**", "/api/patient/**").hasRole("PATIENT")
+                        .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
+                        .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
+                        .requestMatchers("/patient/**").hasRole("PATIENT")
                         .requestMatchers("/doctor/**", "/api/doctor/**").hasRole("DOCTOR")
                         .anyRequest().authenticated()
                 )
 
-                // 3. Cấu hình Session Stateless
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // 4. Cho phép hiển thị H2 Console trong thẻ iframe
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-                
-                // 5. Thêm filter kiểm tra JWT trước filter xác thực mật khẩu
+
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

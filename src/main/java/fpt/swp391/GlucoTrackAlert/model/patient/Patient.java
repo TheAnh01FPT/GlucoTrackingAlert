@@ -1,5 +1,6 @@
 package fpt.swp391.GlucoTrackAlert.model.patient;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Patient {
 
     @Id
