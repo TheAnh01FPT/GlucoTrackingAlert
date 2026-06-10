@@ -154,14 +154,29 @@
 
     function resendOtp() {
         const messageBox = document.getElementById('messageBox');
-        fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-            body: JSON.stringify({ email: registeredEmail })
-        });
-        messageBox.style.display = 'block';
-        messageBox.className = 'message success';
-        messageBox.innerText = "Đã gửi lại mã xác nhận đến " + registeredEmail;
+        if (!registeredEmail) {
+            messageBox.style.display = 'block';
+            messageBox.className = 'message error';
+            messageBox.innerText = 'Không xác định được email. Vui lòng đăng ký lại.';
+            return;
+        }
+        fetch(`/api/auth/resend-otp?email=${encodeURIComponent(registeredEmail)}`, { method: 'POST' })
+            .then(async response => {
+                const text = await response.text();
+                messageBox.style.display = 'block';
+                if (response.ok) {
+                    messageBox.className = 'message success';
+                    messageBox.innerText = 'Đã gửi lại mã xác nhận đến ' + registeredEmail;
+                } else {
+                    messageBox.className = 'message error';
+                    messageBox.innerText = text || 'Gửi lại thất bại.';
+                }
+            })
+            .catch(() => {
+                messageBox.style.display = 'block';
+                messageBox.className = 'message error';
+                messageBox.innerText = 'Không thể kết nối đến server.';
+            });
     }
 </script>
 </body>

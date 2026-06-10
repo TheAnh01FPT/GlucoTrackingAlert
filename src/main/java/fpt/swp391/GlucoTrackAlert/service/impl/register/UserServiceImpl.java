@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.Random;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -41,6 +41,27 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.jwtUtil = jwtUtil;
+    }
+
+    // Tạo mã OTP 6 chữ số
+    private String generateOtp() {
+        return String.format("%06d", new Random().nextInt(999999));
+    }
+
+    // Gửi email chứa OTP
+    private void sendOtpEmail(String toEmail, String fullName, String otp) throws Exception {
+        String subject = "Mã xác nhận đăng ký tài khoản GlucoTrack";
+        String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 480px; margin: auto;'>"
+                + "<h2 style='color: #e74c3c;'>🩸 GlucoTrack</h2>"
+                + "<p>Xin chào <b>" + fullName + "</b>,</p>"
+                + "<p>Mã xác nhận của bạn là:</p>"
+                + "<div style='font-size: 36px; font-weight: bold; letter-spacing: 12px; "
+                + "text-align: center; padding: 20px; background: #f4f7f6; border-radius: 8px; "
+                + "color: #2c3e50;'>" + otp + "</div>"
+                + "<p style='margin-top: 16px;'>Mã có hiệu lực trong <b>10 phút</b>. "
+                + "Không chia sẻ mã này với bất kỳ ai.</p>"
+                + "</div>";
+        emailService.sendHtmlMessage(toEmail, subject, htmlContent);
     }
 
     @Override
@@ -67,40 +88,65 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        // Tạo token xác thực email
-        String token = UUID.randomUUID().toString();
+        // Tạo OTP 6 số
+        String otp = generateOtp();
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
                 .user(user)
-                .verificationToken(token)
-                .expiredAt(LocalDateTime.now().plusHours(24))
+                .verificationToken(otp)
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
                 .status("pending")
                 .createdAt(LocalDateTime.now())
                 .build();
         tokenRepository.save(verificationToken);
 
-        // Gửi email xác thực
-        String subject = "Xác nhận đăng ký tài khoản GlucoTrack";
-        String htmlContent = "<h3>Xin chào " + request.getFullName() + ",</h3>"
-                + "<p>Vui lòng nhấn vào link bên dưới để xác nhận email của bạn:</p>"
-                + "<a href='http://localhost:8081/api/auth/verify-otp?otp=" + token + "'>Xác nhận email</a>"
-                + "<p>Link có hiệu lực trong 24 giờ.</p>";
-        emailService.sendHtmlMessage(request.getEmail(), subject, htmlContent);
+        sendOtpEmail(request.getEmail(), request.getFullName(), otp);
 
         return user;
     }
 
     @Override
     @Transactional
+    public void resendOtp(String email) throws Exception {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản với email này."));
+
+        if (Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new Exception("Tài khoản này đã được xác nhận rồi.");
+        }
+
+        // Hủy tất cả OTP cũ còn pending
+        tokenRepository.expireAllPendingByUserId(user.getId());
+
+        // Tạo OTP mới
+        String otp = generateOtp();
+        EmailVerificationToken verificationToken = EmailVerificationToken.builder()
+                .user(user)
+                .verificationToken(otp)
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
+                .status("pending")
+                .createdAt(LocalDateTime.now())
+                .build();
+        tokenRepository.save(verificationToken);
+
+        sendOtpEmail(email, user.getFullName(), otp);
+    }
+
+    @Override
+    @Transactional
     public User activateUser(String token) throws Exception {
         EmailVerificationToken verificationToken = tokenRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new Exception("Mã xác nhận không hợp lệ."));
+                .orElseThrow(() -> new Exception("Mã xác nhận không đúng."));
 
         if (verificationToken.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new Exception("Mã xác nhận đã hết hạn. Vui lòng đăng ký lại.");
+            throw new Exception("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
         }
 
         if ("verified".equals(verificationToken.getStatus())) {
-            throw new Exception("Tài khoản đã được xác nhận trước đó.");
+            throw new Exception("Mã xác nhận đã được sử dụng rồi.");
+        }
+
+        if ("expired".equals(verificationToken.getStatus())) {
+            throw new Exception("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
         }
 
         User user = verificationToken.getUser();

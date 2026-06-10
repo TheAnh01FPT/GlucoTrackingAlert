@@ -9,4 +9,5 @@ public interface UserService {
     User register(RegisterRequest request) throws Exception;
     User activateUser(String token) throws Exception;
     LoginResponse login(LoginRequest request) throws Exception;
+    void resendOtp(String email) throws Exception;
 }

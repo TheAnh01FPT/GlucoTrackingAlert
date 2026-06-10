@@ -201,8 +201,18 @@ tbody tr.row-danger:hover{background:#fee2e2}
   <div class="sos-title">🚨 Liên hệ khẩn cấp</div>
   <div class="sos-item">🚑 Cấp cứu: <a href="tel:115">115</a></div>
   <div class="sos-item">🏥 Bệnh viện: <a href="tel:1900">1900</a></div>
-  <div class="sos-item">👤 Người thân: <a href="tel:">Gọi người thân</a></div>
-  <div style="margin-top:10px;font-size:13px;color:var(--text-muted)">* Nếu đường huyết rất cao, nghỉ ngơi ngay và gọi người thân!</div>
+  <!-- Danh sách người thân từ DB -->
+  <div th:if="${relatives != null and !relatives.empty}">
+    <div th:each="r : ${relatives}" class="sos-item">
+      👤 <b th:text="${r.fullName}">Người thân</b>
+      <span th:if="${r.relationship != null}" style="color:var(--text-muted);font-size:13px" th:text="${'(' + r.relationship + ')'}"></span>:
+      <a th:href="${'tel:' + r.phone}" th:text="${r.phone != null ? r.phone : 'Chưa có SĐT'}">Gọi</a>
+    </div>
+  </div>
+  <div th:if="${relatives == null or relatives.empty}" class="sos-item">
+    👤 Chưa có người thân nào — <a href="/patient/relatives">Thêm ngay</a>
+  </div>
+  <div style="margin-top:10px;font-size:13px;color:var(--text-muted)">💡 Nếu đường huyết rất cao, nghỉ ngơi ngay và gọi người thân!</div>
 </div>
 
 <div class="header">
@@ -251,6 +261,10 @@ tbody tr.row-danger:hover{background:#fee2e2}
       </div>
       <div style="color:rgba(255,255,255,.8);font-size:14px">
         📊 BMI: <b th:text="${bmi}">—</b>
+      </div>
+      <div th:if="${condition != null and condition != 'none'}"
+           th:style="${condition == 'pregnant'} ? 'font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap;background:rgba(255,182,193,.35);color:#fff;' : 'font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap;background:rgba(255,165,0,.35);color:#fff;'"
+           th:text="${condition == 'pregnant'} ? '🤰 Đang mang thai' : '⚖️ B�o phì'">
       </div>
     </div>
     <div class="profile-indicator" id="profileIndicator">
@@ -501,6 +515,13 @@ const PROFILE_ICONS = {
 
 // onGenderChange removed - profile loaded from patient record
 
+function getPronoun(gender, ageGroup) {
+  if (ageGroup === 'young') return gender === 'male' ? 'Anh' : 'Chị';
+  if (ageGroup === 'middle') return gender === 'male' ? 'Anh' : 'Bà';
+  // elder
+  return gender === 'male' ? 'Ông' : 'Bà';
+}
+
 function getProfile() {
   // Doc tu hidden inputs (du lieu tu server, lay tu ho so benh nhan da dang ky)
   const gender    = (document.getElementById('profileGender')    || {value:'male'}).value   || 'male';
@@ -587,7 +608,7 @@ function calcSugar() {
   }
 
   const { gender, ageGroup, condition, factor, baseFactor, mod, sugarFactor } = getProfile();
-  const pronoun = gender === 'male' ? 'Ông' : 'Bà';
+  const pronoun = getPronoun(gender, ageGroup);
   const profileLabel = PROFILE_LABELS[gender][ageGroup] + mod.label;
   const thresholds = SUGAR_THRESHOLDS[condition];
 
@@ -699,10 +720,12 @@ function checkRemind(data){
   const now=new Date(),h=now.getHours(),t=today();
   const td=data.filter(x=>(x.mealDate||x.logDate||'')===t);
   const hasMeal=type=>td.some(x=>x.mealType===type);
+  const {gender, ageGroup} = getProfile();
+  const p = getPronoun(gender, ageGroup);
   let msg='';
-  if(h>=12&&h<14&&!hasMeal('Lunch')) msg='🍜 Ông/bà chưa ghi bữa trưa hôm nay! Hãy ghi lại để theo dõi đường huyết nhé.';
-  else if(h>=7&&h<10&&!hasMeal('Breakfast')) msg='🌅 Chào buổi sáng! Ông/bà chưa ghi bữa sáng hôm nay. Hãy ghi lại nhé!';
-  else if(h>=18&&h<21&&!hasMeal('Dinner')) msg='🌙 Ông/bà chưa ghi bữa tối hôm nay! Nhớ ghi lại sau khi ăn để theo dõi sức khỏe.';
+  if(h>=12&&h<14&&!hasMeal('Lunch')) msg='🍜 ' + p + ' chưa ghi bữa trưa hôm nay! Hãy ghi lại để theo dõi đường huyết nhé.';
+  else if(h>=7&&h<10&&!hasMeal('Breakfast')) msg='🌅 Chào buổi sáng! ' + p + ' chưa ghi bữa sáng hôm nay. Hãy ghi lại nhé!';
+  else if(h>=18&&h<21&&!hasMeal('Dinner')) msg='🌙 ' + p + ' chưa ghi bữa tối hôm nay! Nhớ ghi lại sau khi ăn để theo dõi sức khỏe.';
   if(msg){document.getElementById('remindText').textContent=msg;document.getElementById('remindBanner').style.display='flex';}
 }
 
@@ -711,10 +734,12 @@ function calcStreak(data){
   let streak=0,d=new Date();
   while(true){const s=d.toISOString().split('T')[0];if(days.has(s)){streak++;d.setDate(d.getDate()-1);}else break;}
   document.getElementById('streakNum').textContent=streak;
-  if(streak>=7) document.getElementById('streakMsg').textContent='Tuyệt vời! Ông/bà đang duy trì rất tốt 🏆';
-  else if(streak>=3) document.getElementById('streakMsg').textContent='Tốt lắm! Ông/bà đang cố gắng rất giỏi 💪';
+  const {gender, ageGroup} = getProfile();
+  const p = getPronoun(gender, ageGroup);
+  if(streak>=7) document.getElementById('streakMsg').textContent='Tuyệt vời! ' + p + ' đang duy trì rất tốt 🏆';
+  else if(streak>=3) document.getElementById('streakMsg').textContent='Tốt lắm! ' + p + ' đang cố gắng rất giỏi 💪';
   else if(streak===0) document.getElementById('streakMsg').textContent='Hãy ghi nhật ký hôm nay để bắt đầu theo dõi!';
-  else document.getElementById('streakMsg').textContent='Ông/bà đang làm rất tốt! Tiếp tục nhé!';
+  else document.getElementById('streakMsg').textContent= p + ' đang làm rất tốt! Tiếp tục nhé!';
   const now=new Date();
   document.getElementById('streakDate').textContent='Hôm nay: '+now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
 }
@@ -734,9 +759,11 @@ function updateDailySummary(data){
   document.getElementById('sumMeals').textContent=td.length;
   document.getElementById('sumSugar').textContent=getSugarLabel(maxSugar);
   const s=document.getElementById('sumStatus');
-  if(maxSugar>=11){s.textContent='🚨 Đường ước tính rất cao — ông/bà cần chú ý!';s.className='ds-status ds-danger';}
+  const {gender, ageGroup} = getProfile();
+  const p = getPronoun(gender, ageGroup);
+  if(maxSugar>=11){s.textContent='🚨 Đường ước tính rất cao — ' + p.toLowerCase() + ' cần chú ý!';s.className='ds-status ds-danger';}
   else if(maxSugar>=7.8){s.textContent='⚡ Cần chú ý — đường hơi cao, theo dõi thêm nhé';s.className='ds-status ds-warn';}
-  else{s.textContent='✅ Sức khỏe ổn định — ông/bà đang làm rất tốt!';s.className='ds-status ds-safe';}
+  else{s.textContent='✅ Sức khỏe ổn định — ' + p.toLowerCase() + ' đang làm rất tốt!';s.className='ds-status ds-safe';}
 }
 
 function buildChart(data){
@@ -900,7 +927,8 @@ function exportCSV(){
 
 async function loadLogs(){
   try{
-    const res=await fetch(API);
+    const patientId = Number(document.getElementById('profilePatientId').value) || 1;
+    const res=await fetch(`${API}/patient/${patientId}`);
     allData=await res.json();
     renderTable(allData);buildChart(allData);calcStreak(allData);updateDailySummary(allData);checkRemind(allData);
   }catch{
@@ -919,9 +947,11 @@ async function doSave(payload,method,url){
 
 async function addLog(){
   const food=document.getElementById('foodName').value.trim();
-  if(!food){showToast('Ông/bà ơi, chưa nhập tên món ăn!','error');return;}
+  const {gender, ageGroup} = getProfile();
+  const p = getPronoun(gender, ageGroup);
+  if(!food){showToast(p + ' ơi, chưa nhập tên món ăn!','error');return;}
   const qty=document.getElementById('quantityInput').value.trim();
-  if(!qty){showToast('Ông/bà ơi, chưa nhập số lượng!','error');return;}
+  if(!qty){showToast(p + ' ơi, chưa nhập số lượng!','error');return;}
   const estSugar=Number(document.getElementById('sugarEstimation').value)||0;
   try{
     const prof = getProfile();
@@ -938,7 +968,8 @@ async function addLog(){
       conditionType: prof.condition
     },'POST',API);
     const thr = SUGAR_THRESHOLDS[prof.condition];
-    if(estSugar>=thr.danger) showToast('Đã lưu! 🚨 Đường ước tính rất cao với hồ sơ của ông/bà — hãy nghỉ ngơi và theo dõi nhé!','error');
+    const p2 = getPronoun(prof.gender, prof.ageGroup);
+    if(estSugar>=thr.danger) showToast('Đã lưu! 🚨 Đường ước tính rất cao với hồ sơ của ' + p2.toLowerCase() + ' — hãy nghỉ ngơi và theo dõi nhé!','error');
     else if(estSugar>=thr.warn) showToast('Đã lưu! 💡 Đường hơi cao — nên đi bộ nhẹ sau ăn!','warn');
   }catch(e){showToast('Có lỗi: '+e.message,'error');}
 }
