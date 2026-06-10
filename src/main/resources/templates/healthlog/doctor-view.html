@@ -586,8 +586,7 @@
         </a>
         <nav class="navbar-menu">
             <a href="/health-logs/doctor-view" class="navbar-link active">Xem Nhật Ký Bệnh Nhân</a>
-            <a th:href="@{/health-logs/chart(userId=${selectedUserId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            <a href="/admin/dashboard" class="navbar-admin">🛡️ Quản Trị</a>
+            <a th:href="@{/health-logs/doctor-chart(userId=${selectedUserId})}"class="navbar-link">Biểu Đồ Xu Hướng</a>
         </nav>
     </header>
 
