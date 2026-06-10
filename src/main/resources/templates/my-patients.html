@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Bệnh nhân phụ trách – GlucoTrackAlert</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+        <style>
+            :root {
+                --primary: #1a56db;
+                --primary-light: #ebf0ff;
+                --primary-dark: #1e3a8a;
+                --accent: #3b82f6;
+                --sidebar-w: 240px;
+                --font: 'Be Vietnam Pro', sans-serif;
+            }
+            * {
+                font-family: var(--font);
+            }
+            body {
+                background: #f0f4f8;
+            }
+            .sidebar {
+                width:var(--sidebar-w);
+                min-height:100vh;
+                background:var(--primary-dark);
+                position:fixed;
+                top:0;
+                left:0;
+                display:flex;
+                flex-direction:column;
+                z-index:100;
+            }
+            .sidebar-logo {
+                padding:24px 20px 16px;
+                border-bottom:1px solid rgba(255,255,255,.1);
+            }
+            .sidebar-logo span {
+                color:#fff;
+                font-weight:700;
+                font-size:1.1rem;
+            }
+            .sidebar-logo small {
+                color:rgba(255,255,255,.5);
+                font-size:.7rem;
+                display:block;
+            }
+            .sidebar-nav {
+                padding:12px 0;
+                flex:1;
+            }
+            .nav-item-link {
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding:10px 20px;
+                color:rgba(255,255,255,.7);
+                text-decoration:none;
+                font-size:.875rem;
+                transition:all .2s;
+            }
+            .nav-item-link:hover, .nav-item-link.active {
+                color:#fff;
+                background:rgba(255,255,255,.1);
+                border-left:3px solid var(--accent);
+                padding-left:17px;
+            }
+            .nav-item-link i {
+                font-size:1rem;
+                width:20px;
+            }
+            .main {
+                margin-left:var(--sidebar-w);
+                padding:28px 32px;
+            }
+            .topbar {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                margin-bottom:24px;
+            }
+            .topbar h4 {
+                font-weight:700;
+                color:#1a1a2e;
+                margin:0;
+            }
+
+            .doctor-card {
+                background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+                border-radius: 16px;
+                padding: 24px 28px;
+                color: #fff;
+                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                box-shadow: 0 4px 20px rgba(30,58,138,.3);
+            }
+            .doctor-avatar {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                background: rgba(255,255,255,.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #fff;
+                flex-shrink: 0;
+            }
+            .doctor-name {
+                font-size: 1.2rem;
+                font-weight: 700;
+            }
+            .doctor-meta {
+                opacity: .8;
+                font-size: .85rem;
+            }
+            .badge-doctor {
+                margin-left:auto;
+                background:rgba(255,255,255,.15);
+                border:1px solid rgba(255,255,255,.3);
+                color:#fff;
+                border-radius:8px;
+                padding:6px 14px;
+                font-size:.85rem;
+                display:flex;
+                align-items:center;
+                gap:6px;
+            }
+
+            .stat-card {
+                background:#fff;
+                border-radius:12px;
+                padding:20px 24px;
+                display:flex;
+                align-items:center;
+                gap:16px;
+                box-shadow:0 1px 4px rgba(0,0,0,.06);
+                border:1px solid #e8edf5;
+            }
+            .stat-icon {
+                width:48px;
+                height:48px;
+                border-radius:12px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:1.3rem;
+            }
+            .stat-label {
+                font-size:.78rem;
+                color:#6c757d;
+                font-weight:500;
+            }
+            .stat-val {
+                font-size:1.6rem;
+                font-weight:700;
+                color:#1a1a2e;
+                line-height:1;
+            }
+            .toolbar {
+                background:#fff;
+                border-radius:12px;
+                padding:16px 20px;
+                display:flex;
+                gap:12px;
+                align-items:center;
+                margin-bottom:16px;
+                box-shadow:0 1px 4px rgba(0,0,0,.06);
+                border:1px solid #e8edf5;
+            }
+            .search-wrap {
+                position:relative;
+                flex:1;
+            }
+            .search-wrap i {
+                position:absolute;
+                left:12px;
+                top:50%;
+                transform:translateY(-50%);
+                color:#aaa;
+            }
+            .search-wrap input {
+                padding-left:36px;
+                border-radius:8px;
+                border:1px solid #dde;
+                font-size:.875rem;
+                height:38px;
+                width:100%;
+            }
+            .search-wrap input:focus {
+                outline:none;
+                border-color:var(--primary);
+                box-shadow:0 0 0 3px rgba(26,86,219,.12);
+            }
+
+            .patient-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 16px;
+            }
+            .patient-card {
+                background: #fff;
+                border-radius: 12px;
+                border: 1px solid #e8edf5;
+                box-shadow: 0 1px 4px rgba(0,0,0,.06);
+                padding: 20px;
+                transition: box-shadow .2s, transform .15s;
+                position: relative;
+                overflow: hidden;
+            }
+            .patient-card:hover {
+                box-shadow: 0 4px 16px rgba(26,86,219,.12);
+                transform: translateY(-2px);
+            }
+            .patient-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, var(--primary), var(--accent));
+            }
+            .patient-avatar {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: var(--primary-light);
+                color: var(--primary);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+                font-weight: 700;
+                margin-bottom: 12px;
+            }
+            .patient-name {
+                font-weight: 700;
+                color: #1a1a2e;
+                font-size: .95rem;
+                margin-bottom: 4px;
+            }
+            .patient-info {
+                font-size: .8rem;
+                color: #6c757d;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 3px;
+            }
+            .patient-info i {
+                color: var(--primary);
+                width: 14px;
+            }
+            .badge-status {
+                padding:4px 10px;
+                border-radius:20px;
+                font-size:.75rem;
+                font-weight:600;
+            }
+            .badge-active {
+                background:#d4edda;
+                color:#155724;
+            }
+            .badge-inactive {
+                background:#f8d7da;
+                color:#721c24;
+            }
+
+            .view-toggle {
+                display: flex;
+                gap: 4px;
+            }
+            .view-btn {
+                border: 1px solid #dde;
+                background: #fff;
+                border-radius: 6px;
+                padding: 6px 10px;
+                cursor: pointer;
+                color: #6c757d;
+                font-size: .9rem;
+                transition: all .15s;
+            }
+            .view-btn.active {
+                background: var(--primary);
+                color: #fff;
+                border-color: var(--primary);
+            }
+
+            .table-wrap {
+                background:#fff;
+                border-radius:12px;
+                overflow:hidden;
+                box-shadow:0 1px 4px rgba(0,0,0,.06);
+                border:1px solid #e8edf5;
+            }
+            .table {
+                margin:0;
+                font-size:.875rem;
+            }
+            .table thead th {
+                background:#f5f7ff;
+                font-weight:600;
+                color:#495057;
+                font-size:.78rem;
+                text-transform:uppercase;
+                letter-spacing:.5px;
+                padding:13px 16px;
+                border-bottom:1px solid #e9ecef;
+            }
+            .table tbody td {
+                padding:13px 16px;
+                vertical-align:middle;
+                border-color:#f0f0f0;
+            }
+            .table tbody tr:hover {
+                background:#fafbff;
+            }
+            .avatar-circle {
+                width:34px;
+                height:34px;
+                border-radius:50%;
+                background:var(--primary-light);
+                color:var(--primary);
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                font-weight:700;
+                font-size:.8rem;
+                margin-right:8px;
+            }
+            #tableView {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <span><i class="bi bi-droplet-half me-2" style="color:#3b82f6"></i>GlucoTrackAlert</span>
+                <small>Cổng bác sĩ</small>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/doctor/home" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+                <a href="/doctor/my-patients" class="nav-item-link active"><i class="bi bi-people"></i> Bệnh nhân của tôi</a>
+                <a href="#" class="nav-item-link"><i class="bi bi-graph-up"></i> Chỉ số Glucose</a>
+                <a href="#" class="nav-item-link"><i class="bi bi-bell"></i> Cảnh báo</a>
+                <a href="/doctor/settings" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+            </nav>
+            <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
+                <div style="color:rgba(255,255,255,.5); font-size:.75rem">Bác sĩ</div>
+                <div style="color:#fff; font-size:.85rem; font-weight:600" id="sidebarDrName">–</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="topbar">
+                <h4><i class="bi bi-people me-2" style="color:var(--primary)"></i>Bệnh nhân phụ trách</h4>
+            </div>
+
+            <!-- Doctor info card (không có dropdown) -->
+            <div class="doctor-card">
+                <div class="doctor-avatar" id="drAvatar">?</div>
+                <div>
+                    <div class="doctor-name" id="drName">Đang tải...</div>
+                    <div class="doctor-meta" id="drMeta">–</div>
+                </div>
+                <div class="badge-doctor">
+                    <i class="bi bi-shield-check"></i> Bác sĩ phụ trách
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#ebf0ff; color:var(--primary)"><i class="bi bi-people"></i></div>
+                        <div><div class="stat-label">Tổng bệnh nhân</div><div class="stat-val" id="totalPat">–</div></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#d4edda; color:#155724"><i class="bi bi-person-check"></i></div>
+                        <div><div class="stat-label">Đang theo dõi</div><div class="stat-val" id="activePat">–</div></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fff3cd; color:#856404"><i class="bi bi-telephone"></i></div>
+                        <div><div class="stat-label">Có số điện thoại</div><div class="stat-val" id="phonePat">–</div></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#e8eaf6; color:#3949ab"><i class="bi bi-envelope"></i></div>
+                        <div><div class="stat-label">Có email</div><div class="stat-val" id="emailPat">–</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm theo tên, điện thoại, email..."/>
+                </div>
+                <select class="form-select" id="filterStatus" style="width:160px; height:38px; font-size:.875rem; border-radius:8px">
+                    <option value="">Tất cả</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Ngừng hoạt động</option>
+                </select>
+                <div class="view-toggle">
+                    <button class="view-btn active" id="btnCard" onclick="setView('card')" title="Dạng thẻ"><i class="bi bi-grid-3x3-gap"></i></button>
+                    <button class="view-btn" id="btnTable" onclick="setView('table')" title="Dạng bảng"><i class="bi bi-list-ul"></i></button>
+                </div>
+            </div>
+
+            <!-- Card view -->
+            <div id="cardView">
+                <div class="patient-grid" id="patientGrid">
+                    <div class="text-center text-muted py-5" style="grid-column:1/-1">
+                        <i class="bi bi-arrow-clockwise" style="font-size:2rem; display:block; margin-bottom:8px; opacity:.4"></i>
+                        Đang tải danh sách bệnh nhân...
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 4px; margin-top:8px;">
+                    <div id="cardPagInfo" style="font-size:.8rem; color:#6c757d;"></div>
+                    <div id="cardPagBtns" style="display:flex; gap:4px;"></div>
+                </div>
+            </div>
+
+            <!-- Table view -->
+            <div id="tableView">
+                <div class="table-wrap">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Họ tên</th><th>Điện thoại</th><th>Email</th><th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientTable">
+                            <tr><td colspan="5" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-top:1px solid #f0f0f0;">
+                        <div id="tablePagInfo" style="font-size:.8rem; color:#6c757d;"></div>
+                        <div id="tablePagBtns" style="display:flex; gap:4px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+
+            function handleAuthError(status) {
+                if (status === 401 || status === 403) {
+                    localStorage.clear();
+                    document.cookie = 'jwt=; path=/; max-age=0';
+                    window.location.href = '/login';
+                    return true;
+                }
+                return false;
+            }
+
+                        let allPatients = [], filteredPatients = [], currentDoctorId = null;
+                        const PAT_PAGE_SIZE = 12;
+                        let patPage = 1;
+
+        // Lấy doctorId từ URL: /doctor/my-patients?doctorId=1, fallback localStorage
+                        function getDoctorIdFromUrl() {
+                            return new URLSearchParams(window.location.search).get('doctorId')
+                                || localStorage.getItem('doctorId');
+                        }
+
+                        function getInitials(name) {
+                            if (!name)
+                                return '?';
+                            return name.trim().split(' ').pop()[0].toUpperCase();
+                        }
+
+                        async function loadDoctor(doctorId) {
+                            try {
+                                const doc = await fetch(`/api/doctors/${doctorId}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
+                                const initials = getInitials(doc.fullName);
+                                document.getElementById('drAvatar').textContent = initials;
+                                document.getElementById('drName').textContent = (doc.degree ? doc.degree + '. ' : '') + (doc.fullName || '–');
+                                document.getElementById('drMeta').textContent = [doc.specialization, doc.experienceYears ? doc.experienceYears + ' năm KN' : null, doc.phone].filter(Boolean).join(' · ');
+                                document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
+                            } catch {
+                                document.getElementById('drName').textContent = 'Không tải được thông tin bác sĩ';
+                            }
+                        }
+
+                        async function loadPatients(doctorId) {
+                            try {
+                                allPatients = await fetch(`/api/doctor/${doctorId}/patients`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
+                                filteredPatients = [...allPatients];
+                                updateStats(allPatients);
+                                patPage = 1;
+                                renderPatPage();
+                            } catch {
+                                allPatients = [];
+                                filteredPatients = [];
+                                renderCards([]);
+                                renderTable([]);
+                                updateStats([]);
+                            }
+                        }
+
+                        function updateStats(list) {
+                            document.getElementById('totalPat').textContent = list.length;
+                            document.getElementById('activePat').textContent = list.filter(p => p.status !== 'inactive').length;
+                            document.getElementById('phonePat').textContent = list.filter(p => p.phone).length;
+                            document.getElementById('emailPat').textContent = list.filter(p => p.email).length;
+                        }
+
+                        function renderCards(list) {
+                            const grid = document.getElementById('patientGrid');
+                            if (!list.length) {
+                                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:48px; color:#aaa">
+                    <i class="bi bi-inbox" style="font-size:2.5rem; display:block; margin-bottom:8px"></i>
+                    Không có bệnh nhân nào
+                </div>`;
+                                return;
+                            }
+                            grid.innerHTML = list.map(p => `
+                <div class="patient-card">
+                    <div class="patient-avatar">${getInitials(p.fullName)}</div>
+                    <div class="patient-name">${p.fullName || 'Chưa có tên'}</div>
+                    ${p.phone ? `<div class="patient-info"><i class="bi bi-telephone"></i>${p.phone}</div>` : ''}
+                    ${p.email ? `<div class="patient-info"><i class="bi bi-envelope"></i>${p.email}</div>` : ''}
+                    <div class="mt-2">
+                        <span class="badge-status ${p.status === 'inactive' ? 'badge-inactive' : 'badge-active'}">
+                            ${p.status === 'inactive' ? 'Ngừng HĐ' : 'Đang theo dõi'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+                        }
+
+                        function renderTable(list, offset = 0) {
+                            const tbody = document.getElementById('patientTable');
+                            if (!list.length) {
+                                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Không có dữ liệu</td></tr>';
+                                return;
+                            }
+                            tbody.innerHTML = list.map((p, i) => `
+                <tr>
+                    <td class="text-muted">${offset + i + 1}</td>
+                    <td><span class="avatar-circle">${getInitials(p.fullName)}</span><strong>${p.fullName || '–'}</strong></td>
+                    <td>${p.phone || '<span class="text-muted">–</span>'}</td>
+                    <td>${p.email || '<span class="text-muted">–</span>'}</td>
+                    <td><span class="badge-status ${p.status === 'inactive' ? 'badge-inactive' : 'badge-active'}">${p.status === 'inactive' ? 'Ngừng HĐ' : 'Đang theo dõi'}</span></td>
+                </tr>
+            `).join('');
+                        }
+
+                        document.getElementById('searchInput').addEventListener('input', () => {
+                            patPage = 1;
+                            applyFilters();
+                        });
+                        document.getElementById('filterStatus').addEventListener('change', () => {
+                            patPage = 1;
+                            applyFilters();
+                        });
+                        function applyFilters() {
+                            const q = document.getElementById('searchInput').value.toLowerCase();
+                            const st = document.getElementById('filterStatus').value;
+                            filteredPatients = allPatients.filter(p => {
+                                const matchQ = !q || (p.fullName || '').toLowerCase().includes(q)
+                                        || (p.phone || '').includes(q) || (p.email || '').toLowerCase().includes(q);
+                                const matchSt = !st || p.status === st || (!p.status && st === 'active');
+                                return matchQ && matchSt;
+                            });
+                            patPage = 1;
+                            renderPatPage();
+                        }
+
+                        function renderPatPage() {
+                            const total = filteredPatients.length;
+                            const totalPages = Math.max(1, Math.ceil(total / PAT_PAGE_SIZE));
+                            if (patPage > totalPages)
+                                patPage = totalPages;
+                            const start = (patPage - 1) * PAT_PAGE_SIZE;
+                            const pageData = filteredPatients.slice(start, start + PAT_PAGE_SIZE);
+                            renderCards(pageData);
+                            renderTable(pageData, start);
+                            renderPatPagination(total, totalPages, 'cardPagInfo', 'cardPagBtns');
+                            renderPatPagination(total, totalPages, 'tablePagInfo', 'tablePagBtns');
+                        }
+
+                        function renderPatPagination(total, totalPages, infoId, btnsId) {
+                            const start = (patPage - 1) * PAT_PAGE_SIZE + 1;
+                            const end = Math.min(patPage * PAT_PAGE_SIZE, total);
+                            document.getElementById(infoId).textContent = total ? `Hiển thị ${start}–${end} / ${total} bệnh nhân` : '';
+                            const btns = document.getElementById(btnsId);
+                            if (totalPages <= 1) {
+                                btns.innerHTML = '';
+                                return;
+                            }
+                            const btnStyle = (active) =>
+                                    `style="min-width:32px;height:32px;border-radius:6px;border:1px solid ${active ? '#1a6b5a' : '#dee2e6'};background:${active ? '#1a6b5a' : '#fff'};color:${active ? '#fff' : '#495057'};font-size:.8rem;cursor:pointer;padding:0 8px;"`;
+                            let html = `<button ${btnStyle(false)} onclick="goPatPage(${patPage - 1})" ${patPage === 1 ? 'disabled' : ''}>‹</button>`;
+                            for (let i = 1; i <= totalPages; i++) {
+                                if (totalPages > 7 && Math.abs(i - patPage) > 2 && i !== 1 && i !== totalPages) {
+                                    if (i === 2 || i === totalPages - 1)
+                                        html += `<span style="padding:0 4px;color:#aaa">…</span>`;
+                                    continue;
+                                }
+                                html += `<button ${btnStyle(i === patPage)} onclick="goPatPage(${i})">${i}</button>`;
+                            }
+                            html += `<button ${btnStyle(false)} onclick="goPatPage(${patPage + 1})" ${patPage === totalPages ? 'disabled' : ''}>›</button>`;
+                            btns.innerHTML = html;
+                        }
+
+                        function goPatPage(p) {
+                            patPage = p;
+                            renderPatPage();
+                        }
+
+                        function setView(v) {
+                            document.getElementById('cardView').style.display = v === 'card' ? 'block' : 'none';
+                            document.getElementById('tableView').style.display = v === 'table' ? 'block' : 'none';
+                            document.getElementById('btnCard').classList.toggle('active', v === 'card');
+                            document.getElementById('btnTable').classList.toggle('active', v === 'table');
+                        }
+
+                        document.addEventListener('DOMContentLoaded', function () {
+                            currentDoctorId = getDoctorIdFromUrl();
+                            if (currentDoctorId) {
+                                loadDoctor(currentDoctorId);
+                                loadPatients(currentDoctorId);
+                            } else {
+                                document.getElementById('drName').textContent = 'Không tìm thấy ID bác sĩ';
+                                document.getElementById('drMeta').textContent = 'Vui lòng đăng nhập lại';
+                            }
+                        });
+        </script>
+    </body>
+</html>

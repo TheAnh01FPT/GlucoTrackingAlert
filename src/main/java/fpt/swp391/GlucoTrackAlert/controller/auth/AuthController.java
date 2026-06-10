@@ -8,6 +8,8 @@ import fpt.swp391.GlucoTrackAlert.dto.register.RegisterRequest;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import jakarta.validation.Valid;
+import java.security.Principal;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,6 +67,19 @@ public class AuthController {
         try {
             userService.resetPassword(request);
             return ResponseEntity.ok("Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập ngay.");
+     @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            Principal principal,
+            @RequestBody Map<String, String> body) {
+        try {
+            String email = principal.getName();
+            String oldPassword = body.get("oldPassword");
+            String newPassword = body.get("newPassword");
+            if (oldPassword == null || newPassword == null) {
+                return ResponseEntity.badRequest().body("Thiếu thông tin mật khẩu");
+            }
+            userService.changePassword(email, oldPassword, newPassword);
+            return ResponseEntity.ok("Đổi mật khẩu thành công");
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
