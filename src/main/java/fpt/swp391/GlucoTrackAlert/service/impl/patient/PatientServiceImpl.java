@@ -68,6 +68,7 @@ public class PatientServiceImpl implements PatientService {
                 .build();
 
         calculateAgeAndBmi(patient);
+        patient.setPatientType(determinePatientType(patient));
 
         Patient savedPatient = patientRepository.save(patient);
         return mapToResponse(savedPatient);
@@ -96,6 +97,7 @@ public class PatientServiceImpl implements PatientService {
         patient.setIsPregnant(isPregnantVal);
 
         calculateAgeAndBmi(patient);
+        patient.setPatientType(determinePatientType(patient));
 
         Patient updatedPatient = patientRepository.save(patient);
         return mapToResponse(updatedPatient);

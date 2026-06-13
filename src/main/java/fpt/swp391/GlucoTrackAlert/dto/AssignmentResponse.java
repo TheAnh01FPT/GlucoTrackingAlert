@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class AssignmentResponse {
 
-    private Integer id;
+    private Long id;
 
     // Doctor info
     private Integer doctorId;

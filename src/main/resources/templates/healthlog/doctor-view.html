@@ -574,6 +574,19 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
         }
+
+        .btn-threshold {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: #6366f1;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-threshold:hover { background: #4f46e5; }
     </style>
 </head>
 
@@ -629,6 +642,9 @@
                 <div class="patient-info-main">
                     <h2 class="patient-info-name">
                         <span th:text="${selectedPatient.fullName}">Nguyễn Văn A</span>
+                        <a th:href="@{/health-logs/doctor-view/thresholds(patientId=${selectedPatient.id})}"
+                           class="btn-threshold"
+                           th:if="${selectedUserId != null}" style="margin-left:12px;">⚙️ Cài ngưỡng riêng</a>
                         <span th:class="${'patient-type-badge badge-' + selectedPatient.patientType}"
                             th:text="${selectedPatient.patientType == 'adult' ? '🧑 Người trưởng thành' : (selectedPatient.patientType == 'elderly' ? '👴 Người cao tuổi' : (selectedPatient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (selectedPatient.patientType == 'child' ? '👶 Trẻ em' : '')))}">
                             Adult
@@ -708,7 +724,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="log : ${logs}"
-                            th:class="${log.bloodSugarStatus == 'danger'} ? 'row-alert-danger' : ''">
+                            th:class="${log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'} ? 'row-alert-danger' : ''">
 
                             <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
                                 30/05/2026</td>
@@ -717,7 +733,7 @@
                             <td>
                                 <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
                                 <span th:if="${log.bloodSugar != null}"
-                                    th:class="${log.bloodSugarStatus == 'normal' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'warning' ? 'value-badge badge-warning' : 'value-badge badge-danger')}"
+                                    th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
                                     th:text="${log.bloodSugar}"
                                     th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
                                 </span>

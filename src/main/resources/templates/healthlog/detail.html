@@ -373,7 +373,7 @@
         <div class="detail-body">
           <!-- Smart Alert Banners -->
           <div
-            th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'danger')}"
+            th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER')}"
             class="alert-banner alert-banner-danger"
           >
             <span>⚠️</span>
@@ -419,7 +419,7 @@
           </div>
 
           <div
-            th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'normal') && (log.systolic == null || log.systolic <= 130)}"
+            th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'NORMAL') && (log.systolic == null || log.systolic <= 130)}"
             class="alert-banner alert-banner-success"
           >
             <span>✔</span>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Ngưỡng - <span th:text="${patient.fullName}"></span></title>
+    <link rel="stylesheet" th:href="@{/css/home.css}" />
+    <style>
+        .btn-threshold { display: inline-block; padding: 0.4rem 1rem; background: #6366f1; color: white; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .btn-threshold:hover { background: #4f46e5; }
+        .card { background: #fff; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #e6eef8; }
+        .badge-custom { background: #d1fae5; color: #065f46; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight:600; }
+        .badge-default { background: #f1f5f9; color: #475569; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight:600; }
+        .form-row { display:flex; gap:0.5rem; align-items:center; margin-top:0.5rem; }
+        .form-row input { padding:0.4rem; border-radius:6px; border:1px solid #e6eef8; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="btn-threshold">← Trở về Doctor View</a>
+    <h1>Ngưỡng chỉ số - <span th:text="${patient.fullName}"></span></h1>
+
+    <div th:if="${successMessage}" style="color:green;">[[${successMessage}]]</div>
+    <div th:if="${errorMessage}" style="color:red;">[[${errorMessage}]]</div>
+
+    <div th:each="metric : ${metricTypes}">
+        <div th:with="custom=${patientThresholds.stream().filter(t -> t.metricType == metric).findFirst().orElse(null)}, defaults=${defaultThresholds.stream().filter(t -> t.metricType == metric).findFirst().orElse(null)}">
+            <div class="card">
+                <h3 th:text="${metric.name() == 'BLOOD_SUGAR' ? 'Đường huyết' : (metric.name() == 'SYSTOLIC' ? 'Huyết áp tâm thu' : 'Huyết áp tâm trương')}"></h3>
+                <div>
+                    <span th:if="${custom != null}" class="badge-custom">Ngưỡng riêng</span>
+                    <span th:if="${custom == null}" class="badge-default">Mặc định</span>
+                </div>
+                <div>
+                    <p>Giá trị hiện tại: <span th:text="${custom != null ? (custom.normalMin + ' - ' + custom.normalMax) : (defaults != null ? (defaults.normalMin + ' - ' + defaults.normalMax) : 'N/A')}"></span></p>
+                </div>
+                <form th:action="@{/health-logs/doctor-view/thresholds/save}" method="post">
+                    <input type="hidden" name="patientId" th:value="${patient.id}" />
+                    <input type="hidden" name="metricType" th:value="${metric.name()}" />
+                    <div class="form-row">
+                        <label>Normal Min</label>
+                        <input name="normalMin" step="any" th:value="${custom != null ? custom.normalMin : (defaults != null ? defaults.normalMin : '')}" />
+                        <label>Normal Max</label>
+                        <input name="normalMax" step="any" th:value="${custom != null ? custom.normalMax : (defaults != null ? defaults.normalMax : '')}" />
+                    </div>
+                    <div class="form-row">
+                        <label>Warning Min</label>
+                        <input name="warningMin" step="any" th:value="${custom != null ? custom.warningMin : (defaults != null ? defaults.warningMin : '')}" />
+                        <label>Warning Max</label>
+                        <input name="warningMax" step="any" th:value="${custom != null ? custom.warningMax : (defaults != null ? defaults.warningMax : '')}" />
+                    </div>
+                    <div style="margin-top:8px;">
+                        <button type="submit" class="btn-threshold">Lưu ngưỡng riêng</button>
+                        <button type="button" th:if="${custom != null}" onclick="resetThreshold('${metric}')" style="margin-left:8px;">Reset về mặc định</button>
+                    </div>
+                </form>
+                <form id="resetForm" th:action="@{/health-logs/doctor-view/thresholds/reset}" method="post" style="display:none;">
+                    <input type="hidden" name="patientId" th:value="${patient.id}" />
+                    <input type="hidden" name="metricType" id="resetMetric" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function resetThreshold(metric) {
+        if (!confirm('Bạn có chắc muốn reset ngưỡng về mặc định?')) return;
+        document.getElementById('resetMetric').value = metric;
+        document.getElementById('resetForm').submit();
+    }
+</script>
+</body>
+</html>

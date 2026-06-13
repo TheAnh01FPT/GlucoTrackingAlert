@@ -1,4 +1,4 @@
-gipackage fpt.swp391.GlucoTrackAlert.service.register;
+package fpt.swp391.GlucoTrackAlert.service.register;
 
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginRequest;
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginResponse;
