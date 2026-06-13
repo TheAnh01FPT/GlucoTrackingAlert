@@ -19,7 +19,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
+<<<<<<< HEAD
                         .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+=======
+                        .requestMatchers("/api/auth/**", "/login", "/register", "/forgot-password", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+>>>>>>> 645926964eebdc2a52ac801e7f676031b556048b
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         // FIX LỖI 3: /api/users/** có thể tra email→userId của bất kỳ user nào → chỉ ADMIN được dùng
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
