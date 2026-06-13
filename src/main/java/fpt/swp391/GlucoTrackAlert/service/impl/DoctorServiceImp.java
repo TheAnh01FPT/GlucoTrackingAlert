@@ -208,6 +208,12 @@ public class DoctorServiceImp implements DoctorService {
         if (req.getAvatarUrl() != null) {
             doctor.setAvatarUrl(req.getAvatarUrl());
         }
+        if (req.getNationalId() != null) {
+            doctor.setNationalId(req.getNationalId());
+        }
+        if (req.getPracticeLicense() != null) {
+            doctor.setPracticeLicense(req.getPracticeLicense());
+        }
     }
 
     /**
@@ -240,6 +246,12 @@ public class DoctorServiceImp implements DoctorService {
         }
         if (req.getStatus() != null) {
             doctor.setStatus(req.getStatus());
+        }
+        if (req.getNationalId() != null) {
+            doctor.setNationalId(req.getNationalId());
+        }
+        if (req.getPracticeLicense() != null) {
+            doctor.setPracticeLicense(req.getPracticeLicense());
         }
     }
 

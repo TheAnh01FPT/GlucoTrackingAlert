@@ -4,6 +4,8 @@ import fpt.swp391.GlucoTrackAlert.dto.AdminCreateDoctorRequest;
 import fpt.swp391.GlucoTrackAlert.dto.DoctorRequest;
 import fpt.swp391.GlucoTrackAlert.dto.DoctorResponse;
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
+import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.service.DoctorService;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,7 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class DoctorController {
 
     private final DoctorService doctorService;
+    private final DoctorRepository doctorRepository;
 
     /**
      * [PUBLIC] Giờ làm việc cố định của tất cả bác sĩ trong hệ thống. Hardcode
@@ -99,6 +104,20 @@ public class DoctorController {
             @RequestParam(value = "nationalIdImage", required = false) MultipartFile nationalIdImage,
             @RequestParam(value = "practiceLicenseImage", required = false) MultipartFile practiceLicenseImage) {
         try {
+            // Chỉ cho phép bác sĩ tự upload ảnh của chính mình (ADMIN được bỏ qua check)
+            String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                    .stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (!isAdmin) {
+                Doctor doctor = doctorRepository.findByUserEmail(email)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bác sĩ của bạn"));
+                if (!doctor.getId().equals(id)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Bạn không có quyền upload ảnh cho bác sĩ khác");
+                }
+            }
+
             String uploadDir = "uploads/doctors/" + id + "/";
             Files.createDirectories(Paths.get(uploadDir));
 

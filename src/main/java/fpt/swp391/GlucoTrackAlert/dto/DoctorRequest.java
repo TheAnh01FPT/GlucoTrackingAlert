@@ -21,4 +21,10 @@ public class DoctorRequest {
     private String avatarUrl;
     private String status;
 
+    /** Số căn cước công dân */
+    private String nationalId;
+
+    /** Số chứng chỉ hành nghề */
+    private String practiceLicense;
+
 }

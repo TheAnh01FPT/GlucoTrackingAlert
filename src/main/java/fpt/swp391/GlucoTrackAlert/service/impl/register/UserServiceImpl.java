@@ -3,20 +3,15 @@ package fpt.swp391.GlucoTrackAlert.service.impl.register;
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginRequest;
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginResponse;
 import fpt.swp391.GlucoTrackAlert.dto.register.RegisterRequest;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.register.EmailVerificationToken;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
-<<<<<<< HEAD
-=======
 import fpt.swp391.GlucoTrackAlert.repository.user.PasswordResetTokenRepository;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.model.Doctor;
->>>>>>> 645926964eebdc2a52ac801e7f676031b556048b
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.model.user.PasswordResetToken;
@@ -47,13 +42,13 @@ public class UserServiceImpl implements UserService {
     private String frontendUrl;
 
     public UserServiceImpl(UserRepository userRepository,
-                           RoleRepository roleRepository,
-                           EmailVerificationTokenRepository tokenRepository,
-                           PasswordResetTokenRepository passwordResetTokenRepository,
-                           EmailService emailService,
-                           BCryptPasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil,
-                           DoctorRepository doctorRepository) {
+            RoleRepository roleRepository,
+            EmailVerificationTokenRepository tokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailService emailService,
+            BCryptPasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil,
+            DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
@@ -155,38 +150,22 @@ public class UserServiceImpl implements UserService {
 
         Integer doctorId = null;
         if ("DOCTOR".equals(roleName)) {
-            doctorId = doctorRepository.findByUserEmail(user.getEmail())
-                    .map(Doctor::getId)
+            doctorId = doctorRepository.findAll().stream()
+                    .filter(d -> d.getUser().getId().equals(user.getId()))
+                    .findFirst()
+                    .map(d -> d.getId())
                     .orElse(null);
         }
-
         return LoginResponse.builder()
                 .token(token)
                 .email(user.getEmail())
                 .role(roleName)
-                .message("Đăng nhập thành công")
                 .doctorId(doctorId)
+                .message("Đăng nhập thành công")
                 .build();
     }
 
     @Override
-<<<<<<< HEAD
-    public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản với email: " + email));
-
-        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
-            throw new Exception("Mật khẩu cũ không chính xác");
-        }
-
-        if (newPassword == null || newPassword.trim().length() < 6) {
-            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(newPassword.trim()));
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-=======
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) throws Exception {
         User user = userRepository.findByEmail(request.getEmail())
@@ -238,7 +217,6 @@ public class UserServiceImpl implements UserService {
         token.setStatus("used");
         token.setUsedAt(LocalDateTime.now());
         passwordResetTokenRepository.save(token);
->>>>>>> 645926964eebdc2a52ac801e7f676031b556048b
     }
 
     private String buildOtpEmail(String fullName, String otp) {
@@ -259,9 +237,6 @@ public class UserServiceImpl implements UserService {
             </div>
             """.formatted(fullName, otp);
     }
-<<<<<<< HEAD
-}
-=======
 
     private String buildPasswordResetOtpEmail(String fullName, String otp) {
         return """
@@ -281,6 +256,7 @@ public class UserServiceImpl implements UserService {
             </div>
             """.formatted(fullName, otp);
     }
+
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
@@ -307,4 +283,3 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 }
->>>>>>> 645926964eebdc2a52ac801e7f676031b556048b

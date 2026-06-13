@@ -1,12 +1,17 @@
 package fpt.swp391.GlucoTrackAlert.service.impl;
 
+import fpt.swp391.GlucoTrackAlert.dto.AssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
+import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import java.util.Map;
 import java.util.HashMap;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
+import jakarta.annotation.PreDestroy;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,14 +27,37 @@ import org.springframework.stereotype.Service;
 public class DoctorPatientAssignmentService {
 
     private final DoctorPatientAssignmentRepository assignmentRepository;
+    private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
     private final EmailService emailService;
 
     private static final LocalTime WORK_START = WorkShift.START;
     private static final LocalTime WORK_END = WorkShift.END;
-    private static final ScheduledExecutorService scheduler
+    private final ScheduledExecutorService scheduler
             = Executors.newSingleThreadScheduledExecutor();
 
     private static final int MAX_PATIENTS_PER_DOCTOR = 5;
+
+    @PreDestroy
+    public void shutdownScheduler() {
+        scheduler.shutdown();
+    }
+
+    public DoctorPatientAssignment assignDoctor(AssignmentRequest request) {
+        DoctorPatientAssignment assignment = new DoctorPatientAssignment();
+        if (request.getDoctorId() != null) {
+            Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ ID " + request.getDoctorId()));
+            assignment.setDoctor(doctor);
+        }
+        if (request.getPatientId() != null) {
+            Patient patient = patientRepository.findById(request.getPatientId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân ID " + request.getPatientId()));
+            assignment.setPatient(patient);
+        }
+        assignment.setNote(request.getNote());
+        return assignDoctor(assignment);
+    }
 
     public DoctorPatientAssignment assignDoctor(DoctorPatientAssignment assignment) {
         if (assignment.getDoctor() != null) {
@@ -106,6 +134,23 @@ public class DoctorPatientAssignmentService {
         return assignmentRepository.findAll();
     }
 
+    public DoctorPatientAssignment updateAssignment(Integer id, AssignmentRequest request) {
+        DoctorPatientAssignment updatedAssignment = new DoctorPatientAssignment();
+        if (request.getDoctorId() != null) {
+            Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ ID " + request.getDoctorId()));
+            updatedAssignment.setDoctor(doctor);
+        }
+        if (request.getPatientId() != null) {
+            Patient patient = patientRepository.findById(request.getPatientId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân ID " + request.getPatientId()));
+            updatedAssignment.setPatient(patient);
+        }
+        updatedAssignment.setNote(request.getNote());
+        updatedAssignment.setStatus(request.getStatus());
+        return updateAssignment(id, updatedAssignment);
+    }
+
     public DoctorPatientAssignment updateAssignment(Integer id, DoctorPatientAssignment updatedAssignment) {
         DoctorPatientAssignment assignment
                 = assignmentRepository.findById(id)
@@ -132,10 +177,16 @@ public class DoctorPatientAssignmentService {
             }
         }
 
-        assignment.setDoctor(updatedAssignment.getDoctor());
-        assignment.setPatient(updatedAssignment.getPatient());
+        if (updatedAssignment.getDoctor() != null) {
+            assignment.setDoctor(updatedAssignment.getDoctor());
+        }
+        if (updatedAssignment.getPatient() != null) {
+            assignment.setPatient(updatedAssignment.getPatient());
+        }
         assignment.setNote(updatedAssignment.getNote());
-        assignment.setStatus(updatedAssignment.getStatus());
+        if (updatedAssignment.getStatus() != null) {
+            assignment.setStatus(updatedAssignment.getStatus());
+        }
         return assignmentRepository.save(assignment);
     }
 
