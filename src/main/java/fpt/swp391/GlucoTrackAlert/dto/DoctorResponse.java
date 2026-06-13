@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 public class DoctorResponse {
 
-    private Integer id;
+    private Long id;
     private Integer userId;
     private String userEmail;
     private String fullName;

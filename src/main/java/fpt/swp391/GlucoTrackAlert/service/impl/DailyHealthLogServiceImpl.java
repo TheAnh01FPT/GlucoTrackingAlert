@@ -2,17 +2,23 @@ package fpt.swp391.GlucoTrackAlert.service.impl;
 
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogRequest;
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
+import fpt.swp391.GlucoTrackAlert.enums.MetricType;
 import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
-import fpt.swp391.GlucoTrackAlert.util.BloodSugarThreshold;
+import fpt.swp391.GlucoTrackAlert.service.HealthThresholdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageImpl;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,12 +30,69 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
     private final DailyHealthLogRepository dailyHealthLogRepository;
     private final PatientRepository patientRepository;
+    private final HealthThresholdService healthThresholdService;
 
     @Override
     @Transactional(readOnly = true)
     public Page<DailyHealthLogResponse> getLogs(Long patientId, Pageable pageable) {
-        return dailyHealthLogRepository.findByPatientIdOrderByLogDateDesc(patientId, pageable)
-                .map(this::toResponse);
+        Page<DailyHealthLog> page = dailyHealthLogRepository.findByPatientIdOrderByLogDateDesc(patientId, pageable);
+
+        // Resolve thresholds grouped by (patientId, patientType, metricType) to avoid N+1
+        Map<String, Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold>> resolved = new HashMap<>();
+
+        // Pre-resolve for blood sugar metric
+        for (DailyHealthLog log : page.getContent()) {
+            Long pId = log.getPatient() != null ? log.getPatient().getId() : null;
+            String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
+            String key = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
+            if (!resolved.containsKey(key)) {
+                resolved.put(key, healthThresholdService.resolveThreshold(pId, pType, MetricType.BLOOD_SUGAR));
+            }
+        }
+
+        List<DailyHealthLogResponse> mapped = page.getContent().stream().map(log -> {
+            Long pId = log.getPatient() != null ? log.getPatient().getId() : null;
+            String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
+            String key = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
+            Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> opt = resolved.get(key);
+            String status = "unknown";
+            if (log.getBloodSugar() != null) {
+                if (opt.isPresent()) {
+                    fpt.swp391.GlucoTrackAlert.model.HealthThreshold t = opt.get();
+                    double v = log.getBloodSugar().doubleValue();
+                    double normalMin = t.getNormalMin().doubleValue();
+                    double normalMax = t.getNormalMax().doubleValue();
+                    double warningMin = t.getWarningMin().doubleValue();
+                    double warningMax = t.getWarningMax().doubleValue();
+                    if (v >= normalMin && v <= normalMax) status = "NORMAL";
+                    else if (v < normalMin) status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
+                    else status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                } else {
+                    status = "unknown";
+                }
+            }
+            return DailyHealthLogResponse.builder()
+                    .id(log.getId())
+                    .patientId(log.getPatient() != null ? log.getPatient().getId() : null)
+                    .userId(log.getPatient() != null && log.getPatient().getUser() != null ? log.getPatient().getUser().getId() : null)
+                    .patientName(log.getPatient() != null ? log.getPatient().getFullName() : null)
+                    .logDate(log.getLogDate())
+                    .bloodSugar(log.getBloodSugar())
+                    .systolic(log.getSystolic())
+                    .diastolic(log.getDiastolic())
+                    .sleepHours(log.getSleepHours())
+                    .waterMl(log.getWaterMl())
+                    .sugarConsumptionLevel(log.getSugarConsumptionLevel())
+                    .symptoms(log.getSymptoms())
+                    .note(log.getNote())
+                    .createdAt(log.getCreatedAt())
+                    .updatedAt(log.getUpdatedAt())
+                    .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
+                    .bloodSugarStatus(status)
+                    .build();
+        }).collect(Collectors.toList());
+
+        return new PageImpl<>(mapped, pageable, page.getTotalElements());
     }
 
     @Override
@@ -72,10 +135,60 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     @Override
     @Transactional(readOnly = true)
     public List<DailyHealthLogResponse> getChartData(Long patientId, LocalDate from, LocalDate to) {
-        return dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, from, to)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, from, to);
+        // Resolve thresholds once per patient/metric/type
+        Map<String, Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold>> resolved = new HashMap<>();
+        for (DailyHealthLog log : logs) {
+            Long pId = log.getPatient() != null ? log.getPatient().getId() : null;
+            String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
+            String key = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
+            if (!resolved.containsKey(key)) {
+                resolved.put(key, healthThresholdService.resolveThreshold(pId, pType, MetricType.BLOOD_SUGAR));
+            }
+        }
+
+        return logs.stream().map(log -> {
+            Long pId = log.getPatient() != null ? log.getPatient().getId() : null;
+            String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
+            String key = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
+            Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> opt = resolved.get(key);
+            String status = "unknown";
+            if (log.getBloodSugar() != null) {
+                if (opt.isPresent()) {
+                    fpt.swp391.GlucoTrackAlert.model.HealthThreshold t = opt.get();
+                    double v = log.getBloodSugar().doubleValue();
+                    double normalMin = t.getNormalMin().doubleValue();
+                    double normalMax = t.getNormalMax().doubleValue();
+                    double warningMin = t.getWarningMin().doubleValue();
+                    double warningMax = t.getWarningMax().doubleValue();
+                    if (v >= normalMin && v <= normalMax) status = "NORMAL";
+                    else if (v < normalMin) status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
+                    else status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                } else {
+                    status = "unknown";
+                }
+            }
+            return DailyHealthLogResponse.builder()
+                    .id(log.getId())
+                    .patientId(log.getPatient() != null ? log.getPatient().getId() : null)
+                    .userId(log.getPatient() != null && log.getPatient().getUser() != null
+                            ? log.getPatient().getUser().getId() : null)
+                    .patientName(log.getPatient() != null ? log.getPatient().getFullName() : null)
+                    .logDate(log.getLogDate())
+                    .bloodSugar(log.getBloodSugar())
+                    .systolic(log.getSystolic())
+                    .diastolic(log.getDiastolic())
+                    .sleepHours(log.getSleepHours())
+                    .waterMl(log.getWaterMl())
+                    .sugarConsumptionLevel(log.getSugarConsumptionLevel())
+                    .symptoms(log.getSymptoms())
+                    .note(log.getNote())
+                    .createdAt(log.getCreatedAt())
+                    .updatedAt(log.getUpdatedAt())
+                    .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
+                    .bloodSugarStatus(status)
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     // === Helper Methods ===
@@ -102,8 +215,11 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .createdAt(log.getCreatedAt())
                 .updatedAt(log.getUpdatedAt())
                 .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
-                .bloodSugarStatus(BloodSugarThreshold.evaluate(log.getBloodSugar(),
-                        log.getPatient() != null ? log.getPatient().getPatientType() : null))
+                .bloodSugarStatus(healthThresholdService.evaluate(
+                    log.getBloodSugar(),
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.BLOOD_SUGAR))
                 .build();
     }
 

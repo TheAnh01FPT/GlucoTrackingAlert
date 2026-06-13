@@ -20,7 +20,7 @@ public class DoctorPatientAssignment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "doctor_id")

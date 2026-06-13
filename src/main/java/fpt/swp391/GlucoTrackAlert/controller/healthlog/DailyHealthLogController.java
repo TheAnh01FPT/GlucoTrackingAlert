@@ -6,6 +6,12 @@ import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
+import java.util.Collections;
+import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
@@ -34,6 +40,8 @@ public class DailyHealthLogController {
     private final DailyHealthLogService dailyHealthLogService;
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
+    private final DoctorRepository doctorRepository;
+    private final DoctorPatientAssignmentRepository assignmentRepository;
 
     private Long resolvePatientId(Long userId) {
         if (userId == null) {
@@ -78,8 +86,11 @@ public class DailyHealthLogController {
         if (currentPatientId != null && currentPatientId.equals(logPatientId)) {
             return true;
         }
-        if (hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR")) {
+        if (hasRole("ROLE_ADMIN")) {
             return true;
+        }
+        if (hasRole("ROLE_DOCTOR")) {
+            return isDoctorAssignedToPatient(logPatientId);
         }
         return false;
     }
@@ -156,16 +167,47 @@ public class DailyHealthLogController {
             @RequestParam(defaultValue = "10") int size,
             Model model) {
         List<Patient> patients;
-        if (patientType != null && !patientType.isEmpty()) {
-            patients = patientRepository.findAllByStatusAndPatientType("active", patientType);
-            if (patients.isEmpty()) {
+
+        if (hasRole("ROLE_ADMIN")) {
+            // Admin xem tất cả
+            if (patientType != null && !patientType.isEmpty()) {
+                patients = patientRepository.findAllByStatusAndPatientType("active", patientType);
+                if (patients.isEmpty()) patients = patientRepository.findAllByStatus("active");
+            } else {
                 patients = patientRepository.findAllByStatus("active");
+                if (patients.isEmpty()) patients = patientRepository.findAll();
+            }
+        } else if (hasRole("ROLE_DOCTOR")) {
+            Long currentUserId = getCurrentUserId();
+            Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+            if (doctor == null) {
+                model.addAttribute("error", "Không tìm thấy hồ sơ bác sĩ. Vui lòng liên hệ admin.");
+                model.addAttribute("patients", Collections.emptyList());
+                model.addAttribute("patientType", patientType);
+                model.addAttribute("selectedUserId", null);
+                model.addAttribute("logs", Collections.emptyList());
+                model.addAttribute("currentPage", 0);
+                model.addAttribute("totalPages", 0);
+                model.addAttribute("totalElements", 0L);
+                model.addAttribute("pageSize", size);
+                return "healthlog/doctor-view";
+            }
+            List<DoctorPatientAssignment> assignments =
+                assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
+            patients = assignments.stream()
+                .map(DoctorPatientAssignment::getPatient)
+                .filter(p -> "active".equals(p.getStatus()))
+                .collect(Collectors.toList());
+
+            // Lọc thêm theo patientType nếu có
+            if (patientType != null && !patientType.isEmpty()) {
+                String finalPatientType = patientType;
+                patients = patients.stream()
+                    .filter(p -> finalPatientType.equals(p.getPatientType()))
+                    .collect(Collectors.toList());
             }
         } else {
-            patients = patientRepository.findAllByStatus("active");
-            if (patients.isEmpty()) {
-                patients = patientRepository.findAll();
-            }
+            return "redirect:/login";
         }
         model.addAttribute("patients", patients);
         model.addAttribute("patientType", patientType);
@@ -261,13 +303,50 @@ public class DailyHealthLogController {
             }
             return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
         }
+
+        // Chỉ ADMIN hoặc doctor được phân công mới xem được
+        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
+            if (!isDoctorAssignedToPatient(log.getPatientId())) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem nhật ký này");
+                return "redirect:/health-logs/doctor-view";
+            }
+        }
         model.addAttribute("log", log);
         model.addAttribute("source", source);
         return "healthlog/detail";
     }
 
+    /**
+     * Kiểm tra doctor hiện tại có được phân công bệnh nhân này không.
+     * Admin luôn trả về true.
+     */
+    private boolean isDoctorAssignedToPatient(Long patientId) {
+        if (hasRole("ROLE_ADMIN")) return true;
+        if (!hasRole("ROLE_DOCTOR")) return false;
+        Long currentUserId = getCurrentUserId();
+        Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+        if (doctor == null) return false;
+        return assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId).isPresent();
+    }
+
     @GetMapping("/create")
-    public String createLogForm(@RequestParam Long userId, Model model) {
+    public String createLogForm(@RequestParam Long userId, Model model, RedirectAttributes redirectAttributes) {
+        if (!hasRole("ROLE_ADMIN")) {
+            if (hasRole("ROLE_DOCTOR")) {
+                Long patientId = resolvePatientId(userId);
+                if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
+                    return "redirect:/health-logs/doctor-view";
+                }
+            } else {
+                Long curUserId = getCurrentUserId();
+                if (curUserId == null || !curUserId.equals(userId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
+                    return "redirect:/login";
+                }
+            }
+        }
+
         DailyHealthLogRequest request = new DailyHealthLogRequest();
         request.setLogDate(LocalDate.now());
         model.addAttribute("log", request);
@@ -282,12 +361,30 @@ public class DailyHealthLogController {
             @Valid @ModelAttribute("log") DailyHealthLogRequest request,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes) {
+        if (!hasRole("ROLE_ADMIN")) {
+            if (hasRole("ROLE_DOCTOR")) {
+                Long patientId = resolvePatientId(userId);
+                if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
+                    return "redirect:/health-logs/doctor-view";
+                }
+            } else {
+                Long curUserId = getCurrentUserId();
+                if (curUserId == null || !curUserId.equals(userId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
+                    return "redirect:/login";
+                }
+            }
+        }
+
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
             redirectAttributes.addFlashAttribute("log", request);
             String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
             if ("my-logs".equals(source)) {
                 redirectUrl += "&source=my-logs";
+            } else if ("doctor-view".equals(source)) {
+                redirectUrl += "&source=doctor-view";
             }
             return redirectUrl;
         }
@@ -365,6 +462,8 @@ public class DailyHealthLogController {
             String redirectUrl = "redirect:/health-logs/" + id + "/edit?userId=" + userId;
             if ("my-logs".equals(source)) {
                 redirectUrl += "&source=my-logs";
+            } else if ("doctor-view".equals(source)) {
+                redirectUrl += "&source=doctor-view";
             }
             return redirectUrl;
         }
