@@ -20,6 +20,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/health-logs/doctor-view", "/health-logs/doctor-chart").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
