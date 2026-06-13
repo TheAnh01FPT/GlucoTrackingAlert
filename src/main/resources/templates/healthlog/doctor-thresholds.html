@@ -2,71 +2,346 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8" />
-    <title>Ngưỡng - <span th:text="${patient.fullName}"></span></title>
-    <link rel="stylesheet" th:href="@{/css/home.css}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cài Đặt Ngưỡng Chỉ Số - GlucoTrackAlert</title>
+    <!-- Fonts and Bootstrap 5 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    
     <style>
-        .btn-threshold { display: inline-block; padding: 0.4rem 1rem; background: #6366f1; color: white; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 500; }
-        .btn-threshold:hover { background: #4f46e5; }
-        .card { background: #fff; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #e6eef8; }
-        .badge-custom { background: #d1fae5; color: #065f46; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight:600; }
-        .badge-default { background: #f1f5f9; color: #475569; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight:600; }
-        .form-row { display:flex; gap:0.5rem; align-items:center; margin-top:0.5rem; }
-        .form-row input { padding:0.4rem; border-radius:6px; border:1px solid #e6eef8; }
+        :root {
+            --primary: #1a56db;
+            --primary-light: #ebf0ff;
+            --primary-dark: #1e3a8a;
+            --accent: #3b82f6;
+            --sidebar-w: 240px;
+            --font: 'Be Vietnam Pro', sans-serif;
+        }
+        * {
+            font-family: var(--font);
+        }
+        body {
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar layout matching my-patients.html */
+        .sidebar {
+            width: var(--sidebar-w);
+            min-height: 100vh;
+            background: var(--primary-dark);
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+        .sidebar-logo span {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .sidebar-logo small {
+            color: rgba(255,255,255,.5);
+            font-size: .7rem;
+            display: block;
+        }
+        .sidebar-nav {
+            padding: 12px 0;
+            flex: 1;
+        }
+        .nav-item-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            color: rgba(255,255,255,.7);
+            text-decoration: none;
+            font-size: .875rem;
+            transition: all .2s;
+        }
+        .nav-item-link:hover, .nav-item-link.active {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+            border-left: 3px solid var(--accent);
+            padding-left: 17px;
+        }
+        .nav-item-link i {
+            font-size: 1rem;
+            width: 20px;
+        }
+        .main {
+            margin-left: var(--sidebar-w);
+            padding: 28px 32px;
+        }
+        
+        /* Patient header styling */
+        .patient-card {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            color: #fff;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(30,58,138,.3);
+        }
+        .patient-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+            border: 2.5px solid rgba(255,255,255,.4);
+        }
+        .patient-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .patient-meta {
+            opacity: .9;
+            font-size: .85rem;
+            display: flex;
+            gap: 15px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .badge-type {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Threshold cards styling */
+        .threshold-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e3eaf5;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .threshold-card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f4f8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .threshold-card-header .title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1a1a2e;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge-custom {
+            background-color: #d1fae5;
+            color: #065f46;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+        }
+        .badge-default {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+        }
+        
+        .btn-threshold {
+            background: var(--primary);
+            color: white;
+            transition: background 0.2s;
+        }
+        .btn-threshold:hover {
+            background: var(--primary-dark);
+            color: white;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="btn-threshold">← Trở về Doctor View</a>
-    <h1>Ngưỡng chỉ số - <span th:text="${patient.fullName}"></span></h1>
 
-    <div th:if="${successMessage}" style="color:green;">[[${successMessage}]]</div>
-    <div th:if="${errorMessage}" style="color:red;">[[${errorMessage}]]</div>
+    <!-- Sidebar Layout -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <span><i class="bi bi-droplet-half me-2" style="color:#3b82f6"></i>GlucoTrackAlert</span>
+            <small>Cổng bác sĩ</small>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/doctor/home" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+            <a href="/doctor/my-patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân của tôi</a>
+            <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="nav-item-link active"><i class="bi bi-graph-up"></i> Chỉ số Glucose</a>
+            <a href="#" class="nav-item-link"><i class="bi bi-bell"></i> Cảnh báo</a>
+            <a href="/doctor/settings" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+        </nav>
+        <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
+            <div style="color:rgba(255,255,255,.5); font-size:.75rem">Bác sĩ</div>
+            <div style="color:#fff; font-size:.85rem; font-weight:600" id="sidebarDrName">–</div>
+        </div>
+    </div>
 
-    <div th:each="metric : ${metricTypes}">
-        <div th:with="custom=${patientThresholds.stream().filter(t -> t.metricType == metric).findFirst().orElse(null)}, defaults=${defaultThresholds.stream().filter(t -> t.metricType == metric).findFirst().orElse(null)}">
-            <div class="card">
-                <h3 th:text="${metric.name() == 'BLOOD_SUGAR' ? 'Đường huyết' : (metric.name() == 'SYSTOLIC' ? 'Huyết áp tâm thu' : 'Huyết áp tâm trương')}"></h3>
-                <div>
-                    <span th:if="${custom != null}" class="badge-custom">Ngưỡng riêng</span>
-                    <span th:if="${custom == null}" class="badge-default">Mặc định</span>
+    <!-- Main Content -->
+    <div class="main">
+        <div class="topbar">
+            <h4><i class="bi bi-gear me-2" style="color:var(--primary)"></i>Cấu hình ngưỡng chỉ số riêng</h4>
+            <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Trở về Nhật Ký
+            </a>
+        </div>
+
+        <!-- Patient Info Card -->
+        <div class="patient-card">
+            <div class="patient-avatar" th:text="${patient.fullName != null && !patient.fullName.isEmpty() ? #strings.substring(patient.fullName, #strings.length(patient.fullName)-1) : '?'}">?</div>
+            <div>
+                <h3 class="patient-name" th:text="${patient.fullName}">Bệnh nhân</h3>
+                <div class="patient-meta">
+                    <span><i class="bi bi-calendar me-1"></i>Tuổi: <strong th:text="${patient.age != null ? patient.age : '--'}">--</strong></span>
+                    <span><i class="bi bi-gender-ambiguous me-1"></i>Giới tính: <strong th:text="${patient.gender != null ? (patient.gender.equalsIgnoreCase('male') ? 'Nam' : 'Nữ') : '--'}">--</strong></span>
+                    <span>
+                        <i class="bi bi-person-badge me-1"></i>Loại bệnh nhân: 
+                        <span class="badge-type" th:text="${patient.patientType == 'adult' ? '🧑 Người trưởng thành' : (patient.patientType == 'elderly' ? '👴 Người cao tuổi' : (patient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (patient.patientType == 'child' ? '👶 Trẻ em' : 'Chưa phân loại')))}"></span>
+                    </span>
                 </div>
-                <div>
-                    <p>Giá trị hiện tại: <span th:text="${custom != null ? (custom.normalMin + ' - ' + custom.normalMax) : (defaults != null ? (defaults.normalMin + ' - ' + defaults.normalMax) : 'N/A')}"></span></p>
+            </div>
+        </div>
+
+        <!-- Status messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i><span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Metric threshold forms -->
+        <div th:each="metric : ${metricTypes}">
+            <div th:with="custom=${customThresholds.get(metric)}, defaults=${defaultThresholds.get(metric)}">
+                <div class="threshold-card">
+                    <div class="threshold-card-header">
+                        <span class="title">
+                            <i class="bi" th:classappend="${metric.name() == 'BLOOD_SUGAR' ? 'bi-droplet-fill text-danger' : 'bi-activity text-primary'}"></i>
+                            <span th:text="${metric.name() == 'BLOOD_SUGAR' ? 'Chỉ số Đường huyết (mmol/L)' : (metric.name() == 'SYSTOLIC' ? 'Chỉ số Huyết áp tâm thu (mmHg)' : 'Chỉ số Huyết áp tâm trương (mmHg)')}"></span>
+                        </span>
+                        <div>
+                            <span th:if="${custom != null}" class="badge-custom"><i class="bi bi-person-fill-gear"></i> Ngưỡng riêng</span>
+                            <span th:if="${custom == null}" class="badge-default"><i class="bi bi-shield-lock"></i> Mặc định</span>
+                        </div>
+                    </div>
+                    
+                    <form th:action="@{/health-logs/doctor-view/thresholds/save}" method="post" class="p-4 pb-3">
+                        <input type="hidden" name="patientId" th:value="${patient.id}" />
+                        <input type="hidden" name="metricType" th:value="${metric.name()}" />
+                        
+                        <div class="row g-3">
+                            <!-- Normal Range Group -->
+                            <div class="col-md-6">
+                                <div class="card p-3 border-light bg-light bg-opacity-50">
+                                    <h6 class="fw-bold mb-3 text-success"><i class="bi bi-check-circle-fill"></i> Phạm vi Bình Thường (Normal)</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label small text-secondary fw-semibold">Tối thiểu (Min)</label>
+                                            <input type="number" step="any" name="normalMin" class="form-control" th:value="${custom != null ? custom.normalMin : (defaults != null ? defaults.normalMin : '')}" required />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small text-secondary fw-semibold">Tối đa (Max)</label>
+                                            <input type="number" step="any" name="normalMax" class="form-control" th:value="${custom != null ? custom.normalMax : (defaults != null ? defaults.normalMax : '')}" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Warning Range Group -->
+                            <div class="col-md-6">
+                                <div class="card p-3 border-light bg-light bg-opacity-50">
+                                    <h6 class="fw-bold mb-3 text-warning"><i class="bi bi-exclamation-triangle-fill"></i> Phạm vi Cảnh Báo (Warning)</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label small text-secondary fw-semibold">Tối thiểu (Min)</label>
+                                            <input type="number" step="any" name="warningMin" class="form-control" th:value="${custom != null ? custom.warningMin : (defaults != null ? defaults.warningMin : '')}" required />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small text-secondary fw-semibold">Tối đa (Max)</label>
+                                            <input type="number" step="any" name="warningMax" class="form-control" th:value="${custom != null ? custom.warningMax : (defaults != null ? defaults.warningMax : '')}" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Description -->
+                            <div class="col-12 mt-3">
+                                <label class="form-label small text-secondary fw-semibold">Ghi chú / Lý do cài ngưỡng riêng</label>
+                                <input type="text" name="description" class="form-control" placeholder="Nhập ghi chú (ví dụ: BN đang mang thai kỳ đầu, hoặc bị cao huyết áp kinh niên...)" th:value="${custom != null ? custom.description : ''}" />
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="col-12 d-flex gap-2 justify-content-end mt-4">
+                                <button type="submit" class="btn btn-threshold px-4">
+                                    <i class="bi bi-save"></i> Lưu ngưỡng riêng
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Reset form if custom threshold exists -->
+                    <div th:if="${custom != null}" class="px-4 pb-4 d-flex justify-content-end" style="margin-top: -5px;">
+                        <form th:action="@{/health-logs/doctor-view/thresholds/reset}" method="post" class="m-0">
+                            <input type="hidden" name="patientId" th:value="${patient.id}" />
+                            <input type="hidden" name="metricType" th:value="${metric.name()}" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa ngưỡng riêng và quay về sử dụng ngưỡng mặc định cho chỉ số này?')">
+                                <i class="bi bi-arrow-counterclockwise"></i> Quay về mặc định
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <form th:action="@{/health-logs/doctor-view/thresholds/save}" method="post">
-                    <input type="hidden" name="patientId" th:value="${patient.id}" />
-                    <input type="hidden" name="metricType" th:value="${metric.name()}" />
-                    <div class="form-row">
-                        <label>Normal Min</label>
-                        <input name="normalMin" step="any" th:value="${custom != null ? custom.normalMin : (defaults != null ? defaults.normalMin : '')}" />
-                        <label>Normal Max</label>
-                        <input name="normalMax" step="any" th:value="${custom != null ? custom.normalMax : (defaults != null ? defaults.normalMax : '')}" />
-                    </div>
-                    <div class="form-row">
-                        <label>Warning Min</label>
-                        <input name="warningMin" step="any" th:value="${custom != null ? custom.warningMin : (defaults != null ? defaults.warningMin : '')}" />
-                        <label>Warning Max</label>
-                        <input name="warningMax" step="any" th:value="${custom != null ? custom.warningMax : (defaults != null ? defaults.warningMax : '')}" />
-                    </div>
-                    <div style="margin-top:8px;">
-                        <button type="submit" class="btn-threshold">Lưu ngưỡng riêng</button>
-                        <button type="button" th:if="${custom != null}" onclick="resetThreshold('${metric}')" style="margin-left:8px;">Reset về mặc định</button>
-                    </div>
-                </form>
-                <form id="resetForm" th:action="@{/health-logs/doctor-view/thresholds/reset}" method="post" style="display:none;">
-                    <input type="hidden" name="patientId" th:value="${patient.id}" />
-                    <input type="hidden" name="metricType" id="resetMetric" />
-                </form>
             </div>
         </div>
     </div>
-</div>
-<script>
-    function resetThreshold(metric) {
-        if (!confirm('Bạn có chắc muốn reset ngưỡng về mặc định?')) return;
-        document.getElementById('resetMetric').value = metric;
-        document.getElementById('resetForm').submit();
-    }
-</script>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fetch doctor info dynamically to update sidebar footer
+        const DOCTOR_ID = parseInt(localStorage.getItem('doctorId')) || 1;
+        async function loadDoctorInfo() {
+            try {
+                const doc = await fetch(`/api/doctors/${DOCTOR_ID}`, {
+                    headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}
+                }).then(r => r.json());
+                document.getElementById('sidebarDrName').textContent = doc.fullName || 'Bác sĩ';
+            } catch {
+                console.error('Không tải được thông tin bác sĩ cho sidebar');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadDoctorInfo);
+    </script>
 </body>
 </html>

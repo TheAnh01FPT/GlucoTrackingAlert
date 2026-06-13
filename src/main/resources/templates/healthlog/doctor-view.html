@@ -644,7 +644,7 @@
                         <span th:text="${selectedPatient.fullName}">Nguyễn Văn A</span>
                         <a th:href="@{/health-logs/doctor-view/thresholds(patientId=${selectedPatient.id})}"
                            class="btn-threshold"
-                           th:if="${selectedUserId != null}" style="margin-left:12px;">⚙️ Cài ngưỡng riêng</a>
+                           style="margin-left:12px;">⚙️ Cài ngưỡng riêng</a>
                         <span th:class="${'patient-type-badge badge-' + selectedPatient.patientType}"
                             th:text="${selectedPatient.patientType == 'adult' ? '🧑 Người trưởng thành' : (selectedPatient.patientType == 'elderly' ? '👴 Người cao tuổi' : (selectedPatient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (selectedPatient.patientType == 'child' ? '👶 Trẻ em' : '')))}">
                             Adult

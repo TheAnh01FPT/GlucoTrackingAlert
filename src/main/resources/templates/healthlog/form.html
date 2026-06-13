@@ -332,6 +332,13 @@
 
         <div class="form-body">
           <form th:action="@{${action}}" th:object="${log}" method="POST">
+            <!-- Validation Errors Summary -->
+            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" style="background-color: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid #fca5a5; font-size: 0.9rem;">
+              <h5 style="margin: 0; font-weight: 700; font-size: 0.95rem;">❌ Có lỗi nhập liệu xảy ra:</h5>
+              <ul style="margin: 0; padding-left: 1.2rem; margin-top: 0.5rem;">
+                <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Lỗi</li>
+              </ul>
+            </div>
             <div class="form-grid">
               <!-- Log Date -->
               <div class="form-group form-group-full">
