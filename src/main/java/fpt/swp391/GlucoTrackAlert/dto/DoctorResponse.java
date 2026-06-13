@@ -27,6 +27,8 @@ public class DoctorResponse {
     private String status;
     private String nationalId;
     private String practiceLicense;
+    private String nationalIdImageUrl;
+    private String practiceLicenseImageUrl;
 
     // Giờ làm việc cố định – mọi bác sĩ đều giống nhau, không lưu DB
     private final String workingHours = WorkShift.DISPLAY;
@@ -51,6 +53,8 @@ public class DoctorResponse {
         r.setStatus(d.getStatus());
         r.setNationalId(d.getNationalId());
         r.setPracticeLicense(d.getPracticeLicense());
+        r.setNationalIdImageUrl(d.getNationalIdImageUrl());
+        r.setPracticeLicenseImageUrl(d.getPracticeLicenseImageUrl());
         return r;
     }
 }

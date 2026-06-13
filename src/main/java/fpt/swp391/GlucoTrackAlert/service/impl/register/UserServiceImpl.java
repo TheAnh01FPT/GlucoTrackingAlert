@@ -3,14 +3,14 @@ package fpt.swp391.GlucoTrackAlert.service.impl.register;
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginRequest;
 import fpt.swp391.GlucoTrackAlert.dto.login.LoginResponse;
 import fpt.swp391.GlucoTrackAlert.dto.register.RegisterRequest;
+import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.register.EmailVerificationToken;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.util.jwt.JwtUtil;
@@ -141,12 +141,10 @@ public class UserServiceImpl implements UserService {
         String roleName = user.getRole() != null ? user.getRole().getName() : "UNKNOWN";
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
-        Long doctorId = null;
+        Integer doctorId = null;
         if ("DOCTOR".equals(roleName)) {
-            doctorId = doctorRepository.findAll().stream()
-                    .filter(d -> d.getUser().getId().equals(user.getId()))
-                    .findFirst()
-                    .map(d -> d.getId().longValue())
+            doctorId = doctorRepository.findByUserEmail(user.getEmail())
+                    .map(Doctor::getId)
                     .orElse(null);
         }
 
@@ -154,9 +152,27 @@ public class UserServiceImpl implements UserService {
                 .token(token)
                 .email(user.getEmail())
                 .role(roleName)
-                .doctorId(doctorId)
                 .message("Đăng nhập thành công")
+                .doctorId(doctorId)
                 .build();
+    }
+
+    @Override
+    public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản với email: " + email));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu cũ không chính xác");
+        }
+
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword.trim()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     private String buildOtpEmail(String fullName, String otp) {
@@ -176,31 +192,5 @@ public class UserServiceImpl implements UserService {
                 <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không đăng ký tài khoản này, hãy bỏ qua email này.</p>
             </div>
             """.formatted(fullName, otp);
-    }
-
-    @Override
-    @Transactional
-    public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản"));
-
-        oldPassword = oldPassword.trim();
-        newPassword = newPassword.trim();
-
-        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
-            throw new Exception("Mật khẩu hiện tại không đúng");
-        }
-
-        if (newPassword.length() < 6) {
-            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
-        }
-
-        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
-            throw new Exception("Mật khẩu mới không được trùng mật khẩu hiện tại");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(java.time.LocalDateTime.now());
-        userRepository.save(user);
     }
 }

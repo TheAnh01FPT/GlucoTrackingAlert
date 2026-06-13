@@ -28,8 +28,25 @@ public interface DoctorService {
     void deactivateDoctor(Integer id);
 
     /**
-     * Hard-delete: xóa vĩnh viễn Doctor + User liên kết khỏi DB. Chỉ thực hiện
-     * được khi bác sĩ đang ở trạng thái inactive.
+     * Bác sĩ upload ảnh CCCD và chứng chỉ hành nghề.
+     * Status chuyển sang pending_approval để admin duyệt.
      */
-    void hardDeleteDoctor(Integer id);
+    DoctorResponse uploadVerificationImages(Integer doctorId,
+            String nationalIdImageUrl, String practiceLicenseImageUrl);
+
+    /**
+     * Admin lấy danh sách bác sĩ đang chờ duyệt (status = pending_approval).
+     */
+    List<DoctorResponse> getPendingDoctors();
+
+    /**
+     * Admin duyệt bác sĩ → status = active.
+     */
+    DoctorResponse approveDoctor(Integer id);
+
+    /**
+     * Admin từ chối bác sĩ → status = rejected.
+     */
+    DoctorResponse rejectDoctor(Integer id, String reason);
+
 }

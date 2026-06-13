@@ -20,4 +20,5 @@ public class DoctorRequest {
     private String introduction;
     private String avatarUrl;
     private String status;
+
 }

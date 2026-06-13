@@ -283,6 +283,57 @@
                 </div>
             </div>
 
+            <!-- Card upload CCCD + chứng chỉ -->
+            <div class="settings-card" style="border-color:#e8f5e9" id="uploadCard">
+                <div class="settings-card-header" style="background:linear-gradient(135deg,#e8f5e9,#f0f4f8)">
+                    <div class="icon" style="background:#c8e6c9;color:#2e7d32"><i class="bi bi-patch-check-fill"></i></div>
+                    <div>
+                        <h6 style="color:#2e7d32">Xác minh hồ sơ</h6>
+                        <p>Upload ảnh CCCD và chứng chỉ hành nghề để Admin xét duyệt</p>
+                    </div>
+                    <span class="info-badge ms-auto" id="verifyStatusBadge" style="background:#fff3e0;color:#e65100">Chưa gửi</span>
+                </div>
+                <div class="settings-card-body">
+                    <!-- Thông báo trạng thái -->
+                    <div id="verifyAlert" style="display:none;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;display:flex;align-items:center;gap:10px"></div>
+
+                    <div style="display:flex;gap:20px;flex-wrap:wrap">
+                        <!-- Upload CCCD -->
+                        <div style="flex:1;min-width:220px">
+                            <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
+                                <i class="bi bi-credit-card-2-front me-1" style="color:#1565c0"></i> Ảnh CCCD
+                            </div>
+                            <div id="previewCCCD" style="width:100%;height:160px;border-radius:12px;border:2px dashed #bbdefb;background:#f8fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s" onclick="document.getElementById('inputCCCD').click()">
+                                <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#90caf9"></i>
+                                <div style="font-size:.8rem;color:#90a4ae;margin-top:6px">Bấm để chọn ảnh</div>
+                            </div>
+                            <input type="file" id="inputCCCD" accept="image/*" style="display:none" onchange="previewImage(this,'previewCCCD')">
+                        </div>
+
+                        <!-- Upload chứng chỉ -->
+                        <div style="flex:1;min-width:220px">
+                            <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
+                                <i class="bi bi-file-earmark-medical me-1" style="color:#1565c0"></i> Ảnh chứng chỉ hành nghề
+                            </div>
+                            <div id="previewCC" style="width:100%;height:160px;border-radius:12px;border:2px dashed #bbdefb;background:#f8fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s" onclick="document.getElementById('inputCC').click()">
+                                <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#90caf9"></i>
+                                <div style="font-size:.8rem;color:#90a4ae;margin-top:6px">Bấm để chọn ảnh</div>
+                            </div>
+                            <input type="file" id="inputCC" accept="image/*" style="display:none" onchange="previewImage(this,'previewCC')">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+                        <div style="font-size:.8rem;color:#6c757d">
+                            <i class="bi bi-info-circle me-1"></i> Ảnh rõ nét, đúng mặt trước. Tối đa 10MB/ảnh. Nếu chỉ đổi 1 ảnh, ảnh còn lại sẽ được giữ nguyên.
+                        </div>
+                        <button class="btn btn-success px-4" id="btnUpload" onclick="uploadVerification()">
+                            <i class="bi bi-send me-1"></i> Gửi xác minh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Liên hệ admin để thay đổi -->
             <div class="settings-card" style="border-color:#e3f2fd">
                 <div class="settings-card-header" style="background:linear-gradient(135deg,#e3f2fd,#f0f4f8)">
@@ -447,6 +498,98 @@
                 document.getElementById('infoPhone').textContent = doc.phone || '–';
                 document.getElementById('infoEmail').textContent = doc.userEmail || '–';
                 document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
+
+                // Cập nhật trạng thái xác minh
+                const badge = document.getElementById('verifyStatusBadge');
+                const alert = document.getElementById('verifyAlert');
+                const btn = document.getElementById('btnUpload');
+                const status = doc.status;
+
+                if (status === 'pending_verification') {
+                    badge.style.cssText = 'background:#fff3e0;color:#e65100';
+                    badge.textContent = '📋 Chưa gửi';
+                } else if (status === 'pending_approval') {
+                    badge.style.cssText = 'background:#e3f2fd;color:#1565c0';
+                    badge.textContent = '⏳ Chờ duyệt';
+                    alert.style.cssText = 'display:flex;background:#e3f2fd;color:#1565c0;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
+                    alert.innerHTML = '<i class="bi bi-hourglass-split"></i> Hồ sơ đang chờ Admin xét duyệt. Nếu muốn cập nhật ảnh, bạn vẫn có thể upload lại.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Upload lại';
+                } else if (status === 'active') {
+                    badge.style.cssText = 'background:#e8f5e9;color:#2e7d32';
+                    badge.textContent = '✅ Đã xác minh';
+                    alert.style.cssText = 'display:flex;background:#e8f5e9;color:#2e7d32;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
+                    alert.innerHTML = '<i class="bi bi-patch-check-fill"></i> Hồ sơ đã được xác minh. Nếu muốn cập nhật giấy tờ mới, hãy upload lại — hồ sơ sẽ chờ Admin duyệt lại.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Cập nhật giấy tờ';
+                } else if (status === 'rejected') {
+                    badge.style.cssText = 'background:#ffebee;color:#c62828';
+                    badge.textContent = '❌ Bị từ chối';
+                    alert.style.cssText = 'display:flex;background:#ffebee;color:#c62828;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
+                    alert.innerHTML = '<i class="bi bi-x-circle-fill"></i> Hồ sơ bị từ chối. Hãy chọn lại ảnh rõ nét hơn rồi bấm <strong> Gửi lại</strong>.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi lại';
+                }
+
+                // Hiển thị ảnh đã upload nếu có
+                if (doc.nationalIdImageUrl) showExistingImage('previewCCCD', doc.nationalIdImageUrl);
+                if (doc.practiceLicenseImageUrl) showExistingImage('previewCC', doc.practiceLicenseImageUrl);
+            }
+
+            function showExistingImage(previewId, url) {
+                const el = document.getElementById(previewId);
+                el.style.border = '2px solid #a5d6a7';
+                el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+            }
+
+            function previewImage(input, previewId) {
+                const file = input.files[0];
+                if (!file) return;
+                const el = document.getElementById(previewId);
+                const reader = new FileReader();
+                reader.onload = e => {
+                    el.style.border = '2px solid #a5d6a7';
+                    el.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            async function uploadVerification() {
+                const cccdFile = document.getElementById('inputCCCD').files[0];
+                const ccFile = document.getElementById('inputCC').files[0];
+
+                if (!cccdFile && !ccFile) {
+                    showToast('Vui lòng chọn ít nhất 1 ảnh để upload', 'danger'); return;
+                }
+
+                const formData = new FormData();
+                if (cccdFile) formData.append('nationalIdImage', cccdFile);
+                if (ccFile)   formData.append('practiceLicenseImage', ccFile);
+
+                const btn = document.getElementById('btnUpload');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang gửi...';
+
+                try {
+                    const res = await fetch(`/api/doctors/${DOCTOR_ID}/upload-verification`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                        body: formData
+                    });
+                    if (res.ok) {
+                        showToast('Gửi xác minh thành công! Admin sẽ xét duyệt sớm.', 'success');
+                        loadDoctor();
+                    } else {
+                        const msg = await res.text();
+                        showToast('Lỗi: ' + msg, 'danger');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi xác minh';
+                    }
+                } catch {
+                    showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi xác minh';
+                }
             }
 
             async function loadDoctor() {

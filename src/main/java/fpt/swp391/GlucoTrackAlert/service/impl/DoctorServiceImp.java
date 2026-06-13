@@ -67,7 +67,7 @@ public class DoctorServiceImp implements DoctorService {
         // 3. Tạo Doctor profile
         Doctor doctor = new Doctor();
         doctor.setUser(user);
-        doctor.setStatus("active");
+        doctor.setStatus("pending_verification"); // chờ bác sĩ upload CCCD + chứng chỉ
         applyAdminFields(doctor, request);
         doctorRepository.save(doctor);
 
@@ -115,35 +115,66 @@ public class DoctorServiceImp implements DoctorService {
         }
     }
 
-    // ── Hard-delete (xóa vĩnh viễn) ──────────────────────────────────────────
+    // ── Bác sĩ upload ảnh CCCD + chứng chỉ ──────────────────────────────────
     @Override
     @Transactional
-    public void hardDeleteDoctor(Integer id) {
-        Doctor doctor = findOrThrow(id);
-        if (!"inactive".equals(doctor.getStatus())) {
-            throw new RuntimeException(
-                    "Chỉ có thể xóa vĩnh viễn bác sĩ đã ngừng hoạt động. "
-                    + "Vui lòng ngừng hoạt động bác sĩ trước.");
+    public DoctorResponse uploadVerificationImages(Integer doctorId,
+            String nationalIdImageUrl, String practiceLicenseImageUrl) {
+        Doctor doctor = findOrThrow(doctorId);
+        if (nationalIdImageUrl != null) {
+            doctor.setNationalIdImageUrl(nationalIdImageUrl);
         }
-
-        // Xóa toàn bộ assignment liên quan (tất cả status)
-        List<DoctorPatientAssignment> allAssignments
-                = assignmentRepository.findByDoctorId(id);
-        assignmentRepository.deleteAll(allAssignments);
-
-        // Lưu reference tới User trước khi xóa Doctor
-        User linkedUser = doctor.getUser();
-
-        // Xóa Doctor trước (FK tới User)
-        doctorRepository.delete(doctor);
-
-        // Xóa User liên kết (tài khoản đăng nhập)
-        if (linkedUser != null) {
-            userRepository.delete(linkedUser);
+        if (practiceLicenseImageUrl != null) {
+            doctor.setPracticeLicenseImageUrl(practiceLicenseImageUrl);
         }
+        doctor.setStatus("pending_approval");
+        return DoctorResponse.from(doctorRepository.save(doctor));
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Admin lấy danh sách chờ duyệt ────────────────────────────────────────
+    @Override
+    public List<DoctorResponse> getPendingDoctors() {
+        return doctorRepository.findByStatus("pending_approval")
+                .stream().map(DoctorResponse::from).toList();
+    }
+
+    // ── Admin duyệt ──────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public DoctorResponse approveDoctor(Integer id) {
+        Doctor doctor = findOrThrow(id);
+        doctor.setStatus("active");
+        doctor.getUser().setStatus("active");
+        userRepository.save(doctor.getUser());
+        // Gửi email thông báo cho bác sĩ
+        emailService.sendSimpleMessage(
+                doctor.getUser().getEmail(),
+                "[GlucoTrackAlert] Hồ sơ của bạn đã được duyệt",
+                "Xin chào Bác sĩ " + doctor.getFullName() + ",\n\n"
+                + "Hồ sơ của bạn đã được Admin xác minh và chấp thuận.\n"
+                + "Bạn có thể đăng nhập và sử dụng hệ thống ngay bây giờ.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert");
+        return DoctorResponse.from(doctorRepository.save(doctor));
+    }
+
+    // ── Admin từ chối ─────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public DoctorResponse rejectDoctor(Integer id, String reason) {
+        Doctor doctor = findOrThrow(id);
+        doctor.setStatus("rejected");
+        // Gửi email thông báo lý do từ chối
+        String reasonText = (reason != null && !reason.isBlank()) ? reason : "Không đủ điều kiện";
+        emailService.sendSimpleMessage(
+                doctor.getUser().getEmail(),
+                "[GlucoTrackAlert] Hồ sơ của bạn chưa được duyệt",
+                "Xin chào Bác sĩ " + doctor.getFullName() + ",\n\n"
+                + "Rất tiếc, hồ sơ của bạn chưa được chấp thuận.\n"
+                + "Lý do: " + reasonText + "\n\n"
+                + "Vui lòng liên hệ Admin để biết thêm thông tin.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert");
+        return DoctorResponse.from(doctorRepository.save(doctor));
+    }
     private Doctor findOrThrow(Integer id) {
         return doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ id=" + id));

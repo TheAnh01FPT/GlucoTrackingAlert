@@ -5,12 +5,18 @@ import fpt.swp391.GlucoTrackAlert.dto.DoctorRequest;
 import fpt.swp391.GlucoTrackAlert.dto.DoctorResponse;
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
 import fpt.swp391.GlucoTrackAlert.service.DoctorService;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Tất cả endpoint trong controller này chỉ dành cho ADMIN. Bác sĩ KHÔNG có
@@ -84,10 +90,78 @@ public class DoctorController {
     }
 
     /**
-     * [ADMIN] Ngừng hoạt động bác sĩ (soft-delete). Tự động hủy hết các phân
-     * công bệnh nhân đang active. Bác sĩ vẫn còn trong DB và có thể được khôi
-     * phục bằng cách cập nhật status = active qua PUT /{id}.
+     * [DOCTOR] Upload ảnh CCCD và chứng chỉ hành nghề.
+     * Sau khi upload, status bác sĩ chuyển sang pending_approval để admin duyệt.
      */
+    @PostMapping("/{id}/upload-verification")
+    public ResponseEntity<?> uploadVerification(
+            @PathVariable Integer id,
+            @RequestParam(value = "nationalIdImage", required = false) MultipartFile nationalIdImage,
+            @RequestParam(value = "practiceLicenseImage", required = false) MultipartFile practiceLicenseImage) {
+        try {
+            String uploadDir = "uploads/doctors/" + id + "/";
+            Files.createDirectories(Paths.get(uploadDir));
+
+            String nationalIdImageUrl = null;
+            String practiceLicenseImageUrl = null;
+
+            if (nationalIdImage != null && !nationalIdImage.isEmpty()) {
+                String filename = "cccd_" + UUID.randomUUID() + "_" + nationalIdImage.getOriginalFilename();
+                Path path = Paths.get(uploadDir + filename);
+                Files.write(path, nationalIdImage.getBytes());
+                nationalIdImageUrl = "/" + uploadDir + filename;
+            }
+
+            if (practiceLicenseImage != null && !practiceLicenseImage.isEmpty()) {
+                String filename = "chungchi_" + UUID.randomUUID() + "_" + practiceLicenseImage.getOriginalFilename();
+                Path path = Paths.get(uploadDir + filename);
+                Files.write(path, practiceLicenseImage.getBytes());
+                practiceLicenseImageUrl = "/" + uploadDir + filename;
+            }
+
+            DoctorResponse response = doctorService.uploadVerificationImages(id, nationalIdImageUrl, practiceLicenseImageUrl);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body("Lỗi khi upload file: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * [ADMIN] Lấy danh sách bác sĩ đang chờ duyệt
+     */
+    @GetMapping("/pending")
+    public ResponseEntity<List<DoctorResponse>> getPendingDoctors() {
+        return ResponseEntity.ok(doctorService.getPendingDoctors());
+    }
+
+    /**
+     * [ADMIN] Duyệt bác sĩ → status = active, gửi email thông báo
+     */
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<?> approveDoctor(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(doctorService.approveDoctor(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * [ADMIN] Từ chối bác sĩ → status = rejected, gửi email kèm lý do
+     */
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<?> rejectDoctor(
+            @PathVariable Integer id,
+            @RequestParam(value = "reason", required = false) String reason) {
+        try {
+            return ResponseEntity.ok(doctorService.rejectDoctor(id, reason));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deactivateDoctor(@PathVariable Integer id) {
         try {
@@ -98,18 +172,4 @@ public class DoctorController {
         }
     }
 
-    /**
-     * [ADMIN] Xóa vĩnh viễn bác sĩ khỏi hệ thống. Yêu cầu bác sĩ phải ở trạng
-     * thái inactive trước. Xóa toàn bộ: Doctor profile + User (tài khoản đăng
-     * nhập) + tất cả assignment. Hành động này KHÔNG THỂ hoàn tác.
-     */
-    @DeleteMapping("/{id}/permanent")
-    public ResponseEntity<String> hardDeleteDoctor(@PathVariable Integer id) {
-        try {
-            doctorService.hardDeleteDoctor(id);
-            return ResponseEntity.ok("Bác sĩ đã được xóa vĩnh viễn khỏi hệ thống.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
 }
