@@ -13,6 +13,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Controller
 @RequestMapping("/health-logs/doctor-view/thresholds")
@@ -31,11 +33,29 @@ public class DoctorThresholdController {
         if (patient == null) return "redirect:/health-logs/doctor-view";
 
         List<HealthThreshold> patientThresholds = healthThresholdService.findByPatientId(patientId);
-        List<HealthThreshold> defaultThresholds = healthThresholdService.findDefaults();
+        List<HealthThreshold> allDefaults = healthThresholdService.findDefaults();
+
+        Map<MetricType, HealthThreshold> customMap = new HashMap<>();
+        if (patientThresholds != null) {
+            for (HealthThreshold t : patientThresholds) {
+                customMap.put(t.getMetricType(), t);
+            }
+        }
+
+        Map<MetricType, HealthThreshold> defaultMap = new HashMap<>();
+        String patientType = patient.getPatientType();
+        String targetType = (patientType != null && !patientType.isBlank()) ? patientType : "adult";
+        if (allDefaults != null) {
+            for (HealthThreshold t : allDefaults) {
+                if (targetType.equalsIgnoreCase(t.getPatientType())) {
+                    defaultMap.put(t.getMetricType(), t);
+                }
+            }
+        }
 
         model.addAttribute("patient", patient);
-        model.addAttribute("patientThresholds", patientThresholds);
-        model.addAttribute("defaultThresholds", defaultThresholds);
+        model.addAttribute("customThresholds", customMap);
+        model.addAttribute("defaultThresholds", defaultMap);
         model.addAttribute("metricTypes", java.util.Arrays.asList(MetricType.values()));
         return "healthlog/doctor-thresholds";
     }

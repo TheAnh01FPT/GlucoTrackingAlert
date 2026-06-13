@@ -330,7 +330,10 @@ public class DailyHealthLogController {
     }
 
     @GetMapping("/create")
-    public String createLogForm(@RequestParam Long userId, Model model, RedirectAttributes redirectAttributes) {
+    public String createLogForm(@RequestParam Long userId,
+            @RequestParam(required = false) String source,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (!hasRole("ROLE_ADMIN")) {
             if (hasRole("ROLE_DOCTOR")) {
                 Long patientId = resolvePatientId(userId);
@@ -347,11 +350,14 @@ public class DailyHealthLogController {
             }
         }
 
-        DailyHealthLogRequest request = new DailyHealthLogRequest();
-        request.setLogDate(LocalDate.now());
-        model.addAttribute("log", request);
+        if (!model.containsAttribute("log")) {
+            DailyHealthLogRequest request = new DailyHealthLogRequest();
+            request.setLogDate(LocalDate.now());
+            model.addAttribute("log", request);
+        }
         model.addAttribute("userId", userId);
-        model.addAttribute("action", "/health-logs/create?userId=" + userId + "&source=my-logs");
+        model.addAttribute("source", source);
+        model.addAttribute("action", "/health-logs/create?userId=" + userId + "&source=" + (source != null ? source : "my-logs"));
         return "healthlog/form";
     }
 
@@ -402,6 +408,8 @@ public class DailyHealthLogController {
         dailyHealthLogService.createLog(patientId, request);
         if ("my-logs".equals(source)) {
             return "redirect:/health-logs/my-logs?userId=" + userId;
+        } else if ("doctor-view".equals(source)) {
+            return "redirect:/health-logs/doctor-view?userId=" + userId;
         }
         return "redirect:/health-logs?userId=" + userId;
     }
@@ -424,18 +432,19 @@ public class DailyHealthLogController {
             return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
         }
 
-        DailyHealthLogRequest request = new DailyHealthLogRequest();
-        request.setLogDate(response.getLogDate());
-        request.setBloodSugar(response.getBloodSugar());
-        request.setSystolic(response.getSystolic());
-        request.setDiastolic(response.getDiastolic());
-        request.setSleepHours(response.getSleepHours());
-        request.setWaterMl(response.getWaterMl());
-        request.setSugarConsumptionLevel(response.getSugarConsumptionLevel());
-        request.setSymptoms(response.getSymptoms());
-        request.setNote(response.getNote());
-
-        model.addAttribute("log", request);
+        if (!model.containsAttribute("log")) {
+            DailyHealthLogRequest request = new DailyHealthLogRequest();
+            request.setLogDate(response.getLogDate());
+            request.setBloodSugar(response.getBloodSugar());
+            request.setSystolic(response.getSystolic());
+            request.setDiastolic(response.getDiastolic());
+            request.setSleepHours(response.getSleepHours());
+            request.setWaterMl(response.getWaterMl());
+            request.setSugarConsumptionLevel(response.getSugarConsumptionLevel());
+            request.setSymptoms(response.getSymptoms());
+            request.setNote(response.getNote());
+            model.addAttribute("log", request);
+        }
         model.addAttribute("userId", userId != null ? userId : response.getUserId());
         model.addAttribute("source", source); // ← THÊM DÒNG NÀY
 
@@ -485,6 +494,8 @@ public class DailyHealthLogController {
         dailyHealthLogService.updateLog(id, request);
         if ("my-logs".equals(source)) {
             return "redirect:/health-logs/my-logs?userId=" + userId;
+        } else if ("doctor-view".equals(source)) {
+            return "redirect:/health-logs/doctor-view?userId=" + userId;
         }
         return "redirect:/health-logs?userId=" + userId;
     }
@@ -508,6 +519,8 @@ public class DailyHealthLogController {
         dailyHealthLogService.deleteLog(id);
         if ("my-logs".equals(source)) {
             return "redirect:/health-logs/my-logs?userId=" + userId;
+        } else if ("doctor-view".equals(source)) {
+            return "redirect:/health-logs/doctor-view?userId=" + userId;
         }
         return "redirect:/health-logs?userId=" + userId;
     }
