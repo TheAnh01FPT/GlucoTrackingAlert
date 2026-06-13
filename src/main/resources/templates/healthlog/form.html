@@ -1,409 +1,506 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GlucoTrackAlert - Cập Nhật Chỉ Số Sức Khỏe</title>
     <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        :root {
-            --bg-primary: #f8fafc;
-            --card-bg: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --border: #e2e8f0;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      :root {
+        --bg-primary: #f8fafc;
+        --card-bg: #ffffff;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --border: #e2e8f0;
+        --shadow:
+          0 10px 15px -3px rgba(0, 0, 0, 0.05),
+          0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+
+      /* Navbar Layout */
+      .navbar {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        padding: 1rem 2rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: var(--transition);
+      }
+
+      .navbar-brand:hover {
+        opacity: 0.9;
+      }
+
+      .navbar-menu {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+
+      .navbar-link {
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+      }
+
+      .navbar-link:hover,
+      .navbar-link.active {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main Container */
+      .main-container {
+        max-width: 750px;
+        margin: 3rem auto;
+        padding: 0 1.5rem;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(15px);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
+      }
 
-        /* Navbar Layout */
-        .navbar {
-            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-            padding: 1rem 2rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+      .back-nav {
+        margin-bottom: 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+      }
 
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: var(--transition);
-        }
+      .back-nav:hover {
+        color: var(--primary-hover);
+        transform: translateX(-3px);
+      }
 
-        .navbar-brand:hover {
-            opacity: 0.9;
-        }
+      .form-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
 
-        .navbar-menu {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
+      .form-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+        padding: 2rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-        .navbar-link {
-            color: #cbd5e1;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-        }
+      .form-title {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+      }
 
-        .navbar-link:hover,
-        .navbar-link.active {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+      .form-subtitle {
+        margin-top: 0.25rem;
+        font-size: 0.85rem;
+        opacity: 0.85;
+      }
 
-        /* Main Container */
-        .main-container {
-            max-width: 750px;
-            margin: 3rem auto;
-            padding: 0 1.5rem;
-            animation: fadeIn 0.5s ease;
-        }
+      .form-body {
+        padding: 2.5rem;
+      }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
+      /* Form Layout Grid */
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      .form-group-full {
+        grid-column: span 2;
+      }
 
-        .back-nav {
-            margin-bottom: 1.5rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .back-nav:hover {
-            color: var(--primary-hover);
-            transform: translateX(-3px);
-        }
-
-        .form-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-
-        .form-header {
-            background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
-            padding: 2rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .form-title {
-            margin: 0;
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .form-subtitle {
-            margin-top: 0.25rem;
-            font-size: 0.85rem;
-            opacity: 0.85;
-        }
-
-        .form-body {
-            padding: 2.5rem;
-        }
-
-        /* Form Layout Grid */
+      @media (max-width: 600px) {
         .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+          grid-template-columns: 1fr;
         }
 
         .form-group-full {
-            grid-column: span 2;
+          grid-column: span 1;
         }
+      }
 
-        @media (max-width: 600px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
 
-            .form-group-full {
-                grid-column: span 1;
-            }
-        }
+      .form-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
+      .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
 
-        .form-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
+      .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--text-primary);
+        background-color: #f8fafc;
+        transition: var(--transition);
+        outline: none;
+        box-sizing: border-box;
+      }
 
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
+      .form-input:focus {
+        border-color: var(--primary);
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+      }
 
-        .form-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-family: inherit;
-            color: var(--text-primary);
-            background-color: #f8fafc;
-            transition: var(--transition);
-            outline: none;
-            box-sizing: border-box;
-        }
+      .form-input-unit {
+        padding-right: 4.5rem;
+      }
 
-        .form-input:focus {
-            border-color: var(--primary);
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
-        }
+      .input-unit {
+        position: absolute;
+        right: 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #94a3b8;
+        pointer-events: none;
+      }
 
-        .form-input-unit {
-            padding-right: 4.5rem;
-        }
+      textarea.form-input {
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.5;
+      }
 
-        .input-unit {
-            position: absolute;
-            right: 1rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #94a3b8;
-            pointer-events: none;
-        }
+      /* Actions block */
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2.5rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+      }
 
-        textarea.form-input {
-            resize: vertical;
-            min-height: 100px;
-            line-height: 1.5;
-        }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: var(--transition);
+        border: none;
+      }
 
-        /* Actions block */
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 2.5rem;
-            border-top: 1px solid var(--border);
-            padding-top: 1.5rem;
-        }
+      .btn-cancel {
+        background-color: #f1f5f9;
+        color: var(--text-secondary);
+      }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
-        }
+      .btn-cancel:hover {
+        background-color: #e2e8f0;
+      }
 
-        .btn-cancel {
-            background-color: #f1f5f9;
-            color: var(--text-secondary);
-        }
+      .btn-submit {
+        background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+      }
 
-        .btn-cancel:hover {
-            background-color: #e2e8f0;
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
-        }
+      .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- Header Navigation -->
     <header class="navbar">
-        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
-            🩸 GlucoTrackAlert
-        </a>
-        <nav class="navbar-menu">
-            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
-            <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-        </nav>
+      <a
+        th:href="@{/health-logs/my-logs(userId=${userId})}"
+        class="navbar-brand"
+      >
+        🩸 GlucoTrackAlert
+      </a>
+      <nav class="navbar-menu">
+        <a
+          th:href="@{/health-logs/my-logs(userId=${userId})}"
+          class="navbar-link"
+          >Nhật Ký Đo</a
+        >
+        <a
+          th:href="@{/health-logs/my-chart(userId=${userId})}"
+          class="navbar-link"
+          >Biểu Đồ Xu Hướng</a
+        >
+      </nav>
     </header>
 
     <main class="main-container">
-        <!-- Back navigation link -->
-        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="back-nav">
-            ← Hủy bỏ & Quay lại
-        </a>
+      <!-- Back navigation link -->
+      <a
+        th:href="${source == 'doctor-view' ? 
+    '/health-logs/doctor-view?userId=' + userId : 
+    '/health-logs/my-logs?userId=' + userId}"
+        class="back-nav"
+      >
+        ← Hủy bỏ & Quay lại
+      </a>
 
-        <!-- Form Card -->
-        <div class="form-card">
-            <div class="form-header">
-                <div>
-                    <h1 class="form-title"
-                        th:text="${action.contains('edit') ? '✏️ Cập Nhật Chỉ Số Sức Khỏe' : '➕ Ghi Nhận Chỉ Số Sức Khỏe'}">
-                        Ghi Nhận Chỉ Số Sức Khỏe</h1>
-                    <div class="form-subtitle">Điền đầy đủ thông tin bên dưới để lưu trữ dữ liệu theo dõi y khoa.</div>
-                </div>
-                <div style="font-size: 2rem;">📝</div>
+      <!-- Form Card -->
+      <div class="form-card">
+        <div class="form-header">
+          <div>
+            <h1
+              class="form-title"
+              th:text="${action.contains('edit') ? '✏️ Cập Nhật Chỉ Số Sức Khỏe' : '➕ Ghi Nhận Chỉ Số Sức Khỏe'}"
+            >
+              Ghi Nhận Chỉ Số Sức Khỏe
+            </h1>
+            <div class="form-subtitle">
+              Điền đầy đủ thông tin bên dưới để lưu trữ dữ liệu theo dõi y khoa.
             </div>
-
-            <div class="form-body">
-                <form th:action="@{${action}}" th:object="${log}" method="POST">
-
-                    <div class="form-grid">
-
-                        <!-- Log Date -->
-                        <div class="form-group form-group-full">
-                            <label class="form-label" for="logDate">Ngày Ghi Nhật Ký *</label>
-                            <input type="date" id="logDate" th:field="*{logDate}" class="form-input" required />
-                        </div>
-
-                        <!-- Blood Sugar -->
-                        <div class="form-group">
-                            <label class="form-label" for="bloodSugar">Đường Huyết (mmol/L)</label>
-                            <div class="input-wrapper">
-                                <input type="number" step="0.01" id="bloodSugar" th:field="*{bloodSugar}"
-                                    class="form-input form-input-unit" placeholder="Ví dụ: 5.60" min="0" max="50" />
-                                <span class="input-unit">mmol/L</span>
-                            </div>
-                        </div>
-
-                        <!-- Sleep Hours -->
-                        <div class="form-group">
-                            <label class="form-label" for="sleepHours">Giờ Ngủ (tiếng)</label>
-                            <div class="input-wrapper">
-                                <input type="number" step="0.01" id="sleepHours" th:field="*{sleepHours}"
-                                    class="form-input form-input-unit" placeholder="Ví dụ: 7.50" min="0" max="24" />
-                                <span class="input-unit">giờ</span>
-                            </div>
-                        </div>
-
-                        <!-- Blood Pressure Sys -->
-                        <div class="form-group">
-                            <label class="form-label" for="systolic">Huyết Áp Tâm Thu (Systolic)</label>
-                            <div class="input-wrapper">
-                                <input type="number" id="systolic" th:field="*{systolic}"
-                                    class="form-input form-input-unit" placeholder="Ví dụ: 120" min="50" max="250" />
-                                <span class="input-unit">mmHg</span>
-                            </div>
-                        </div>
-
-                        <!-- Blood Pressure Dia -->
-                        <div class="form-group">
-                            <label class="form-label" for="diastolic">Huyết Áp Tâm Trương (Diastolic)</label>
-                            <div class="input-wrapper">
-                                <input type="number" id="diastolic" th:field="*{diastolic}"
-                                    class="form-input form-input-unit" placeholder="Ví dụ: 80" min="30" max="150" />
-                                <span class="input-unit">mmHg</span>
-                            </div>
-                        </div>
-
-                        <!-- Water consumed -->
-                        <div class="form-group">
-                            <label class="form-label" for="waterMl">Lượng Nước Tiêu Thụ (ml)</label>
-                            <div class="input-wrapper">
-                                <input type="number" id="waterMl" th:field="*{waterMl}"
-                                    class="form-input form-input-unit" placeholder="Ví dụ: 2000" min="0" max="20000" />
-                                <span class="input-unit">ml</span>
-                            </div>
-                        </div>
-
-                        <!-- Sugar Consumption Level -->
-                        <div class="form-group">
-                            <label class="form-label" for="sugarConsumptionLevel">Mức Đường Tiêu Thụ Trong Ngày</label>
-                            <select id="sugarConsumptionLevel" th:field="*{sugarConsumptionLevel}" class="form-input">
-                                <option value="low">Thấp (Low)</option>
-                                <option value="medium">Vừa (Medium)</option>
-                                <option value="high">Cao (High)</option>
-                            </select>
-                        </div>
-
-                        <!-- Symptoms -->
-                        <div class="form-group form-group-full">
-                            <label class="form-label" for="symptoms">Triệu Chứng Ghi Nhận</label>
-                            <textarea id="symptoms" th:field="*{symptoms}" class="form-input"
-                                placeholder="Ví dụ: Đau đầu, mệt mỏi, thèm ngọt, chóng mặt,..."></textarea>
-                        </div>
-
-                        <!-- Note -->
-                        <div class="form-group form-group-full">
-                            <label class="form-label" for="note">Ghi Chú Nhắc Nhở</label>
-                            <textarea id="note" th:field="*{note}" class="form-input"
-                                placeholder="Ví dụ: Thực đơn hôm nay có nhiều rau xanh, tập thể dục nhẹ nhàng..."></textarea>
-                        </div>
-
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="form-actions">
-                        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="btn btn-cancel">Hủy Bỏ</a>
-                        <button type="submit" class="btn btn-submit">💾 Lưu Chỉ Số Sức Khỏe</button>
-                    </div>
-
-                </form>
-            </div>
+          </div>
+          <div style="font-size: 2rem">📝</div>
         </div>
+
+        <div class="form-body">
+          <form th:action="@{${action}}" th:object="${log}" method="POST">
+            <div class="form-grid">
+              <!-- Log Date -->
+              <div class="form-group form-group-full">
+                <label class="form-label" for="logDate"
+                  >Ngày Ghi Nhật Ký *</label
+                >
+                <input
+                  type="date"
+                  id="logDate"
+                  th:field="*{logDate}"
+                  class="form-input"
+                  required
+                />
+              </div>
+
+              <!-- Blood Sugar -->
+              <div class="form-group">
+                <label class="form-label" for="bloodSugar"
+                  >Đường Huyết (mmol/L)</label
+                >
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="bloodSugar"
+                    th:field="*{bloodSugar}"
+                    class="form-input form-input-unit"
+                    placeholder="Ví dụ: 5.60"
+                    min="0"
+                    max="50"
+                  />
+                  <span class="input-unit">mmol/L</span>
+                </div>
+              </div>
+
+              <!-- Sleep Hours -->
+              <div class="form-group">
+                <label class="form-label" for="sleepHours"
+                  >Giờ Ngủ (tiếng)</label
+                >
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="sleepHours"
+                    th:field="*{sleepHours}"
+                    class="form-input form-input-unit"
+                    placeholder="Ví dụ: 7.50"
+                    min="0"
+                    max="24"
+                  />
+                  <span class="input-unit">giờ</span>
+                </div>
+              </div>
+
+              <!-- Blood Pressure Sys -->
+              <div class="form-group">
+                <label class="form-label" for="systolic"
+                  >Huyết Áp Tâm Thu (Systolic)</label
+                >
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="systolic"
+                    th:field="*{systolic}"
+                    class="form-input form-input-unit"
+                    placeholder="Ví dụ: 120"
+                    min="50"
+                    max="250"
+                  />
+                  <span class="input-unit">mmHg</span>
+                </div>
+              </div>
+
+              <!-- Blood Pressure Dia -->
+              <div class="form-group">
+                <label class="form-label" for="diastolic"
+                  >Huyết Áp Tâm Trương (Diastolic)</label
+                >
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="diastolic"
+                    th:field="*{diastolic}"
+                    class="form-input form-input-unit"
+                    placeholder="Ví dụ: 80"
+                    min="30"
+                    max="150"
+                  />
+                  <span class="input-unit">mmHg</span>
+                </div>
+              </div>
+
+              <!-- Water consumed -->
+              <div class="form-group">
+                <label class="form-label" for="waterMl"
+                  >Lượng Nước Tiêu Thụ (ml)</label
+                >
+                <div class="input-wrapper">
+                  <input
+                    type="number"
+                    id="waterMl"
+                    th:field="*{waterMl}"
+                    class="form-input form-input-unit"
+                    placeholder="Ví dụ: 2000"
+                    min="0"
+                    max="20000"
+                  />
+                  <span class="input-unit">ml</span>
+                </div>
+              </div>
+
+              <!-- Sugar Consumption Level -->
+              <div class="form-group">
+                <label class="form-label" for="sugarConsumptionLevel"
+                  >Mức Đường Tiêu Thụ Trong Ngày</label
+                >
+                <select
+                  id="sugarConsumptionLevel"
+                  th:field="*{sugarConsumptionLevel}"
+                  class="form-input"
+                >
+                  <option value="low">Thấp (Low)</option>
+                  <option value="medium">Vừa (Medium)</option>
+                  <option value="high">Cao (High)</option>
+                </select>
+              </div>
+
+              <!-- Symptoms -->
+              <div class="form-group form-group-full">
+                <label class="form-label" for="symptoms"
+                  >Triệu Chứng Ghi Nhận</label
+                >
+                <textarea
+                  id="symptoms"
+                  th:field="*{symptoms}"
+                  class="form-input"
+                  placeholder="Ví dụ: Đau đầu, mệt mỏi, thèm ngọt, chóng mặt,..."
+                ></textarea>
+              </div>
+
+              <!-- Note -->
+              <div class="form-group form-group-full">
+                <label class="form-label" for="note">Ghi Chú Nhắc Nhở</label>
+                <textarea
+                  id="note"
+                  th:field="*{note}"
+                  class="form-input"
+                  placeholder="Ví dụ: Thực đơn hôm nay có nhiều rau xanh, tập thể dục nhẹ nhàng..."
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <a
+                th:href="${source == 'doctor-view' ? 
+    '/health-logs/doctor-view?userId=' + userId : 
+    '/health-logs/my-logs?userId=' + userId}"
+                class="btn btn-cancel"
+                >Hủy Bỏ</a
+              >
+              <button type="submit" class="btn btn-submit">
+                💾 Lưu Chỉ Số Sức Khỏe
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </main>
-
-</body>
-
+  </body>
 </html>

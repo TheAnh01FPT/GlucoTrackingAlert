@@ -90,6 +90,14 @@ public class DailyHealthLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
+        // Redirect về đúng trang theo role, tránh để /health-logs là trang chung
+        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
+            return "redirect:/health-logs/doctor-view" + (userId != null ? "?userId=" + userId : "");
+        }
+        if (hasRole("ROLE_PATIENT")) {
+            Long curUserId = getCurrentUserId();
+            return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
+        }
         // Prevent non-admin/doctor users from viewing other patients by forcing
         // `userId` to the current logged-in user when the caller is not admin/doctor.
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
@@ -254,7 +262,7 @@ public class DailyHealthLogController {
             return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
         }
         model.addAttribute("log", log);
-        model.addAttribute("source", source); 
+        model.addAttribute("source", source);
         return "healthlog/detail";
     }
 
@@ -332,9 +340,13 @@ public class DailyHealthLogController {
 
         model.addAttribute("log", request);
         model.addAttribute("userId", userId != null ? userId : response.getUserId());
+        model.addAttribute("source", source); // ← THÊM DÒNG NÀY
+
         String actionUrl = "/health-logs/" + id + "/edit?userId=" + (userId != null ? userId : response.getUserId());
         if ("my-logs".equals(source)) {
             actionUrl += "&source=my-logs";
+        } else if ("doctor-view".equals(source)) {
+            actionUrl += "&source=doctor-view"; // ← THÊM DÒNG NÀY
         }
         model.addAttribute("action", actionUrl);
         return "healthlog/form";
@@ -464,5 +476,43 @@ public class DailyHealthLogController {
         model.addAttribute("from", startDate);
         model.addAttribute("to", endDate);
         return "healthlog/my-chart";
+    }
+
+    @GetMapping("/doctor-chart")
+    public String getDoctorChart(@RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Model model) {
+        // Chỉ DOCTOR/ADMIN mới vào được
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            return "redirect:/login";
+        }
+
+        List<Patient> patients = patientRepository.findAllByStatus("active");
+        if (patients.isEmpty()) {
+            patients = patientRepository.findAll();
+        }
+        model.addAttribute("patients", patients);
+
+        Long selectedPatientId = userId;
+        if (selectedPatientId == null && !patients.isEmpty()) {
+            selectedPatientId = patients.get(0).getId();
+        }
+
+        LocalDate endDate = to != null ? to : LocalDate.now();
+        LocalDate startDate = from != null ? from : endDate.minusDays(30);
+
+        if (selectedPatientId != null) {
+            List<DailyHealthLogResponse> chartData = dailyHealthLogService.getChartData(selectedPatientId, startDate, endDate);
+            model.addAttribute("chartData", chartData);
+            model.addAttribute("selectedUserId", selectedPatientId);
+        } else {
+            model.addAttribute("chartData", Collections.emptyList());
+            model.addAttribute("selectedUserId", null);
+        }
+
+        model.addAttribute("from", startDate);
+        model.addAttribute("to", endDate);
+        return "healthlog/doctor-chart";
     }
 }

@@ -327,19 +327,19 @@
     <!-- Header Navigation -->
     <header class="navbar">
       <a
-        th:href="${source == 'doctor-view' ? '/health-logs/doctor-view?userId=' + log.userId : '/health-logs/my-logs?userId=' + log.userId}"
+        th:href="${source == 'doctor-view' ? '/health-logs/doctor-view?userId=' + log.patientId : '/health-logs/my-logs?userId=' + log.userId}"
         class="navbar-brand"
       >
         🩸 GlucoTrackAlert
       </a>
       <nav class="navbar-menu">
         <a
-          th:href="${source == 'doctor-view' ? '/health-logs/doctor-view?userId=' + log.userId : '/health-logs/my-logs?userId=' + log.userId}"
+          th:href="${source == 'doctor-view' ? '/health-logs/doctor-view?userId=' + log.patientId : '/health-logs/my-logs?userId=' + log.userId}"
           class="navbar-link"
           >Nhật Ký Đo</a
         >
         <a
-          th:href="@{/health-logs/my-chart(userId=${log.userId})}"
+          th:href="${source == 'doctor-view' ? '/health-logs/doctor-chart?userId=' + log.patientId : '/health-logs/my-chart?userId=' + log.userId}"
           class="navbar-link"
           >Biểu Đồ Xu Hướng</a
         >
@@ -349,7 +349,7 @@
     <main class="main-container">
       <!-- Back navigation link -->
       <a
-        th:href="${source == 'doctor-view' ? '/health-logs/doctor-view?userId=' + log.userId : '/health-logs/my-logs?userId=' + log.userId}"
+        th:href="${source == 'doctor-view' ? '/health-logs/doctor-view?userId=' + log.patientId : '/health-logs/my-logs?userId=' + log.userId}"
         class="back-nav"
       >
         ← Quay Lại Lịch Sử
@@ -542,13 +542,13 @@
           <!-- Actions Footer -->
           <div class="detail-actions">
             <a
-              th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${log.userId}, source='my-logs')}"
+              th:href="${source == 'doctor-view' ? '/health-logs/' + log.id + '/edit?userId=' + log.patientId + '&source=doctor-view' : '/health-logs/' + log.id + '/edit?userId=' + log.userId + '&source=my-logs'}"
               class="btn btn-edit"
               >✏️ Chỉnh Sửa Chỉ Số</a
             >
 
             <form
-              th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${log.userId}, source='my-logs')}"
+              th:action="${source == 'doctor-view' ? '/health-logs/' + log.id + '/delete?userId=' + log.patientId + '&source=doctor-view' : '/health-logs/' + log.id + '/delete?userId=' + log.userId + '&source=my-logs'}"
               method="POST"
               onsubmit="
                 return confirm(
