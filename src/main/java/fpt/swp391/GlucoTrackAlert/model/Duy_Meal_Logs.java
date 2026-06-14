@@ -1,5 +1,4 @@
 package fpt.swp391.GlucoTrackAlert.model;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
@@ -12,18 +11,17 @@ public class Duy_Meal_Logs {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
+    // FIX 1: Đổi tên cột từ "user_id" → "patient_id" cho đúng với bảng patients
+    @Column(name = "patient_id", nullable = false)
     private Long patientId;
 
     @NotBlank(message = "Ten mon an khong duoc de trong")
     @Column(name = "food_name", nullable = false)
     private String foodName;
 
-    // So luong bua an do benh nhan nhap (vd: 1 bat, 2 mieng, nua to...)
     @Column(name = "quantity_text")
     private String quantityText;
 
-    // Luong duong huyet uoc tinh sau bua an (mmol/L) - he thong tu tinh
     @Column(name = "sugar_estimation")
     private Double sugarEstimation;
 
@@ -37,10 +35,13 @@ public class Duy_Meal_Logs {
     private LocalDate mealDate;
 
     // --- LOGIC ---
+    // FIX 2: Thống nhất ngưỡng đường huyết với Service và Controller
+    // Hơi cao (post-meal): > 7.8 mmol/L
     public boolean isHighSugar() {
         return sugarEstimation != null && sugarEstimation > 7.8;
     }
 
+    // Nguy hiểm: >= 11.0 mmol/L
     public boolean isDangerSugar() {
         return sugarEstimation != null && sugarEstimation >= 11.0;
     }
@@ -79,8 +80,6 @@ public class Duy_Meal_Logs {
     public void normalizeData() {
         if (foodName != null) foodName = foodName.trim();
         if (quantityText != null) quantityText = quantityText.trim();
-    // Không ép sugarEstimation về 0.0 — để null nếu chưa có dữ liệu,
-    // tránh ghi đè giá trị hợp lệ khi update
-    if (mealDate == null) mealDate = LocalDate.now();
+        if (mealDate == null) mealDate = LocalDate.now();
     }
 }

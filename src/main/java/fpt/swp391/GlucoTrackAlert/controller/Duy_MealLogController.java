@@ -10,9 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/meal-logs")
-// FIX 6: Không dùng @CrossOrigin("*") chung chung trong production.
-// Giữ tạm để dev, nhưng nên chỉ định origin cụ thể khi deploy.
-@CrossOrigin(origins = "*")
+// FIX 3: Bỏ @CrossOrigin("*") vì Security đã xử lý, tránh lộ API
 public class Duy_MealLogController {
 
     @Autowired
@@ -54,7 +52,6 @@ public class Duy_MealLogController {
                                     @RequestBody Duy_Meal_Logs log) {
         Duy_Meal_Logs updated = mealLogService.updateLog(id, log);
         if (updated == null) {
-            // FIX 6: Trả 404 thay vì 400 khi không tìm thấy
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updated);
@@ -77,15 +74,13 @@ public class Duy_MealLogController {
         return ResponseEntity.ok(mealLogService.calculateTotalSugarForUser(patientId));
     }
 
-   
-
-    // REPORT - HIGH SUGAR (> 10 mmol/L)
+    // REPORT - HIGH SUGAR (> 7.8 mmol/L — hơi cao sau bữa ăn)
     @GetMapping("/report/high-sugar")
     public ResponseEntity<List<Duy_Meal_Logs>> highSugar() {
         return ResponseEntity.ok(mealLogService.getHighSugarMeals());
     }
 
-    // REPORT - DANGER SUGAR (> 13.9 mmol/L)
+    // REPORT - DANGER SUGAR (>= 11.0 mmol/L — nguy hiểm)
     @GetMapping("/report/danger-sugar")
     public ResponseEntity<List<Duy_Meal_Logs>> dangerSugar() {
         return ResponseEntity.ok(mealLogService.getDangerSugarMeals());

@@ -39,7 +39,7 @@ public class PageController {
     @GetMapping("/register")
     public String registerPage() { return "register/register"; }
 
-    @GetMapping("/patient/homepage")
+    @GetMapping({"/patient/homepage", "/patient/home"})
     public String patientDashboard(@RequestParam(value = "userId", required = false) Long userId, Model model) {
         if (userId == null) {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -73,8 +73,20 @@ public class PageController {
         return "patient/home";
     }
 
-    @GetMapping("/doctor/homepage")
-    public String doctorDashboard() { return "homepage/homepage"; }
+    @GetMapping({"/doctor/homepage", "/doctor/home"})
+    public String doctorDashboard() {
+        return "doctor-home";
+    }
+
+    @GetMapping("/doctor/my-patients")
+    public String doctorMyPatients() {
+        return "my-patients";
+    }
+
+    @GetMapping("/doctor/settings")
+    public String doctorSettings() {
+        return "settings";
+    }
 
     @GetMapping("/meal-logs")
     public String mealLogsPage(Model model) {
@@ -108,7 +120,7 @@ public class PageController {
             // Lấy danh sách người thân (dùng patient.id, không phải user.id)
             List<RelativeResponse> relatives = relativeService.getRelativesByPatientId(profile.getId());
 
-            model.addAttribute("patientId",   user.getId());
+            model.addAttribute("patientId",   profile.getId());
             model.addAttribute("patientName", profile.getFullName());
             model.addAttribute("gender",      gender);
             model.addAttribute("ageGroup",    ageGroup);
