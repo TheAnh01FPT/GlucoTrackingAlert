@@ -7,6 +7,7 @@ import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
 import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.service.DoctorService;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +28,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class DoctorController {
 
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
+            "image/jpeg", "image/jpg", "image/png"
+    );
+
     private final DoctorService doctorService;
     private final DoctorRepository doctorRepository;
 
@@ -45,7 +51,7 @@ public class DoctorController {
      * [ADMIN] Tạo tài khoản bác sĩ mới
      */
     @PostMapping("/admin-create")
-    public ResponseEntity<?> adminCreateDoctor(@RequestBody AdminCreateDoctorRequest request) {
+    public ResponseEntity<?> adminCreateDoctor(@Valid @RequestBody AdminCreateDoctorRequest request) {
         try {
             DoctorResponse response = doctorService.adminCreateDoctor(request);
             return ResponseEntity.ok(response);
@@ -76,7 +82,7 @@ public class DoctorController {
     @PutMapping("/{id}")
     public ResponseEntity<DoctorResponse> updateDoctor(
             @PathVariable Integer id,
-            @RequestBody DoctorRequest request) {
+            @Valid @RequestBody DoctorRequest request) {
         return ResponseEntity.ok(doctorService.updateDoctor(id, request));
     }
 
@@ -94,6 +100,27 @@ public class DoctorController {
             @RequestParam(value = "nationalId", required = false) String nationalId,
             @RequestParam(value = "practiceLicense", required = false) String practiceLicense) {
         try {
+            // Validate CCCD format nếu có nhập
+            if (nationalId != null && !nationalId.isBlank() && !nationalId.matches("^\\d{12}$")) {
+                return ResponseEntity.badRequest().body("Số CCCD phải gồm đúng 12 chữ số");
+            }
+
+            // Validate chứng chỉ hành nghề không quá dài
+            if (practiceLicense != null && practiceLicense.length() > 50) {
+                return ResponseEntity.badRequest().body("Số chứng chỉ hành nghề không được vượt quá 50 ký tự");
+            }
+
+            // Validate các file upload
+            if (nationalIdImage != null && !nationalIdImage.isEmpty()) {
+                validateImageFile(nationalIdImage, "Ảnh CCCD");
+            }
+            if (practiceLicenseImage != null && !practiceLicenseImage.isEmpty()) {
+                validateImageFile(practiceLicenseImage, "Ảnh chứng chỉ hành nghề");
+            }
+            if (avatar != null && !avatar.isEmpty()) {
+                validateImageFile(avatar, "Ảnh đại diện");
+            }
+
             // Chỉ cho phép bác sĩ tự upload ảnh của chính mình
             String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
@@ -116,21 +143,21 @@ public class DoctorController {
             String avatarUrl = null;
 
             if (nationalIdImage != null && !nationalIdImage.isEmpty()) {
-                String filename = "cccd_" + UUID.randomUUID() + "_" + nationalIdImage.getOriginalFilename();
+                String filename = "cccd_" + UUID.randomUUID() + "_" + sanitizeFilename(nationalIdImage.getOriginalFilename());
                 Path path = Paths.get(uploadDir + filename);
                 Files.write(path, nationalIdImage.getBytes());
                 nationalIdImageUrl = "/" + uploadDir + filename;
             }
 
             if (practiceLicenseImage != null && !practiceLicenseImage.isEmpty()) {
-                String filename = "chungchi_" + UUID.randomUUID() + "_" + practiceLicenseImage.getOriginalFilename();
+                String filename = "chungchi_" + UUID.randomUUID() + "_" + sanitizeFilename(practiceLicenseImage.getOriginalFilename());
                 Path path = Paths.get(uploadDir + filename);
                 Files.write(path, practiceLicenseImage.getBytes());
                 practiceLicenseImageUrl = "/" + uploadDir + filename;
             }
 
             if (avatar != null && !avatar.isEmpty()) {
-                String filename = "avatar_" + UUID.randomUUID() + "_" + avatar.getOriginalFilename();
+                String filename = "avatar_" + UUID.randomUUID() + "_" + sanitizeFilename(avatar.getOriginalFilename());
                 Path path = Paths.get(uploadDir + filename);
                 Files.write(path, avatar.getBytes());
                 avatarUrl = "/" + uploadDir + filename;
@@ -194,5 +221,29 @@ public class DoctorController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    /**
+     * Validate file upload: chỉ chấp nhận ảnh JPG/PNG và tối đa 5MB
+     */
+    private void validateImageFile(MultipartFile file, String fieldName) {
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new RuntimeException(fieldName + " không được vượt quá 5MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new RuntimeException(fieldName + " chỉ chấp nhận định dạng JPG hoặc PNG");
+        }
+    }
+
+    /**
+     * Làm sạch tên file để tránh path traversal attack
+     */
+    private String sanitizeFilename(String originalFilename) {
+        if (originalFilename == null) {
+            return "file";
+        }
+        return originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 }
