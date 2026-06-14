@@ -64,6 +64,13 @@ public class PatientWebController {
                     .identityCard(profile.getIdentityCard())
                     .insuranceNumber(profile.getInsuranceNumber())
                     .isPregnant(profile.getIsPregnant())
+                    .apHi(profile.getApHi())
+                    .apLo(profile.getApLo())
+                    .cholesterol(profile.getCholesterol())
+                    .gluc(profile.getGluc())
+                    .smoke(profile.getSmoke())
+                    .alco(profile.getAlco())
+                    .active(profile.getActive())
                     .build();
             model.addAttribute("profileForm", request);
             model.addAttribute("isNew", false);
@@ -87,6 +94,9 @@ public class PatientWebController {
         
         // Enforce security by setting/verifying correct userId in the request
         request.setUserId(loggedInUser.getId());
+        if (request.getSmoke() == null) request.setSmoke(0);
+        if (request.getAlco() == null) request.setAlco(0);
+        if (request.getActive() == null) request.setActive(0);
 
         if (result.hasErrors()) {
             model.addAttribute("isNew", isNew);

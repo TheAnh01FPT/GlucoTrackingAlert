@@ -58,6 +58,7 @@ public class Patient {
 
     @Column(name = "patient_type", length = 20)
     private String patientType;
+
     @Column(name = "identity_card", length = 20)
     private String identityCard;
 
@@ -67,6 +68,23 @@ public class Patient {
     @Column(name = "is_pregnant")
     @Builder.Default
     private Boolean isPregnant = false;
+
+    // --- CÁC TRƯỜNG CHỈ SỐ LÂM SÀNG MỚI ĐƯỢC THÊM VÀO ---
+    @Column(name = "ap_hi")
+    private Integer apHi;
+
+    @Column(name = "ap_lo")
+    private Integer apLo;
+
+    private Integer cholesterol;
+
+    private Double gluc;
+
+    private Integer smoke;
+
+    private Integer alco;
+
+    private Integer active;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
