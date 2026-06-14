@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -100,6 +101,14 @@ public class PatientServiceImpl implements PatientService {
         return mapToResponse(updatedPatient);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<PatientProfileResponse> getAllPatients() {
+        return patientRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private void calculateAgeAndBmi(Patient patient) {
         // 1. Calculate Age
         if (patient.getDateOfBirth() != null) {
@@ -107,7 +116,7 @@ public class PatientServiceImpl implements PatientService {
         }
 
         // 2. Calculate BMI
-        if (patient.getHeightCm() != null && patient.getWeightKg() != null 
+        if (patient.getHeightCm() != null && patient.getWeightKg() != null
                 && patient.getHeightCm().compareTo(BigDecimal.ZERO) > 0) {
             // Height in meters = heightCm / 100
             BigDecimal heightInMeters = patient.getHeightCm().divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);

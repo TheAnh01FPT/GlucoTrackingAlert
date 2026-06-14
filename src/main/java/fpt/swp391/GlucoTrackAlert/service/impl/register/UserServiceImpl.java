@@ -9,8 +9,9 @@ import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
-import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
+import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.util.jwt.JwtUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,19 +29,22 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final JwtUtil jwtUtil;
+    private final DoctorRepository doctorRepository;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            EmailVerificationTokenRepository tokenRepository,
-                           BCryptPasswordEncoder passwordEncoder,
                            EmailService emailService,
-                           JwtUtil jwtUtil) {
+                           BCryptPasswordEncoder passwordEncoder,
+                           JwtUtil jwtUtil,
+                           DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.jwtUtil = jwtUtil;
+        this.doctorRepository = doctorRepository;
     }
 
     // Tạo mã OTP 6 chữ số
@@ -48,19 +52,29 @@ public class UserServiceImpl implements UserService {
         return String.format("%06d", new Random().nextInt(999999));
     }
 
+    private String buildOtpEmail(String fullName, String otp) {
+        return """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert</h2>
+                <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
+                <p style="color: #555;">Mã xác nhận tài khoản của bạn là:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="background-color: #f4f7f6; color: #2c3e50; padding: 14px 28px;
+                          border-radius: 5px; font-size: 32px; font-weight: bold;
+                          letter-spacing: 8px; border: 2px dashed #2ecc71;">
+                        %s
+                    </span>
+                </div>
+                <p style="color: #999; font-size: 13px; text-align: center;">Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
+                <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không đăng ký tài khoản này, hãy bỏ qua email này.</p>
+            </div>
+            """.formatted(fullName, otp);
+    }
+
     // Gửi email chứa OTP
     private void sendOtpEmail(String toEmail, String fullName, String otp) throws Exception {
         String subject = "Mã xác nhận đăng ký tài khoản GlucoTrack";
-        String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 480px; margin: auto;'>"
-                + "<h2 style='color: #e74c3c;'>🩸 GlucoTrack</h2>"
-                + "<p>Xin chào <b>" + fullName + "</b>,</p>"
-                + "<p>Mã xác nhận của bạn là:</p>"
-                + "<div style='font-size: 36px; font-weight: bold; letter-spacing: 12px; "
-                + "text-align: center; padding: 20px; background: #f4f7f6; border-radius: 8px; "
-                + "color: #2c3e50;'>" + otp + "</div>"
-                + "<p style='margin-top: 16px;'>Mã có hiệu lực trong <b>10 phút</b>. "
-                + "Không chia sẻ mã này với bất kỳ ai.</p>"
-                + "</div>";
+        String htmlContent = buildOtpEmail(fullName, otp);
         emailService.sendHtmlMessage(toEmail, subject, htmlContent);
     }
 
@@ -182,11 +196,47 @@ public class UserServiceImpl implements UserService {
         String roleName = user.getRole() != null ? user.getRole().getName() : "PATIENT";
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
+        Long doctorId = null;
+        if ("DOCTOR".equals(roleName)) {
+            doctorId = doctorRepository.findAll().stream()
+                    .filter(d -> d.getUser().getId().equals(user.getId()))
+                    .findFirst()
+                    .map(d -> d.getId().longValue())
+                    .orElse(null);
+        }
+
         return LoginResponse.builder()
                 .token(token)
                 .email(user.getEmail())
                 .role(roleName)
+                .doctorId(doctorId)
                 .message("Đăng nhập thành công.")
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản"));
+
+        oldPassword = oldPassword.trim();
+        newPassword = newPassword.trim();
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu hiện tại không đúng");
+        }
+
+        if (newPassword.length() < 6) {
+            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu mới không được trùng mật khẩu hiện tại");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(java.time.LocalDateTime.now());
+        userRepository.save(user);
     }
 }
