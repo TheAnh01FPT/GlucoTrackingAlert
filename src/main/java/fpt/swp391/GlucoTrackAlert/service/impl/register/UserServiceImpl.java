@@ -62,18 +62,25 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User register(RegisterRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email đã được sử dụng");
+        // 1. Kiểm tra trùng email
+        if (userRepository.existsByEmail(request.getEmail().trim())) {
+            throw new Exception("Email này đã được sử dụng trong hệ thống.");
+        }
+
+        // 2. BỔ SUNG: Kiểm tra trùng số điện thoại
+        // Lưu ý: Đảm bảo trong UserRepository đã có phương thức boolean existsByPhone(String phone);
+        if (userRepository.existsByPhone(request.getPhone().trim())) {
+            throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
         }
 
         Role role = roleRepository.findByName("PATIENT")
                 .orElseThrow(() -> new Exception("Role not found"));
 
         User u = User.builder()
-                .email(request.getEmail())
+                .email(request.getEmail().trim())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
-                .phone(request.getPhone())
+                .fullName(request.getFullName().trim())
+                .phone(request.getPhone().trim())
                 .role(role)
                 .status("pending_verification")
                 .emailVerified(false)
@@ -81,6 +88,8 @@ public class UserServiceImpl implements UserService {
                 .updatedAt(LocalDateTime.now())
                 .build();
         User saved = userRepository.save(u);
+
+        // ... giữ nguyên phần sinh OTP 6 số bên dưới của bạn ...
 
         // Tạo OTP 6 số
         String otp = String.format("%06d", new Random().nextInt(999999));
