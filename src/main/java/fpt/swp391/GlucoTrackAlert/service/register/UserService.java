@@ -12,6 +12,8 @@ public interface UserService {
     User activateUser(String token) throws Exception;
 
     LoginResponse login(LoginRequest request) throws Exception;
+    void forgotPassword(fpt.swp391.GlucoTrackAlert.dto.login.ForgotPasswordRequest request) throws Exception;
+    void resetPassword(fpt.swp391.GlucoTrackAlert.dto.login.ResetPasswordRequest request) throws Exception;
 
     void resendOtp(String email) throws Exception;
 
