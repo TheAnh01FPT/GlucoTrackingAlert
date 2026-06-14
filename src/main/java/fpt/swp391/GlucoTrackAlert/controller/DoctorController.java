@@ -22,11 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * Tất cả endpoint trong controller này chỉ dành cho ADMIN. Bác sĩ KHÔNG có
- * quyền tự sửa bất kỳ thông tin nào của mình. Admin là người quản lý toàn bộ dữ
- * liệu bác sĩ.
- */
 @RestController
 @RequestMapping("/api/doctors")
 @RequiredArgsConstructor
@@ -35,11 +30,6 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorRepository doctorRepository;
 
-    /**
-     * [PUBLIC] Giờ làm việc cố định của tất cả bác sĩ trong hệ thống. Hardcode
-     * trong WorkShift – không có DB, không cần auth. Dùng để hiển thị trên
-     * trang admin và làm điều kiện gửi thông báo.
-     */
     @GetMapping("/working-hours")
     public ResponseEntity<Map<String, String>> getWorkingHours() {
         Map<String, String> info = new LinkedHashMap<>();
@@ -52,9 +42,7 @@ public class DoctorController {
     }
 
     /**
-     * [ADMIN] Tạo tài khoản bác sĩ mới. - Tạo User (email + mật khẩu tạm) +
-     * Doctor profile cùng lúc. - Hệ thống tự gửi email cho bác sĩ kèm username
-     * & mật khẩu. - Bác sĩ KHÔNG tự đăng ký được qua form thông thường.
+     * [ADMIN] Tạo tài khoản bác sĩ mới
      */
     @PostMapping("/admin-create")
     public ResponseEntity<?> adminCreateDoctor(@RequestBody AdminCreateDoctorRequest request) {
@@ -83,9 +71,7 @@ public class DoctorController {
     }
 
     /**
-     * [ADMIN] Cập nhật thông tin bác sĩ. Admin có thể sửa mọi trường bao gồm:
-     * fullName, phone, specialization, degree, workplace, introduction,
-     * avatarUrl, status.
+     * [ADMIN] Cập nhật thông tin bác sĩ
      */
     @PutMapping("/{id}")
     public ResponseEntity<DoctorResponse> updateDoctor(
@@ -95,16 +81,20 @@ public class DoctorController {
     }
 
     /**
-     * [DOCTOR] Upload ảnh CCCD và chứng chỉ hành nghề.
-     * Sau khi upload, status bác sĩ chuyển sang pending_approval để admin duyệt.
+     * [DOCTOR] Upload ảnh CCCD, chứng chỉ hành nghề, avatar + nhập số CCCD & số
+     * chứng chỉ. Bác sĩ phải hoàn tất bước này trước khi được phân công và khám
+     * bệnh. Sau khi submit, status chuyển sang pending_approval để admin duyệt.
      */
-    @PostMapping("/{id}/upload-verification")
+    @PostMapping(value = "/{id}/upload-verification", consumes = "multipart/form-data")
     public ResponseEntity<?> uploadVerification(
             @PathVariable Integer id,
             @RequestParam(value = "nationalIdImage", required = false) MultipartFile nationalIdImage,
-            @RequestParam(value = "practiceLicenseImage", required = false) MultipartFile practiceLicenseImage) {
+            @RequestParam(value = "practiceLicenseImage", required = false) MultipartFile practiceLicenseImage,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar,
+            @RequestParam(value = "nationalId", required = false) String nationalId,
+            @RequestParam(value = "practiceLicense", required = false) String practiceLicense) {
         try {
-            // Chỉ cho phép bác sĩ tự upload ảnh của chính mình (ADMIN được bỏ qua check)
+            // Chỉ cho phép bác sĩ tự upload ảnh của chính mình
             String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities()
                     .stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -123,6 +113,7 @@ public class DoctorController {
 
             String nationalIdImageUrl = null;
             String practiceLicenseImageUrl = null;
+            String avatarUrl = null;
 
             if (nationalIdImage != null && !nationalIdImage.isEmpty()) {
                 String filename = "cccd_" + UUID.randomUUID() + "_" + nationalIdImage.getOriginalFilename();
@@ -138,7 +129,21 @@ public class DoctorController {
                 practiceLicenseImageUrl = "/" + uploadDir + filename;
             }
 
-            DoctorResponse response = doctorService.uploadVerificationImages(id, nationalIdImageUrl, practiceLicenseImageUrl);
+            if (avatar != null && !avatar.isEmpty()) {
+                String filename = "avatar_" + UUID.randomUUID() + "_" + avatar.getOriginalFilename();
+                Path path = Paths.get(uploadDir + filename);
+                Files.write(path, avatar.getBytes());
+                avatarUrl = "/" + uploadDir + filename;
+            }
+
+            DoctorResponse response = doctorService.uploadVerificationImages(
+                    id,
+                    nationalIdImageUrl,
+                    practiceLicenseImageUrl,
+                    avatarUrl,
+                    nationalId,
+                    practiceLicense
+            );
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Lỗi khi upload file: " + e.getMessage());
@@ -156,7 +161,7 @@ public class DoctorController {
     }
 
     /**
-     * [ADMIN] Duyệt bác sĩ → status = active, gửi email thông báo
+     * [ADMIN] Duyệt bác sĩ → status = active
      */
     @PutMapping("/{id}/approve")
     public ResponseEntity<?> approveDoctor(@PathVariable Integer id) {
@@ -168,7 +173,7 @@ public class DoctorController {
     }
 
     /**
-     * [ADMIN] Từ chối bác sĩ → status = rejected, gửi email kèm lý do
+     * [ADMIN] Từ chối bác sĩ → status = rejected
      */
     @PutMapping("/{id}/reject")
     public ResponseEntity<?> rejectDoctor(
@@ -190,5 +195,4 @@ public class DoctorController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }

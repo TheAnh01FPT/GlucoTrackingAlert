@@ -349,7 +349,7 @@
             <nav class="sidebar-nav">
                 <a href="/doctor/home" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
                 <a href="/doctor/my-patients" class="nav-item-link active"><i class="bi bi-people"></i> Bệnh nhân của tôi</a>
-                <a href="#" class="nav-item-link"><i class="bi bi-graph-up"></i> Chỉ số Glucose</a>
+                <a href="/health-logs/doctor-view" class="nav-item-link"><i class="bi bi-graph-up"></i> Chỉ số Glucose</a>
                 <a href="#" class="nav-item-link"><i class="bi bi-bell"></i> Cảnh báo</a>
                 <a href="/doctor/settings" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
             </nav>
@@ -441,7 +441,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>#</th><th>Họ tên</th><th>Điện thoại</th><th>Email</th><th>Trạng thái</th>
+                                <th>#</th><th>Họ tên</th><th>Điện thoại</th><th>Email</th><th>Trạng thái</th><th style="width: 140px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody id="patientTable">
@@ -536,10 +536,11 @@
                     <div class="patient-name">${p.fullName || 'Chưa có tên'}</div>
                     ${p.phone ? `<div class="patient-info"><i class="bi bi-telephone"></i>${p.phone}</div>` : ''}
                     ${p.email ? `<div class="patient-info"><i class="bi bi-envelope"></i>${p.email}</div>` : ''}
-                    <div class="mt-2">
+                    <div class="mt-2" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <span class="badge-status ${p.status === 'inactive' ? 'badge-inactive' : 'badge-active'}">
                             ${p.status === 'inactive' ? 'Ngừng HĐ' : 'Đang theo dõi'}
                         </span>
+                        <a href="/health-logs/doctor-view?userId=${p.id}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 6px;"><i class="bi bi-graph-up"></i> Xem chỉ số</a>
                     </div>
                 </div>
             `).join('');
@@ -558,6 +559,9 @@
                     <td>${p.phone || '<span class="text-muted">–</span>'}</td>
                     <td>${p.email || '<span class="text-muted">–</span>'}</td>
                     <td><span class="badge-status ${p.status === 'inactive' ? 'badge-inactive' : 'badge-active'}">${p.status === 'inactive' ? 'Ngừng HĐ' : 'Đang theo dõi'}</span></td>
+                    <td>
+                        <a href="/health-logs/doctor-view?userId=${p.id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-graph-up"></i> Xem chỉ số</a>
+                    </td>
                 </tr>
             `).join('');
                         }

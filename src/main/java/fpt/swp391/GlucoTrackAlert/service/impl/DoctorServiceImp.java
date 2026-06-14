@@ -15,7 +15,6 @@ import fpt.swp391.GlucoTrackAlert.service.DoctorService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -43,13 +42,11 @@ public class DoctorServiceImp implements DoctorService {
             throw new Exception("Email \"" + request.getEmail() + "\" đã tồn tại trong hệ thống");
         }
 
-        // 1. Tạo mật khẩu tạm thời (admin đặt hoặc auto-generate)
         String plainPassword = (request.getTemporaryPassword() != null
                 && !request.getTemporaryPassword().isBlank())
                 ? request.getTemporaryPassword()
                 : generatePassword();
 
-        // 2. Tạo User với role DOCTOR
         Role doctorRole = roleRepository.findByName("DOCTOR")
                 .orElseThrow(() -> new Exception("Role DOCTOR chưa được khởi tạo trong DB"));
 
@@ -57,27 +54,25 @@ public class DoctorServiceImp implements DoctorService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(plainPassword))
                 .role(doctorRole)
-                .status("active") // admin tạo hộ → active ngay, không cần verify email
+                .status("active")
                 .emailVerified(true)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
         userRepository.save(user);
 
-        // 3. Tạo Doctor profile
         Doctor doctor = new Doctor();
         doctor.setUser(user);
-        doctor.setStatus("pending_verification"); // chờ bác sĩ upload CCCD + chứng chỉ
+        doctor.setStatus("pending_verification"); // chờ bác sĩ upload CCCD + chứng chỉ + avatar
         applyAdminFields(doctor, request);
         doctorRepository.save(doctor);
 
-        // 4. Gửi email thông báo tài khoản cho bác sĩ
         sendAccountEmail(user.getEmail(), plainPassword, doctor.getFullName());
 
         return DoctorResponse.from(doctor);
     }
 
-    // ── Admin sửa hồ sơ (bao gồm phone) ──────────────────────────────────────
+    // ── Admin sửa hồ sơ ──────────────────────────────────────────────────────
     @Override
     public DoctorResponse updateDoctor(Integer id, DoctorRequest request) {
         Doctor doctor = findOrThrow(id);
@@ -96,7 +91,7 @@ public class DoctorServiceImp implements DoctorService {
         return DoctorResponse.from(findOrThrow(id));
     }
 
-    // ── Soft-delete (ngừng hoạt động) ────────────────────────────────────────
+    // ── Soft-delete ───────────────────────────────────────────────────────────
     @Override
     @Transactional
     public void deactivateDoctor(Integer id) {
@@ -115,18 +110,48 @@ public class DoctorServiceImp implements DoctorService {
         }
     }
 
-    // ── Bác sĩ upload ảnh CCCD + chứng chỉ ──────────────────────────────────
+    // ── Bác sĩ upload ảnh CCCD + chứng chỉ + avatar + nhập số ───────────────
     @Override
     @Transactional
     public DoctorResponse uploadVerificationImages(Integer doctorId,
-            String nationalIdImageUrl, String practiceLicenseImageUrl) {
+            String nationalIdImageUrl,
+            String practiceLicenseImageUrl,
+            String avatarUrl,
+            String nationalId,
+            String practiceLicense) {
+
         Doctor doctor = findOrThrow(doctorId);
+
+        // Kiểm tra số CCCD trùng (nếu có nhập)
+        if (nationalId != null && !nationalId.isBlank()) {
+            doctorRepository.findByNationalId(nationalId).ifPresent(existing -> {
+                if (!existing.getId().equals(doctorId)) {
+                    throw new RuntimeException("Số CCCD \"" + nationalId + "\" đã được đăng ký bởi bác sĩ khác");
+                }
+            });
+            doctor.setNationalId(nationalId);
+        }
+
+        // Kiểm tra số chứng chỉ trùng (nếu có nhập)
+        if (practiceLicense != null && !practiceLicense.isBlank()) {
+            doctorRepository.findByPracticeLicense(practiceLicense).ifPresent(existing -> {
+                if (!existing.getId().equals(doctorId)) {
+                    throw new RuntimeException("Số chứng chỉ \"" + practiceLicense + "\" đã được đăng ký bởi bác sĩ khác");
+                }
+            });
+            doctor.setPracticeLicense(practiceLicense);
+        }
+
         if (nationalIdImageUrl != null) {
             doctor.setNationalIdImageUrl(nationalIdImageUrl);
         }
         if (practiceLicenseImageUrl != null) {
             doctor.setPracticeLicenseImageUrl(practiceLicenseImageUrl);
         }
+        if (avatarUrl != null) {
+            doctor.setAvatarUrl(avatarUrl);
+        }
+
         doctor.setStatus("pending_approval");
         return DoctorResponse.from(doctorRepository.save(doctor));
     }
@@ -146,7 +171,6 @@ public class DoctorServiceImp implements DoctorService {
         doctor.setStatus("active");
         doctor.getUser().setStatus("active");
         userRepository.save(doctor.getUser());
-        // Gửi email thông báo cho bác sĩ
         emailService.sendSimpleMessage(
                 doctor.getUser().getEmail(),
                 "[GlucoTrackAlert] Hồ sơ của bạn đã được duyệt",
@@ -163,7 +187,6 @@ public class DoctorServiceImp implements DoctorService {
     public DoctorResponse rejectDoctor(Integer id, String reason) {
         Doctor doctor = findOrThrow(id);
         doctor.setStatus("rejected");
-        // Gửi email thông báo lý do từ chối
         String reasonText = (reason != null && !reason.isBlank()) ? reason : "Không đủ điều kiện";
         emailService.sendSimpleMessage(
                 doctor.getUser().getEmail(),
@@ -175,14 +198,12 @@ public class DoctorServiceImp implements DoctorService {
                 + "Trân trọng,\nGlucoTrackAlert");
         return DoctorResponse.from(doctorRepository.save(doctor));
     }
+
     private Doctor findOrThrow(Integer id) {
         return doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ id=" + id));
     }
 
-    /**
-     * Áp dụng các field từ AdminCreateDoctorRequest vào Doctor entity
-     */
     private void applyAdminFields(Doctor doctor, AdminCreateDoctorRequest req) {
         if (req.getFullName() != null) {
             doctor.setFullName(req.getFullName());
@@ -205,20 +226,8 @@ public class DoctorServiceImp implements DoctorService {
         if (req.getIntroduction() != null) {
             doctor.setIntroduction(req.getIntroduction());
         }
-        if (req.getAvatarUrl() != null) {
-            doctor.setAvatarUrl(req.getAvatarUrl());
-        }
-        if (req.getNationalId() != null) {
-            doctor.setNationalId(req.getNationalId());
-        }
-        if (req.getPracticeLicense() != null) {
-            doctor.setPracticeLicense(req.getPracticeLicense());
-        }
     }
 
-    /**
-     * Áp dụng các field từ DoctorRequest (admin update) vào Doctor entity
-     */
     private void applyAdminFieldsFromRequest(Doctor doctor, DoctorRequest req) {
         if (req.getFullName() != null) {
             doctor.setFullName(req.getFullName());
@@ -255,9 +264,6 @@ public class DoctorServiceImp implements DoctorService {
         }
     }
 
-    /**
-     * Sinh mật khẩu ngẫu nhiên 10 ký tự gồm chữ hoa, chữ thường, số
-     */
     private String generatePassword() {
         String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
         StringBuilder sb = new StringBuilder(10);
@@ -268,21 +274,16 @@ public class DoctorServiceImp implements DoctorService {
         return sb.toString();
     }
 
-    /**
-     * Gửi email thông báo tài khoản cho bác sĩ
-     */
     private void sendAccountEmail(String email, String plainPassword, String doctorName) {
         String subject = "[GlucoTrackAlert] Tài khoản của bạn đã được tạo";
-        String greeting = (doctorName != null && !doctorName.isBlank())
-                ? "Bác sĩ " + doctorName
-                : "Bác sĩ";
+        String greeting = (doctorName != null && !doctorName.isBlank()) ? "Bác sĩ " + doctorName : "Bác sĩ";
         String body = "Xin chào " + greeting + ",\n\n"
                 + "Admin đã tạo tài khoản GlucoTrackAlert cho bạn với thông tin sau:\n\n"
                 + "  Email đăng nhập : " + email + "\n"
                 + "  Mật khẩu tạm thời: " + plainPassword + "\n\n"
-                + "Vui lòng đăng nhập và đổi mật khẩu ngay sau lần đăng nhập đầu tiên.\n\n"
-                + "Lưu ý: Thông tin tài khoản có tính bảo mật cao. "
-                + "Không chia sẻ mật khẩu với bất kỳ ai.\n\n"
+                + "Vui lòng đăng nhập và hoàn tất hồ sơ (upload CCCD, chứng chỉ hành nghề, ảnh đại diện)\n"
+                + "trước khi có thể sử dụng hệ thống.\n\n"
+                + "Lưu ý: Không chia sẻ mật khẩu với bất kỳ ai.\n\n"
                 + "Trân trọng,\nGlucoTrackAlert";
         emailService.sendSimpleMessage(email, subject, body);
     }
