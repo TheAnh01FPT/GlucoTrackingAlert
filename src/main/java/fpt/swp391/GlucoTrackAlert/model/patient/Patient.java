@@ -56,6 +56,8 @@ public class Patient {
     @Builder.Default
     private String status = "active";
 
+    @Column(name = "patient_type", length = 20)
+    private String patientType;
     @Column(name = "identity_card", length = 20)
     private String identityCard;
 
@@ -75,6 +77,7 @@ public class Patient {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate

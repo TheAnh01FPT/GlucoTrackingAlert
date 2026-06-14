@@ -39,6 +39,11 @@ public class PageController {
     @GetMapping("/register")
     public String registerPage() { return "register/register"; }
 
+    @GetMapping("/forgot-password")
+    public String forgotPasswordPage() {
+        return "login/forgot-password";
+    }
+
     @GetMapping({"/patient/homepage", "/patient/home"})
     public String patientDashboard(@RequestParam(value = "userId", required = false) Long userId, Model model) {
         if (userId == null) {

@@ -9,9 +9,13 @@ import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
+import fpt.swp391.GlucoTrackAlert.repository.user.PasswordResetTokenRepository;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
+import fpt.swp391.GlucoTrackAlert.model.user.PasswordResetToken;
+import fpt.swp391.GlucoTrackAlert.dto.login.ForgotPasswordRequest;
+import fpt.swp391.GlucoTrackAlert.dto.login.ResetPasswordRequest;
 import fpt.swp391.GlucoTrackAlert.util.jwt.JwtUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,14 +30,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmailVerificationTokenRepository tokenRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final DoctorRepository doctorRepository;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            EmailVerificationTokenRepository tokenRepository,
+                           PasswordResetTokenRepository passwordResetTokenRepository,
                            EmailService emailService,
                            BCryptPasswordEncoder passwordEncoder,
                            JwtUtil jwtUtil,
@@ -41,8 +47,10 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
-        this.passwordEncoder = passwordEncoder;
+
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
+        this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.doctorRepository = doctorRepository;
     }
@@ -50,6 +58,60 @@ public class UserServiceImpl implements UserService {
     // Tạo mã OTP 6 chữ số
     private String generateOtp() {
         return String.format("%06d", new Random().nextInt(999999));
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) throws Exception {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
+
+        if (!"active".equalsIgnoreCase(user.getStatus())) {
+            throw new Exception("Tài khoản chưa được kích hoạt hoặc đã bị khóa");
+        }
+
+        // Tạo OTP 6 số
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .user(user)
+                .resetToken(otp)
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
+                .status("pending")
+                .createdAt(LocalDateTime.now())
+                .build();
+        passwordResetTokenRepository.save(resetToken);
+
+        // Gửi email
+        String body = buildPasswordResetOtpEmail(user.getFullName() != null ? user.getFullName() : "Bạn", otp);
+        emailService.sendHtmlMessage(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) throws Exception {
+        PasswordResetToken token = passwordResetTokenRepository.findByResetToken(request.getOtp())
+                .orElseThrow(() -> new Exception("Mã OTP không hợp lệ"));
+
+        if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new Exception("Mã OTP đã hết hạn");
+        }
+
+        if (!"pending".equals(token.getStatus())) {
+            throw new Exception("Mã OTP đã được sử dụng");
+        }
+
+        User user = token.getUser();
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
+            throw new Exception("Email không khớp với mã OTP");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        token.setStatus("used");
+        token.setUsedAt(LocalDateTime.now());
+        passwordResetTokenRepository.save(token);
     }
 
     private String buildOtpEmail(String fullName, String otp) {
@@ -214,6 +276,24 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    private String buildPasswordResetOtpEmail(String fullName, String otp) {
+        return """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert - Đặt lại mật khẩu</h2>
+                <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
+                <p style="color: #555;">Mã OTP để đặt lại mật khẩu của bạn là:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="background-color: #f4f7f6; color: #2c3e50; padding: 14px 28px;
+                          border-radius: 5px; font-size: 32px; font-weight: bold;
+                          letter-spacing: 8px; border: 2px dashed #e74c3c;">
+                        %s
+                    </span>
+                </div>
+                <p style="color: #999; font-size: 13px; text-align: center;">Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
+                <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và bảo mật tài khoản của bạn.</p>
+            </div>
+            """.formatted(fullName, otp);
+    }
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
