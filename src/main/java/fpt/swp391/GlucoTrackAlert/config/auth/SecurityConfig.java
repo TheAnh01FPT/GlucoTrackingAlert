@@ -2,6 +2,7 @@ package fpt.swp391.GlucoTrackAlert.config.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -28,8 +29,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                 .requestMatchers("/patient/**").hasRole("PATIENT")
                 .requestMatchers("/doctor/**", "/api/doctor/**").hasRole("DOCTOR")
+                .requestMatchers("/ai/**").hasAnyRole("ADMIN", "DOCTOR")
+                .requestMatchers(HttpMethod.GET, "/api/recommendations/patient/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                .requestMatchers("/api/recommendations/**").hasRole("DOCTOR")
+                .requestMatchers("/api/notifications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                 .anyRequest().authenticated()
-
                 )
                 .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

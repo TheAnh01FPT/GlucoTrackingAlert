@@ -834,6 +834,50 @@
                 </div>
             </div>
         </section>
+        <!-- AI Analysis Panel -->
+        <section class="table-card" style="margin-top: 2rem;" th:if="${selectedUserId != null}">
+            <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 class="table-title">🤖 Phân Tích AI (Gemini)</h2>
+                <button id="btnAnalyze" onclick="analyzeWithAI()"
+                    style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color:white; border:none;
+                           padding: 0.6rem 1.4rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600;
+                           cursor:pointer; display:flex; align-items:center; gap:0.5rem; transition: all 0.2s;">
+                    ✨ Phân Tích Ngay
+                </button>
+            </div>
+            <div id="aiResultBox" style="display:none; margin-top: 1rem; padding: 1.25rem 1.5rem;
+                 background: #f8f7ff; border: 1px solid #e0e7ff; border-radius: 12px;
+                 font-size: 0.95rem; line-height: 1.8; color: #1e1b4b; white-space: pre-wrap;">
+            </div>
+            <div id="aiLoading" style="display:none; margin-top: 1rem; text-align:center; color: #6366f1; font-weight:500;">
+                ⏳ Đang phân tích dữ liệu bệnh nhân...
+            </div>
+            <p style="margin-top: 0.75rem; font-size: 0.82rem; color: #94a3b8;">
+                * Kết quả chỉ mang tính tham khảo, không thay thế chẩn đoán lâm sàng của bác sĩ.
+            </p>
+        </section>
+
+        <!-- Recommendation Panel -->
+        <section class="table-card" style="margin-top: 2rem;" th:if="${selectedUserId != null}">
+            <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 class="table-title">📝 Khuyến Nghị Của Bác Sĩ</h2>
+            </div>
+            <div style="margin-top: 1rem; padding: 1.25rem 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <h3 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin-bottom: 1rem;">✏️ Tạo Khuyến Nghị Mới</h3>
+                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    <input id="recTitle" type="text" placeholder="Tiêu đề khuyến nghị..." style="padding: 0.65rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline:none;"/>
+                    <textarea id="recContent" rows="4" placeholder="Nội dung khuyến nghị..." style="padding: 0.65rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize:vertical; outline:none;"></textarea>
+                    <div style="display:flex; justify-content:flex-end;">
+                        <button onclick="saveRecommendation()" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color:white; border:none; padding: 0.6rem 1.4rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor:pointer;">💾 Lưu Khuyến Nghị</button>
+                    </div>
+                </div>
+                <div id="recMsg" style="display:none; margin-top:0.75rem; font-size:0.88rem;"></div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+                <h3 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin-bottom: 1rem;">📋 Danh Sách Khuyến Nghị</h3>
+                <div id="recItems" style="display:flex; flex-direction:column; gap:0.75rem;"><p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p></div>
+            </div>
+        </section>
     </main>
 
     <script th:inline="javascript">
@@ -855,6 +899,73 @@
             location.href = url;
         }
 
+        async function analyzeWithAI() {
+            const patientId = /*[[${selectedUserId}]]*/ null;
+            if (!patientId) return;
+
+            const btn = document.getElementById('btnAnalyze');
+            const resultBox = document.getElementById('aiResultBox');
+            const loading = document.getElementById('aiLoading');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang phân tích...';
+            resultBox.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch(`/ai/analyze?patientId=${patientId}`, { method: 'POST' });
+                const data = await response.json();
+                resultBox.textContent = data.result || data.error || 'Không có kết quả.';
+                resultBox.style.display = 'block';
+            } catch (e) {
+                resultBox.textContent = '❌ Lỗi kết nối đến AI. Vui lòng thử lại.';
+                resultBox.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
+                btn.textContent = '✨ Phân Tích Lại';
+            }
+        }
+
+
+        const patientIdForRec = /*[[${selectedUserId}]]*/ null;
+
+        async function loadRecommendations() {
+            if (!patientIdForRec) return;
+            const res = await fetch(`/api/recommendations/doctor/patient/${patientIdForRec}`);
+            const list = await res.json();
+            const container = document.getElementById("recItems");
+            if (!list.length) { container.innerHTML = "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>"; return; }
+            container.innerHTML = list.map(r => `
+                <div style="padding:1rem 1.25rem; background:#fff; border:1px solid #e2e8f0; border-radius:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="font-size:0.95rem; color:#1e293b;">${r.title}</strong>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer;">🗑 Xóa</button>
+                        </div>
+                    </div>
+                    <p style="margin-top:0.5rem; font-size:0.88rem; color:#475569;">${r.recommendation}</p>
+                    <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
+                </div>`).join("");
+        }
+
+        async function saveRecommendation() {
+            const title = document.getElementById("recTitle").value.trim();
+            const content = document.getElementById("recContent").value.trim();
+            const msg = document.getElementById("recMsg");
+            if (!title || !content) { msg.style.display="block"; msg.style.color="#dc2626"; msg.textContent="Vui lòng điền đầy đủ tiêu đề và nội dung!"; return; }
+            const res = await fetch("/api/recommendations", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ title, recommendation: content, patientId: patientIdForRec }) });
+            if (res.ok) { msg.style.display="block"; msg.style.color="#16a34a"; msg.textContent="✅ Lưu thành công!"; document.getElementById("recTitle").value=""; document.getElementById("recContent").value=""; loadRecommendations(); }
+            else { msg.style.display="block"; msg.style.color="#dc2626"; msg.textContent="❌ Lưu thất bại, vui lòng thử lại."; }
+        }
+
+        async function deleteRecommendation(id) {
+            if (!confirm("Bạn có chắc muốn xóa khuyến nghị này?")) return;
+            const res = await fetch(`/api/recommendations/${id}`, { method:"DELETE" });
+            if (res.ok) loadRecommendations();
+        }
+
+        window.onload = () => loadRecommendations();
         function changePageSize() {
             var size = document.getElementById('pageSizeSelect').value;
             var userId = /*[[${selectedUserId}]]*/ '';

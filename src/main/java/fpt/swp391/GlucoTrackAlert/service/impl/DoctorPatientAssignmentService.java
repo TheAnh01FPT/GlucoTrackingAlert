@@ -48,6 +48,9 @@ public class DoctorPatientAssignmentService {
         if (request.getDoctorId() != null) {
             Doctor doctor = doctorRepository.findById(request.getDoctorId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ ID " + request.getDoctorId()));
+            if (!"active".equals(doctor.getStatus())) {
+                throw new RuntimeException("Bác sĩ này chưa được kích hoạt, không thể phân công.");
+            }
             assignment.setDoctor(doctor);
         }
         if (request.getPatientId() != null) {
@@ -139,6 +142,9 @@ public class DoctorPatientAssignmentService {
         if (request.getDoctorId() != null) {
             Doctor doctor = doctorRepository.findById(request.getDoctorId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ ID " + request.getDoctorId()));
+            if (!"active".equals(doctor.getStatus())) {
+                throw new RuntimeException("Bác sĩ này chưa được kích hoạt, không thể phân công.");
+            }
             updatedAssignment.setDoctor(doctor);
         }
         if (request.getPatientId() != null) {
