@@ -546,7 +546,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
 
     const stripeClass = isCompleted ? 'done' : isOverdue ? 'overdue' : isToday ? 'today' : t && t > now ? 'upcoming' : 'default';
     const timeBadgeClass = isOverdue ? 'overdue' : isToday ? 'today' : '';
-    const sentBadge = r.sent ? '<span class="sent-badge">📧 Đã gửi</span>' : '';
+    const sentBadge = r.isSent ? '<span class="sent-badge">📧 Đã gửi</span>' : '';
     const repeatLabel = {'DAILY':'Hàng ngày','WEEKLY':'Hàng tuần','MONTHLY':'Hàng tháng'}[r.repeatType] || '';
     const repeatBadge = repeatLabel ? `<span class="repeat-badge">🔄 ${repeatLabel}</span>` : '';
     // Google Calendar sync badge
