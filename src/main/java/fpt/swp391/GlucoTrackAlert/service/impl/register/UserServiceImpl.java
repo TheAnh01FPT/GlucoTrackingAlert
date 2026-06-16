@@ -21,8 +21,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Random;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -36,6 +36,9 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final DoctorRepository doctorRepository;
 
+    // FIX: dùng SecureRandom thay Random — tránh bị predict OTP
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            EmailVerificationTokenRepository tokenRepository,
@@ -47,7 +50,6 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
-
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
@@ -55,9 +57,9 @@ public class UserServiceImpl implements UserService {
         this.doctorRepository = doctorRepository;
     }
 
-    // Tạo mã OTP 6 chữ số
+    // FIX: dùng SecureRandom, range đủ 000000–999999
     private String generateOtp() {
-        return String.format("%06d", new Random().nextInt(999999));
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
     }
 
     @Override
@@ -70,8 +72,8 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Tài khoản chưa được kích hoạt hoặc đã bị khóa");
         }
 
-        // Tạo OTP 6 số
-        String otp = String.format("%06d", new Random().nextInt(999999));
+        // FIX: dùng generateOtp() thống nhất thay vì tự new Random() riêng
+        String otp = generateOtp();
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .user(user)
                 .resetToken(otp)
@@ -81,7 +83,6 @@ public class UserServiceImpl implements UserService {
                 .build();
         passwordResetTokenRepository.save(resetToken);
 
-        // Gửi email
         String body = buildPasswordResetOtpEmail(user.getFullName() != null ? user.getFullName() : "Bạn", otp);
         emailService.sendHtmlMessage(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
     }
@@ -133,8 +134,7 @@ public class UserServiceImpl implements UserService {
             """.formatted(fullName, otp);
     }
 
-    // Gửi email chứa OTP
-    private void sendOtpEmail(String toEmail, String fullName, String otp) throws Exception {
+    private void sendOtpEmail(String toEmail, String fullName, String otp) {
         String subject = "Mã xác nhận đăng ký tài khoản GlucoTrack";
         String htmlContent = buildOtpEmail(fullName, otp);
         emailService.sendHtmlMessage(toEmail, subject, htmlContent);
@@ -164,7 +164,6 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        // Tạo OTP 6 số
         String otp = generateOtp();
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
                 .user(user)
@@ -190,10 +189,8 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Tài khoản này đã được xác nhận rồi.");
         }
 
-        // Hủy tất cả OTP cũ còn pending
         tokenRepository.expireAllPendingByUserId(user.getId());
 
-        // Tạo OTP mới
         String otp = generateOtp();
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
                 .user(user)
@@ -260,10 +257,8 @@ public class UserServiceImpl implements UserService {
 
         Long doctorId = null;
         if ("DOCTOR".equals(roleName)) {
-            doctorId = doctorRepository.findAll().stream()
-                    .filter(d -> d.getUser().getId().equals(user.getId()))
-                    .findFirst()
-                    .map(d -> d.getId().longValue())
+            doctorId = doctorRepository.findByUserId(user.getId())
+                    .map(d -> d.getId())
                     .orElse(null);
         }
 
@@ -294,6 +289,7 @@ public class UserServiceImpl implements UserService {
             </div>
             """.formatted(fullName, otp);
     }
+
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
@@ -316,7 +312,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(java.time.LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
     }
 }

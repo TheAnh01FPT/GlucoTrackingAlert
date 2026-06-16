@@ -93,6 +93,25 @@ public class PageController {
         return "settings";
     }
 
+    @GetMapping("/health-reminders")
+    public String healthRemindersPage(Model model) {
+        try {
+            String email = (String) SecurityContextHolder.getContext()
+                    .getAuthentication().getPrincipal();
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            PatientProfileResponse profile = patientService.getProfileByUserId(user.getId());
+
+            model.addAttribute("patientId", profile.getId());
+            model.addAttribute("patientName", profile.getFullName());
+        } catch (Exception e) {
+            model.addAttribute("patientId", 1L);
+            model.addAttribute("patientName", "Bệnh nhân");
+        }
+        return "health-reminders";
+    }
+
     @GetMapping("/meal-logs")
     public String mealLogsPage(Model model) {
         try {

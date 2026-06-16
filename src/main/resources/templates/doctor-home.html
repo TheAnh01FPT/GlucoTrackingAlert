@@ -654,7 +654,8 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            const DOCTOR_ID = parseInt(localStorage.getItem('doctorId')) || 1;
+            const DOCTOR_ID = parseInt(localStorage.getItem('doctorId'));
+            if (!DOCTOR_ID) { window.location.href = '/login'; }
 
             // Clock
             function updateClock() {
@@ -794,8 +795,8 @@
                     avatarUrl: document.getElementById('editAvatarUrl').value.trim() || null,
                 };
                 try {
-                    const res = await fetch(`/api/doctors/${DOCTOR_ID}/self`, {
-                        method: 'PATCH',
+                    const res = await fetch(`/api/doctors/${DOCTOR_ID}`, {
+                        method: 'PUT',
                         headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
                         body: JSON.stringify(body)
                     });
