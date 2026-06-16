@@ -26,8 +26,9 @@ public class Duy_MealLogController {
         return ResponseEntity.ok(savedLog);
     }
 
-    // READ ALL
+    // READ ALL - chỉ dành cho ADMIN
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Duy_Meal_Logs>> getAll() {
         return ResponseEntity.ok(mealLogService.getAllLogs());
     }
