@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlucoTrack | Nhắc Nhở Sức Khoẻ</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- Google Identity Services (OAuth2 token model) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#005b99;--primary-dark:#003f6e;--primary-light:#e8f4fd;
+  --accent:#00a86b;--accent-light:#e6f7f1;
+  --danger:#dc2626;--danger-light:#fef2f2;
+  --warning:#d97706;--warning-light:#fffbeb;
+  --text:#1a2535;--text-muted:#6b7a8d;
+  --border:#d1dde8;--bg:#f0f4f8;
+  --shadow:0 2px 12px rgba(0,91,153,.08);--shadow-lg:0 8px 32px rgba(0,91,153,.13);
+  --radius:14px;
+}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px}
+
+/* HEADER */
+.header{background:linear-gradient(90deg,var(--primary-dark) 0%,var(--primary) 60%,#0077c2 100%);color:#fff;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:68px;box-shadow:0 2px 16px rgba(0,63,110,.18);position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-logo{width:42px;height:42px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.header-title{font-family:'Lexend',sans-serif;font-size:22px;font-weight:700}
+.header-sub{font-size:13px;opacity:.75;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:10px;font-size:14px;opacity:.85}
+/* Google Calendar connect button */
+.btn-google-connect{display:flex;align-items:center;gap:8px;background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:24px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:box-shadow .2s,background .2s;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.btn-google-connect:hover{box-shadow:0 2px 8px rgba(0,0,0,.18);background:#f8f9fa}
+.btn-google-connect.connected{background:#e6f7f1;color:#047857;border-color:#a7f3d0}
+.btn-google-connect img{width:18px;height:18px}
+/* Sync badge trên card */
+.sync-badge{display:inline-flex;align-items:center;gap:4px;background:#e6f7f1;color:#047857;border:1px solid #a7f3d0;border-radius:20px;padding:2px 10px;font-size:11.5px;font-weight:600;cursor:pointer;transition:background .15s}
+.sync-badge:hover{background:#d1fae5}
+.sync-badge.not-synced{background:#f0f4f8;color:#6b7a8d;border-color:#d1dde8}
+.sync-badge.not-synced:hover{background:#e8f4fd;color:var(--primary)}
+.status-dot{width:9px;height:9px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* NAV BACK */
+.breadcrumb{background:#fff;border-bottom:1px solid var(--border);padding:11px 32px;font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.breadcrumb a{color:var(--primary);text-decoration:none;font-weight:600}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb span{color:var(--primary);font-weight:600}
+
+/* MAIN */
+.page-wrapper{max-width:1280px;margin:0 auto;padding:24px 32px}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .22s;color:#fff;background:linear-gradient(135deg,var(--primary-dark),var(--primary))}
+.stat-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px) scale(1.01)}
+.stat-card.active-filter{outline:3px solid rgba(255,255,255,.5);outline-offset:2px}
+.stat-card.green{background:linear-gradient(135deg,#047857,var(--accent))}
+.stat-card.red{background:linear-gradient(135deg,#991b1b,var(--danger))}
+.stat-card.orange{background:linear-gradient(135deg,#92400e,var(--warning))}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,.2);flex-shrink:0;backdrop-filter:blur(4px)}
+.stat-label{font-size:11.5px;color:rgba(255,255,255,.85);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-family:'Lexend',sans-serif;font-size:28px;font-weight:700;color:#fff;line-height:1.1}
+
+/* LAYOUT */
+.content-grid{display:grid;grid-template-columns:420px 1fr;gap:20px}
+
+/* FORM */
+.form-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto}
+.form-card-header{background:linear-gradient(135deg,var(--primary) 0%,#0077c2 100%);color:#fff;padding:18px 22px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.form-card-header.edit-mode{background:linear-gradient(135deg,#d97706 0%,#f59e0b 100%)}
+.form-card-header h3{font-family:'Lexend',sans-serif;font-size:17px;font-weight:700}
+.edit-badge{background:rgba(255,255,255,.25);border-radius:20px;padding:3px 12px;font-size:13px;margin-left:auto;display:none}
+.edit-badge.show{display:block}
+.form-body{padding:22px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 15px;border:2px solid var(--border);border-radius:12px;font-family:'Be Vietnam Pro',sans-serif;font-size:15px;color:var(--text);background:#fafbfc;transition:all .2s;outline:none;resize:vertical}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(0,91,153,.1)}
+
+/* TYPE PILLS */
+.type-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.type-pill{padding:10px 6px;border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .18s;font-size:12.5px;font-weight:600;background:#fafbfc;user-select:none}
+.type-pill:hover{border-color:var(--primary);background:var(--primary-light)}
+.type-pill.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+.type-pill .pill-icon{font-size:20px;display:block;margin-bottom:3px}
+
+/* REPEAT */
+.repeat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.repeat-btn{padding:10px 4px;border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .18s;font-size:12.5px;font-weight:600;background:#fafbfc;user-select:none}
+.repeat-btn:hover{border-color:var(--primary)}
+.repeat-btn.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+
+/* CHAR COUNTER */
+.char-counter{font-size:12px;color:var(--text-muted);text-align:right;margin-top:4px}
+.char-counter.warn{color:var(--warning)}.char-counter.danger{color:var(--danger)}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:20px}
+.btn{padding:13px 0;border:none;border-radius:12px;font-family:'Be Vietnam Pro',sans-serif;font-size:15px;font-weight:700;cursor:pointer;flex:1;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,var(--primary),#0077c2);color:#fff}
+.btn-primary:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-cancel{background:var(--bg);color:var(--text-muted);border:2px solid var(--border)}
+.btn-cancel:hover{border-color:var(--primary);color:var(--primary)}
+
+/* LIST */
+.list-section{display:flex;flex-direction:column;gap:0}
+
+/* FILTER BAR */
+.filter-bar{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.filter-btn{padding:8px 16px;border:2px solid var(--border);border-radius:20px;font-size:13.5px;font-weight:600;cursor:pointer;background:#fafbfc;transition:all .2s;font-family:'Be Vietnam Pro',sans-serif}
+.filter-btn:hover{border-color:var(--primary)}
+.filter-btn.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+.filter-search{flex:1;padding:9px 15px;border:2px solid var(--border);border-radius:20px;font-size:14px;font-family:'Be Vietnam Pro',sans-serif;outline:none;min-width:140px;background:#fafbfc;transition:border-color .2s}
+.filter-search:focus{border-color:var(--primary);background:#fff}
+
+/* REMINDER GROUPS */
+.reminder-group{margin-bottom:20px}
+.reminder-group-header{font-family:'Lexend',sans-serif;font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:0 4px 8px;border-bottom:1px solid var(--border);margin-bottom:2px;display:flex;align-items:center;justify-content:space-between}
+
+/* REMINDER ITEM */
+.reminder-item{background:#fff;padding:0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;transition:background .15s;position:relative;overflow:hidden}
+.reminder-item:first-child{border-radius:var(--radius) var(--radius) 0 0}
+.reminder-item:last-child{border-radius:0 0 var(--radius) var(--radius);border-bottom:none}
+.reminder-item:only-child{border-radius:var(--radius)}
+.reminder-item:hover{background:#f8fafc}
+.reminder-item.completed .reminder-title{text-decoration:line-through;color:var(--text-muted);opacity:.7}
+.reminder-item.overdue{background:#fff9f9}
+
+/* PRIORITY STRIPE */
+.priority-stripe{width:4px;align-self:stretch;flex-shrink:0;border-radius:2px;margin:8px 0 8px 12px}
+.priority-stripe.overdue{background:var(--danger)}
+.priority-stripe.today{background:var(--warning)}
+.priority-stripe.upcoming{background:var(--accent)}
+.priority-stripe.default{background:var(--border)}
+.priority-stripe.done{background:#d1fae5}
+
+/* CHECKBOX */
+.reminder-checkbox{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:16px 12px 16px 14px;transition:all .2s}
+.reminder-checkbox:hover{border-color:var(--accent)}
+.reminder-item.completed .reminder-checkbox{background:var(--accent);border-color:var(--accent)}
+.checkmark{display:none;color:#fff;font-size:14px;font-weight:700}
+.reminder-item.completed .checkmark{display:block}
+
+/* TYPE DOT */
+.type-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-right:10px}
+.type-dot.MEDICATION{background:#e63946}.type-dot.BLOOD_SUGAR{background:#c1121f}
+.type-dot.MEAL{background:#f4a261}.type-dot.EXERCISE{background:#2a9d8f}
+.type-dot.DOCTOR_VISIT{background:#457b9d}.type-dot.CUSTOM{background:#6c757d}
+
+/* CONTENT */
+.reminder-content{flex:1;padding:14px 0;min-width:0}
+.reminder-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reminder-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.time-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--primary-light);color:var(--primary)}
+.time-badge.overdue{background:var(--danger-light);color:var(--danger)}
+.time-badge.today{background:var(--warning-light);color:var(--warning)}
+.type-badge{font-size:12px;color:var(--text-muted)}
+.repeat-badge{font-size:11px;background:#f1f5f9;color:var(--text-muted);padding:2px 8px;border-radius:10px}
+.sent-badge{font-size:11px;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px}
+.reminder-note{font-size:13px;color:var(--text-muted);margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* ACTIONS */
+.reminder-actions{display:flex;gap:6px;padding:0 12px;flex-shrink:0;align-items:center}
+.action-btn{width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.action-edit{background:var(--warning-light);color:var(--warning)}.action-edit:hover{background:var(--warning);color:#fff}
+.action-delete{background:var(--danger-light);color:var(--danger)}.action-delete:hover{background:var(--danger);color:#fff}
+.action-flag{background:#fff3e0;color:#f57c00;font-size:15px}.action-flag:hover{background:#ff9800;color:#fff}
+.action-flag.flagged{background:#ff9800;color:#fff}
+
+/* EMPTY */
+.empty-state{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:60px 40px;text-align:center}
+.empty-icon{font-size:56px;margin-bottom:16px;opacity:.5}
+.empty-title{font-family:'Lexend',sans-serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px}
+.empty-sub{font-size:15px;color:var(--text-muted)}
+
+/* LOADING SKELETON */
+.skeleton{background:linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;height:70px;margin-bottom:2px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* CONFIRMATION DIALOG */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.confirm-overlay.show{display:flex}
+.confirm-box{background:#fff;border-radius:20px;padding:32px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center}
+.confirm-icon{font-size:48px;margin-bottom:12px}
+.confirm-title{font-family:'Lexend',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.confirm-msg{font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6}
+.confirm-btns{display:flex;gap:12px}
+.confirm-btns button{flex:1;padding:12px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .2s}
+.confirm-yes{background:var(--danger);color:#fff}.confirm-yes:hover{background:#b91c1c}
+.confirm-no{background:var(--bg);color:var(--text);border:2px solid var(--border)}.confirm-no:hover{border-color:var(--primary);color:var(--primary)}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:#1a2535;color:#fff;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);display:none;z-index:9999;max-width:340px;align-items:center;gap:10px}
+.toast.show{display:flex;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast.success{background:linear-gradient(135deg,#065f46,#059669)}
+.toast.error{background:linear-gradient(135deg,#991b1b,#dc2626)}
+.toast.info{background:linear-gradient(135deg,#1e3a5f,var(--primary))}
+.toast-close{margin-left:auto;cursor:pointer;opacity:.7;font-size:18px;line-height:1}
+.toast-close:hover{opacity:1}
+
+/* VALIDATION */
+.field-error{font-size:12px;color:var(--danger);margin-top:4px;display:none}
+.field-error.show{display:block}
+input.invalid,textarea.invalid{border-color:var(--danger) !important;background:#fff5f5 !important}
+
+@media(max-width:900px){
+  .content-grid{grid-template-columns:1fr}
+  .form-card{position:static;max-height:none}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .page-wrapper{padding:16px}
+  .header{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">🩺</div>
+    <div>
+      <div class="header-title">GlucoTrack</div>
+      <div class="header-sub">Quản lý nhắc nhở sức khoẻ</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <span th:text="${patientName != null ? patientName : 'Bệnh nhân'}">Bệnh nhân</span>
+    <button class="btn-google-connect" id="btnGoogleConnect" onclick="handleGoogleConnect()" title="Kết nối Google Calendar để tự động thêm nhắc nhở vào lịch của bạn">
+      <img src="https://www.google.com/favicon.ico" alt="Google">
+      <span id="googleConnectLabel">Kết nối Google Calendar</span>
+    </button>
+  </div>
+</div>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  🏠 <a href="/patient/home">Trang chủ</a> › <span>Nhắc nhở sức khoẻ</span>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card" onclick="quickFilter('ALL')" title="Xem tất cả">
+      <div class="stat-icon">🔔</div>
+      <div><div class="stat-label">Tổng nhắc nhở</div><div class="stat-value" id="statTotal">—</div></div>
+    </div>
+    <div class="stat-card green" onclick="quickFilter('ACTIVE')" title="Lọc đang chờ">
+      <div class="stat-icon">✅</div>
+      <div><div class="stat-label">Đang hoạt động</div><div class="stat-value" id="statActive">—</div></div>
+    </div>
+    <div class="stat-card orange" onclick="quickFilter('UPCOMING')" title="Lọc sắp tới 24h">
+      <div class="stat-icon">⏰</div>
+      <div><div class="stat-label">Sắp tới (24h)</div><div class="stat-value" id="statUpcoming">—</div></div>
+    </div>
+    <div class="stat-card red" onclick="quickFilter('COMPLETED')" title="Lọc đã hoàn thành">
+      <div class="stat-icon">✔️</div>
+      <div><div class="stat-label">Đã hoàn thành</div><div class="stat-value" id="statCompleted">—</div></div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+
+    <!-- FORM -->
+    <div class="form-card">
+      <div class="form-card-header" id="formHeader">
+        <span style="font-size:22px">➕</span>
+        <h3 id="formTitle">Tạo nhắc nhở mới</h3>
+        <span class="edit-badge" id="editBadge">Đang sửa</span>
+      </div>
+      <div class="form-body">
+
+        <div class="form-group">
+          <label>Loại nhắc nhở</label>
+          <div class="type-pills">
+            <div class="type-pill active" data-type="MEDICATION" onclick="selectType(this)"><span class="pill-icon">💊</span>Uống thuốc</div>
+            <div class="type-pill" data-type="BLOOD_SUGAR" onclick="selectType(this)"><span class="pill-icon">🩸</span>Đường huyết</div>
+            <div class="type-pill" data-type="MEAL" onclick="selectType(this)"><span class="pill-icon">🍽️</span>Bữa ăn</div>
+            <div class="type-pill" data-type="EXERCISE" onclick="selectType(this)"><span class="pill-icon">🏃</span>Tập thể dục</div>
+            <div class="type-pill" data-type="DOCTOR_VISIT" onclick="selectType(this)"><span class="pill-icon">🏥</span>Khám bác sĩ</div>
+            <div class="type-pill" data-type="CUSTOM" onclick="selectType(this)"><span class="pill-icon">📌</span>Tuỳ chỉnh</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tiêu đề *</label>
+          <input type="text" id="inputTitle" placeholder="Vd: Uống Metformin 500mg" maxlength="200" oninput="onTitleInput()">
+          <div class="char-counter" id="titleCounter">0 / 200</div>
+          <div class="field-error" id="titleError">Vui lòng nhập tiêu đề</div>
+        </div>
+
+        <div class="form-group">
+          <label>Ghi chú</label>
+          <textarea id="inputMessage" rows="2" placeholder="Nội dung chi tiết (tuỳ chọn)" maxlength="500" oninput="onMsgInput()"></textarea>
+          <div class="char-counter" id="msgCounter">0 / 500</div>
+        </div>
+
+        <div class="form-group">
+          <label>Ngày &amp; giờ nhắc *</label>
+          <input type="datetime-local" id="inputTime" oninput="clearTimeError()">
+          <div class="field-error" id="timeError">Vui lòng chọn ngày giờ nhắc</div>
+        </div>
+
+        <div class="form-group">
+          <label>Lặp lại</label>
+          <div class="repeat-row">
+            <div class="repeat-btn active" data-repeat="NONE" onclick="selectRepeat(this)">Không</div>
+            <div class="repeat-btn" data-repeat="DAILY" onclick="selectRepeat(this)">Hàng ngày</div>
+            <div class="repeat-btn" data-repeat="WEEKLY" onclick="selectRepeat(this)">Hàng tuần</div>
+            <div class="repeat-btn" data-repeat="MONTHLY" onclick="selectRepeat(this)">Hàng tháng</div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="saveBtn" onclick="saveReminder()">
+            <span id="btnIcon">💾</span>
+            <span id="btnText">Lưu nhắc nhở</span>
+          </button>
+          <button class="btn btn-cancel" id="cancelBtn" onclick="resetForm()" style="display:none">Huỷ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="list-section">
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="ALL" onclick="filterReminders(this)">🔔 Tất cả</button>
+        <button class="filter-btn" data-filter="ACTIVE" onclick="filterReminders(this)">⏰ Đang chờ</button>
+        <button class="filter-btn" data-filter="COMPLETED" onclick="filterReminders(this)">✅ Hoàn thành</button>
+        <button class="filter-btn" data-filter="UPCOMING" onclick="filterReminders(this)">🚀 Sắp tới 24h</button>
+        <input class="filter-search" id="searchInput" placeholder="🔍 Tìm kiếm..." oninput="applyFilter()">
+      </div>
+      <div id="reminderList">
+        <div style="background:#fff;border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)">
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Xoá nhắc nhở?</div>
+    <div class="confirm-msg" id="confirmMsg">Hành động này không thể hoàn tác.</div>
+    <div class="confirm-btns">
+      <button class="confirm-no" onclick="hideConfirm()">Giữ lại</button>
+      <button class="confirm-yes" id="confirmYes">Xoá</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastMsg"></span><span class="toast-close" onclick="hideToast()">×</span></div>
+
+<script th:inline="javascript">
+  const PATIENT_ID = /*[[${patientId}]]*/ 1;
+  const BASE_URL = '/api/reminders';
+
+  let allReminders = [];
+  let editingId = null;
+  let selectedType = 'MEDICATION';
+  let selectedRepeat = 'NONE';
+  let currentFilter = 'ALL';
+  let toastTimer = null;
+
+  // ==================== INIT ====================
+  document.addEventListener('DOMContentLoaded', () => {
+    setDefaultTime();
+    loadReminders();
+  });
+
+  function setDefaultTime() {
+    const dt = new Date(Date.now() + 3600000);
+    // Format sang "yyyy-MM-ddTHH:mm" cho datetime-local
+    const pad = n => String(n).padStart(2,'0');
+    const val = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    document.getElementById('inputTime').value = val;
+  }
+
+  // ==================== PARSE DATE (BUG FIX) ====================
+  // API trả về "2026-06-15T08:00:00" (không có timezone suffix)
+  // new Date("2026-06-15T08:00:00") → trên một số browser parse sai (UTC thay vì local)
+  // Fix: parse thủ công để đảm bảo đúng giờ địa phương
+  function parseLocalDateTime(str) {
+    if (!str) return null;
+    // Bỏ suffix Z hoặc offset nếu có
+    const clean = str.replace(/Z$/, '').replace(/[+-]\d{2}:\d{2}$/, '');
+    const [datePart, timePart] = clean.split('T');
+    if (!datePart || !timePart) return new Date(str); // fallback
+    const [y, mo, d] = datePart.split('-').map(Number);
+    const [h, mi, s] = timePart.split(':').map(Number);
+    return new Date(y, mo - 1, d, h, mi, s || 0);
+  }
+
+  function formatDateTime(str) {
+    const dt = parseLocalDateTime(str);
+    if (!dt || isNaN(dt)) return '—';
+    return dt.toLocaleString('vi-VN', {
+      hour:'2-digit', minute:'2-digit',
+      day:'2-digit', month:'2-digit', year:'numeric'
+    });
+  }
+
+  // ==================== LOAD ====================
+  async function loadReminders() {
+    try {
+      const res = await fetch(`${BASE_URL}/patient/${PATIENT_ID}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      allReminders = await res.json();
+      updateStats();
+      applyFilter();
+    } catch(e) {
+      showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
+      document.getElementById('reminderList').innerHTML = `<div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">Không thể tải dữ liệu</div>
+        <div class="empty-sub">${escHtml(e.message)}</div>
+      </div>`;
+    }
+  }
+
+  function updateStats() {
+    const now = new Date();
+    const total = allReminders.length;
+    const active = allReminders.filter(r => r.status === 'ACTIVE').length;
+    const completed = allReminders.filter(r => r.status === 'COMPLETED').length;
+    const upcoming = allReminders.filter(r => {
+      if (r.status !== 'ACTIVE') return false;
+      const t = parseLocalDateTime(r.reminderTime);
+      return t && t > now && t < new Date(now.getTime() + 86400000);
+    }).length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statUpcoming').textContent = upcoming;
+    document.getElementById('statCompleted').textContent = completed;
+  }
+
+  // ==================== FILTER ====================
+  function filterReminders(btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    document.getElementById('searchInput').value = '';
+    applyFilter();
+  }
+
+  function quickFilter(type) {
+    currentFilter = type;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === type);
+    });
+    document.getElementById('searchInput').value = '';
+    applyFilter();
+  }
+
+  function applyFilter() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const now = new Date();
+    let list = allReminders;
+
+    if (currentFilter === 'ACTIVE') list = list.filter(r => r.status === 'ACTIVE');
+    else if (currentFilter === 'COMPLETED') list = list.filter(r => r.status === 'COMPLETED');
+    else if (currentFilter === 'UPCOMING') {
+      list = list.filter(r => {
+        if (r.status !== 'ACTIVE') return false;
+        const t = parseLocalDateTime(r.reminderTime);
+        return t && t > now && t < new Date(now.getTime() + 86400000);
+      });
+    }
+
+    if (q) list = list.filter(r =>
+      (r.title && r.title.toLowerCase().includes(q)) ||
+      (r.message && r.message.toLowerCase().includes(q)) ||
+      (r.reminderTypeLabel && r.reminderTypeLabel.toLowerCase().includes(q))
+    );
+
+    renderList(list);
+  }
+
+  // ==================== RENDER ====================
+  function renderList(reminders) {
+    const el = document.getElementById('reminderList');
+    if (!reminders.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <div class="empty-title">Không có nhắc nhở nào</div>
+        <div class="empty-sub">Tạo nhắc nhở mới bằng form bên trái</div>
+      </div>`;
+      return;
+    }
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+    const groups = {};
+
+    reminders.forEach(r => {
+      const t = r.reminderTime ? parseLocalDateTime(r.reminderTime) : null;
+      let groupKey = '📂 Không có ngày';
+      if (t && !isNaN(t)) {
+        const d = new Date(t); d.setHours(0,0,0,0);
+        if (d.getTime() === today.getTime()) groupKey = '📅 Hôm nay';
+        else if (d.getTime() === tomorrow.getTime()) groupKey = '🌅 Ngày mai';
+        else if (d < today) groupKey = '⚠️ Đã qua hạn';
+        else groupKey = '📆 ' + t.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+      }
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(r);
+    });
+
+    const orderMap = {'⚠️ Đã qua hạn':0,'📅 Hôm nay':1,'🌅 Ngày mai':2};
+    const keys = Object.keys(groups).sort((a,b) => {
+      const oa = orderMap[a]??99, ob = orderMap[b]??99;
+      return oa !== ob ? oa - ob : a.localeCompare(b,'vi');
+    });
+
+    el.innerHTML = keys.map(key => `
+      <div class="reminder-group">
+        <div class="reminder-group-header">
+          <span>${key}</span>
+          <span style="font-weight:400;font-size:12px">${groups[key].length} lịch</span>
+        </div>
+        <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden">
+          ${groups[key].map(r => renderItem(r)).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderItem(r) {
+    const now = new Date();
+    const t = r.reminderTime ? parseLocalDateTime(r.reminderTime) : null;
+    const isCompleted = r.status === 'COMPLETED';
+    const isOverdue = !isCompleted && t && t < now && r.status === 'ACTIVE';
+    const isToday = t && !isOverdue && !isCompleted && (() => {
+      const d = new Date(t); d.setHours(0,0,0,0);
+      const td = new Date(); td.setHours(0,0,0,0);
+      return d.getTime() === td.getTime();
+    })();
+
+    const stripeClass = isCompleted ? 'done' : isOverdue ? 'overdue' : isToday ? 'today' : t && t > now ? 'upcoming' : 'default';
+    const timeBadgeClass = isOverdue ? 'overdue' : isToday ? 'today' : '';
+    const sentBadge = r.sent ? '<span class="sent-badge">📧 Đã gửi</span>' : '';
+    const repeatLabel = {'DAILY':'Hàng ngày','WEEKLY':'Hàng tuần','MONTHLY':'Hàng tháng'}[r.repeatType] || '';
+    const repeatBadge = repeatLabel ? `<span class="repeat-badge">🔄 ${repeatLabel}</span>` : '';
+    // Google Calendar sync badge
+    const syncBadge = r.synced
+      ? `<span class="sync-badge" onclick="unsyncFromGoogleCalendar(${r.id},event)" title="Đã đồng bộ – nhấn để gỡ">📅 Đã thêm vào Google</span>`
+      : `<span class="sync-badge not-synced" onclick="syncToGoogleCalendar(${r.id},event)" title="Nhấn để đồng bộ lên Google Calendar">📅 Thêm vào Google</span>`;
+
+    return `
+    <div class="reminder-item ${isCompleted?'completed':''} ${isOverdue?'overdue':''}" id="item-${r.id}">
+      <div class="priority-stripe ${stripeClass}"></div>
+      <div class="reminder-checkbox" onclick="toggleComplete(${r.id},'${r.status}')">
+        <span class="checkmark">✓</span>
+      </div>
+      <div class="type-dot ${r.reminderType||'CUSTOM'}"></div>
+      <div class="reminder-content">
+        <div class="reminder-title">${r.reminderTypeIcon||'📌'} ${escHtml(r.title)}</div>
+        <div class="reminder-meta">
+          <span class="time-badge ${timeBadgeClass}">🕐 ${formatDateTime(r.reminderTime)}</span>
+          <span class="type-badge">${r.reminderTypeLabel||''}</span>
+          ${repeatBadge}
+          ${sentBadge}
+          ${syncBadge}
+        </div>
+        ${r.message ? `<div class="reminder-note">${escHtml(r.message)}</div>` : ''}
+      </div>
+      <div class="reminder-actions">
+        <button class="action-btn action-flag ${isOverdue?'flagged':''}" title="${isOverdue?'Khẩn cấp':'Gắn cờ'}" onclick="event.stopPropagation()">🚩</button>
+        <button class="action-btn action-edit" title="Sửa nhắc nhở" onclick="editReminder(${r.id})">✏️</button>
+        <button class="action-btn action-delete" title="Xoá nhắc nhở" onclick="confirmDelete(${r.id},'${escHtml(r.title)}')">🗑️</button>
+      </div>
+    </div>`;
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ==================== FORM INPUT HANDLERS ====================
+  function onTitleInput() {
+    const v = document.getElementById('inputTitle').value;
+    const c = document.getElementById('titleCounter');
+    c.textContent = `${v.length} / 200`;
+    c.className = 'char-counter' + (v.length > 180 ? (v.length > 195 ? ' danger' : ' warn') : '');
+    document.getElementById('inputTitle').classList.remove('invalid');
+    document.getElementById('titleError').classList.remove('show');
+  }
+  function onMsgInput() {
+    const v = document.getElementById('inputMessage').value;
+    const c = document.getElementById('msgCounter');
+    c.textContent = `${v.length} / 500`;
+    c.className = 'char-counter' + (v.length > 450 ? (v.length > 490 ? ' danger' : ' warn') : '');
+  }
+  function clearTimeError() {
+    document.getElementById('inputTime').classList.remove('invalid');
+    document.getElementById('timeError').classList.remove('show');
+  }
+
+  // ==================== TYPE / REPEAT ====================
+  function selectType(el) {
+    document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    selectedType = el.dataset.type;
+  }
+  function selectRepeat(el) {
+    document.querySelectorAll('.repeat-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedRepeat = el.dataset.repeat;
+  }
+
+  // ==================== SAVE ====================
+  async function saveReminder() {
+    const title = document.getElementById('inputTitle').value.trim();
+    const time  = document.getElementById('inputTime').value;
+    let valid = true;
+    if (!title) {
+      document.getElementById('inputTitle').classList.add('invalid');
+      document.getElementById('titleError').classList.add('show');
+      valid = false;
+    }
+    if (!time) {
+      document.getElementById('inputTime').classList.add('invalid');
+      document.getElementById('timeError').classList.add('show');
+      valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    document.getElementById('btnText').textContent = 'Đang lưu...';
+
+    const body = {
+      patientId: PATIENT_ID,
+      reminderType: selectedType,
+      title,
+      message: document.getElementById('inputMessage').value.trim() || null,
+      // FIX: thêm ':00' để đảm bảo backend nhận đúng format "yyyy-MM-ddTHH:mm:ss"
+      reminderTime: time.length === 16 ? time + ':00' : time,
+      repeatType: selectedRepeat
+    };
+
+    try {
+      const res = await fetch(editingId ? `${BASE_URL}/${editingId}` : BASE_URL, {
+        method: editingId ? 'PUT' : 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('Lỗi: ' + (data.message || JSON.stringify(data)), 'error'); return; }
+      showToast(editingId ? '✅ Đã cập nhật nhắc nhở!' : '✅ Đã tạo nhắc nhở mới!', 'success');
+      resetForm();
+      loadReminders();
+    } catch(e) {
+      showToast('Lỗi kết nối server: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      document.getElementById('btnText').textContent = editingId ? 'Cập nhật' : 'Lưu nhắc nhở';
+    }
+  }
+
+  // ==================== EDIT ====================
+  async function editReminder(id) {
+    const r = allReminders.find(x => x.id === id);
+    if (!r) return;
+    editingId = id;
+    document.getElementById('inputTitle').value = r.title || '';
+    onTitleInput();
+    document.getElementById('inputMessage').value = r.message || '';
+    onMsgInput();
+    if (r.reminderTime) {
+      // Convert ISO string → "yyyy-MM-ddTHH:mm" for datetime-local
+      const t = parseLocalDateTime(r.reminderTime);
+      if (t && !isNaN(t)) {
+        const pad = n => String(n).padStart(2,'0');
+        document.getElementById('inputTime').value =
+          `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`;
+      }
+    }
+    document.querySelectorAll('.type-pill').forEach(p => p.classList.toggle('active', p.dataset.type === r.reminderType));
+    selectedType = r.reminderType;
+    document.querySelectorAll('.repeat-btn').forEach(b => b.classList.toggle('active', b.dataset.repeat === (r.repeatType||'NONE')));
+    selectedRepeat = r.repeatType || 'NONE';
+
+    document.getElementById('formHeader').classList.add('edit-mode');
+    document.getElementById('formTitle').textContent = 'Sửa nhắc nhở';
+    document.getElementById('editBadge').classList.add('show');
+    document.getElementById('btnIcon').textContent = '✏️';
+    document.getElementById('btnText').textContent = 'Cập nhật';
+    document.getElementById('cancelBtn').style.display = 'flex';
+    document.querySelector('.form-card').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function resetForm() {
+    editingId = null;
+    document.getElementById('inputTitle').value = '';
+    document.getElementById('inputMessage').value = '';
+    document.getElementById('titleCounter').textContent = '0 / 200';
+    document.getElementById('msgCounter').textContent = '0 / 500';
+    document.getElementById('inputTitle').classList.remove('invalid');
+    document.getElementById('titleError').classList.remove('show');
+    document.getElementById('inputTime').classList.remove('invalid');
+    document.getElementById('timeError').classList.remove('show');
+    setDefaultTime();
+    document.querySelectorAll('.type-pill').forEach((p,i) => p.classList.toggle('active', i===0));
+    selectedType = 'MEDICATION';
+    document.querySelectorAll('.repeat-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+    selectedRepeat = 'NONE';
+    document.getElementById('formHeader').classList.remove('edit-mode');
+    document.getElementById('formTitle').textContent = 'Tạo nhắc nhở mới';
+    document.getElementById('editBadge').classList.remove('show');
+    document.getElementById('btnIcon').textContent = '💾';
+    document.getElementById('btnText').textContent = 'Lưu nhắc nhở';
+    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('saveBtn').disabled = false;
+  }
+
+  // ==================== TOGGLE COMPLETE ====================
+  async function toggleComplete(id, currentStatus) {
+    const endpoint = currentStatus === 'COMPLETED'
+      ? `${BASE_URL}/${id}/reactivate`
+      : `${BASE_URL}/${id}/complete`;
+    try {
+      const res = await fetch(endpoint, {method:'PATCH'});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      loadReminders();
+    } catch(e) {
+      showToast('Lỗi cập nhật trạng thái', 'error');
+    }
+  }
+
+  // ==================== DELETE (with confirm dialog) ====================
+  function confirmDelete(id, title) {
+    document.getElementById('confirmMsg').textContent = `Xoá nhắc nhở "${title}"? Hành động này không thể hoàn tác.`;
+    document.getElementById('confirmOverlay').classList.add('show');
+    document.getElementById('confirmYes').onclick = () => { hideConfirm(); deleteReminder(id); };
+  }
+  function hideConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+  }
+  document.getElementById('confirmOverlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) hideConfirm();
+  });
+
+  async function deleteReminder(id) {
+    try {
+      const res = await fetch(`${BASE_URL}/${id}`, {method:'DELETE'});
+      if (res.ok) {
+        showToast('🗑️ Đã xoá nhắc nhở', 'info');
+        loadReminders();
+      } else {
+        showToast('Không thể xoá nhắc nhở này', 'error');
+      }
+    } catch(e) {
+      showToast('Lỗi kết nối', 'error');
+    }
+  }
+
+  // ==================== GOOGLE CALENDAR ====================
+  // Client ID lấy từ Thymeleaf (inject từ application.properties)
+  const GG_CLIENT_ID = '914565033422-tqmmkaffv3cs7shak09orj4r8pk5b01l.apps.googleusercontent.com';
+  const GG_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+
+  let googleAccessToken = null;  // token lưu trong memory (session)
+  let tokenClient = null;
+
+  // Khởi tạo Google Identity Services sau khi GIS script load xong
+  window.addEventListener('load', () => {
+    if (typeof google === 'undefined') return; // GIS chưa load
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GG_CLIENT_ID,
+      scope: GG_SCOPE,
+      callback: (tokenResponse) => {
+        if (tokenResponse.error) {
+          showToast('❌ Không thể kết nối Google: ' + tokenResponse.error, 'error');
+          return;
+        }
+        googleAccessToken = tokenResponse.access_token;
+        updateGoogleConnectUI(true);
+        showToast('✅ Đã kết nối Google Calendar!', 'success');
+        // Nếu đang chờ sync một reminder cụ thể thì thực hiện ngay
+        if (pendingSyncId !== null) {
+          const pid = pendingSyncId; pendingSyncId = null;
+          doSyncToGoogle(pid);
+        }
+      }
+    });
+  });
+
+  let pendingSyncId = null;
+
+  function handleGoogleConnect() {
+    if (googleAccessToken) {
+      // Đã kết nối → ngắt kết nối (chỉ clear token trong memory)
+      googleAccessToken = null;
+      updateGoogleConnectUI(false);
+      showToast('🔌 Đã ngắt kết nối Google Calendar', 'info');
+    } else {
+      if (!tokenClient) {
+        showToast('❌ Google API chưa sẵn sàng, thử lại sau giây lát', 'error');
+        return;
+      }
+      tokenClient.requestAccessToken();
+    }
+  }
+
+  function updateGoogleConnectUI(connected) {
+    const btn = document.getElementById('btnGoogleConnect');
+    const label = document.getElementById('googleConnectLabel');
+    if (connected) {
+      btn.classList.add('connected');
+      label.textContent = '✓ Google Calendar';
+    } else {
+      btn.classList.remove('connected');
+      label.textContent = 'Kết nối Google Calendar';
+    }
+  }
+
+  async function syncToGoogleCalendar(reminderId, event) {
+    if (event) event.stopPropagation();
+    if (!googleAccessToken) {
+      // Chưa đăng nhập → yêu cầu đăng nhập trước, sau đó tự động sync
+      pendingSyncId = reminderId;
+      if (!tokenClient) { showToast('❌ Google API chưa sẵn sàng', 'error'); return; }
+      showToast('🔑 Vui lòng đăng nhập Google để đồng bộ lịch...', 'info');
+      tokenClient.requestAccessToken();
+      return;
+    }
+    await doSyncToGoogle(reminderId);
+  }
+
+  async function doSyncToGoogle(reminderId) {
+    showToast('📅 Đang thêm vào Google Calendar...', 'info');
+    try {
+      const res = await fetch(`${BASE_URL}/${reminderId}/sync-google`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({googleAccessToken})
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // Token hết hạn (401)
+        if (res.status === 401 || (data.message||'').includes('401') || JSON.stringify(data).includes('401')) {
+          googleAccessToken = null;
+          updateGoogleConnectUI(false);
+          pendingSyncId = reminderId;
+          showToast('🔑 Phiên Google hết hạn, vui lòng đăng nhập lại...', 'info');
+          tokenClient.requestAccessToken();
+          return;
+        }
+        showToast('❌ Lỗi đồng bộ: ' + (data.message || JSON.stringify(data)), 'error');
+        return;
+      }
+      showToast('✅ Đã thêm vào Google Calendar!', 'success');
+      loadReminders();
+    } catch(e) {
+      showToast('❌ Lỗi kết nối: ' + e.message, 'error');
+    }
+  }
+
+  async function unsyncFromGoogleCalendar(reminderId, event) {
+    if (event) event.stopPropagation();
+    if (!googleAccessToken) {
+      pendingSyncId = null; // không cần pending ở đây
+      showToast('🔑 Cần đăng nhập Google để gỡ sự kiện khỏi lịch...', 'info');
+      if (!tokenClient) return;
+      // Sau khi login sẽ không tự unsync, user phải nhấn lại
+      tokenClient.requestAccessToken();
+      return;
+    }
+    showToast('🗑️ Đang gỡ khỏi Google Calendar...', 'info');
+    try {
+      const res = await fetch(`${BASE_URL}/${reminderId}/unsync-google`, {
+        method: 'DELETE',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({googleAccessToken})
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast('❌ Lỗi gỡ: ' + (data.message || res.status), 'error');
+        return;
+      }
+      showToast('✅ Đã gỡ khỏi Google Calendar', 'success');
+      loadReminders();
+    } catch(e) {
+      showToast('❌ Lỗi kết nối: ' + e.message, 'error');
+    }
+  }
+
+  // ==================== TOAST ====================
+  function showToast(msg, type='info') {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.className = 'toast show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 3500);
+  }
+  function hideToast() {
+    document.getElementById('toast').classList.remove('show');
+  }
+</script>
+</body>
+</html>
