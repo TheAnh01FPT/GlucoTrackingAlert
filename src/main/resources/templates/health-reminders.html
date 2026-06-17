@@ -634,6 +634,25 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
     }
     if (!valid) return;
 
+    // FIX: nếu đang sửa một reminder đã từng sync lên Google Calendar
+    // nhưng token trong memory đã mất (reload trang, hết hạn...), phải
+    // xin lại token TRƯỚC khi gửi update, nếu không backend sẽ âm thầm
+    // bỏ qua việc cập nhật Google Calendar (chỉ còn email).
+    if (editingId) {
+      const editingReminder = allReminders.find(x => x.id === editingId);
+      const wasSynced = editingReminder && editingReminder.googleCalendarEventId;
+      if (wasSynced && !googleAccessToken) {
+        if (!tokenClient) {
+          showToast('❌ Google API chưa sẵn sàng, thử lại sau giây lát', 'error');
+          return;
+        }
+        showToast('🔑 Cần đăng nhập lại Google để cập nhật lịch...', 'info');
+        pendingUpdateId = editingId;
+        tokenClient.requestAccessToken();
+        return; // callback của tokenClient sẽ tự gọi lại saveReminder()
+      }
+    }
+
     const btn = document.getElementById('saveBtn');
     btn.disabled = true;
     document.getElementById('btnText').textContent = 'Đang lưu...';
@@ -645,7 +664,8 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
       message: document.getElementById('inputMessage').value.trim() || null,
       // FIX: thêm ':00' để đảm bảo backend nhận đúng format "yyyy-MM-ddTHH:mm:ss"
       reminderTime: time.length === 16 ? time + ':00' : time,
-      repeatType: selectedRepeat
+      repeatType: selectedRepeat,
+      googleAccessToken: googleAccessToken || null
     };
 
     try {
@@ -655,7 +675,20 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
         body: JSON.stringify(body)
       });
       const data = await res.json();
-      if (!res.ok) { showToast('Lỗi: ' + (data.message || JSON.stringify(data)), 'error'); return; }
+      if (!res.ok) {
+        const msg = data.message || JSON.stringify(data);
+        // Token Google hết hạn khi đang sửa reminder đã sync
+        if (msg.includes('GOOGLE_TOKEN_EXPIRED')) {
+          showToast('🔑 Phiên Google hết hạn, đang đăng nhập lại để cập nhật lịch...', 'info');
+          googleAccessToken = null;
+          updateGoogleConnectUI(false);
+          pendingUpdateId = editingId; // Ghi nhớ để sau login tự động save lại
+          if (tokenClient) tokenClient.requestAccessToken();
+          return;
+        }
+        showToast('Lỗi: ' + msg, 'error');
+        return;
+      }
       showToast(editingId ? '✅ Đã cập nhật nhắc nhở!' : '✅ Đã tạo nhắc nhở mới!', 'success');
       resetForm();
       loadReminders();
@@ -791,11 +824,17 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
           const pid = pendingSyncId; pendingSyncId = null;
           doSyncToGoogle(pid);
         }
+        // Nếu đang chờ update reminder (token hết hạn lúc sửa giờ)
+        if (pendingUpdateId !== null) {
+          editingId = pendingUpdateId; pendingUpdateId = null;
+          saveReminder();
+        }
       }
     });
   });
 
   let pendingSyncId = null;
+  let pendingUpdateId = null; // Lưu editingId khi token hết hạn lúc đang sửa
 
   function handleGoogleConnect() {
     if (googleAccessToken) {
