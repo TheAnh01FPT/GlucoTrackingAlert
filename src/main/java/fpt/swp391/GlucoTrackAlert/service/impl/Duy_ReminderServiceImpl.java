@@ -33,10 +33,10 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // ==================== PRIVATE HELPERS ====================
-
     /**
-     * Parse chuỗi thời gian linh hoạt: hỗ trợ ISO format có/không có ms, có/không có 'Z'
-     * VD: "2025-06-15T08:00:00", "2025-06-15T08:00:00.000", "2025-06-15T08:00:00Z"
+     * Parse chuỗi thời gian linh hoạt: hỗ trợ ISO format có/không có ms,
+     * có/không có 'Z' VD: "2025-06-15T08:00:00", "2025-06-15T08:00:00.000",
+     * "2025-06-15T08:00:00Z"
      */
     private static final DateTimeFormatter FLEXIBLE_DT = new DateTimeFormatterBuilder()
             .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
@@ -45,7 +45,9 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
             .toFormatter();
 
     private LocalDateTime parseReminderTime(String raw) {
-        if (raw == null || raw.isBlank()) throw new IllegalArgumentException("Thời gian không được để trống");
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalArgumentException("Thời gian không được để trống");
+        }
         // Bỏ offset nếu có (vd: +07:00)
         String cleaned = raw.replaceAll("[+-]\\d{2}:\\d{2}$", "").replace("Z", "");
         return LocalDateTime.parse(cleaned, FLEXIBLE_DT);
@@ -65,7 +67,6 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     }
 
     // ==================== CRUD ====================
-
     @Override
     public Duy_ReminderResponse create(Duy_ReminderRequest request) {
         Duy_HealthReminder entity = fromRequest(request);
@@ -102,9 +103,15 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
         Duy_HealthReminder existing = repo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reminder không tồn tại: " + id));
 
-        if (request.getTitle() != null) existing.setTitle(request.getTitle());
-        if (request.getMessage() != null) existing.setMessage(request.getMessage());
-        if (request.getReminderType() != null) existing.setReminderType(request.getReminderType());
+        if (request.getTitle() != null) {
+            existing.setTitle(request.getTitle());
+        }
+        if (request.getMessage() != null) {
+            existing.setMessage(request.getMessage());
+        }
+        if (request.getReminderType() != null) {
+            existing.setReminderType(request.getReminderType());
+        }
         if (request.getReminderTime() != null) {
             existing.setReminderTime(parseReminderTime(request.getReminderTime()));
             // BUG FIX: Reset isSent khi user đổi giờ, để scheduler gửi lại đúng giờ mới
@@ -113,7 +120,9 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
                 existing.setStatus("ACTIVE");
             }
         }
-        if (request.getRepeatType() != null) existing.setRepeatType(request.getRepeatType());
+        if (request.getRepeatType() != null) {
+            existing.setRepeatType(request.getRepeatType());
+        }
 
         Duy_HealthReminder saved = repo.save(existing);
 
@@ -124,7 +133,8 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
             try {
                 updateGoogleCalendarEvent(saved, request.getGoogleAccessToken());
             } catch (Exception e) {
-                System.err.println("[Reminder] Google Calendar update failed: " + e.getMessage());
+                // Throw ra để frontend biết token hết hạn và xử lý re-auth
+                throw new RuntimeException("GOOGLE_TOKEN_EXPIRED: " + e.getMessage());
             }
         }
 
@@ -140,7 +150,6 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     }
 
     // ==================== LỌC ====================
-
     @Override
     public List<Duy_ReminderResponse> getByPatientAndStatus(Long patientId, String status) {
         return repo.findByPatientIdAndStatusOrderByReminderTimeAsc(patientId, status.toUpperCase())
@@ -162,7 +171,6 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     }
 
     // ==================== HÀNH ĐỘNG NHANH ====================
-
     @Override
     public Duy_ReminderResponse markComplete(Long id) {
         Duy_HealthReminder r = repo.findById(id)
@@ -186,7 +194,6 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     }
 
     // ==================== GOOGLE CALENDAR ====================
-
     /**
      * Tạo event mới trên Google Calendar rồi lưu event ID vào DB
      */
@@ -235,7 +242,6 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     }
 
     // ==================== PRIVATE: GG CALENDAR REST CALLS ====================
-
     /**
      * Tạo event trên Google Calendar và trả về eventId
      */
@@ -283,20 +289,20 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     }
 
     /**
-     * Build JSON body theo Google Calendar API v3 format
-     * Docs: https://developers.google.com/calendar/api/v3/reference/events
+     * Build JSON body theo Google Calendar API v3 format Docs:
+     * https://developers.google.com/calendar/api/v3/reference/events
      */
     private String buildEventJson(Duy_HealthReminder r) throws Exception {
         DateTimeFormatter ggFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
         LocalDateTime start = r.getReminderTime();
-        LocalDateTime end   = start.plusMinutes(30);
+        LocalDateTime end = start.plusMinutes(1);
 
         ObjectNode root = objectMapper.createObjectNode();
         root.put("summary", r.getTitle());
         root.put("description",
-                (r.getMessage() != null ? r.getMessage() : "") +
-                "\n\n[GlucoTrack - " + r.getReminderType() + "]");
+                (r.getMessage() != null ? r.getMessage() : "")
+                + "\n\n[GlucoTrack - " + r.getReminderType() + "]");
 
         // start
         ObjectNode startNode = objectMapper.createObjectNode();
@@ -313,25 +319,33 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
         // reminders popup 10 phút trước
         ObjectNode reminders = objectMapper.createObjectNode();
         reminders.put("useDefault", false);
-        ArrayNode overrides = objectMapper.createArrayNode();
+        ArrayNode overrideList = objectMapper.createArrayNode();
         ObjectNode popup = objectMapper.createObjectNode();
         popup.put("method", "popup");
         popup.put("minutes", 0);
-        overrides.add(popup);
-        reminders.set("overrides", overrides);
+        overrideList.add(popup);
+        reminders.set("overrides", overrideList);
         root.set("reminders", reminders);
 
         // Lặp lại (recurrence) theo Google Calendar format
         if (r.getRepeatType() != null && !r.getRepeatType().equals("NONE")) {
             ArrayNode recurrence = objectMapper.createArrayNode();
             String rrule = switch (r.getRepeatType()) {
-                case "DAILY"   -> "RRULE:FREQ=DAILY";
-                case "WEEKLY"  -> "RRULE:FREQ=WEEKLY";
-                case "MONTHLY" -> "RRULE:FREQ=MONTHLY";
-                default        -> null;
+                case "DAILY" ->
+                    "RRULE:FREQ=DAILY";
+                case "WEEKLY" ->
+                    "RRULE:FREQ=WEEKLY";
+                case "MONTHLY" ->
+                    "RRULE:FREQ=MONTHLY";
+                default ->
+                    null;
             };
-            if (rrule != null) recurrence.add(rrule);
-            if (recurrence.size() > 0) root.set("recurrence", recurrence);
+            if (rrule != null) {
+                recurrence.add(rrule);
+            }
+            if (recurrence.size() > 0) {
+                root.set("recurrence", recurrence);
+            }
         }
 
         return objectMapper.writeValueAsString(root);
