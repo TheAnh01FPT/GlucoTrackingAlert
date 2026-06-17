@@ -13,4 +13,6 @@ import java.util.List;
 public interface DailyHealthLogRepository extends JpaRepository<DailyHealthLog, Long> {
     Page<DailyHealthLog> findByPatientIdOrderByLogDateDesc(Long patientId, Pageable pageable);
     List<DailyHealthLog> findByPatientIdAndLogDateBetweenOrderByLogDate(Long patientId, LocalDate from, LocalDate to);
+
+    boolean existsByPatientIdAndLogDate(Long patientId, LocalDate logDate);
 }

@@ -9,6 +9,7 @@ import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
 import fpt.swp391.GlucoTrackAlert.service.HealthThresholdService;
+import fpt.swp391.GlucoTrackAlert.service.ComplicationRiskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     private final DailyHealthLogRepository dailyHealthLogRepository;
     private final PatientRepository patientRepository;
     private final HealthThresholdService healthThresholdService;
+    private final ComplicationRiskService complicationRiskService;
 
     @Override
     @Transactional(readOnly = true)
@@ -64,9 +66,13 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     double normalMax = t.getNormalMax().doubleValue();
                     double warningMin = t.getWarningMin().doubleValue();
                     double warningMax = t.getWarningMax().doubleValue();
-                    if (v >= normalMin && v <= normalMax) status = "NORMAL";
-                    else if (v < normalMin) status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
-                    else status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                    if (v >= normalMin && v <= normalMax) {
+                        status = "NORMAL"; 
+                    }else if (v < normalMin) {
+                        status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER"; 
+                    }else {
+                        status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                    }
                 } else {
                     status = "unknown";
                 }
@@ -108,9 +114,19 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     public DailyHealthLogResponse createLog(Long patientId, DailyHealthLogRequest request) {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân có mã số ID: " + patientId));
+
+        if (dailyHealthLogRepository.existsByPatientIdAndLogDate(patientId, request.getLogDate())) {
+            throw new RuntimeException("Bạn đã nhập nhật ký sức khỏe cho ngày " + request.getLogDate() + " rồi. Vui lòng chỉnh sửa thay vì tạo mới.");
+        }
+
         DailyHealthLog log = toEntity(request);
         log.setPatient(patient);
         DailyHealthLog savedLog = dailyHealthLogRepository.save(log);
+        try {
+            complicationRiskService.assessPatient(patientId, savedLog.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return toResponse(savedLog);
     }
 
@@ -121,6 +137,14 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         updateEntity(log, request);
         DailyHealthLog updatedLog = dailyHealthLogRepository.save(log);
+        try {
+            Long pid = updatedLog.getPatient() != null ? updatedLog.getPatient().getId() : null;
+            if (pid != null) {
+                complicationRiskService.assessPatient(pid, updatedLog.getId());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return toResponse(updatedLog);
     }
 
@@ -161,9 +185,13 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     double normalMax = t.getNormalMax().doubleValue();
                     double warningMin = t.getWarningMin().doubleValue();
                     double warningMax = t.getWarningMax().doubleValue();
-                    if (v >= normalMin && v <= normalMax) status = "NORMAL";
-                    else if (v < normalMin) status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
-                    else status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                    if (v >= normalMin && v <= normalMax) {
+                        status = "NORMAL"; 
+                    }else if (v < normalMin) {
+                        status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER"; 
+                    }else {
+                        status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                    }
                 } else {
                     status = "unknown";
                 }
@@ -192,7 +220,6 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     }
 
     // === Helper Methods ===
-
     private DailyHealthLogResponse toResponse(DailyHealthLog log) {
         if (log == null) {
             return null;
@@ -201,7 +228,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .id(log.getId())
                 .patientId(log.getPatient() != null ? log.getPatient().getId() : null)
                 .userId(log.getPatient() != null && log.getPatient().getUser() != null
-                    ? log.getPatient().getUser().getId() : null)
+                        ? log.getPatient().getUser().getId() : null)
                 .patientName(log.getPatient() != null ? log.getPatient().getFullName() : null)
                 .logDate(log.getLogDate())
                 .bloodSugar(log.getBloodSugar())
@@ -216,10 +243,10 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .updatedAt(log.getUpdatedAt())
                 .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
                 .bloodSugarStatus(healthThresholdService.evaluate(
-                    log.getBloodSugar(),
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.BLOOD_SUGAR))
+                        log.getBloodSugar(),
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.BLOOD_SUGAR))
                 .build();
     }
 

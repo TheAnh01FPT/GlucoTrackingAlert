@@ -26,7 +26,7 @@ import org.springframework.validation.BindingResult;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import org.springframework.dao.DataIntegrityViolationException;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -362,57 +362,59 @@ public class DailyHealthLogController {
     }
 
     @PostMapping("/create")
-    public String createLog(@RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
-            BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
-        if (!hasRole("ROLE_ADMIN")) {
-            if (hasRole("ROLE_DOCTOR")) {
-                Long patientId = resolvePatientId(userId);
-                if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
-                    redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
-                    return "redirect:/health-logs/doctor-view";
-                }
-            } else {
-                Long curUserId = getCurrentUserId();
-                if (curUserId == null || !curUserId.equals(userId)) {
-                    redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
-                    return "redirect:/login";
-                }
+public String createLog(@RequestParam Long userId,
+        @RequestParam(required = false) String source,
+        @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+        BindingResult bindingResult,
+        RedirectAttributes redirectAttributes) {
+    if (!hasRole("ROLE_ADMIN")) {
+        if (hasRole("ROLE_DOCTOR")) {
+            Long patientId = resolvePatientId(userId);
+            if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
+                return "redirect:/health-logs/doctor-view";
+            }
+        } else {
+            Long curUserId = getCurrentUserId();
+            if (curUserId == null || !curUserId.equals(userId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
+                return "redirect:/login";
             }
         }
+    }
 
-        if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
-            redirectAttributes.addFlashAttribute("log", request);
-            String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
-            if ("my-logs".equals(source)) {
-                redirectUrl += "&source=my-logs";
-            } else if ("doctor-view".equals(source)) {
-                redirectUrl += "&source=doctor-view";
-            }
-            return redirectUrl;
-        }
+    if (bindingResult.hasErrors()) {
+        redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
+        redirectAttributes.addFlashAttribute("log", request);
+        String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
+        if ("my-logs".equals(source)) redirectUrl += "&source=my-logs";
+        else if ("doctor-view".equals(source)) redirectUrl += "&source=doctor-view";
+        return redirectUrl;
+    }
 
-        Long patientId = resolvePatientId(userId);
-        if (patientId == null) {
-            redirectAttributes.addFlashAttribute("error",
-                    "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
-            if ("my-logs".equals(source)) {
-                return "redirect:/health-logs/my-logs?userId=" + userId;
-            }
-            return "redirect:/health-logs?userId=" + userId;
-        }
-
-        dailyHealthLogService.createLog(patientId, request);
-        if ("my-logs".equals(source)) {
-            return "redirect:/health-logs/my-logs?userId=" + userId;
-        } else if ("doctor-view".equals(source)) {
-            return "redirect:/health-logs/doctor-view?userId=" + userId;
-        }
+    Long patientId = resolvePatientId(userId);
+    if (patientId == null) {
+        redirectAttributes.addFlashAttribute("error",
+                "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
+        if ("my-logs".equals(source)) return "redirect:/health-logs/my-logs?userId=" + userId;
         return "redirect:/health-logs?userId=" + userId;
     }
+
+    try {
+        dailyHealthLogService.createLog(patientId, request);
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("error", e.getMessage());
+        redirectAttributes.addFlashAttribute("log", request);
+        String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
+        if ("my-logs".equals(source)) redirectUrl += "&source=my-logs";
+        else if ("doctor-view".equals(source)) redirectUrl += "&source=doctor-view";
+        return redirectUrl;
+    }
+
+    if ("my-logs".equals(source)) return "redirect:/health-logs/my-logs?userId=" + userId;
+    else if ("doctor-view".equals(source)) return "redirect:/health-logs/doctor-view?userId=" + userId;
+    return "redirect:/health-logs?userId=" + userId;
+}
 
     @GetMapping("/{id}/edit")
     public String editLogForm(@PathVariable Long id,
