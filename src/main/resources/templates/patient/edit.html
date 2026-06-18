@@ -14,163 +14,185 @@
             <span class="brand-icon">🩸</span> GlucoTrack
         </h1>
         <div style="display: flex; gap: 12px;">
-            <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">
-                🏠 Trang chủ
-            </a>
-            <a th:href="@{/patient/profile}" class="action-btn btn-secondary" th:if="${!isNew}">
-                ⬅️ Quay lại hồ sơ
-            </a>
+            <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">🏠 Trang chủ</a>
+            <a th:href="@{/patient/profile}" class="action-btn btn-secondary" th:if="${!isNew}">⬅️ Quay lại hồ sơ</a>
         </div>
     </div>
 
     <div class="error-banner" th:if="${errorMessage != null || param.error != null}">
         <span>⚠️</span>
-        <span th:text="${errorMessage != null ? errorMessage : param.error}">Đã xảy ra lỗi khi lưu thông tin.</span>
+        <span th:text="${errorMessage != null ? errorMessage : param.error}">Đã xảy ra lỗi.</span>
     </div>
-
-    <h2 class="card-title" th:text="${isNew ? '✨ Khởi tạo hồ sơ sức khỏe mới' : '⚙️ Cập nhật hồ sơ sức khỏe'}">Cập nhật hồ sơ</h2>
-    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">
-        Hãy nhập các thông tin chính xác dưới đây. Hệ thống sẽ tự động tính toán tuổi và chỉ số BMI để đưa ra đánh giá ban đầu.
-    </p>
 
     <form th:action="@{/patient/profile/save}" th:object="${profileForm}" method="post">
         <input type="hidden" th:field="*{userId}">
         <input type="hidden" name="isNew" th:value="${isNew}">
 
         <div class="profile-grid">
-
             <div class="info-card">
+                <h2 class="card-title">👤 Thông tin cá nhân cơ bản</h2>
                 <div class="form-group">
-                    <label class="form-label" for="fullName">Họ và tên bệnh nhân *</label>
-                    <input type="text" id="fullName" th:field="*{fullName}" class="form-input" placeholder="Nhập họ và tên đầy đủ">
-                    <span class="error-text" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">Lỗi họ tên</span>
+                    <label class="form-label">Họ và tên bệnh nhân *</label>
+                    <input type="text" th:field="*{fullName}" class="form-input" placeholder="Nhập họ và tên đầy đủ">
+                    <span class="error-text" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label" for="dateOfBirth">Ngày tháng năm sinh</label>
-                    <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" class="form-input">
-                    <span class="error-text" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}">Lỗi ngày sinh</span>
+                    <label class="form-label">Ngày tháng năm sinh</label>
+                    <input type="date" th:field="*{dateOfBirth}" class="form-input">
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label" for="gender">Giới tính</label>
+                    <label class="form-label">Giới tính</label>
                     <select id="gender" th:field="*{gender}" class="form-input">
-                        <option value="">-- Chọn giới tính --</option>
                         <option value="Nam">Nam</option>
                         <option value="Nữ">Nữ</option>
-                        <option value="Khác">Khác</option>
                     </select>
-                    <span class="error-text" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}">Lỗi giới tính</span>
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label" for="phone">Số điện thoại liên lạc</label>
-                    <input type="tel" id="phone" th:field="*{phone}" class="form-input" placeholder="Nhập số điện thoại">
-                    <span class="error-text" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Lỗi số điện thoại</span>
+                    <label class="form-label">Số điện thoại liên lạc</label>
+                    <input type="tel" th:field="*{phone}" class="form-input" placeholder="Nhập số điện thoại">
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label" for="identityCard">Căn cước công dân (CCCD)</label>
-                    <input type="text" id="identityCard" th:field="*{identityCard}" class="form-input" placeholder="Nhập số CCCD">
-                    <span class="error-text" th:if="${#fields.hasErrors('identityCard')}" th:errors="*{identityCard}">Lỗi CCCD</span>
+                    <label class="form-label">Địa chỉ thường trú</label>
+                    <input type="text" th:field="*{address}" class="form-input" placeholder="Nhập địa chỉ">
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="insuranceNumber">Mã bảo hiểm y tế (BHYT)</label>
-                    <input type="text" id="insuranceNumber" th:field="*{insuranceNumber}" class="form-input" placeholder="Nhập mã số BHYT">
-                    <span class="error-text" th:if="${#fields.hasErrors('insuranceNumber')}" th:errors="*{insuranceNumber}">Lỗi BHYT</span>
-                </div>
-            </div>
-
-            <div class="info-card">
-                <div class="form-group">
-                    <label class="form-label" for="address">Địa chỉ thường trú</label>
-                    <input type="text" id="address" th:field="*{address}" class="form-input" placeholder="Nhập địa chỉ của bạn">
-                    <span class="error-text" th:if="${#fields.hasErrors('address')}" th:errors="*{address}">Lỗi địa chỉ</span>
-                </div>
-
                 <div class="form-input-two-col">
                     <div class="form-group">
-                        <label class="form-label" for="heightCm">Chiều cao (cm)</label>
-                        <input type="number" step="0.1" id="heightCm" th:field="*{heightCm}" class="form-input" placeholder="Ví dụ: 170">
-                        <span class="error-text" th:if="${#fields.hasErrors('heightCm')}" th:errors="*{heightCm}">Lỗi chiều cao</span>
+                        <label class="form-label">Số CCCD / Định danh</label>
+                        <input type="text" th:field="*{identityCard}" class="form-input" placeholder="Nhập 12 số CCCD" maxlength="12">
+                        <span class="error-text" th:if="${#fields.hasErrors('identityCard')}" th:errors="*{identityCard}"></span>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label" for="weightKg">Cân nặng (kg)</label>
-                        <input type="number" step="0.1" id="weightKg" th:field="*{weightKg}" class="form-input" placeholder="Ví dụ: 65">
-                        <span class="error-text" th:if="${#fields.hasErrors('weightKg')}" th:errors="*{weightKg}">Lỗi cân nặng</span>
+                        <label class="form-label">Mã số BHYT</label>
+                        <input type="text" th:field="*{insuranceNumber}" class="form-input" placeholder="Nhập mã thẻ BHYT" maxlength="15">
+                        <span class="error-text" th:if="${#fields.hasErrors('insuranceNumber')}" th:errors="*{insuranceNumber}"></span>
+                    </div>
+                </div>
+                <div class="form-input-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Chiều cao (cm)</label>
+                        <input type="number" step="0.1" th:field="*{heightCm}" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cân nặng (kg)</label>
+                        <input type="number" step="0.1" th:field="*{weightKg}" class="form-input">
                     </div>
                 </div>
 
                 <div class="form-group" id="pregnancyGroup" style="display: none;">
-                    <label class="form-label" for="isPregnant">Tình trạng thai sản</label>
+                    <label class="form-label">Tình trạng thai sản</label>
                     <select id="isPregnant" th:field="*{isPregnant}" class="form-input">
-                        <option value="false">Không có thai (Hoặc không áp dụng)</option>
-                        <option value="true">Đang có thai (Pregnant)</option>
+                        <option value="false">Không có thai</option>
+                        <option value="true">Đang có thai</option>
                     </select>
-                    <span class="error-text" th:if="${#fields.hasErrors('isPregnant')}" th:errors="*{isPregnant}">Lỗi tình trạng thai sản</span>
                 </div>
+            </div>
 
-                <h3 style="grid-column: span 2; margin-top: 25px; margin-bottom: 15px; color: #e74c3c; font-size: 16px; border-bottom: 2px solid #fce8e6; padding-bottom: 8px;">
-                    ❤️ Chỉ số Lâm sàng (Đầu vào phân tích Tim mạch AI)
+            <div class="info-card">
+                <h3 style="color: #2980b9; font-size: 16px; border-bottom: 2px solid #ebf5fb; padding-bottom: 6px; margin-bottom: 15px;">
+                    🏠 Khối 1: Sàng lọc tại nhà (Khuyên dùng nhập đủ)
                 </h3>
+                <div class="form-group">
+                    <label class="form-label">Triệu chứng đau ngực (cp)</label>
+                    <select th:field="*{cp}" class="form-input">
+                        <option value="0">Mức 0: Đau thắt ngực điển hình</option>
+                        <option value="1">Mức 1: Đau thắt ngực không điển hình</option>
+                        <option value="2">Mức 2: Đau không liên quan tới tim</option>
+                        <option value="3">Mức 3: Cơ thể trạng thái bình thường (Không triệu chứng)</option>
+                    </select>
+                </div>
+                <div class="form-input-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Huyết áp lúc nghỉ (trestbps - mmHg)</label>
+                        <input type="number" th:field="*{trestbps}" class="form-input" placeholder="Mặc định: 120">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Đường huyết lúc đói (fbs)</label>
+                        <select th:field="*{fbs}" class="form-input">
+                            <option value="0">Dưới hoặc bằng 120 mg/dL (An toàn)</option>
+                            <option value="1">Trên 120 mg/dL (Nguy cơ tiểu đường)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Đau ngực khi vận động mạnh/gắng sức (exang)</label>
+                    <select th:field="*{exang}" class="form-input">
+                        <option value="0">Không bị đau ngực khi gắng sức</option>
+                        <option value="1">Có xuất hiện đau thắt ngực khi gắng sức</option>
+                    </select>
+                </div>
+
+                <h3 style="color: #e74c3c; font-size: 16px; border-bottom: 2px solid #fce8e6; padding-bottom: 6px; margin-top: 25px; margin-bottom: 10px;">
+                    🏥 Khối 2: Chỉ số xét nghiệm tại bệnh viện (Không bắt buộc)
+                </h3>
+                <p style="color: #7f8c8d; font-size: 12px; font-style: italic; margin-bottom: 15px;">
+                    * Lưu ý: Nếu chưa khám chuyên khoa, bạn hãy để trống nhóm mục dưới đây. Hệ thống AI sẽ tự động kích hoạt Luồng 2 kết hợp chỉ số an toàn để sàng lọc sơ bộ.
+                </p>
 
                 <div class="form-input-two-col">
                     <div class="form-group">
-                        <label class="form-label">Huyết áp tâm thu (ap_hi - mmHg)</label>
-                        <input type="number" th:field="*{apHi}" class="form-input" placeholder="Mặc định: 120">
+                        <label class="form-label">Cholesterol toàn phần (mg/dL)</label>
+                        <input type="number" th:field="*{chol}" class="form-input" placeholder="Để trống nếu chưa có">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Huyết áp tâm trương (ap_lo - mmHg)</label>
-                        <input type="number" th:field="*{apLo}" class="form-input" placeholder="Mặc định: 80">
+                        <label class="form-label">Kết quả điện tâm đồ (restecg)</label>
+                        <select th:field="*{restecg}" class="form-input">
+                            <option value="">-- Để trống hoặc Chọn kết quả --</option>
+                            <option value="0">0: Bình thường</option>
+                            <option value="1">1: Bất thường sóng ST-T</option>
+                            <option value="2">2: Phì đại thất trái</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="form-input-two-col">
                     <div class="form-group">
-                        <label class="form-label">Chỉ số Đường huyết (gluc - mg/dL)</label>
-                        <input type="number" step="0.1" th:field="*{gluc}" class="form-input" placeholder="Mặc định: 100.0">
+                        <label class="form-label">Nhịp tim tối đa đạt được (thalach)</label>
+                        <input type="number" th:field="*{thalach}" class="form-input" placeholder="Để trống nếu chưa đo">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Mức Cholesterol cá nhân</label>
-                        <select th:field="*{cholesterol}" class="form-input">
-                            <option value="1">Mức 1: Bình thường</option>
-                            <option value="2">Mức 2: Trên chuẩn</option>
-                            <option value="3">Mức 3: Cao nguy hiểm</option>
+                        <label class="form-label">Chỉ số suy giảm ST (oldpeak)</label>
+                        <input type="number" step="0.1" th:field="*{oldpeak}" class="form-input" placeholder="Ví dụ: 1.5">
+                    </div>
+                </div>
+
+                <div class="form-input-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Độ dốc đoạn ST gắng sức (slope)</label>
+                        <select th:field="*{slope}" class="form-input">
+                            <option value="">-- Chọn độ dốc --</option>
+                            <option value="0">0: Dốc lên</option>
+                            <option value="1">1: Đi ngang phẳng</option>
+                            <option value="2">2: Dốc xuống hiểm họa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Số mạch máu bị nghẽn cản quang (ca)</label>
+                        <select th:field="*{ca}" class="form-input">
+                            <option value="">-- Chọn số mạch máu (0-4) --</option>
+                            <option value="0">0 mạch máu bị tắc</option>
+                            <option value="1">1 mạch máu</option>
+                            <option value="2">2 mạch máu</option>
+                            <option value="3">3 mạch máu</option>
+                            <option value="4">4 mạch máu</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Thói quen sinh hoạt & Lối sống</label>
-                    <div style="display: flex; flex-direction: column; gap: 10px; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #eee;">
-                        <div style="display: flex; gap: 20px;">
-                            <label style="font-size: 13px; font-weight: normal; cursor: pointer;">
-                                <input type="checkbox" th:field="*{smoke}" th:value="1" th:checked="${profileForm.smoke == 1}"> Có hút thuốc lá
-                            </label>
-                            <label style="font-size: 13px; font-weight: normal; cursor: pointer;">
-                                <input type="checkbox" th:field="*{alco}" th:value="1" th:checked="${profileForm.alco == 1}"> Có sử dụng rượu bia
-                            </label>
-                        </div>
-                        <label style="font-size: 13px; font-weight: normal; cursor: pointer; border-top: 1px solid #eee; padding-top: 8px;">
-                            <input type="checkbox" th:field="*{active}" th:value="1" th:checked="${profileForm.active == 1 || profileForm.active == null}"> Thường xuyên vận động thể chất (>30 phút/ngày)
-                        </label>
-                    </div>
-                </div>
-
-                <div style="background: var(--primary-light); padding: 18px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--primary-color);">
-                    <p style="font-size: 13px; color: var(--primary-color); font-weight: 600; line-height: 1.5;">
-                        💡 Hệ thống sẽ tự động tính BMI khi lưu. BMI từ 18.5 đến 24.9 được xem là chỉ số vàng của sức khỏe!
-                    </p>
+                    <label class="form-label">Kết quả xạ hình tưới máu cơ tim (thal)</label>
+                    <select th:field="*{thal}" class="form-input">
+                        <option value="">-- Chọn trạng thái xạ hình --</option>
+                        <option value="1">1: Lưu lượng tuần hoàn bình thường</option>
+                        <option value="2">2: Có khuyết tật dòng máu cố định</option>
+                        <option value="3">3: Khuyết tật dòng máu có thể đảo ngược</option>
+                    </select>
                 </div>
             </div>
-
         </div>
 
-        <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
+        <div style="margin-top: 30px; display: flex; justify-content: flex-end;">
             <button type="submit" class="action-btn btn-primary" style="width: 200px; justify-content: center;">
-                💾 Lưu hồ sơ
+                💾 Lưu hồ sơ & Phân tích AI
             </button>
         </div>
     </form>
@@ -187,15 +209,11 @@
                 pregnancyGroup.style.display = "block";
             } else {
                 pregnancyGroup.style.display = "none";
-                if (isPregnantSelect) {
-                    isPregnantSelect.value = "false";
-                }
+                if (isPregnantSelect) isPregnantSelect.value = "false";
             }
         }
-
         if (genderSelect) {
             genderSelect.addEventListener("change", togglePregnancyField);
-            // Run on page load
             togglePregnancyField();
         }
     });

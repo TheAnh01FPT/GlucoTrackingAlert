@@ -64,13 +64,18 @@ public class PatientWebController {
                     .identityCard(profile.getIdentityCard())
                     .insuranceNumber(profile.getInsuranceNumber())
                     .isPregnant(profile.getIsPregnant())
-                    .apHi(profile.getApHi())
-                    .apLo(profile.getApLo())
-                    .cholesterol(profile.getCholesterol())
-                    .gluc(profile.getGluc())
-                    .smoke(profile.getSmoke())
-                    .alco(profile.getAlco())
-                    .active(profile.getActive())
+                    // Map đồng bộ các chỉ số Cleveland chuẩn mới vào Form sửa
+                    .cp(profile.getCp())
+                    .trestbps(profile.getTrestbps())
+                    .fbs(profile.getFbs())
+                    .exang(profile.getExang())
+                    .chol(profile.getChol())
+                    .restecg(profile.getRestecg())
+                    .thalach(profile.getThalach())
+                    .oldpeak(profile.getOldpeak())
+                    .slope(profile.getSlope())
+                    .ca(profile.getCa())
+                    .thal(profile.getThal())
                     .build();
             model.addAttribute("profileForm", request);
             model.addAttribute("isNew", false);
@@ -86,24 +91,19 @@ public class PatientWebController {
     }
 
     @PostMapping("/profile/save")
-    public String saveProfile(@Valid @ModelAttribute("profileForm") PatientProfileRequest request, 
-                               BindingResult result,
-                               @RequestParam("isNew") boolean isNew,
-                               Model model) {
+    public String saveProfile(@Valid @ModelAttribute("profileForm") PatientProfileRequest request,
+                              BindingResult result,
+                              @RequestParam("isNew") boolean isNew,
+                              Model model) {
         User loggedInUser = getLoggedInUser();
-        
-        // Enforce security by setting/verifying correct userId in the request
         request.setUserId(loggedInUser.getId());
-        if (request.getSmoke() == null) request.setSmoke(0);
-        if (request.getAlco() == null) request.setAlco(0);
-        if (request.getActive() == null) request.setActive(0);
 
         if (result.hasErrors()) {
             model.addAttribute("isNew", isNew);
             model.addAttribute("userId", loggedInUser.getId());
             return "patient/edit";
         }
-        
+
         try {
             if (isNew) {
                 patientService.createProfile(request);
