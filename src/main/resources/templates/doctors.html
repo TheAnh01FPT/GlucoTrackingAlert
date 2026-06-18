@@ -393,8 +393,8 @@
                 <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
                 <a href="/admin/doctors" class="nav-item-link active"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
                 <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
-                <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
-                <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+                <a href="/admin/patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
+                <a href="/admin/thresholds" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
             </nav>
             <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
                 <div style="color:rgba(255,255,255,.5); font-size:.75rem">Admin</div>
@@ -698,6 +698,11 @@
                                 async function loadDoctors() {
                                     try {
                                         const res = await fetch('/api/doctors', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                        if (!res.ok) {
+                                            document.getElementById('doctorTable').innerHTML =
+                                                '<tr><td colspan="9" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-1"></i>Lỗi tải dữ liệu (HTTP ' + res.status + '). Vui lòng đăng nhập lại.</td></tr>';
+                                            return;
+                                        }
                                         allDoctors = await res.json();
                                         filteredDoctors = [...allDoctors];
                                         updateStats(allDoctors);

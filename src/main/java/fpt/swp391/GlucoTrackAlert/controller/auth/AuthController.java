@@ -23,7 +23,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request, org.springframework.validation.BindingResult bindingResult) {
+        // Nếu có bất kỳ lỗi Validate nào từ Validation Annotations
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
         try {
             userService.register(request);
             return ResponseEntity.ok("Mã xác nhận đã được gửi đến email của bạn.");
@@ -37,6 +43,16 @@ public class AuthController {
         try {
             userService.activateUser(otp);
             return ResponseEntity.ok("Xác nhận thành công! Bạn có thể đăng nhập.");
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestParam("email") String email) {
+        try {
+            userService.resendOtp(email);
+            return ResponseEntity.ok("Mã xác nhận mới đã được gửi đến email của bạn.");
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }

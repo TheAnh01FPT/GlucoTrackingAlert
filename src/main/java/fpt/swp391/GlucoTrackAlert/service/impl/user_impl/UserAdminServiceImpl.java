@@ -1,15 +1,16 @@
 package fpt.swp391.GlucoTrackAlert.service.impl.user_impl;
 
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
+import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +25,16 @@ public class UserAdminServiceImpl implements UserAdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final DoctorRepository doctorRepository;
 
     public UserAdminServiceImpl(UserRepository userRepository,
                                 RoleRepository roleRepository,
-                                BCryptPasswordEncoder passwordEncoder) {
+                                BCryptPasswordEncoder passwordEncoder,
+                                DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.doctorRepository = doctorRepository;
     }
 
     @Override
@@ -40,7 +44,6 @@ public class UserAdminServiceImpl implements UserAdminService {
 
     @Override
     public Page<User> getUsersPaged(int page, int size) {
-        // Lấy tất cả user rồi filter PATIENT/DOCTOR, sau đó phân trang thủ công
         List<User> filtered = userRepository.findAll().stream()
                 .filter(u -> u.getRole() != null &&
                         (u.getRole().getName().equalsIgnoreCase("PATIENT") ||
@@ -116,6 +119,8 @@ public class UserAdminServiceImpl implements UserAdminService {
         Role role = roleRepository.findByName(inputRole)
                 .orElseThrow(() -> new Exception("Không tồn tại quyền vai trò hệ thống: " + inputRole));
 
+        String oldRole = user.getRole() != null ? user.getRole().getName() : "";
+
         user.setEmail(request.getEmail());
         user.setStatus(request.getStatus());
         user.setEmailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : false);
@@ -126,18 +131,19 @@ public class UserAdminServiceImpl implements UserAdminService {
             user.setPasswordHash(passwordEncoder.encode(request.getPassword().trim()));
         }
 
-        return userRepository.save(user);
-    }
+        User savedUser = userRepository.save(user);
 
-//    @Override
-//    @Transactional
-//    public void deleteUserByAdmin(Long id) throws Exception {
-//        User user = userRepository.findById(id)
-//                .orElseThrow(() -> new Exception("Không tìm thấy người dùng có mã số ID để xóa."));
-//        try {
-//            userRepository.delete(user);
-//        } catch (Exception e) {
-//            throw new Exception("Không thể xóa tài khoản do đã phát sinh dữ liệu liên kết.");
-//        }
-//    }
+        // Nếu đổi sang DOCTOR và chưa có record trong bảng doctors thì tự tạo
+        if (inputRole.equals("DOCTOR") && !oldRole.equalsIgnoreCase("DOCTOR")) {
+            if (!doctorRepository.existsByUserEmail(savedUser.getEmail())) {
+                Doctor doctor = new Doctor();
+                doctor.setUser(savedUser);
+                doctor.setFullName(savedUser.getFullName() != null ? savedUser.getFullName() : savedUser.getEmail());
+                doctor.setStatus("active");
+                doctorRepository.save(doctor);
+            }
+        }
+
+        return savedUser;
+    }
 }

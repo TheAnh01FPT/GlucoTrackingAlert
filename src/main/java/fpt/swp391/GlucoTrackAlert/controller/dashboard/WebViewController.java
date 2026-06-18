@@ -48,6 +48,11 @@ public class WebViewController {
         return "assignments";
     }
 
+    @GetMapping("/patients")
+    public String showPatientsPage(Model model) {
+        return "my-patients";
+    }
+
     @PostMapping("/users/save")
     public String saveUser(@RequestParam(required = false) Long id,
                            @RequestParam String email,

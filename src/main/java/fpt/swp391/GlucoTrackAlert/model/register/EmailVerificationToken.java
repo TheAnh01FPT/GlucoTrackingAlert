@@ -29,8 +29,9 @@ public class EmailVerificationToken {
 
     private LocalDateTime verifiedAt;
 
+    @Builder.Default
     private String status = "pending";
 
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 }
-

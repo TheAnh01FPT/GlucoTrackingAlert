@@ -9,125 +9,90 @@
 
   <body>
     <div class="home-container">
-      <!-- Top Area: Only displays greeting on the top right -->
-      <div
-        class="home-navbar"
-        style="
-          justify-content: flex-end;
-          border-bottom: none;
-          margin-bottom: 10px;
-          padding-bottom: 0;
-        "
-      >
-        <!-- Elegant Top-Right User Greeting (Hello, [Name]) -->
+
+      <!-- Top Area: Greeting top right -->
+      <div class="home-navbar" style="justify-content: flex-end; border-bottom: none; margin-bottom: 10px; padding-bottom: 0;">
         <div class="user-greeting">
           <span class="active-dot"></span>
           <span>Hello, </span>
-          <strong
-            th:text="${patientName != 'Chưa tạo hồ sơ' ? patientName : 'Bệnh nhân'}"
-            >Nguyễn Văn A</strong
-          >
-          <span
-            style="font-size: 11.5px; opacity: 0.7; margin-left: 2px"
-            th:text="'(' + ${userEmail} + ')'"
-            >(patient1@gmail.com)</span
-          >
+          <strong th:text="${patientName != 'Chưa tạo hồ sơ' ? patientName : 'Bệnh nhân'}">Nguyễn Văn A</strong>
+          <span style="font-size: 11.5px; opacity: 0.7; margin-left: 2px;" th:text="'(' + ${userEmail} + ')'">(patient@gmail.com)</span>
         </div>
       </div>
 
-      <!-- Hero Section (Restored Center Brand Title) -->
-      <div class="hero-section" style="margin-top: 10px">
+      <!-- Hero Section -->
+      <div class="hero-section" style="margin-top: 10px;">
         <h1 class="brand-title">
           <span class="brand-icon">🩸</span> GlucoTrack
         </h1>
         <p class="hero-subtitle">
-          Giải pháp toàn diện hỗ trợ theo dõi chỉ số đường huyết, huyết áp, kiểm
-          soát chế độ dinh dưỡng và tự động phân tích nguy cơ sức khỏe thông qua
-          Trí tuệ nhân tạo (AI).
+          Giải pháp toàn diện hỗ trợ theo dõi chỉ số đường huyết, huyết áp,
+          kiểm soát chế độ dinh dưỡng và tự động phân tích nguy cơ sức khỏe
+          thông qua Trí tuệ nhân tạo (AI).
         </p>
       </div>
 
       <!-- Features Grid -->
       <div class="features-grid">
-        <!-- 1. Patient Profile Card (ACTIVE) -->
+
+        <!-- 1. Hồ sơ sức khỏe (ACTIVE) -->
         <a id="profileLink" th:href="@{/patient/profile}" class="feature-card">
           <div class="card-icon">👤</div>
           <h3 class="card-title">Hồ sơ sức khỏe của tôi</h3>
-          <p class="card-desc">
-            Thiết lập hồ sơ y tế cá nhân, chiều cao, cân nặng để hệ thống tự
-            động đo tuổi và tính toán chỉ số BMI cơ bản.
-          </p>
+          <p class="card-desc">Thiết lập hồ sơ y tế cá nhân, chiều cao, cân nặng để hệ thống tự động đo tuổi và tính toán chỉ số BMI cơ bản.</p>
           <div class="arrow-icon">Truy cập ngay ➔</div>
         </a>
 
-        <!-- 2. Relatives Management Card (ACTIVE) -->
-        <a
-          id="relativesLink"
-          th:href="@{/patient/relatives}"
-          class="feature-card"
-        >
+        <!-- 2. Quản lý người thân (ACTIVE) -->
+        <a id="relativesLink" th:href="@{/patient/relatives}" class="feature-card">
           <div class="card-icon">👪</div>
           <h3 class="card-title">Quản lý người thân</h3>
-          <p class="card-desc">
-            Thiết lập thông tin người thân nhận email khẩn cấp. Bật/tắt nhận
-            cảnh báo tự động khi chỉ số sức khỏe của bạn vượt ngưỡng an toàn.
-          </p>
+          <p class="card-desc">Thiết lập thông tin người thân nhận email khẩn cấp. Bật/tắt nhận cảnh báo tự động khi chỉ số sức khỏe của bạn vượt ngưỡng an toàn.</p>
           <div class="arrow-icon">Truy cập ngay ➔</div>
         </a>
 
-        <!-- 3. Daily Health Logs (ACTIVE) -->
-        <a
-          id="healthLogLink"
-          th:href="@{/health-logs/my-logs(userId=${userId})}"
-          class="feature-card"
-        >
+        <!-- 3. Nhật ký sức khỏe hàng ngày (ACTIVE) -->
+        <a id="healthLogLink" th:href="@{/health-logs/my-logs(userId=${userId})}" class="feature-card">
           <div class="card-icon">📝</div>
           <h3 class="card-title">Nhật ký sức khỏe hàng ngày</h3>
-          <p class="card-desc">Ghi nhận chỉ số đường huyết...</p>
+          <p class="card-desc">Ghi nhận chỉ số đường huyết, huyết áp, chất lượng giấc ngủ và lượng nước nạp vào cơ thể hàng ngày.</p>
           <div class="arrow-icon">Truy cập ngay ➔</div>
         </a>
 
-        <!-- 4. Meal Nutrition Logs (DISABLED - Iteration 2/3 teaser) -->
-        <div class="feature-card card-disabled">
-          <span class="badge-soon">Sắp ra mắt</span>
+        <!-- 4. Nhật ký dinh dưỡng (ACTIVE) -->
+        <a th:href="@{/meal-logs}" class="feature-card">
           <div class="card-icon">🍎</div>
           <h3 class="card-title">Nhật ký dinh dưỡng & bữa ăn</h3>
-          <p class="card-desc">
-            Ghi chép các món ăn, tính toán lượng tinh bột (Carb) và thống kê
-            lượng đường nạp vào cơ thể qua bữa ăn hàng ngày.
-          </p>
-          <div class="arrow-icon" style="color: var(--text-muted)">
-            Đang phát triển...
-          </div>
-        </div>
+          <p class="card-desc">Ghi chép các món ăn, tính toán lượng tinh bột (Carb) và thống kê lượng đường nạp vào cơ thể qua bữa ăn hàng ngày.</p>
+          <div class="arrow-icon">Truy cập ngay ➔</div>
+        </a>
 
-        <!-- 5. Weekly Reports & AI Trend (DISABLED - Iteration 2/3 teaser) -->
+        <!-- 5. Nhắc nhở sức khoẻ (ACTIVE) -->
+        <a th:href="@{/health-reminders}" class="feature-card">
+          <div class="card-icon">🔔</div>
+          <h3 class="card-title">Nhắc nhở sức khoẻ</h3>
+          <p class="card-desc">Đặt lịch nhắc uống thuốc, đo đường huyết, bữa ăn, tập thể dục và khám bác sĩ. Đồng bộ tự động lên Google Calendar.</p>
+          <div class="arrow-icon">Truy cập ngay ➔</div>
+        </a>
+
+        <!-- 6. Báo cáo tuần & AI (DISABLED) -->
         <div class="feature-card card-disabled">
           <span class="badge-soon">Sắp ra mắt</span>
           <div class="card-icon">📈</div>
           <h3 class="card-title">Báo cáo tuần & AI Phân tích</h3>
-          <p class="card-desc">
-            AI tự động so sánh, tính toán trung bình chỉ số, đánh giá tiến triển
-            sức khỏe (Cải thiện / Ổn định / Tệ đi) theo tuần.
-          </p>
-          <div class="arrow-icon" style="color: var(--text-muted)">
-            Đang phát triển...
-          </div>
+          <p class="card-desc">AI tự động so sánh, tính toán trung bình chỉ số, đánh giá tiến triển sức khỏe (Cải thiện / Ổn định / Tệ đi) theo tuần.</p>
+          <div class="arrow-icon" style="color: var(--text-muted);">Đang phát triển...</div>
         </div>
 
-        <!-- 6. AI Risk Assessment (DISABLED - Iteration 2/3 teaser) -->
+        <!-- 7. Đánh giá nguy cơ AI (DISABLED) -->
         <div class="feature-card card-disabled">
           <span class="badge-soon">Sắp ra mắt</span>
           <div class="card-icon">🧠</div>
           <h3 class="card-title">Đánh giá nguy cơ tiểu đường AI</h3>
-          <p class="card-desc">
-            Gửi thông tin khảo sát nguy cơ y tế để AI phân tích và đưa ra khuyến
-            nghị phòng tránh lâm sàng chuẩn chỉ.
-          </p>
-          <div class="arrow-icon" style="color: var(--text-muted)">
-            Đang phát triển...
-          </div>
+          <p class="card-desc">Gửi thông tin khảo sát nguy cơ y tế để AI phân tích và đưa ra khuyến nghị phòng tránh lâm sàng chuẩn chỉ.</p>
+          <div class="arrow-icon" style="color: var(--text-muted);">Đang phát triển...</div>
         </div>
+
       </div>
     </div>
   </body>

@@ -10,7 +10,6 @@ import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
-import java.util.Collections;
 import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
