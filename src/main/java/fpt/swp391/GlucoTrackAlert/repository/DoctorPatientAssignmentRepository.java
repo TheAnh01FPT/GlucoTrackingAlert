@@ -7,18 +7,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
+// FIX 4: Đổi generic type từ Integer → Long
 public interface DoctorPatientAssignmentRepository
-        extends JpaRepository<DoctorPatientAssignment, Integer> {
+        extends JpaRepository<DoctorPatientAssignment, Long> {
 
-    List<DoctorPatientAssignment> findByDoctorIdAndStatus(Integer doctorId, String status);
+    List<DoctorPatientAssignment> findByDoctorIdAndStatus(Long doctorId, String status);
 
-    List<DoctorPatientAssignment> findByDoctorId(Integer doctorId);
+    List<DoctorPatientAssignment> findByDoctorId(Long doctorId);
 
     boolean existsByPatientIdAndStatus(Long patientId, String status);
 
     List<DoctorPatientAssignment> findByPatientIdAndStatus(Long patientId, String status);
 
-    Optional<DoctorPatientAssignment> findByDoctorIdAndPatientId(Integer doctorId, Long patientId);
+    Optional<DoctorPatientAssignment> findByDoctorIdAndPatientId(Long doctorId, Long patientId);
 
-    long countByDoctorIdAndStatus(Integer doctorId, String status);
+    long countByDoctorIdAndStatus(Long doctorId, String status);
 }

@@ -31,6 +31,7 @@ public class PasswordResetToken {
     @Column(name = "used_at")
     private LocalDateTime usedAt;
 
+    @Builder.Default
     @Column(name = "status")
     private String status = "pending";
 

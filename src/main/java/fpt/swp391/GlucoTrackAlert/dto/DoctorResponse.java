@@ -13,8 +13,9 @@ import lombok.Setter;
 @Setter
 public class DoctorResponse {
 
-    private Integer id;
-    private Integer userId;
+    // FIX 4: Đổi Integer → Long nhất quán với Doctor.id
+    private Long id;
+    private Long userId;
     private String userEmail;
     private String fullName;
     private String specialization;
@@ -39,7 +40,7 @@ public class DoctorResponse {
         DoctorResponse r = new DoctorResponse();
         r.setId(d.getId());
         if (d.getUser() != null) {
-            r.setUserId(d.getUser().getId().intValue());
+            r.setUserId(d.getUser().getId());
             r.setUserEmail(d.getUser().getEmail());
         }
         r.setFullName(d.getFullName());

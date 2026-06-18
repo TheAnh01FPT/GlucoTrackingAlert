@@ -9,13 +9,12 @@ import lombok.Setter;
 @Setter
 public class AssignmentResponse {
 
+    // FIX 4: Đổi Integer → Long nhất quán
     private Long id;
 
     // Doctor info
-    private Integer doctorId;
+    private Long doctorId;
     private String doctorName;
-
-    // Patient info
     private Long patientId;
     private String patientName;
 
