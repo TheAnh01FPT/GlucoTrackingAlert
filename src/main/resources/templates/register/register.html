@@ -22,12 +22,12 @@
         .otp-hint { text-align: center; color: #555; font-size: 14px; margin-bottom: 15px; }
         .resend-link { text-align: center; margin-top: 10px; font-size: 13px; color: #999; }
         .resend-link a { color: #3498db; text-decoration: none; }
+        .resend-link a.disabled { color: #aaa; pointer-events: none; text-decoration: none; cursor: not-allowed; }
     </style>
 </head>
 <body>
 <div class="form-container">
 
-    <!-- Bước 1: Form đăng ký -->
     <div id="registerSection">
         <h2>Đăng Ký Tài Khoản</h2>
         <form id="registerForm">
@@ -58,7 +58,6 @@
         </div>
     </div>
 
-    <!-- Bước 2: Nhập OTP -->
     <div id="otpSection">
         <h2>Xác Nhận Email</h2>
         <p class="otp-hint">Mã xác nhận đã được gửi đến email của bạn. Vui lòng nhập mã bên dưới.</p>
@@ -68,7 +67,7 @@
         </div>
         <button onclick="verifyOtp()">Xác nhận</button>
         <div class="resend-link">
-            Không nhận được mã? <a href="#" onclick="resendOtp()">Gửi lại</a>
+            Không nhận được mã? <a href="#" id="resendBtn" onclick="resendOtp()">Gửi lại</a>
         </div>
     </div>
 
@@ -77,23 +76,48 @@
 
 <script>
     let registeredEmail = '';
+    let countdownTimer;
 
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const fullName = document.getElementById('fullName').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         const messageBox = document.getElementById('messageBox');
 
-        if (password !== confirmPassword) {
-            messageBox.style.display = 'block';
-            messageBox.className = 'message error';
-            messageBox.innerText = "Mật khẩu xác nhận không khớp!";
+        const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỨỬỮỰYÝỲỸỶYÝỲỸỶỹỳýỵỷ\s]{2,50}$/;
+        if (!nameRegex.test(fullName)) {
+            showError("Họ và tên hợp lệ dài từ 2-50 ký tự và không được chứa số hay ký tự đặc biệt!");
             return;
         }
+
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            showError("Địa chỉ Email không đúng định dạng!");
+            return;
+        }
+
+        const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
+        if (!phoneRegex.test(phone)) {
+            showError("Số điện thoại không hợp lệ (Phải gồm 10 chữ số chuẩn nhà mạng Việt Nam)!");
+            return;
+        }
+
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
+        if (!passRegex.test(password)) {
+            showError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showError("Mật khẩu xác nhận không trùng khớp!");
+            return;
+        }
+
+        messageBox.style.display = 'none';
 
         fetch('/api/auth/register', {
             method: 'POST',
@@ -109,15 +133,13 @@
                     document.getElementById('otpSection').style.display = 'block';
                     messageBox.className = 'message success';
                     messageBox.innerText = "Mã xác nhận đã gửi đến " + email;
+                    startResendCountdown();
                 } else {
-                    messageBox.className = 'message error';
-                    messageBox.innerText = text || "Đăng ký thất bại.";
+                    showError(text || "Đăng ký thất bại.");
                 }
             })
             .catch(() => {
-                messageBox.style.display = 'block';
-                messageBox.className = 'message error';
-                messageBox.innerText = "Không thể kết nối đến server.";
+                showError("Không thể kết nối đến server.");
             });
     });
 
@@ -125,10 +147,9 @@
         const otp = document.getElementById('otpInput').value.trim();
         const messageBox = document.getElementById('messageBox');
 
-        if (otp.length !== 6) {
-            messageBox.style.display = 'block';
-            messageBox.className = 'message error';
-            messageBox.innerText = "Vui lòng nhập đủ 6 số!";
+        const otpRegex = /^[0-9]{6}$/;
+        if (!otpRegex.test(otp)) {
+            showError("Mã xác nhận OTP phải chứa đúng 6 chữ số!");
             return;
         }
 
@@ -141,15 +162,32 @@
                     messageBox.innerText = "Xác nhận thành công! Đang chuyển đến trang đăng nhập...";
                     setTimeout(() => window.location.href = '/login', 2000);
                 } else {
-                    messageBox.className = 'message error';
-                    messageBox.innerText = text || "Mã xác nhận không đúng.";
+                    showError(text || "Mã xác nhận không đúng.");
                 }
             })
             .catch(() => {
-                messageBox.style.display = 'block';
-                messageBox.className = 'message error';
-                messageBox.innerText = "Không thể kết nối đến server.";
+                showError("Không thể kết nối đến server.");
             });
+    }
+
+    function startResendCountdown() {
+        const resendBtn = document.getElementById('resendBtn');
+        let timeLeft = 60;
+
+        resendBtn.removeAttribute('onclick');
+        resendBtn.classList.add('disabled');
+
+        countdownTimer = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                resendBtn.innerText = "Gửi lại";
+                resendBtn.setAttribute('onclick', 'resendOtp()');
+                resendBtn.classList.remove('disabled');
+            } else {
+                resendBtn.innerText = `Gửi lại (${timeLeft}s)`;
+                timeLeft--;
+            }
+        }, 1000);
     }
 
     function resendOtp() {
@@ -167,6 +205,7 @@
                 if (response.ok) {
                     messageBox.className = 'message success';
                     messageBox.innerText = 'Đã gửi lại mã xác nhận đến ' + registeredEmail;
+                    startResendCountdown();
                 } else {
                     messageBox.className = 'message error';
                     messageBox.innerText = text || 'Gửi lại thất bại.';
@@ -177,6 +216,13 @@
                 messageBox.className = 'message error';
                 messageBox.innerText = 'Không thể kết nối đến server.';
             });
+    }
+
+    function showError(msg) {
+        const messageBox = document.getElementById('messageBox');
+        messageBox.style.display = 'block';
+        messageBox.className = 'message error';
+        messageBox.innerText = msg;
     }
 </script>
 </body>

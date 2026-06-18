@@ -49,6 +49,18 @@ public class Duy_HealthReminder {
     @Column(name = "google_calendar_event_id", length = 255)
     private String googleCalendarEventId;
 
+    // Liên kết tới PrescriptionItem khi reminder được sinh ra từ đơn thuốc.
+    // Dùng để: (1) huỷ/tắt reminder khi đơn thuốc bị CANCELLED,
+    // (2) biết reminder này thuộc thuốc nào khi cần tra cứu.
+    @Column(name = "prescription_item_id")
+    private Long prescriptionItemId;
+
+    // Ngày cuối cùng reminder còn hiệu lực (vd: ngày cuối của đợt uống thuốc).
+    // Khi repeatType != NONE, scheduler sẽ KHÔNG lặp lại reminder sau ngày này
+    // (tự chuyển sang COMPLETED) để tránh nhắc nhở mãi mãi sau khi thuốc đã hết.
+    @Column(name = "end_date")
+    private java.time.LocalDate endDate;
+
     // ==================== CONSTRUCTORS ====================
     public Duy_HealthReminder() {}
 
@@ -110,5 +122,10 @@ public class Duy_HealthReminder {
 
     public String getGoogleCalendarEventId() { return googleCalendarEventId; }
     public void setGoogleCalendarEventId(String googleCalendarEventId) { this.googleCalendarEventId = googleCalendarEventId; }
-}
 
+    public Long getPrescriptionItemId() { return prescriptionItemId; }
+    public void setPrescriptionItemId(Long prescriptionItemId) { this.prescriptionItemId = prescriptionItemId; }
+
+    public java.time.LocalDate getEndDate() { return endDate; }
+    public void setEndDate(java.time.LocalDate endDate) { this.endDate = endDate; }
+}
