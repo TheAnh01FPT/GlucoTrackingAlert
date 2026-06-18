@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlucoTrack | Thuốc của tôi</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#005b99;--primary-dark:#003f6e;--primary-light:#e8f4fd;
+  --accent:#00a86b;--accent-light:#e6f7f1;
+  --danger:#dc2626;--danger-light:#fef2f2;
+  --warning:#d97706;--warning-light:#fffbeb;
+  --text:#1a2535;--text-muted:#6b7a8d;
+  --border:#d1dde8;--bg:#f0f4f8;
+  --shadow:0 2px 12px rgba(0,91,153,.08);--shadow-lg:0 8px 32px rgba(0,91,153,.13);
+  --radius:14px;
+}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px}
+
+.header{background:linear-gradient(90deg,var(--primary-dark) 0%,var(--primary) 60%,#0077c2 100%);color:#fff;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:68px;box-shadow:0 2px 16px rgba(0,63,110,.18);position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-logo{width:42px;height:42px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.header-title{font-family:'Lexend',sans-serif;font-size:22px;font-weight:700}
+.header-sub{font-size:13px;opacity:.75;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:10px;font-size:14px;opacity:.85}
+.status-dot{width:9px;height:9px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.breadcrumb{background:#fff;border-bottom:1px solid var(--border);padding:11px 32px;font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.breadcrumb a{color:var(--primary);text-decoration:none;font-weight:600}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb span{color:var(--primary);font-weight:600}
+
+.main{max-width:1100px;margin:0 auto;padding:24px 32px}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.stat-card{border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;color:#fff}
+.stat-card.blue{background:linear-gradient(135deg,var(--primary-dark),var(--primary))}
+.stat-card.green{background:linear-gradient(135deg,#047857,var(--accent))}
+.stat-card.orange{background:linear-gradient(135deg,#92400e,var(--warning))}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,.2);flex-shrink:0}
+.stat-label{font-size:11.5px;color:rgba(255,255,255,.85);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-family:'Lexend',sans-serif;font-size:28px;font-weight:700;line-height:1.1}
+
+.date-nav{display:flex;align-items:center;gap:12px;margin-bottom:20px;background:#fff;border-radius:var(--radius);padding:14px 20px;box-shadow:var(--shadow)}
+.date-nav button{background:var(--primary-light);color:var(--primary);border:none;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer;font-family:inherit;font-weight:600;transition:background .15s}
+.date-nav button:hover{background:var(--primary);color:#fff}
+.date-nav input[type=date]{border:2px solid var(--border);border-radius:8px;padding:7px 12px;font-size:15px;font-family:inherit;color:var(--text);outline:none;cursor:pointer}
+.date-nav input[type=date]:focus{border-color:var(--primary)}
+.date-label{font-family:'Lexend',sans-serif;font-size:16px;font-weight:700;color:var(--primary);flex:1;text-align:center}
+
+.section-title{font-family:'Lexend',sans-serif;font-size:18px;font-weight:700;color:var(--primary-dark);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+.log-list{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.log-card{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;border-left:4px solid var(--border);transition:all .2s}
+.log-card.taken{border-left-color:var(--accent);background:var(--accent-light)}
+.log-card.missed{border-left-color:var(--danger);background:var(--danger-light)}
+.log-card.pending{border-left-color:var(--warning)}
+.log-time{font-family:'Lexend',sans-serif;font-size:22px;font-weight:700;color:var(--primary);min-width:60px;text-align:center}
+.log-info{flex:1}
+.log-name{font-size:16px;font-weight:700;color:var(--text)}
+.log-detail{font-size:13px;color:var(--text-muted);margin-top:3px}
+.log-status{font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px}
+.log-status.taken{background:#d1fae5;color:#047857}
+.log-status.missed{background:#fee2e2;color:#991b1b}
+.log-status.pending{background:#fffbeb;color:#92400e}
+.btn-taken{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
+.btn-taken:hover{background:#047857}
+.btn-taken:disabled{background:#9ca3af;cursor:not-allowed}
+
+.prescription-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.prescription-header{background:linear-gradient(135deg,var(--primary) 0%,#0077c2 100%);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.prescription-header h3{font-family:'Lexend',sans-serif;font-size:15px;font-weight:700}
+.prescription-meta{font-size:13px;opacity:.85}
+.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.badge.active{background:#d1fae5;color:#047857}
+.badge.expired{background:#f3f4f6;color:#6b7280}
+.badge.cancelled{background:#fee2e2;color:#991b1b}
+.prescription-body{padding:16px 20px}
+.medicine-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.medicine-row:last-child{border-bottom:none}
+.medicine-icon{font-size:22px;width:38px;text-align:center;flex-shrink:0}
+.medicine-info{flex:1}
+.medicine-name{font-size:15px;font-weight:700}
+.medicine-detail{font-size:13px;color:var(--text-muted);margin-top:3px}
+.medicine-time{font-size:13px;font-weight:600;color:var(--primary);background:var(--primary-light);border-radius:8px;padding:3px 10px;white-space:nowrap}
+
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-muted)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.loading{text-align:center;padding:32px;color:var(--text-muted);font-size:15px}
+
+.tabs{display:flex;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden}
+.tab{flex:1;padding:14px;text-align:center;cursor:pointer;font-weight:600;font-size:15px;color:var(--text-muted);border:none;background:none;font-family:inherit;transition:all .2s;border-bottom:3px solid transparent}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--primary-light)}
+.tab:hover:not(.active){background:#f8fafc}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+@media(max-width:600px){
+  .main{padding:16px}
+  .stats-row{grid-template-columns:1fr}
+  .header{padding:0 16px}
+  .breadcrumb{padding:11px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">💊</div>
+    <div>
+      <div class="header-title">GlucoTrack</div>
+      <div class="header-sub">Quản lý thuốc điều trị tiểu đường</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    Hệ thống hoạt động bình thường &nbsp;|&nbsp;
+    <span th:text="${patientName}">Bệnh nhân</span>
+  </div>
+</div>
+
+<div class="breadcrumb">
+  🏠 <a href="/patient/home">Trang chủ</a> › Bệnh nhân › <span>💊 Thuốc của tôi</span>
+</div>
+
+<input type="hidden" id="patientId" th:value="${patientId}">
+
+<div class="main">
+
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-icon">💊</div>
+      <div>
+        <div class="stat-label">Tổng liều</div>
+        <div class="stat-value" id="statTotal">—</div>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">✅</div>
+      <div>
+        <div class="stat-label">Đã uống</div>
+        <div class="stat-value" id="statTaken">—</div>
+      </div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon">📊</div>
+      <div>
+        <div class="stat-label">Tuân thủ</div>
+        <div class="stat-value" id="statPct">—%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('today', this)">📅 Hôm nay</button>
+    <button class="tab" onclick="switchTab('prescriptions', this)">📋 Đơn thuốc</button>
+  </div>
+
+  <div class="tab-content active" id="tab-today">
+    <div class="date-nav">
+      <button onclick="changeDate(-1)">◀</button>
+      <input type="date" id="datePicker" onchange="loadDailyLogs()">
+      <span class="date-label" id="dateLabel"></span>
+      <button onclick="changeDate(1)">▶</button>
+      <button onclick="goToday()">Hôm nay</button>
+    </div>
+    <div class="section-title">💊 Lịch uống thuốc</div>
+    <div class="log-list" id="logList">
+      <div class="loading">⏳ Đang tải...</div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-prescriptions">
+    <div class="section-title">📋 Đơn thuốc từ bác sĩ</div>
+    <div id="prescriptionList">
+      <div class="loading">⏳ Đang tải...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const patientId = document.getElementById('patientId').value;
+let currentDate = new Date().toISOString().split('T')[0];
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'prescriptions') loadPrescriptions();
+}
+
+function initDate() {
+  document.getElementById('datePicker').value = currentDate;
+  updateDateLabel();
+}
+
+function updateDateLabel() {
+  const d = new Date(currentDate + 'T00:00:00');
+  const today = new Date().toISOString().split('T')[0];
+  const label = currentDate === today ? 'Hôm nay — ' : '';
+  document.getElementById('dateLabel').textContent = label + d.toLocaleDateString('vi-VN', {weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+function changeDate(delta) {
+  const d = new Date(currentDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  currentDate = d.toISOString().split('T')[0];
+  document.getElementById('datePicker').value = currentDate;
+  updateDateLabel();
+  loadDailyLogs();
+}
+
+function goToday() {
+  currentDate = new Date().toISOString().split('T')[0];
+  document.getElementById('datePicker').value = currentDate;
+  updateDateLabel();
+  loadDailyLogs();
+}
+
+async function loadDailyLogs() {
+  currentDate = document.getElementById('datePicker').value || currentDate;
+  updateDateLabel();
+  document.getElementById('logList').innerHTML = '<div class="loading">⏳ Đang tải...</div>';
+  try {
+    const res = await fetch(`/api/medications/logs/patient/${patientId}?date=${currentDate}`);
+    renderLogs(await res.json());
+  } catch(e) {
+    document.getElementById('logList').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Không thể tải dữ liệu</p></div>';
+  }
+  loadAdherence();
+}
+
+function renderLogs(logs) {
+  const el = document.getElementById('logList');
+  if (!logs || logs.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Không có lịch uống thuốc trong ngày này</p></div>';
+    return;
+  }
+  el.innerHTML = logs.map(log => {
+    const st = (log.status || 'PENDING').toLowerCase();
+    const stLabel = st === 'taken' ? '✅ Đã uống' : st === 'missed' ? '❌ Bỏ liều' : '⏳ Chờ uống';
+    const takenInfo = log.takenAt ? ` <span style="color:var(--accent)">— Đã uống lúc ${log.takenAt}</span>` : '';
+    return `
+    <div class="log-card ${st}" id="logCard${log.id}">
+      <div class="log-time">${log.scheduledTime || '—'}</div>
+      <div class="log-info">
+        <div class="log-name">💊 ${log.medicineName || '—'}</div>
+        <div class="log-detail">
+          ${log.dosage ? `<b>${log.dosage}</b>` : ''}
+          ${log.instructions ? ` &nbsp;·&nbsp; ${log.instructions}` : ''}
+          ${takenInfo}
+        </div>
+      </div>
+      <div class="log-status ${st}">${stLabel}</div>
+      ${st === 'pending' ? `<button class="btn-taken" onclick="markTaken(${log.id}, this)">✅ Đã uống</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function markTaken(logId, btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+  try {
+    const res = await fetch(`/api/medications/logs/${logId}/taken`, {method:'PATCH'});
+    if (res.ok) {
+      const card = document.getElementById('logCard' + logId);
+      card.className = 'log-card taken';
+      card.querySelector('.log-status').className = 'log-status taken';
+      card.querySelector('.log-status').textContent = '✅ Đã uống';
+      btn.remove();
+      loadAdherence();
+    } else {
+      btn.disabled = false;
+      btn.textContent = '✅ Đã uống';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ Đã uống';
+  }
+}
+
+async function loadAdherence() {
+  try {
+    const res = await fetch(`/api/medications/adherence/patient/${patientId}`);
+    const stat = await res.json();
+    document.getElementById('statTotal').textContent = stat.total ?? '—';
+    document.getElementById('statTaken').textContent = stat.taken ?? '—';
+    document.getElementById('statPct').textContent = (stat.adherencePct ?? '—') + '%';
+  } catch(e) {}
+}
+
+async function loadPrescriptions() {
+  document.getElementById('prescriptionList').innerHTML = '<div class="loading">⏳ Đang tải...</div>';
+  try {
+    const res = await fetch(`/api/medications/prescriptions/patient/${patientId}`);
+    renderPrescriptions(await res.json());
+  } catch(e) {
+    document.getElementById('prescriptionList').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Không thể tải dữ liệu</p></div>';
+  }
+}
+
+function renderPrescriptions(list) {
+  const el = document.getElementById('prescriptionList');
+  if (!list || list.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Chưa có đơn thuốc nào được kê</p></div>';
+    return;
+  }
+  el.innerHTML = list.map(p => {
+    const badgeCls = (p.status || '').toLowerCase();
+    const badgeLabel = p.status === 'ACTIVE' ? '🟢 Đang dùng' : p.status === 'EXPIRED' ? 'Hết hạn' : 'Đã huỷ';
+    const items = (p.items || []).map(item => {
+      const times = (item.timeOfDay || '').split(',').filter(Boolean).join(' & ');
+      return `
+      <div class="medicine-row">
+        <div class="medicine-icon">💊</div>
+        <div class="medicine-info">
+          <div class="medicine-name">${item.medicineName || '—'}</div>
+          <div class="medicine-detail">
+            ${item.dosage ? `<b>${item.dosage}</b>` : ''}
+            ${item.frequency ? ` &nbsp;·&nbsp; ${item.frequency}` : ''}
+            ${item.durationDays ? ` &nbsp;·&nbsp; ${item.durationDays} ngày` : ''}
+            ${item.instructions ? `<br>📌 ${item.instructions}` : ''}
+          </div>
+        </div>
+        ${times ? `<div class="medicine-time">🕐 ${times}</div>` : ''}
+      </div>`;
+    }).join('');
+    return `
+    <div class="prescription-card">
+      <div class="prescription-header">
+        <div>
+          <h3>📋 Đơn kê ngày ${p.prescribedDate || '—'}</h3>
+          <div class="prescription-meta">👨‍⚕️ Bác sĩ: ${p.doctorName || '—'}</div>
+        </div>
+        <span class="badge ${badgeCls}">${badgeLabel}</span>
+      </div>
+      <div class="prescription-body">
+        ${p.note ? `<div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;padding:10px;background:var(--primary-light);border-radius:8px">📝 ${p.note}</div>` : ''}
+        ${items || '<div class="empty-state" style="padding:20px"><p>Không có thuốc nào</p></div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+initDate();
+loadDailyLogs();
+</script>
+</body>
+</html>

@@ -360,8 +360,12 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
 <div class="toast" id="toast"><span id="toastMsg"></span><span class="toast-close" onclick="hideToast()">×</span></div>
 
 <script th:inline="javascript">
-  const PATIENT_ID = /*[[${patientId}]]*/ 1;
+  const PATIENT_ID = parseInt([[${patientId}]]);
   const BASE_URL = '/api/reminders';
+
+  function authHeaders(extra) {
+    return Object.assign({'Authorization': `Bearer ${localStorage.getItem('token')}`}, extra || {});
+  }
 
   let allReminders = [];
   let editingId = null;
@@ -411,7 +415,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
   // ==================== LOAD ====================
   async function loadReminders() {
     try {
-      const res = await fetch(`${BASE_URL}/patient/${PATIENT_ID}`);
+      const res = await fetch(`${BASE_URL}/patient/${PATIENT_ID}`, {headers: authHeaders()});
       if (!res.ok) throw new Error('HTTP ' + res.status);
       allReminders = await res.json();
       updateStats();
@@ -671,7 +675,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
     try {
       const res = await fetch(editingId ? `${BASE_URL}/${editingId}` : BASE_URL, {
         method: editingId ? 'PUT' : 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: authHeaders({'Content-Type':'application/json'}),
         body: JSON.stringify(body)
       });
       const data = await res.json();
@@ -762,7 +766,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
       ? `${BASE_URL}/${id}/reactivate`
       : `${BASE_URL}/${id}/complete`;
     try {
-      const res = await fetch(endpoint, {method:'PATCH'});
+      const res = await fetch(endpoint, {method:'PATCH', headers: authHeaders()});
       if (!res.ok) throw new Error('HTTP ' + res.status);
       loadReminders();
     } catch(e) {
@@ -785,7 +789,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
 
   async function deleteReminder(id) {
     try {
-      const res = await fetch(`${BASE_URL}/${id}`, {method:'DELETE'});
+      const res = await fetch(`${BASE_URL}/${id}`, {method:'DELETE', headers: authHeaders()});
       if (res.ok) {
         showToast('🗑️ Đã xoá nhắc nhở', 'info');
         loadReminders();
@@ -881,7 +885,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
     try {
       const res = await fetch(`${BASE_URL}/${reminderId}/sync-google`, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: authHeaders({'Content-Type':'application/json'}),
         body: JSON.stringify({googleAccessToken})
       });
       const data = await res.json();
@@ -919,7 +923,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
     try {
       const res = await fetch(`${BASE_URL}/${reminderId}/unsync-google`, {
         method: 'DELETE',
-        headers: {'Content-Type':'application/json'},
+        headers: authHeaders({'Content-Type':'application/json'}),
         body: JSON.stringify({googleAccessToken})
       });
       if (!res.ok) {

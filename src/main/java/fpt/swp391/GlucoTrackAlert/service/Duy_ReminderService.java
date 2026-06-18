@@ -19,6 +19,9 @@ public interface Duy_ReminderService {
 
     void delete(Long id);
 
+    // Huỷ tất cả reminder được sinh ra từ một PrescriptionItem (dùng khi đơn thuốc bị CANCELLED)
+    void cancelByPrescriptionItemId(Long prescriptionItemId);
+
     // Lọc
     List<Duy_ReminderResponse> getByPatientAndStatus(Long patientId, String status);
 

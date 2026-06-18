@@ -42,7 +42,7 @@ public class ReminderScheduler {
         for (Duy_HealthReminder reminder : dueList) {
             try {
                 Optional<Patient> patientOpt =
-                        patientRepository.findById(reminder.getPatientId());
+                        patientRepository.findByIdWithUser(reminder.getPatientId());
 
                 if (patientOpt.isEmpty()) {
                     // Patient không tồn tại, đánh dấu sent để không retry mãi
@@ -75,12 +75,20 @@ public class ReminderScheduler {
         reminder.setIsSent(true);
         reminder.setSentAt(LocalDateTime.now());
 
-        // Nếu không lặp lại thì đổi status sang COMPLETED
-        if (reminder.getRepeatType() == null || "NONE".equals(reminder.getRepeatType())) {
+        boolean repeats = reminder.getRepeatType() != null && !"NONE".equals(reminder.getRepeatType());
+        LocalDateTime next = repeats ? nextReminderTime(reminder) : null;
+
+        // Nếu reminder có endDate (vd: đơn thuốc có ngày kết thúc) và lần nhắc tiếp theo
+        // đã vượt qua endDate đó, dừng lặp lại để tránh nhắc nhở mãi mãi sau khi thuốc hết.
+        boolean pastEndDate = reminder.getEndDate() != null
+                && next != null
+                && next.toLocalDate().isAfter(reminder.getEndDate());
+
+        if (!repeats || pastEndDate) {
             reminder.setStatus("COMPLETED");
         } else {
             // Lặp lại: cập nhật reminderTime sang lần tiếp theo và reset isSent
-            reminder.setReminderTime(nextReminderTime(reminder));
+            reminder.setReminderTime(next);
             reminder.setIsSent(false);
         }
 

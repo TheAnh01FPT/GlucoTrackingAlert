@@ -22,12 +22,19 @@ public class SecurityConfig {
                             "/css/**", "/js/**", "/images/**"
                         ).permitAll()
 
-                        // Trang meal-logs cần đăng nhập, API meal-logs cũng cần auth
-                        // Chỉ PATIENT và DOCTOR mới được xem/thêm meal log
                         .requestMatchers("/meal-logs").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                         .requestMatchers("/api/meal-logs/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
                         .requestMatchers("/api/reminders/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+
+                        .requestMatchers("/api/ai/**").hasAnyRole("DOCTOR", "ADMIN")
+
+                        .requestMatchers("/patient/medications").hasAnyRole("PATIENT", "ADMIN")
+                        // Phải đặt rule cụ thể trước rule wildcard để Spring Security match đúng
+                        .requestMatchers("/api/medications/prescriptions/*/cancel").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/api/medications/prescriptions").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/api/medications/prescriptions/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/medications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
                         .requestMatchers("/health-logs/doctor-view", "/health-logs/doctor-chart").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/health-logs/doctor-view/thresholds/**").hasAnyRole("ADMIN", "DOCTOR")

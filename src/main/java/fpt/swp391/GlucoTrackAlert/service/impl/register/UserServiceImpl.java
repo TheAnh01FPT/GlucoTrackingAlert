@@ -36,7 +36,6 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final DoctorRepository doctorRepository;
 
-    // FIX: dùng SecureRandom thay Random — tránh bị predict OTP
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public UserServiceImpl(UserRepository userRepository,
@@ -57,111 +56,35 @@ public class UserServiceImpl implements UserService {
         this.doctorRepository = doctorRepository;
     }
 
-    // FIX: dùng SecureRandom, range đủ 000000–999999
     private String generateOtp() {
         return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
     }
 
     @Override
     @Transactional
-    public void forgotPassword(ForgotPasswordRequest request) throws Exception {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
-
-        if (!"active".equalsIgnoreCase(user.getStatus())) {
-            throw new Exception("Tài khoản chưa được kích hoạt hoặc đã bị khóa");
-        }
-
-        // FIX: dùng generateOtp() thống nhất thay vì tự new Random() riêng
-        String otp = generateOtp();
-        PasswordResetToken resetToken = PasswordResetToken.builder()
-                .user(user)
-                .resetToken(otp)
-                .expiredAt(LocalDateTime.now().plusMinutes(10))
-                .status("pending")
-                .createdAt(LocalDateTime.now())
-                .build();
-        passwordResetTokenRepository.save(resetToken);
-
-        String body = buildPasswordResetOtpEmail(user.getFullName() != null ? user.getFullName() : "Bạn", otp);
-        emailService.sendHtmlMessage(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
-    }
-
-    @Override
-    @Transactional
-    public void resetPassword(ResetPasswordRequest request) throws Exception {
-        PasswordResetToken token = passwordResetTokenRepository.findByResetToken(request.getOtp())
-                .orElseThrow(() -> new Exception("Mã OTP không hợp lệ"));
-
-        if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new Exception("Mã OTP đã hết hạn");
-        }
-
-        if (!"pending".equals(token.getStatus())) {
-            throw new Exception("Mã OTP đã được sử dụng");
-        }
-
-        User user = token.getUser();
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
-            throw new Exception("Email không khớp với mã OTP");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-
-        token.setStatus("used");
-        token.setUsedAt(LocalDateTime.now());
-        passwordResetTokenRepository.save(token);
-    }
-
-    private String buildOtpEmail(String fullName, String otp) {
-        return """
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
-                <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert</h2>
-                <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
-                <p style="color: #555;">Mã xác nhận tài khoản của bạn là:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <span style="background-color: #f4f7f6; color: #2c3e50; padding: 14px 28px;
-                          border-radius: 5px; font-size: 32px; font-weight: bold;
-                          letter-spacing: 8px; border: 2px dashed #2ecc71;">
-                        %s
-                    </span>
-                </div>
-                <p style="color: #999; font-size: 13px; text-align: center;">Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
-                <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không đăng ký tài khoản này, hãy bỏ qua email này.</p>
-            </div>
-            """.formatted(fullName, otp);
-    }
-
-    private void sendOtpEmail(String toEmail, String fullName, String otp) {
-        String subject = "Mã xác nhận đăng ký tài khoản GlucoTrack";
-        String htmlContent = buildOtpEmail(fullName, otp);
-        emailService.sendHtmlMessage(toEmail, subject, htmlContent);
-    }
-
-    @Override
-    @Transactional
     public User register(RegisterRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email '" + request.getEmail() + "' đã được đăng ký.");
+        if (userRepository.existsByEmail(request.getEmail().trim())) {
+            throw new Exception("Email này đã được sử dụng trong hệ thống.");
         }
 
-        Role patientRole = roleRepository.findByName("PATIENT")
+        if (userRepository.existsByPhone(request.getPhone().trim())) {
+            throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
+        }
+
+        Role role = roleRepository.findByName("PATIENT")
                 .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(request.getEmail().trim())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
-                .phone(request.getPhone())
-                .role(patientRole)
+                .fullName(request.getFullName().trim())
+                .phone(request.getPhone().trim())
+                .role(role)
                 .status("pending_verification")
                 .emailVerified(false)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-
         userRepository.save(user);
 
         String otp = generateOtp();
@@ -174,7 +97,7 @@ public class UserServiceImpl implements UserService {
                 .build();
         tokenRepository.save(verificationToken);
 
-        sendOtpEmail(request.getEmail(), request.getFullName(), otp);
+        sendOtpEmail(request.getEmail().trim(), request.getFullName().trim(), otp);
 
         return user;
     }
@@ -271,23 +194,56 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    private String buildPasswordResetOtpEmail(String fullName, String otp) {
-        return """
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
-                <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert - Đặt lại mật khẩu</h2>
-                <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
-                <p style="color: #555;">Mã OTP để đặt lại mật khẩu của bạn là:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <span style="background-color: #f4f7f6; color: #2c3e50; padding: 14px 28px;
-                          border-radius: 5px; font-size: 32px; font-weight: bold;
-                          letter-spacing: 8px; border: 2px dashed #e74c3c;">
-                        %s
-                    </span>
-                </div>
-                <p style="color: #999; font-size: 13px; text-align: center;">Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
-                <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và bảo mật tài khoản của bạn.</p>
-            </div>
-            """.formatted(fullName, otp);
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) throws Exception {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
+
+        if (!"active".equalsIgnoreCase(user.getStatus())) {
+            throw new Exception("Tài khoản chưa được kích hoạt hoặc đã bị khóa");
+        }
+
+        String otp = generateOtp();
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .user(user)
+                .resetToken(otp)
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
+                .status("pending")
+                .createdAt(LocalDateTime.now())
+                .build();
+        passwordResetTokenRepository.save(resetToken);
+
+        String body = buildPasswordResetOtpEmail(user.getFullName() != null ? user.getFullName() : "Bạn", otp);
+        emailService.sendHtmlMessage(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) throws Exception {
+        PasswordResetToken token = passwordResetTokenRepository.findByResetToken(request.getOtp())
+                .orElseThrow(() -> new Exception("Mã OTP không hợp lệ"));
+
+        if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new Exception("Mã OTP đã hết hạn");
+        }
+
+        if (!"pending".equals(token.getStatus())) {
+            throw new Exception("Mã OTP đã được sử dụng");
+        }
+
+        User user = token.getUser();
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
+            throw new Exception("Email không khớp với mã OTP");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        token.setStatus("used");
+        token.setUsedAt(LocalDateTime.now());
+        passwordResetTokenRepository.save(token);
     }
 
     @Override
@@ -314,5 +270,49 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
+    }
+
+    private void sendOtpEmail(String toEmail, String fullName, String otp) {
+        String subject = "Mã xác nhận đăng ký tài khoản GlucoTrackAlert";
+        String htmlContent = buildOtpEmail(fullName, otp);
+        emailService.sendHtmlMessage(toEmail, subject, htmlContent);
+    }
+
+    private String buildOtpEmail(String fullName, String otp) {
+        return """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert</h2>
+                <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
+                <p style="color: #555;">Mã xác nhận tài khoản của bạn là:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="background-color: #f4f7f6; color: #2c3e50; padding: 14px 28px;
+                          border-radius: 5px; font-size: 32px; font-weight: bold;
+                          letter-spacing: 8px; border: 2px dashed #2ecc71;">
+                        %s
+                    </span>
+                </div>
+                <p style="color: #999; font-size: 13px; text-align: center;">Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
+                <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không đăng ký tài khoản này, hãy bỏ qua email này.</p>
+            </div>
+            """.formatted(fullName, otp);
+    }
+
+    private String buildPasswordResetOtpEmail(String fullName, String otp) {
+        return """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #2c3e50; text-align: center;">GlucoTrackAlert - Đặt lại mật khẩu</h2>
+                <p style="color: #555;">Xin chào <strong>%s</strong>,</p>
+                <p style="color: #555;">Mã OTP để đặt lại mật khẩu của bạn là:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="background-color: #f4f7f6; color: #2c3e50; padding: 14px 28px;
+                          border-radius: 5px; font-size: 32px; font-weight: bold;
+                          letter-spacing: 8px; border: 2px dashed #e74c3c;">
+                        %s
+                    </span>
+                </div>
+                <p style="color: #999; font-size: 13px; text-align: center;">Mã này sẽ hết hạn sau <strong>10 phút</strong>.</p>
+                <p style="color: #999; font-size: 13px; text-align: center;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và bảo mật tài khoản của bạn.</p>
+            </div>
+            """.formatted(fullName, otp);
     }
 }

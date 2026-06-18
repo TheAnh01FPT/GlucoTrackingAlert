@@ -21,6 +21,16 @@ public class Duy_ReminderRequest {
 
     private String repeatType = "NONE"; // NONE, DAILY, WEEKLY, MONTHLY
 
+    // Liên kết tới PrescriptionItem (chỉ dùng khi reminder được tạo từ đơn thuốc).
+    // Cho phép MedicationService tạo reminder gắn với đúng thuốc, để sau này
+    // có thể tìm và huỷ reminder khi đơn thuốc bị CANCELLED.
+    private Long prescriptionItemId;
+
+    // Ngày cuối cùng reminder còn hiệu lực (vd: ngày uống thuốc cuối cùng).
+    // Nếu null thì reminder lặp lại (repeatType khác NONE) sẽ lặp vô thời hạn,
+    // như hành vi cũ.
+    private java.time.LocalDate endDate;
+
     // Token OAuth2 Google Calendar của user (frontend gửi lên khi muốn sync GG)
     private String googleAccessToken;
 
@@ -42,6 +52,12 @@ public class Duy_ReminderRequest {
 
     public String getRepeatType() { return repeatType; }
     public void setRepeatType(String repeatType) { this.repeatType = repeatType; }
+
+    public Long getPrescriptionItemId() { return prescriptionItemId; }
+    public void setPrescriptionItemId(Long prescriptionItemId) { this.prescriptionItemId = prescriptionItemId; }
+
+    public java.time.LocalDate getEndDate() { return endDate; }
+    public void setEndDate(java.time.LocalDate endDate) { this.endDate = endDate; }
 
     public String getGoogleAccessToken() { return googleAccessToken; }
     public void setGoogleAccessToken(String googleAccessToken) { this.googleAccessToken = googleAccessToken; }

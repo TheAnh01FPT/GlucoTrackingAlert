@@ -61,6 +61,8 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
         r.setMessage(req.getMessage());
         r.setReminderTime(parseReminderTime(req.getReminderTime()));
         r.setRepeatType(req.getRepeatType() != null ? req.getRepeatType() : "NONE");
+        r.setPrescriptionItemId(req.getPrescriptionItemId());
+        r.setEndDate(req.getEndDate());
         r.setStatus("ACTIVE");
         r.setIsSent(false);
         return r;
@@ -147,6 +149,16 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
             throw new IllegalArgumentException("Reminder không tồn tại: " + id);
         }
         repo.deleteById(id);
+    }
+
+    @Override
+    public void cancelByPrescriptionItemId(Long prescriptionItemId) {
+        if (prescriptionItemId == null) return;
+        List<Duy_HealthReminder> reminders = repo.findByPrescriptionItemId(prescriptionItemId);
+        for (Duy_HealthReminder r : reminders) {
+            r.setStatus("CANCELLED");
+        }
+        repo.saveAll(reminders);
     }
 
     // ==================== LỌC ====================

@@ -18,6 +18,9 @@ public interface Duy_ReminderRepository extends JpaRepository<Duy_HealthReminder
 
     List<Duy_HealthReminder> findByPatientIdAndReminderTypeOrderByReminderTimeAsc(Long patientId, String reminderType);
 
+    // Tìm các reminder được tạo từ một PrescriptionItem cụ thể (vd: để huỷ khi đơn thuốc CANCELLED)
+    List<Duy_HealthReminder> findByPrescriptionItemId(Long prescriptionItemId);
+
     // Lấy các reminder sắp tới (trong 24h)
     @Query("SELECT r FROM Duy_HealthReminder r WHERE r.patientId = :patientId " +
            "AND r.reminderTime BETWEEN :now AND :next24h " +

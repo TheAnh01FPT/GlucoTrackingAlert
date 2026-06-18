@@ -93,6 +93,11 @@ public class PageController {
         return "settings";
     }
 
+    @GetMapping("/doctor/prescriptions")
+    public String doctorPrescriptions() {
+        return "prescriptions";
+    }
+
     @GetMapping("/health-reminders")
     public String healthRemindersPage(Model model) {
         try {
@@ -100,9 +105,7 @@ public class PageController {
                     .getAuthentication().getPrincipal();
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-
             PatientProfileResponse profile = patientService.getProfileByUserId(user.getId());
-
             model.addAttribute("patientId", profile.getId());
             model.addAttribute("patientName", profile.getFullName());
         } catch (Exception e) {
@@ -110,6 +113,23 @@ public class PageController {
             model.addAttribute("patientName", "Bệnh nhân");
         }
         return "health-reminders";
+    }
+
+    @GetMapping("/patient/medications")
+    public String medicationsPage(Model model) {
+        try {
+            String email = (String) SecurityContextHolder.getContext()
+                    .getAuthentication().getPrincipal();
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            PatientProfileResponse profile = patientService.getProfileByUserId(user.getId());
+            model.addAttribute("patientId", profile.getId());
+            model.addAttribute("patientName", profile.getFullName());
+        } catch (Exception e) {
+            model.addAttribute("patientId", 1L);
+            model.addAttribute("patientName", "Bệnh nhân");
+        }
+        return "patient/medications";
     }
 
     @GetMapping("/meal-logs")
@@ -141,7 +161,6 @@ public class PageController {
                 }
             }
 
-            // Lấy danh sách người thân (dùng patient.id, không phải user.id)
             List<RelativeResponse> relatives = relativeService.getRelativesByPatientId(profile.getId());
 
             model.addAttribute("patientId",   profile.getId());
