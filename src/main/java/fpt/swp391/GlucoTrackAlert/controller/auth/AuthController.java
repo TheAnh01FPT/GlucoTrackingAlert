@@ -48,6 +48,16 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestParam("email") String email) {
+        try {
+            userService.resendOtp(email);
+            return ResponseEntity.ok("Mã xác nhận mới đã được gửi đến email của bạn.");
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {

@@ -19,7 +19,7 @@ public class DoctorPatientController {
 
     @GetMapping("/{doctorId}/patients")
     public ResponseEntity<List<Map<String, Object>>> getPatientsByDoctor(
-            @PathVariable Integer doctorId
+            @PathVariable Long doctorId
     ) {
         return ResponseEntity.ok(assignmentService.getPatientsByDoctor(doctorId));
     }

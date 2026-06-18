@@ -79,7 +79,7 @@ public class DoctorServiceImp implements DoctorService {
 
     // ── Admin sửa hồ sơ (bao gồm phone) ──────────────────────────────────────
     @Override
-    public DoctorResponse updateDoctor(Integer id, DoctorRequest request) {
+    public DoctorResponse updateDoctor(Long id, DoctorRequest request) {
         Doctor doctor = findOrThrow(id);
         applyAdminFieldsFromRequest(doctor, request);
         return DoctorResponse.from(doctorRepository.save(doctor));
@@ -92,14 +92,14 @@ public class DoctorServiceImp implements DoctorService {
     }
 
     @Override
-    public DoctorResponse getDoctorById(Integer id) {
+    public DoctorResponse getDoctorById(Long id) {
         return DoctorResponse.from(findOrThrow(id));
     }
 
     // ── Soft-delete (ngừng hoạt động) ────────────────────────────────────────
     @Override
     @Transactional
-    public void deactivateDoctor(Integer id) {
+    public void deactivateDoctor(Long id) {
         Doctor doctor = findOrThrow(id);
         doctor.setStatus("inactive");
         doctorRepository.save(doctor);
@@ -118,7 +118,7 @@ public class DoctorServiceImp implements DoctorService {
     // ── Hard-delete (xóa vĩnh viễn) ──────────────────────────────────────────
     @Override
     @Transactional
-    public void hardDeleteDoctor(Integer id) {
+    public void hardDeleteDoctor(Long id) {
         Doctor doctor = findOrThrow(id);
         if (!"inactive".equals(doctor.getStatus())) {
             throw new RuntimeException(
@@ -144,7 +144,7 @@ public class DoctorServiceImp implements DoctorService {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-    private Doctor findOrThrow(Integer id) {
+    private Doctor findOrThrow(Long id) {
         return doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ id=" + id));
     }
@@ -176,6 +176,12 @@ public class DoctorServiceImp implements DoctorService {
         }
         if (req.getAvatarUrl() != null) {
             doctor.setAvatarUrl(req.getAvatarUrl());
+        }
+        if (req.getNationalId() != null) {
+            doctor.setNationalId(req.getNationalId());
+        }
+        if (req.getPracticeLicense() != null) {
+            doctor.setPracticeLicense(req.getPracticeLicense());
         }
     }
 
@@ -209,6 +215,12 @@ public class DoctorServiceImp implements DoctorService {
         }
         if (req.getStatus() != null) {
             doctor.setStatus(req.getStatus());
+        }
+        if (req.getNationalId() != null) {
+            doctor.setNationalId(req.getNationalId());
+        }
+        if (req.getPracticeLicense() != null) {
+            doctor.setPracticeLicense(req.getPracticeLicense());
         }
     }
 
