@@ -67,7 +67,7 @@ public class DoctorController {
      * [ADMIN] Lấy thông tin 1 bác sĩ theo id
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DoctorResponse> getDoctorById(@PathVariable Integer id) {
+    public ResponseEntity<DoctorResponse> getDoctorById(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.getDoctorById(id));
     }
 
@@ -78,7 +78,7 @@ public class DoctorController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<DoctorResponse> updateDoctor(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestBody DoctorRequest request) {
         return ResponseEntity.ok(doctorService.updateDoctor(id, request));
     }
@@ -89,7 +89,7 @@ public class DoctorController {
      * phục bằng cách cập nhật status = active qua PUT /{id}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deactivateDoctor(@PathVariable Integer id) {
+    public ResponseEntity<String> deactivateDoctor(@PathVariable Long id) {
         try {
             doctorService.deactivateDoctor(id);
             return ResponseEntity.ok("Bác sĩ đã được ngừng hoạt động và toàn bộ phân công active đã được hủy.");
@@ -104,7 +104,7 @@ public class DoctorController {
      * nhập) + tất cả assignment. Hành động này KHÔNG THỂ hoàn tác.
      */
     @DeleteMapping("/{id}/permanent")
-    public ResponseEntity<String> hardDeleteDoctor(@PathVariable Integer id) {
+    public ResponseEntity<String> hardDeleteDoctor(@PathVariable Long id) {
         try {
             doctorService.hardDeleteDoctor(id);
             return ResponseEntity.ok("Bác sĩ đã được xóa vĩnh viễn khỏi hệ thống.");

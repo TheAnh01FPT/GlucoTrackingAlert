@@ -16,20 +16,20 @@ public interface DoctorService {
     /**
      * Admin cập nhật thông tin hồ sơ bác sĩ (bao gồm cả phone).
      */
-    DoctorResponse updateDoctor(Integer id, DoctorRequest request);
+    DoctorResponse updateDoctor(Long id, DoctorRequest request);
 
-    DoctorResponse getDoctorById(Integer id);
+    DoctorResponse getDoctorById(Long id);
 
     List<DoctorResponse> getAllDoctors();
 
     /**
      * Soft-delete: set status = inactive, hủy hết assignment active.
      */
-    void deactivateDoctor(Integer id);
+    void deactivateDoctor(Long id);
 
     /**
      * Hard-delete: xóa vĩnh viễn Doctor + User liên kết khỏi DB. Chỉ thực hiện
      * được khi bác sĩ đang ở trạng thái inactive.
      */
-    void hardDeleteDoctor(Integer id);
+    void hardDeleteDoctor(Long id);
 }

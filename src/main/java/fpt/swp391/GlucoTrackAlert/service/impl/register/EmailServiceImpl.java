@@ -5,7 +5,6 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,7 +15,9 @@ public class EmailServiceImpl implements EmailService {
         this.emailSender = emailSender;
     }
 
-    @Async
+    // BUG FIX: Bỏ @Async ở đây — ReminderScheduler tự xử lý exception và retry.
+    // Nếu để @Async, exception bị nuốt trên async thread riêng, scheduler không
+    // nhận được → không retry, không markSent đúng lúc.
     @Override
     public void sendSimpleMessage(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -26,7 +27,6 @@ public class EmailServiceImpl implements EmailService {
         emailSender.send(message);
     }
 
-    @Async
     @Override
     public void sendHtmlMessage(String to, String subject, String htmlContent) {
         try {
@@ -34,10 +34,11 @@ public class EmailServiceImpl implements EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(htmlContent, true); // true = là HTML
+            helper.setText(htmlContent, true);
             emailSender.send(message);
         } catch (Exception e) {
-            throw new RuntimeException("Lỗi gửi email HTML: " + e.getMessage());
+            // Ném thẳng ra để caller (ReminderScheduler) bắt được và xử lý retry
+            throw new RuntimeException("Lỗi gửi email HTML tới " + to + ": " + e.getMessage(), e);
         }
     }
 }

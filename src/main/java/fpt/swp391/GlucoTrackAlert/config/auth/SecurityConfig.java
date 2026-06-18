@@ -3,14 +3,12 @@ package fpt.swp391.GlucoTrackAlert.config.auth;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
@@ -19,22 +17,42 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers(
+                            "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
+                            "/css/**", "/js/**", "/images/**"
+                        ).permitAll()
+
+                        .requestMatchers("/meal-logs").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/meal-logs/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+
+                        .requestMatchers("/api/reminders/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+
+                        .requestMatchers("/api/ai/**").hasAnyRole("DOCTOR", "ADMIN")
+
+                        .requestMatchers("/patient/medications").hasAnyRole("PATIENT", "ADMIN")
+                        // Phải đặt rule cụ thể trước rule wildcard để Spring Security match đúng
+                        .requestMatchers("/api/medications/prescriptions/*/cancel").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/api/medications/prescriptions").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/api/medications/prescriptions/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/medications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+
                         .requestMatchers("/health-logs/doctor-view", "/health-logs/doctor-chart").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/health-logs/doctor-view/thresholds/**").hasAnyRole("ADMIN", "DOCTOR")
-                        .requestMatchers("/api/auth/**", "/login", "/register", "/forgot-password", "/error", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/patient/**").hasRole("PATIENT")
-                        .requestMatchers("/doctor/**", "/api/doctor/**").hasRole("DOCTOR")
+                        .requestMatchers("/health-reminders").hasAnyRole("PATIENT", "ADMIN")
+                        .requestMatchers("/doctor/**", "/api/doctor/**").hasAnyRole("DOCTOR", "ADMIN")
                         .anyRequest().authenticated()
                 )
 
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                .formLogin(form -> form.disable())
 
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
 

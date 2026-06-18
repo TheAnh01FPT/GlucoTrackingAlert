@@ -106,7 +106,7 @@ public class DoctorPatientAssignmentService {
         return assignmentRepository.findAll();
     }
 
-    public DoctorPatientAssignment updateAssignment(Integer id, DoctorPatientAssignment updatedAssignment) {
+    public DoctorPatientAssignment updateAssignment(Long id, DoctorPatientAssignment updatedAssignment) {
         DoctorPatientAssignment assignment
                 = assignmentRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Assignment not found"));
@@ -139,7 +139,7 @@ public class DoctorPatientAssignmentService {
         return assignmentRepository.save(assignment);
     }
 
-    public void deleteAssignment(Integer id) {
+    public void deleteAssignment(Long id) {
         DoctorPatientAssignment assignment
                 = assignmentRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Assignment not found"));
@@ -147,7 +147,7 @@ public class DoctorPatientAssignmentService {
         assignmentRepository.save(assignment);
     }
 
-    public List<Map<String, Object>> getPatientsByDoctor(Integer doctorId) {
+    public List<Map<String, Object>> getPatientsByDoctor(Long doctorId) {
         return assignmentRepository
                 .findByDoctorIdAndStatus(doctorId, "active")
                 .stream()
@@ -167,7 +167,7 @@ public class DoctorPatientAssignmentService {
                 .toList();
     }
 
-    public void hardDeleteAssignment(Integer id) {
+    public void hardDeleteAssignment(Long id) {
         DoctorPatientAssignment assignment
                 = assignmentRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Assignment not found"));
