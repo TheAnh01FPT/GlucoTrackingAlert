@@ -26,6 +26,9 @@ import org.springframework.validation.BindingResult;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -42,6 +45,7 @@ public class DailyHealthLogController {
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorPatientAssignmentRepository assignmentRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     private Long resolvePatientId(Long userId) {
         if (userId == null) {
@@ -626,5 +630,111 @@ public class DailyHealthLogController {
         model.addAttribute("from", startDate);
         model.addAttribute("to", endDate);
         return "healthlog/doctor-chart";
+    }
+
+    @GetMapping("/ai-report")
+    public String getAiReport(@RequestParam(required = false) Long userId, Model model, RedirectAttributes redirectAttributes) {
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null) {
+            return "redirect:/login";
+        }
+        
+        Long targetUserId = userId;
+        if (targetUserId == null) {
+            targetUserId = curUserId;
+        }
+
+        // Access check
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            if (!curUserId.equals(targetUserId)) {
+                return "redirect:/login";
+            }
+        }
+
+        Long patientId = resolvePatientId(targetUserId);
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
+        }
+
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
+        }
+
+        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
+            if (!isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem báo cáo của bệnh nhân này.");
+                return "redirect:/health-logs/doctor-view";
+            }
+        }
+
+        // Get the latest health log and its associated AI risk assessment
+        List<Map<String, Object>> list = jdbcTemplate.queryForList(
+            "SELECT ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at, dhl.blood_sugar, dhl.systolic, dhl.diastolic, dhl.log_date " +
+            "FROM risk_assessments ra " +
+            "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
+            "WHERE ra.patient_id = ? AND ra.assessment_type = 'DAILY_AI_PREDICTION' " +
+            "ORDER BY ra.id DESC LIMIT 1",
+            patientId
+        );
+
+        Map<String, Object> latestRisk = null;
+        if (!list.isEmpty()) {
+            Map<String, Object> raw = list.get(0);
+            latestRisk = new HashMap<>();
+            
+            // Safe decimal conversion
+            Object pct = raw.get("risk_percentage");
+            if (pct instanceof java.math.BigDecimal) {
+                latestRisk.put("riskPercentage", String.format("%.2f", ((java.math.BigDecimal) pct).doubleValue()));
+            } else if (pct instanceof Number) {
+                latestRisk.put("riskPercentage", String.format("%.2f", ((Number) pct).doubleValue()));
+            } else {
+                latestRisk.put("riskPercentage", pct != null ? pct.toString() : "0.00");
+            }
+            
+            latestRisk.put("riskLevel", raw.get("risk_level"));
+            latestRisk.put("aiSummary", raw.get("ai_summary"));
+            latestRisk.put("recommendation", raw.get("recommendation"));
+            
+            // Safe date formatting in Java
+            Object assessedAtObj = raw.get("assessed_at");
+            if (assessedAtObj != null) {
+                if (assessedAtObj instanceof java.time.LocalDateTime) {
+                    java.time.LocalDateTime ldt = (java.time.LocalDateTime) assessedAtObj;
+                    latestRisk.put("assessedAtStr", ldt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                } else if (assessedAtObj instanceof java.util.Date) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+                    latestRisk.put("assessedAtStr", sdf.format((java.util.Date) assessedAtObj));
+                } else {
+                    latestRisk.put("assessedAtStr", assessedAtObj.toString());
+                }
+            }
+            
+            Object logDateObj = raw.get("log_date");
+            if (logDateObj != null) {
+                if (logDateObj instanceof java.time.LocalDate) {
+                    java.time.LocalDate ld = (java.time.LocalDate) logDateObj;
+                    latestRisk.put("logDateStr", ld.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                } else if (logDateObj instanceof java.sql.Date) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                    latestRisk.put("logDateStr", sdf.format((java.sql.Date) logDateObj));
+                } else if (logDateObj instanceof java.util.Date) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                    latestRisk.put("logDateStr", sdf.format((java.util.Date) logDateObj));
+                } else {
+                    latestRisk.put("logDateStr", logDateObj.toString());
+                }
+            }
+        }
+
+        model.addAttribute("patient", patient);
+        model.addAttribute("userId", targetUserId);
+        model.addAttribute("latestRisk", latestRisk);
+        model.addAttribute("hasRiskData", latestRisk != null);
+
+        return "healthlog/ai-report";
     }
 }
