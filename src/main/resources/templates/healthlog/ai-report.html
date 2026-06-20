@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlucoTrackAlert - Báo Cáo Sức Khỏe AI</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Navbar Layout */
+        .navbar {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            padding: 1rem 2rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .navbar-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid #818cf8;
+        }
+
+        /* Container */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-heading {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #1e1b4b;
+        }
+
+        /* Dashboard Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Profile Sidebar Card */
+        .profile-sidebar {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .profile-header {
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-avatar {
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .profile-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .profile-type {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            background-color: var(--indigo-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-block;
+            margin-top: 0.5rem;
+            background-color: #e0e7ff;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .badge-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .badge-yes {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .badge-no {
+            background-color: #d1fae5;
+            color: #10b981;
+        }
+
+        .btn-edit-profile {
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+            padding: 0.65rem 1rem;
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .btn-edit-profile:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* AI Risk Report Area */
+        .report-area {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Large AI Card */
+        .ai-card {
+            background-color: var(--card-bg);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .ai-card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Risk visual gauge */
+        .risk-gauge-container {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            background: #fafafa;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid #f1f5f9;
+        }
+
+        @media (max-width: 600px) {
+            .risk-gauge-container {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        .risk-circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+        }
+
+        .risk-circle-low {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .risk-circle-medium {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .risk-circle-high {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .risk-circle-critical {
+            background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+        }
+
+        .risk-circle-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+        }
+
+        .risk-circle-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.9;
+        }
+
+        .risk-details {
+            flex-grow: 1;
+        }
+
+        .risk-status-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+        }
+        .color-low { color: #10b981; }
+        .color-medium { color: #d97706; }
+        .color-high { color: #ef4444; }
+        .color-critical { color: #991b1b; }
+
+        .risk-status-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Detail sections */
+        .section-box {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-box-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-box-content {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 5rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .btn-action {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+            transition: var(--transition);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Other diseases grid */
+        .other-diseases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .disease-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0.75;
+            transition: var(--transition);
+        }
+
+        .disease-card:hover {
+            opacity: 0.9;
+        }
+
+        .disease-icon {
+            font-size: 2.25rem;
+            background-color: #f1f5f9;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .disease-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .disease-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .disease-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            background-color: #f1f5f9;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 0.25rem;
+            width: fit-content;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+            🩸 GlucoTrackAlert
+        </a>
+        <nav class="navbar-menu">
+            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
+            <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        
+        <h1 class="page-heading">🤖 Dashboard Cảnh Báo Sức Khỏe AI</h1>
+
+        <div class="dashboard-grid">
+            
+            <!-- Sidebar: Patient Info -->
+            <section class="profile-sidebar">
+                <div class="profile-header">
+                    <span class="profile-avatar">👤</span>
+                    <h2 class="profile-name" th:text="${patient.fullName}">Nguyễn Văn A</h2>
+                    <span class="profile-type" th:text="${patient.patientType != null ? 'Loại: ' + patient.patientType.toUpperCase() : 'Bệnh nhân'}">Loại: Adult</span>
+                </div>
+
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">Tuổi</span>
+                        <span class="info-value" th:text="${patient.age != null ? patient.age + ' tuổi' : '--'}">72 tuổi</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Giới tính</span>
+                        <span class="info-value" th:text="${patient.gender != null ? patient.gender : '--'}">Nam</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Chỉ số BMI</span>
+                        <span class="info-value" th:text="${patient.bmi != null ? patient.bmi : '--'}">28.4</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tăng huyết áp</span>
+                        <span th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" 
+                              th:text="${patient.hypertension == true ? 'Có' : 'Không'}">Có</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bệnh tim mạch</span>
+                        <span th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" 
+                              th:text="${patient.heartDisease == true ? 'Có' : 'Không'}">Có</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Hút thuốc</span>
+                        <span class="info-value" th:text="${patient.smokingStatus != null ? patient.smokingStatus : '--'}">smokes</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Công việc</span>
+                        <span class="info-value" th:text="${patient.workType != null ? patient.workType : '--'}">Private</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Nơi ở</span>
+                        <span class="info-value" th:text="${patient.residenceType != null ? patient.residenceType : '--'}">Urban</span>
+                    </div>
+                </div>
+
+                <a th:href="@{/patients/profile/edit(userId=${userId})}" class="btn-edit-profile">✏️ Chỉnh Sửa Hồ Sơ</a>
+            </section>
+
+            <!-- Report Area -->
+            <div class="report-area">
+
+                <!-- 1. AI Stroke Risk Assessment -->
+                <section class="ai-card" th:if="${hasRiskData}">
+                    <div class="ai-card-header">
+                        <h2 class="ai-card-title">🧠 Dự báo Nguy cơ Đột quỵ (Stroke Risk)</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;"
+                              th:text="${'Đánh giá lúc: ' + latestRisk.assessedAtStr}">
+                            Đánh giá lúc: 30/05/2026 12:00
+                        </span>
+                    </div>
+
+                    <!-- Gauge and description -->
+                    <div class="risk-gauge-container">
+                        <!-- Risk circle based on riskLevel -->
+                        <div th:class="${latestRisk.riskLevel == 'Low' ? 'risk-circle risk-circle-low' : (latestRisk.riskLevel == 'Medium' ? 'risk-circle risk-circle-medium' : (latestRisk.riskLevel == 'High' ? 'risk-circle risk-circle-high' : 'risk-circle risk-circle-critical'))}">
+                            <span class="risk-circle-value" th:text="${latestRisk.riskPercentage + '%'}">45%</span>
+                            <span class="risk-circle-label">nguy cơ</span>
+                        </div>
+                        
+                        <div class="risk-details">
+                            <h3 th:class="${latestRisk.riskLevel == 'Low' ? 'risk-status-title color-low' : (latestRisk.riskLevel == 'Medium' ? 'risk-status-title color-medium' : (latestRisk.riskLevel == 'High' ? 'risk-status-title color-high' : 'risk-status-title color-critical'))}"
+                                th:text="${'Mức độ: ' + latestRisk.riskLevel}">
+                                Mức độ: Medium
+                            </h3>
+                            <p class="risk-status-desc">
+                                Phân tích từ mô hình học máy kết hợp thông tin nhân khẩu học (tuổi, giới tính, tiền sử bệnh án) và chỉ số đường huyết của nhật ký ngày đo gần nhất (<span th:text="${latestRisk.logDateStr}">30/05/2026</span>).
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- AI Summary -->
+                    <div class="section-box">
+                        <h4 class="section-box-title">🤖 Nhận Xét Từ Trí Tuệ Nhân Tạo (AI Summary)</h4>
+                        <p class="section-box-content" th:text="${latestRisk.aiSummary}">
+                            Tóm tắt nhận xét của AI về chỉ số và nguy cơ của bạn.
+                        </p>
+                    </div>
+
+                    <!-- Recommendation -->
+                    <div class="section-box">
+                        <h4 class="section-box-title">🩺 Khuyến Nghị Từ Hệ Thống (Recommendation)</h4>
+                        <p class="section-box-content" th:text="${latestRisk.recommendation}" style="border-left: 4px solid var(--primary); background-color: #f5f3ff;">
+                            Khuyến nghị phòng chống bệnh.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Empty State (No log / No assessment yet) -->
+                <section class="ai-card" th:if="${!hasRiskData}">
+                    <div class="empty-state">
+                        <span class="empty-state-icon">🧠</span>
+                        <h2>Chưa Có Báo Cáo Sức Khỏe AI</h2>
+                        <p>Hệ thống cần ít nhất 1 bản ghi nhật ký sức khỏe hàng ngày có đo chỉ số đường huyết để tiến hành phân tích và đưa ra dự báo nguy cơ.</p>
+                        <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}" class="btn-action">
+                            ➕ Nhập Chỉ Số Ngay
+                        </a>
+                    </div>
+                </section>
+
+                <!-- 2. Other Diseases Section (Future Extensibility) -->
+                <section style="margin-top: 1rem;">
+                    <h2 class="ai-card-title" style="margin-bottom: 1rem; font-size: 1.25rem;">🩺 Các Module Bệnh Lý Khác (Đang phát triển)</h2>
+                    <div class="other-diseases-grid">
+                        <div class="disease-card">
+                            <div class="disease-icon">🫀</div>
+                            <div class="disease-info">
+                                <span class="disease-name">Suy Tim & Mạch Vành</span>
+                                <span class="disease-status">Sắp ra mắt (v2.0)</span>
+                            </div>
+                        </div>
+                        <div class="disease-card">
+                            <div class="disease-icon">🧪</div>
+                            <div class="disease-info">
+                                <span class="disease-name">Biến Chứng Suy Thận</span>
+                                <span class="disease-status">Sắp ra mắt (v2.0)</span>
+                            </div>
+                        </div>
+                        <div class="disease-card">
+                            <div class="disease-icon">👁️</div>
+                            <div class="disease-info">
+                                <span class="disease-name">Võng Mạc Tiểu Đường</span>
+                                <span class="disease-status">Sắp ra mắt (v2.0)</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
