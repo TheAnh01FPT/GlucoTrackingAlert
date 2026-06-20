@@ -120,6 +120,62 @@
                         <span class="error-text" th:if="${#fields.hasErrors('isPregnant')}" th:errors="*{isPregnant}">Lỗi tình trạng thai sản</span>
                     </div>
 
+                    <!-- === Bổ sung các trường nhập liệu phục vụ AI dự báo === -->
+                    <div class="form-group">
+                        <label class="form-label" for="hypertension">Tiền sử tăng huyết áp</label>
+                        <select id="hypertension" th:field="*{hypertension}" class="form-input">
+                            <option value="false">Không có tiền sử tăng huyết áp</option>
+                            <option value="true">Có tiền sử tăng huyết áp</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="heartDisease">Tiền sử bệnh tim mạch</label>
+                        <select id="heartDisease" th:field="*{heartDisease}" class="form-input">
+                            <option value="false">Không có tiền sử bệnh tim</option>
+                            <option value="true">Có tiền sử bệnh tim</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="everMarried">Tình trạng hôn nhân</label>
+                        <select id="everMarried" th:field="*{everMarried}" class="form-input">
+                            <option value="No">Chưa từng kết hôn</option>
+                            <option value="Yes">Đã từng / Đang kết hôn</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="workType">Loại hình công việc</label>
+                        <select id="workType" th:field="*{workType}" class="form-input">
+                            <option value="">-- Chọn loại hình công việc --</option>
+                            <option value="Private">Làm việc tư nhân (Private)</option>
+                            <option value="Self-employed">Tự kinh doanh (Self-employed)</option>
+                            <option value="Govt_job">Làm việc nhà nước (Govt_job)</option>
+                            <option value="children">Trẻ em / Học sinh (children)</option>
+                            <option value="Never_worked">Chưa từng đi làm (Never_worked)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="residenceType">Khu vực sinh sống</label>
+                        <select id="residenceType" th:field="*{residenceType}" class="form-input">
+                            <option value="">-- Chọn khu vực --</option>
+                            <option value="Urban">Thành thị (Urban)</option>
+                            <option value="Rural">Nông thôn (Rural)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="smokingStatus">Tình trạng hút thuốc</label>
+                        <select id="smokingStatus" th:field="*{smokingStatus}" class="form-input">
+                            <option value="Unknown">Không rõ / Không xác định</option>
+                            <option value="never smoked">Chưa từng hút thuốc</option>
+                            <option value="formerly smoked">Đã từng hút thuốc (nay đã bỏ)</option>
+                            <option value="smokes">Đang hút thuốc</option>
+                        </select>
+                    </div>
+
                     <!-- Notice message -->
                     <div style="background: var(--primary-light); padding: 18px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--primary-color);">
                         <p style="font-size: 13px; color: var(--primary-color); font-weight: 600; line-height: 1.5;">
