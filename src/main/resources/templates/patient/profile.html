@@ -72,6 +72,30 @@
                     <span class="detail-label">Phân loại bệnh nhân</span>
                     <span class="detail-value" th:text="${profile.patientType == 'pregnant' ? 'Phụ nữ có thai' : (profile.patientType == 'elderly' ? 'Người cao tuổi' : (profile.patientType == 'child' ? 'Trẻ em' : 'Người trưởng thành'))}">Người trưởng thành</span>
                 </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tăng huyết áp</span>
+                    <span class="detail-value" th:text="${profile.hypertension ? 'Có tiền sử' : 'Không có tiền sử'}">Không có tiền sử</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tiền sử bệnh tim</span>
+                    <span class="detail-value" th:text="${profile.heartDisease ? 'Có tiền sử' : 'Không có tiền sử'}">Không có tiền sử</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Đã từng kết hôn</span>
+                    <span class="detail-value" th:text="${profile.everMarried == 'Yes' ? 'Đã kết hôn' : 'Chưa kết hôn'}">Chưa kết hôn</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Loại công việc</span>
+                    <span class="detail-value" th:text="${profile.workType == 'Private' ? 'Tư nhân' : (profile.workType == 'Self-employed' ? 'Tự kinh doanh' : (profile.workType == 'Govt_job' ? 'Công chức' : (profile.workType == 'children' ? 'Trẻ em' : (profile.workType == 'Never_worked' ? 'Chưa từng đi làm' : 'Chưa cập nhật'))))}">Tư nhân</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Khu vực sinh sống</span>
+                    <span class="detail-value" th:text="${profile.residenceType == 'Urban' ? 'Thành thị (Urban)' : (profile.residenceType == 'Rural' ? 'Nông thôn (Rural)' : 'Chưa cập nhật')}">Chưa cập nhật</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tình trạng hút thuốc</span>
+                    <span class="detail-value" th:text="${profile.smokingStatus == 'never smoked' ? 'Chưa từng hút thuốc' : (profile.smokingStatus == 'formerly smoked' ? 'Đã từng hút thuốc' : (profile.smokingStatus == 'smokes' ? 'Đang hút thuốc' : 'Không rõ'))}">Không rõ</span>
+                </div>
             </div>
 
             <!-- Right Card: Health Indicators & BMI -->
