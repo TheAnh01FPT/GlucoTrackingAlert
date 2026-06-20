@@ -65,6 +65,12 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(request.getInsuranceNumber())
                 .isPregnant(isPregnantVal)
                 .status("active")
+                .hypertension(request.getHypertension() != null ? request.getHypertension() : false)
+                .heartDisease(request.getHeartDisease() != null ? request.getHeartDisease() : false)
+                .everMarried(request.getEverMarried() != null ? request.getEverMarried() : "No")
+                .workType(request.getWorkType())
+                .residenceType(request.getResidenceType())
+                .smokingStatus(request.getSmokingStatus() != null ? request.getSmokingStatus() : "Unknown")
                 .build();
 
         calculateAgeAndBmi(patient);
@@ -95,6 +101,13 @@ public class PatientServiceImpl implements PatientService {
             isPregnantVal = request.getIsPregnant();
         }
         patient.setIsPregnant(isPregnantVal);
+        
+        patient.setHypertension(request.getHypertension());
+        patient.setHeartDisease(request.getHeartDisease());
+        patient.setEverMarried(request.getEverMarried());
+        patient.setWorkType(request.getWorkType());
+        patient.setResidenceType(request.getResidenceType());
+        patient.setSmokingStatus(request.getSmokingStatus());
 
         calculateAgeAndBmi(patient);
         patient.setPatientType(determinePatientType(patient));
@@ -164,6 +177,12 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(patient.getInsuranceNumber())
                 .patientType(determinePatientType(patient))
                 .isPregnant(patient.getIsPregnant())
+                .hypertension(patient.getHypertension())
+                .heartDisease(patient.getHeartDisease())
+                .everMarried(patient.getEverMarried())
+                .workType(patient.getWorkType())
+                .residenceType(patient.getResidenceType())
+                .smokingStatus(patient.getSmokingStatus())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
                 .build();
