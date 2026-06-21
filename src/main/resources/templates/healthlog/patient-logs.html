@@ -481,9 +481,6 @@
         <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
             🩸 GlucoTrackAlert
         </a>
-        <a th:href="@{/patient/homepage}" class="navbar-link">
-                    🏠 Trang chủ
-                </a>
         <nav class="navbar-menu">
             <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
             <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
@@ -513,7 +510,7 @@
                 <div class="stat-icon stat-icon-blood">🩸</div>
                 <div class="stat-info">
                     <span class="stat-label">Số Lần Đo Gần Đây</span>
-                    <span class="stat-value" th:text="${#lists.size(logs)}">0</span>
+                    <span class="stat-value" th:text="${totalElements}">0</span>
                 </div>
             </div>
             <div class="stat-card">
@@ -521,7 +518,7 @@
                 <div class="stat-info">
                     <span class="stat-label">Huyết Áp Gần Nhất</span>
                     <span class="stat-value"
-                        th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
+                        th:text="${latestLog != null && latestLog.systolic != null && latestLog.diastolic != null ? latestLog.systolic + '/' + latestLog.diastolic : '--'}">120/80</span>
                 </div>
             </div>
             <div class="stat-card">
@@ -529,14 +526,14 @@
                 <div class="stat-info">
                     <span class="stat-label">Giờ Ngủ Gần Nhất</span>
                     <span class="stat-value"
-                        th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
+                        th:text="${latestLog != null && latestLog.sleepHours != null ? latestLog.sleepHours + ' giờ' : '--'}">8 giờ</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-water">🥛</div>
                 <div class="stat-info">
                     <span class="stat-label">Nước Uống Gần Nhất</span>
-                    <span class="stat-value" th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500
+                    <span class="stat-value" th:text="${latestLog != null && latestLog.waterMl != null ? latestLog.waterMl + ' ml' : '--'}">1500
                         ml</span>
                 </div>
             </div>
@@ -576,14 +573,14 @@
                                 <span th:if="${log.bloodSugar != null}"
                                     th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
                                     th:text="${log.bloodSugar}"
-                                    th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
+                                    th:title="${log.bloodSugarNormalMin != null ? 'Ngưỡng: normal ' + log.bloodSugarNormalMin + ' - ' + log.bloodSugarNormalMax + ' | warning ' + log.bloodSugarWarningMin + ' - ' + log.bloodSugarWarningMax : 'Ngưỡng không xác định'}">
                                 </span>
                             </td>
 
                             <!-- Blood Pressure display -->
                             <td>
                                 <span th:if="${log.systolic != null && log.diastolic != null}"
-                                    th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
+                                        th:class="${(log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : (log.systolicStatus == 'NORMAL' or log.diastolicStatus == 'NORMAL') ? 'value-badge badge-warning' : (log.systolicStatus != 'NORMAL' or log.diastolicStatus != 'NORMAL') ? 'value-badge badge-danger' : 'value-badge badge-neutral' }"
                                     th:text="${log.systolic + '/' + log.diastolic}">
                                     120/80
                                 </span>

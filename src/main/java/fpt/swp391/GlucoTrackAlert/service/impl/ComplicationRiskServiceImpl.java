@@ -41,10 +41,15 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
         DailyHealthLog log = dailyHealthLogRepository.findById(dailyHealthLogId).orElse(null);
         if (log == null) return;
 
-        double age = patient.getAge() != null ? patient.getAge().doubleValue() : 50.0;
+        Double patientAgeObj = patient.getAge() != null ? patient.getAge().doubleValue() : null;
+        double age = patientAgeObj != null ? patientAgeObj : 50.0;
         boolean htn = Boolean.TRUE.equals(patient.getHypertensionDiagnosed());
-        double diastolic = log.getDiastolic() != null ? log.getDiastolic().doubleValue() : 80.0;
-        double bloodSugar = log.getBloodSugar() != null ? log.getBloodSugar().doubleValue() : 120.0;
+        Double diastolicObj = log.getDiastolic() != null ? log.getDiastolic().doubleValue() : null;
+        double diastolic = diastolicObj != null ? diastolicObj : 80.0;
+        Double bloodSugarObj = log.getBloodSugar() != null ? log.getBloodSugar().doubleValue() : null;
+        double bloodSugar = bloodSugarObj != null ? bloodSugarObj : 120.0;
+
+        boolean lowConfidenceFlag = (patientAgeObj == null) || (diastolicObj == null) || (bloodSugarObj == null);
 
         double riskPct = riskModelService.predictRiskPercentage(age, diastolic, bloodSugar, htn);
         RiskLevel level = riskModelService.mapToRiskLevel(riskPct);
@@ -52,15 +57,16 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
 
         String recommendation = getRecommendation(level);
 
-        RiskAssessment assessment = RiskAssessment.builder()
-                .patient(patient)
-                .dailyHealthLogId(dailyHealthLogId)
-                .assessmentType("NEPHROPATHY")
-                .riskLevel(level.name())
-                .riskPercentage(riskPercentage)
-                .recommendation(recommendation)
-                .assessedAt(LocalDateTime.now())
-                .build();
+        RiskAssessment.RiskAssessmentBuilder assessmentBuilder = RiskAssessment.builder()
+            .patient(patient)
+            .dailyHealthLogId(dailyHealthLogId)
+            .assessmentType("NEPHROPATHY")
+            .riskLevel(level.name())
+            .riskPercentage(riskPercentage)
+            .recommendation(recommendation)
+            .assessedAt(LocalDateTime.now());
+        if (lowConfidenceFlag) assessmentBuilder.lowConfidence(true);
+        RiskAssessment assessment = assessmentBuilder.build();
         RiskAssessment savedAssessment = riskAssessmentRepository.save(assessment);
 
         if (level != RiskLevel.LOW) {

@@ -57,7 +57,7 @@
 
     <main class="main-container">
         <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="btn-back">← Quay lại nhật ký</a>
-        <h1 class="page-title">⚠️ Nguy cơ biến chứng thận (Nephropathy/CKD)</h1>
+        <h1 class="page-title">⚠️ Sàng lọc nguy cơ biến chứng thận (CKD)</h1>
 
         <!-- Đánh giá gần nhất -->
         <div class="card">
@@ -67,9 +67,10 @@
             </div>
             <div th:if="${latestAssessment != null}">
                 <div style="display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;">
-                    <span style="font-size:0.95rem; font-weight:600; color:var(--text-secondary);">Mức độ nguy cơ:</span>
+                    <span style="font-size:0.95rem; font-weight:600; color:var(--text-secondary);">Mức độ (sàng lọc):</span>
                     <span th:class="'badge badge-' + ${latestAssessment.riskLevel}"
                           th:text="${latestAssessment.riskLevel}">LOW</span>
+                    <span th:if="${latestAssessment.lowConfidence}" class="badge badge-MEDIUM" style="margin-left:0.5rem;">⚠️ Ước tính dựa trên dữ liệu chưa đầy đủ</span>
                 </div>
                 <div class="progress-wrap">
                     <div th:class="'progress-bar risk-' + ${latestAssessment.riskLevel}"

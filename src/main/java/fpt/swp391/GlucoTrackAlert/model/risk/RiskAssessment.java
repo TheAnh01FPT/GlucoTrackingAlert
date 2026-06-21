@@ -42,4 +42,8 @@ public class RiskAssessment {
 
     @Column(name = "assessed_at")
     private LocalDateTime assessedAt;
+
+    // Not persisted by default; set to true when inputs were incomplete/defaulted.
+    @Transient
+    private boolean lowConfidence = false;
 }

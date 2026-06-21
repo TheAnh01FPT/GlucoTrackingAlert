@@ -617,6 +617,7 @@
           class="navbar-link"
           >⚠️ Cảnh Báo Biến Chứng</a
         >
+        <a th:href="@{/doctor/home}" class="navbar-link">🏠 Trang Chủ</a>
       </nav>
     </header>
 
@@ -827,7 +828,7 @@
                 <td>
                   <span
                     th:if="${log.systolic != null && log.diastolic != null}"
-                    th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
+                    th:class="${(log.systolicStatus != null and log.systolicStatus.contains('HIGH')) or (log.diastolicStatus != null and log.diastolicStatus.contains('HIGH')) ? 'value-badge badge-warning' : 'value-badge badge-neutral'}"
                     th:text="${log.systolic + '/' + log.diastolic}"
                   >
                     120/80

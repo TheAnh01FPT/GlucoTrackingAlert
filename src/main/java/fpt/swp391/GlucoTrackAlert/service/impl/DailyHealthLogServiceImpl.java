@@ -40,14 +40,16 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         // Resolve thresholds grouped by (patientId, patientType, metricType) to avoid N+1
         Map<String, Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold>> resolved = new HashMap<>();
 
-        // Pre-resolve for blood sugar metric
+        // Pre-resolve thresholds for blood sugar, systolic and diastolic to avoid N+1
         for (DailyHealthLog log : page.getContent()) {
             Long pId = log.getPatient() != null ? log.getPatient().getId() : null;
             String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
-            String key = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
-            if (!resolved.containsKey(key)) {
-                resolved.put(key, healthThresholdService.resolveThreshold(pId, pType, MetricType.BLOOD_SUGAR));
-            }
+            String keyBs = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
+            if (!resolved.containsKey(keyBs)) resolved.put(keyBs, healthThresholdService.resolveThreshold(pId, pType, MetricType.BLOOD_SUGAR));
+            String keySys = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.SYSTOLIC.name();
+            if (!resolved.containsKey(keySys)) resolved.put(keySys, healthThresholdService.resolveThreshold(pId, pType, MetricType.SYSTOLIC));
+            String keyDia = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.DIASTOLIC.name();
+            if (!resolved.containsKey(keyDia)) resolved.put(keyDia, healthThresholdService.resolveThreshold(pId, pType, MetricType.DIASTOLIC));
         }
 
         List<DailyHealthLogResponse> mapped = page.getContent().stream().map(log -> {
@@ -55,26 +57,13 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
             String key = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
             Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> opt = resolved.get(key);
-            String status = "unknown";
-            if (log.getBloodSugar() != null) {
-                if (opt.isPresent()) {
-                    fpt.swp391.GlucoTrackAlert.model.HealthThreshold t = opt.get();
-                    double v = log.getBloodSugar().doubleValue();
-                    double normalMin = t.getNormalMin().doubleValue();
-                    double normalMax = t.getNormalMax().doubleValue();
-                    double warningMin = t.getWarningMin().doubleValue();
-                    double warningMax = t.getWarningMax().doubleValue();
-                    if (v >= normalMin && v <= normalMax) {
-                        status = "NORMAL"; 
-                    }else if (v < normalMin) {
-                        status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER"; 
-                    }else {
-                        status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
-                    }
-                } else {
-                    status = "unknown";
-                }
-            }
+            String bloodSugarStatus = evaluateStatus(log.getBloodSugar(), opt);
+
+            Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> optSys = resolved.get((log.getPatient() != null ? log.getPatient().getId().toString() : "null") + "|" + (log.getPatient() != null ? log.getPatient().getPatientType() : "") + "|" + MetricType.SYSTOLIC.name());
+            String systolicStatus = evaluateStatus(log.getSystolic() != null ? java.math.BigDecimal.valueOf(log.getSystolic()) : null, optSys);
+
+            Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> optDia = resolved.get((log.getPatient() != null ? log.getPatient().getId().toString() : "null") + "|" + (log.getPatient() != null ? log.getPatient().getPatientType() : "") + "|" + MetricType.DIASTOLIC.name());
+            String diastolicStatus = evaluateStatus(log.getDiastolic() != null ? java.math.BigDecimal.valueOf(log.getDiastolic()) : null, optDia);
             return DailyHealthLogResponse.builder()
                     .id(log.getId())
                     .patientId(log.getPatient() != null ? log.getPatient().getId() : null)
@@ -92,7 +81,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     .createdAt(log.getCreatedAt())
                     .updatedAt(log.getUpdatedAt())
                     .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
-                    .bloodSugarStatus(status)
+                    .bloodSugarStatus(bloodSugarStatus)
+                    .systolicStatus(systolicStatus)
+                    .diastolicStatus(diastolicStatus)
                     .build();
         }).collect(Collectors.toList());
 
@@ -105,6 +96,27 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         return toResponse(log);
+    }
+
+    private String evaluateStatus(java.math.BigDecimal value, Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> opt) {
+        String status = "unknown";
+        if (value == null) return status;
+        if (opt.isPresent()) {
+            fpt.swp391.GlucoTrackAlert.model.HealthThreshold t = opt.get();
+            double v = value.doubleValue();
+            double normalMin = t.getNormalMin().doubleValue();
+            double normalMax = t.getNormalMax().doubleValue();
+            double warningMin = t.getWarningMin().doubleValue();
+            double warningMax = t.getWarningMax().doubleValue();
+            if (v >= normalMin && v <= normalMax) {
+                status = "NORMAL";
+            } else if (v < normalMin) {
+                status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
+            } else {
+                status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+            }
+        }
+        return status;
     }
 
     @Override
@@ -133,6 +145,11 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     public DailyHealthLogResponse updateLog(Long id, DailyHealthLogRequest request) {
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
+        // Prevent duplicate date for the same patient (excluding this id)
+        Long patientId = log.getPatient() != null ? log.getPatient().getId() : null;
+        if (patientId != null && dailyHealthLogRepository.existsByPatientIdAndLogDateAndIdNot(patientId, request.getLogDate(), id)) {
+            throw new RuntimeException("Bạn đã nhập nhật ký sức khỏe cho ngày " + request.getLogDate() + " rồi. Vui lòng chỉnh sửa bản ghi hiện có.");
+        }
         updateEntity(log, request);
         DailyHealthLog updatedLog = dailyHealthLogRepository.save(log);
         try {
@@ -151,7 +168,12 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     public void deleteLog(Long id) {
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
-        dailyHealthLogRepository.delete(log);
+        try {
+            dailyHealthLogRepository.delete(log);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            // rethrow with clearer message for controller/handler to convert
+            throw new RuntimeException("Không thể xóa nhật ký: ràng buộc dữ liệu (" + ex.getMostSpecificCause().getMessage() + ")");
+        }
     }
 
     @Override
@@ -241,10 +263,37 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .updatedAt(log.getUpdatedAt())
                 .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
                 .bloodSugarStatus(healthThresholdService.evaluate(
-                        log.getBloodSugar(),
-                        log.getPatient() != null ? log.getPatient().getId() : null,
-                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                        MetricType.BLOOD_SUGAR))
+                    log.getBloodSugar(),
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.BLOOD_SUGAR))
+                .systolicStatus(healthThresholdService.evaluate(
+                    log.getSystolic() != null ? java.math.BigDecimal.valueOf(log.getSystolic()) : null,
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.SYSTOLIC))
+                .diastolicStatus(healthThresholdService.evaluate(
+                    log.getDiastolic() != null ? java.math.BigDecimal.valueOf(log.getDiastolic()) : null,
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.DIASTOLIC))
+                // expose numeric thresholds for blood sugar tooltip
+                .bloodSugarNormalMin(healthThresholdService.resolveThreshold(
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.BLOOD_SUGAR).map(t -> t.getNormalMin()).orElse(null))
+                .bloodSugarNormalMax(healthThresholdService.resolveThreshold(
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.BLOOD_SUGAR).map(t -> t.getNormalMax()).orElse(null))
+                .bloodSugarWarningMin(healthThresholdService.resolveThreshold(
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.BLOOD_SUGAR).map(t -> t.getWarningMin()).orElse(null))
+                .bloodSugarWarningMax(healthThresholdService.resolveThreshold(
+                    log.getPatient() != null ? log.getPatient().getId() : null,
+                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                    MetricType.BLOOD_SUGAR).map(t -> t.getWarningMax()).orElse(null))
                 .build();
     }
 

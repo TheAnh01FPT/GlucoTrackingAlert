@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
+import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,7 @@ public class DailyHealthLogController {
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorPatientAssignmentRepository assignmentRepository;
+    private final DailyHealthLogRepository dailyHealthLogRepository;
 
     private Long resolvePatientId(Long userId) {
         if (userId == null) {
@@ -140,6 +142,7 @@ public class DailyHealthLogController {
             Pageable pageable = PageRequest.of(page, size);
             Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(selectedPatientId, pageable);
             model.addAttribute("logs", logsPage.getContent());
+            model.addAttribute("latestLog", dailyHealthLogRepository.findFirstByPatientIdOrderByLogDateDesc(selectedPatientId));
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", logsPage.getTotalPages());
             model.addAttribute("totalElements", logsPage.getTotalElements());
@@ -160,11 +163,12 @@ public class DailyHealthLogController {
     }
 
     @GetMapping("/doctor-view")
-    public String getDoctorView(@RequestParam(required = false) Long userId,
+        public String getDoctorView(@RequestParam(required = false) Long userId,
             @RequestParam(required = false) String patientType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
         List<Patient> patients;
 
         if (hasRole("ROLE_ADMIN")) {
@@ -223,7 +227,13 @@ public class DailyHealthLogController {
         if (selectedPatientId == null && !patients.isEmpty()) {
             selectedPatientId = patients.get(0).getId();
         }
-
+        // If caller is a doctor, ensure they are assigned to the selected patient
+        if (hasRole("ROLE_DOCTOR") && selectedPatientId != null) {
+            if (!isDoctorAssignedToPatient(selectedPatientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này");
+                return "redirect:/health-logs/doctor-view";
+            }
+        }
         Patient selectedPatient = null;
         if (selectedPatientId != null) {
             Optional<Patient> patientOpt = patientRepository.findById(selectedPatientId);
@@ -234,6 +244,7 @@ public class DailyHealthLogController {
             Pageable pageable = PageRequest.of(page, size);
             Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(selectedPatientId, pageable);
             model.addAttribute("logs", logsPage.getContent());
+            model.addAttribute("latestLog", dailyHealthLogRepository.findFirstByPatientIdOrderByLogDateDesc(selectedPatientId));
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", logsPage.getTotalPages());
             model.addAttribute("totalElements", logsPage.getTotalElements());
@@ -275,6 +286,7 @@ public class DailyHealthLogController {
         Pageable pageable = PageRequest.of(page, size);
         Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(patientId, pageable);
         model.addAttribute("logs", logsPage.getContent());
+        model.addAttribute("latestLog", dailyHealthLogRepository.findFirstByPatientIdOrderByLogDateDesc(patientId));
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", logsPage.getTotalPages());
         model.addAttribute("totalElements", logsPage.getTotalElements());
@@ -492,7 +504,19 @@ public String createLog(@RequestParam Long userId,
             return "redirect:/health-logs?userId=" + (curUserId != null ? curUserId : userId);
         }
 
-        dailyHealthLogService.updateLog(id, request);
+        try {
+            dailyHealthLogService.updateLog(id, request);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("log", request);
+            String redirectUrl = "redirect:/health-logs/" + id + "/edit?userId=" + userId;
+            if ("my-logs".equals(source)) {
+                redirectUrl += "&source=my-logs";
+            } else if ("doctor-view".equals(source)) {
+                redirectUrl += "&source=doctor-view";
+            }
+            return redirectUrl;
+        }
         if ("my-logs".equals(source)) {
             return "redirect:/health-logs/my-logs?userId=" + userId;
         } else if ("doctor-view".equals(source)) {
@@ -595,21 +619,37 @@ public String createLog(@RequestParam Long userId,
     public String getDoctorChart(@RequestParam(required = false) Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
         // Chỉ DOCTOR/ADMIN mới vào được
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
             return "redirect:/login";
         }
-
-        List<Patient> patients = patientRepository.findAllByStatus("active");
-        if (patients.isEmpty()) {
-            patients = patientRepository.findAll();
+        List<Patient> patients;
+        if (hasRole("ROLE_DOCTOR")) {
+            Long currentUserId = getCurrentUserId();
+            Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+            if (doctor == null) {
+                return "redirect:/health-logs/doctor-view";
+            }
+            List<DoctorPatientAssignment> assignments = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
+            patients = assignments.stream().map(DoctorPatientAssignment::getPatient).collect(Collectors.toList());
+        } else {
+            patients = patientRepository.findAllByStatus("active");
+            if (patients.isEmpty()) patients = patientRepository.findAll();
         }
         model.addAttribute("patients", patients);
 
         Long selectedPatientId = userId;
         if (selectedPatientId == null && !patients.isEmpty()) {
             selectedPatientId = patients.get(0).getId();
+        }
+
+        if (hasRole("ROLE_DOCTOR") && selectedPatientId != null) {
+            if (!isDoctorAssignedToPatient(selectedPatientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này");
+                return "redirect:/health-logs/doctor-view";
+            }
         }
 
         LocalDate endDate = to != null ? to : LocalDate.now();

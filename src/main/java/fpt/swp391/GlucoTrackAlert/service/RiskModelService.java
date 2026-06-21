@@ -39,7 +39,38 @@ public class RiskModelService {
     }
 
     public double predictRiskPercentage(double age, double diastolic, double bloodSugar, boolean hypertension) {
-        double[] x = {age, diastolic, bloodSugar, hypertension ? 1.0 : 0.0};
+        // Convert blood sugar from mmol/L (app) to mg/dL (model training units)
+        double bloodSugarMgDl = bloodSugar * 18.0182;
+
+        // Clamp inputs to training dataset realistic ranges and warn when clamping occurs
+        double clampedAge = age;
+        if (clampedAge < 2) {
+            log.warn("Age {} below model min, clamping to 2", age);
+            clampedAge = 2;
+        } else if (clampedAge > 90) {
+            log.warn("Age {} above model max, clamping to 90", age);
+            clampedAge = 90;
+        }
+
+        double clampedDiastolic = diastolic;
+        if (clampedDiastolic < 50) {
+            log.warn("Diastolic {} below model min, clamping to 50", diastolic);
+            clampedDiastolic = 50;
+        } else if (clampedDiastolic > 180) {
+            log.warn("Diastolic {} above model max, clamping to 180", diastolic);
+            clampedDiastolic = 180;
+        }
+
+        double clampedBloodSugar = bloodSugarMgDl;
+        if (clampedBloodSugar < 22) {
+            log.warn("Blood sugar (mg/dL) {} below model min, clamping to 22", bloodSugarMgDl);
+            clampedBloodSugar = 22;
+        } else if (clampedBloodSugar > 490) {
+            log.warn("Blood sugar (mg/dL) {} above model max, clamping to 490", bloodSugarMgDl);
+            clampedBloodSugar = 490;
+        }
+
+        double[] x = {clampedAge, clampedDiastolic, clampedBloodSugar, hypertension ? 1.0 : 0.0};
         double z = intercept;
         for (int i = 0; i < coefficients.length; i++) {
             z += coefficients[i] * (x[i] - scalerMean[i]) / scalerScale[i];
