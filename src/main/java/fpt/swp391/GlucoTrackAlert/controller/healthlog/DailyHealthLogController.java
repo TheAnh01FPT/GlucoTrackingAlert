@@ -31,6 +31,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -633,7 +637,9 @@ public class DailyHealthLogController {
     }
 
     @GetMapping("/ai-report")
-    public String getAiReport(@RequestParam(required = false) Long userId, Model model, RedirectAttributes redirectAttributes) {
+    public String getAiReport(@RequestParam(required = false) Long userId, 
+                              @RequestParam(required = false) Long assessmentId, 
+                              Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
         if (curUserId == null) {
             return "redirect:/login";
@@ -670,15 +676,78 @@ public class DailyHealthLogController {
             }
         }
 
-        // Get the latest health log and its associated AI risk assessment
-        List<Map<String, Object>> list = jdbcTemplate.queryForList(
-            "SELECT ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at, dhl.blood_sugar, dhl.systolic, dhl.diastolic, dhl.log_date " +
-            "FROM risk_assessments ra " +
+        // Trigger weekly AI prediction calculation (On-Demand)
+        dailyHealthLogService.assessWeeklyRisk(patientId);
+
+        // Get all weekly assessments for this patient
+        List<Map<String, Object>> allAssessmentsRaw = jdbcTemplate.queryForList(
+            "SELECT ra.id, ra.assessed_at, dhl.log_date FROM risk_assessments ra " +
             "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
-            "WHERE ra.patient_id = ? AND ra.assessment_type = 'DAILY_AI_PREDICTION' " +
-            "ORDER BY ra.id DESC LIMIT 1",
+            "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
+            "ORDER BY ra.assessed_at DESC",
             patientId
         );
+
+        List<Map<String, Object>> allAssessments = new java.util.ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        for (Map<String, Object> raw : allAssessmentsRaw) {
+            Long idVal = ((Number) raw.get("id")).longValue();
+            Object assessedAtObj = raw.get("assessed_at");
+            LocalDateTime ldt = null;
+            if (assessedAtObj instanceof LocalDateTime) {
+                ldt = (LocalDateTime) assessedAtObj;
+            } else if (assessedAtObj instanceof java.sql.Timestamp) {
+                ldt = ((java.sql.Timestamp) assessedAtObj).toLocalDateTime();
+            }
+            
+            Object logDateObj = raw.get("log_date");
+            LocalDate logDate = null;
+            if (logDateObj instanceof LocalDate) {
+                logDate = (LocalDate) logDateObj;
+            } else if (logDateObj instanceof java.sql.Date) {
+                logDate = ((java.sql.Date) logDateObj).toLocalDate();
+            } else if (logDateObj instanceof java.util.Date) {
+                logDate = new java.sql.Date(((java.util.Date) logDateObj).getTime()).toLocalDate();
+            }
+            
+            String label = "Không rõ ngày";
+            if (logDate != null) {
+                LocalDate start = logDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                LocalDate end = logDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+                
+                LocalDate assessDate = LocalDate.now();
+                if (ldt != null) {
+                    assessDate = ldt.toLocalDate();
+                }
+                label = String.format("Tuần %s - %s (Đánh giá: %s)", start.format(formatter), end.format(formatter), assessDate.format(formatter));
+            }
+            Map<String, Object> option = new HashMap<>();
+            option.put("id", idVal);
+            option.put("label", label);
+            allAssessments.add(option);
+        }
+
+        // Determine which assessment to display
+        Long selectedId = assessmentId;
+        if (selectedId == null && !allAssessments.isEmpty()) {
+            selectedId = (Long) allAssessments.get(0).get("id");
+        }
+
+        // Get the specific weekly AI risk assessment
+        List<Map<String, Object>> list = Collections.emptyList();
+        if (selectedId != null) {
+            list = jdbcTemplate.queryForList(
+                "SELECT ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at, dhl.blood_sugar, dhl.systolic, dhl.diastolic, dhl.log_date, " +
+                "       whr.average_blood_sugar, whr.average_systolic, whr.average_diastolic, whr.average_sleep_hours, whr.average_water_ml, " +
+                "       whr.high_sugar_days, whr.warning_count, whr.blood_sugar_change, whr.blood_sugar_change_percent, " +
+                "       whr.systolic_change, whr.diastolic_change, whr.sleep_hours_change, whr.trend_status, whr.health_status, whr.week_start " +
+                "FROM risk_assessments ra " +
+                "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
+                "LEFT JOIN weekly_health_reports whr ON whr.patient_id = ra.patient_id AND dhl.log_date >= whr.week_start AND dhl.log_date <= whr.week_end " +
+                "WHERE ra.id = ? AND ra.patient_id = ?",
+                selectedId, patientId
+            );
+        }
 
         Map<String, Object> latestRisk = null;
         if (!list.isEmpty()) {
@@ -728,13 +797,81 @@ public class DailyHealthLogController {
                     latestRisk.put("logDateStr", logDateObj.toString());
                 }
             }
+
+            // Weekly health reports mapping
+            latestRisk.put("avgSugar", formatDecimal(raw.get("average_blood_sugar")));
+            latestRisk.put("avgSystolic", formatDecimal(raw.get("average_systolic")));
+            latestRisk.put("avgDiastolic", formatDecimal(raw.get("average_diastolic")));
+            latestRisk.put("avgSleep", formatDecimal(raw.get("average_sleep_hours")));
+            latestRisk.put("avgWater", formatDecimal(raw.get("average_water_ml")));
+            
+            latestRisk.put("highSugarDays", raw.get("high_sugar_days"));
+            latestRisk.put("warningCount", raw.get("warning_count"));
+            
+            latestRisk.put("sugarChange", formatDecimal(raw.get("blood_sugar_change")));
+            latestRisk.put("sugarChangePercent", formatDecimal(raw.get("blood_sugar_change_percent")));
+            latestRisk.put("systolicChange", formatDecimal(raw.get("systolic_change")));
+            latestRisk.put("diastolicChange", formatDecimal(raw.get("diastolic_change")));
+            latestRisk.put("sleepChange", formatDecimal(raw.get("sleep_hours_change")));
+            
+            latestRisk.put("trendStatus", raw.get("trend_status"));
+            latestRisk.put("healthStatus", raw.get("health_status"));
+            latestRisk.put("waterChange", null); // Initialize default to prevent SpelEvaluationException
+
+            // Calculate water change on the fly since there's no water_change column
+            Object weekStartObj = raw.get("week_start");
+            LocalDate weekStart = null;
+            if (weekStartObj instanceof LocalDate) {
+                weekStart = (LocalDate) weekStartObj;
+            } else if (weekStartObj instanceof java.sql.Date) {
+                weekStart = ((java.sql.Date) weekStartObj).toLocalDate();
+            } else if (weekStartObj instanceof java.util.Date) {
+                weekStart = new java.sql.Date(((java.util.Date) weekStartObj).getTime()).toLocalDate();
+            }
+
+            if (weekStart != null) {
+                LocalDate prevStart = weekStart.minusWeeks(1);
+                List<Map<String, Object>> prevList = jdbcTemplate.queryForList(
+                    "SELECT average_water_ml FROM weekly_health_reports WHERE patient_id = ? AND week_start = ?",
+                    patientId, prevStart
+                );
+                if (!prevList.isEmpty() && raw.get("average_water_ml") != null) {
+                    java.math.BigDecimal currentWater = getBigDecimalSafe(raw.get("average_water_ml"));
+                    java.math.BigDecimal prevWater = getBigDecimalSafe(prevList.get(0).get("average_water_ml"));
+                    if (prevWater != null) {
+                        java.math.BigDecimal waterChangeVal = currentWater.subtract(prevWater);
+                        latestRisk.put("waterChange", formatDecimal(waterChangeVal));
+                    }
+                }
+            }
         }
 
         model.addAttribute("patient", patient);
         model.addAttribute("userId", targetUserId);
         model.addAttribute("latestRisk", latestRisk);
         model.addAttribute("hasRiskData", latestRisk != null);
+        model.addAttribute("allAssessments", allAssessments);
+        model.addAttribute("selectedAssessmentId", selectedId);
 
         return "healthlog/ai-report";
     }
+
+    private String formatDecimal(Object obj) {
+        if (obj == null) return null;
+        if (obj instanceof java.math.BigDecimal) {
+            return String.format("%.2f", ((java.math.BigDecimal) obj).doubleValue());
+        } else if (obj instanceof Number) {
+            return String.format("%.2f", ((Number) obj).doubleValue());
+        }
+        return obj.toString();
+    }
+
+    private java.math.BigDecimal getBigDecimalSafe(Object obj) {
+        if (obj == null) return null;
+        if (obj instanceof java.math.BigDecimal) return (java.math.BigDecimal) obj;
+        if (obj instanceof Number) return java.math.BigDecimal.valueOf(((Number) obj).doubleValue());
+        return new java.math.BigDecimal(obj.toString());
+    }
 }
+
+

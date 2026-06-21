@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 
 @Service
 @RequiredArgsConstructor
@@ -137,7 +139,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         DailyHealthLog log = toEntity(request);
         log.setPatient(patient);
         DailyHealthLog savedLog = dailyHealthLogRepository.save(log);
-        triggerDailyAiPrediction(patient, savedLog);
+        // triggerDailyAiPrediction(patient, savedLog);
         return toResponse(savedLog);
     }
 
@@ -148,7 +150,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         updateEntity(log, request);
         DailyHealthLog updatedLog = dailyHealthLogRepository.save(log);
-        triggerDailyAiPrediction(updatedLog.getPatient(), updatedLog);
+        // triggerDailyAiPrediction(updatedLog.getPatient(), updatedLog);
         return toResponse(updatedLog);
     }
 
@@ -410,5 +412,371 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         entity.setSugarConsumptionLevel(request.getSugarConsumptionLevel());
         entity.setSymptoms(request.getSymptoms());
         entity.setNote(request.getNote());
+    }
+
+    private BigDecimal getBigDecimalSafe(Object obj) {
+        if (obj == null) return null;
+        if (obj instanceof BigDecimal) return (BigDecimal) obj;
+        if (obj instanceof Number) return BigDecimal.valueOf(((Number) obj).doubleValue());
+        return new BigDecimal(obj.toString());
+    }
+
+    @Override
+    @Transactional
+    public void assessWeeklyRisk(Long patientId) {
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate endOfWeek = today.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+
+        // Get logs for the previous week
+        List<DailyHealthLog> weeklyLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, startOfWeek, endOfWeek);
+        if (weeklyLogs == null || weeklyLogs.isEmpty()) {
+            return;
+        }
+
+        // Find logs with non-null blood sugar
+        double sumSugar = 0;
+        int sugarCount = 0;
+        double sumSystolic = 0;
+        int countSystolic = 0;
+        double sumDiastolic = 0;
+        int countDiastolic = 0;
+        double sumSleep = 0;
+        int countSleep = 0;
+        double sumWater = 0;
+        int countWater = 0;
+        int highSugarDays = 0;
+        int warningCount = 0;
+
+        DailyHealthLog latestLogWithSugar = null;
+        LocalDateTime maxUpdatedAt = null;
+
+        String patientType = patient.getPatientType();
+
+        for (DailyHealthLog log : weeklyLogs) {
+            if (log.getBloodSugar() != null) {
+                BigDecimal sugarVal = log.getBloodSugar();
+                sumSugar += sugarVal.doubleValue();
+                sugarCount++;
+                latestLogWithSugar = log;
+
+                // Evaluate sugar threshold
+                String sugarStatus = healthThresholdService.evaluate(sugarVal, patientId, patientType, MetricType.BLOOD_SUGAR);
+                if (sugarStatus.contains("HIGH")) {
+                    highSugarDays++;
+                }
+                if (!"NORMAL".equals(sugarStatus) && !"UNKNOWN".equalsIgnoreCase(sugarStatus) && !"unknown".equalsIgnoreCase(sugarStatus)) {
+                    warningCount++;
+                }
+            }
+
+            if (log.getSystolic() != null) {
+                double sysVal = log.getSystolic();
+                sumSystolic += sysVal;
+                countSystolic++;
+
+                String sysStatus = healthThresholdService.evaluate(BigDecimal.valueOf(sysVal), patientId, patientType, MetricType.SYSTOLIC);
+                if (!"NORMAL".equals(sysStatus) && !"UNKNOWN".equalsIgnoreCase(sysStatus) && !"unknown".equalsIgnoreCase(sysStatus)) {
+                    warningCount++;
+                }
+            }
+
+            if (log.getDiastolic() != null) {
+                double diaVal = log.getDiastolic();
+                sumDiastolic += diaVal;
+                countDiastolic++;
+
+                String diaStatus = healthThresholdService.evaluate(BigDecimal.valueOf(diaVal), patientId, patientType, MetricType.DIASTOLIC);
+                if (!"NORMAL".equals(diaStatus) && !"UNKNOWN".equalsIgnoreCase(diaStatus) && !"unknown".equalsIgnoreCase(diaStatus)) {
+                    warningCount++;
+                }
+            }
+
+            if (log.getSleepHours() != null) {
+                sumSleep += log.getSleepHours().doubleValue();
+                countSleep++;
+            }
+
+            if (log.getWaterMl() != null) {
+                sumWater += log.getWaterMl().doubleValue();
+                countWater++;
+            }
+
+            if (log.getUpdatedAt() != null) {
+                if (maxUpdatedAt == null || log.getUpdatedAt().isAfter(maxUpdatedAt)) {
+                    maxUpdatedAt = log.getUpdatedAt();
+                }
+            }
+        }
+
+        if (sugarCount == 0 || latestLogWithSugar == null) {
+            return; // No blood sugar data to assess
+        }
+
+        double avgSugarMmol = sumSugar / sugarCount;
+        double avgGlucoseMgDl = avgSugarMmol * 18.0;
+
+        // Check if a weekly assessment already exists
+        List<Map<String, Object>> existing = jdbcTemplate.queryForList(
+            "SELECT ra.id, ra.assessed_at FROM risk_assessments ra " +
+            "JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
+            "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
+            "AND dhl.log_date >= ? AND dhl.log_date <= ? ORDER BY ra.id DESC",
+            patientId,
+            startOfWeek,
+            endOfWeek
+        );
+
+        boolean needUpdate = true;
+
+        // Force update if the weekly report record doesn't exist yet
+        List<Map<String, Object>> existingReport = jdbcTemplate.queryForList(
+            "SELECT id FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
+            patientId,
+            startOfWeek,
+            endOfWeek
+        );
+
+        if (!existing.isEmpty() && !existingReport.isEmpty()) {
+            Map<String, Object> map = existing.get(0);
+            Object assessedAtObj = map.get("assessed_at");
+            LocalDateTime assessedAt = null;
+            if (assessedAtObj instanceof LocalDateTime) {
+                assessedAt = (LocalDateTime) assessedAtObj;
+            } else if (assessedAtObj instanceof java.sql.Timestamp) {
+                assessedAt = ((java.sql.Timestamp) assessedAtObj).toLocalDateTime();
+            }
+            
+            // If the latest update in logs is not after the assessment time, and we have exactly 1 record, we don't need to recalculate
+            if (assessedAt != null && maxUpdatedAt != null && !maxUpdatedAt.isAfter(assessedAt) && existing.size() == 1) {
+                needUpdate = false;
+            }
+        }
+
+        if (needUpdate) {
+            // Call AI API synchronously
+            try {
+                int genderVal = 0; // Default Male
+                if (patient.getGender() != null) {
+                    String g = patient.getGender().toLowerCase();
+                    if (g.contains("fem") || g.contains("nữ")) genderVal = 1;
+                    else if (g.contains("oth") || g.contains("khác")) genderVal = -1;
+                }
+
+                double ageVal = patient.getAge() != null ? patient.getAge() : 0.0;
+                int hyperVal = Boolean.TRUE.equals(patient.getHypertension()) ? 1 : 0;
+                int heartVal = Boolean.TRUE.equals(patient.getHeartDisease()) ? 1 : 0;
+                int marriedVal = patient.getEverMarried() != null && patient.getEverMarried().equalsIgnoreCase("Yes") ? 1 : 0;
+
+                int workVal = 0; // Default Private
+                if (patient.getWorkType() != null) {
+                    String w = patient.getWorkType();
+                    if (w.equalsIgnoreCase("Self-employed")) workVal = 1;
+                    else if (w.equalsIgnoreCase("Govt_job")) workVal = 2;
+                    else if (w.equalsIgnoreCase("children")) workVal = -1;
+                    else if (w.equalsIgnoreCase("Never_worked")) workVal = -2;
+                }
+
+                int resVal = 1; // Default Urban
+                if (patient.getResidenceType() != null && patient.getResidenceType().equalsIgnoreCase("Rural")) {
+                    resVal = 0;
+                }
+
+                double bmiVal = patient.getBmi() != null ? patient.getBmi().doubleValue() : 25.0;
+
+                int smokeVal = -1; // Default Unknown
+                if (patient.getSmokingStatus() != null) {
+                    String s = patient.getSmokingStatus();
+                    if (s.equalsIgnoreCase("never smoked")) smokeVal = 0;
+                    else if (s.equalsIgnoreCase("formerly smoked")) smokeVal = 1;
+                    else if (s.equalsIgnoreCase("smokes")) smokeVal = 2;
+                }
+
+                // Construct JSON payload using calculated average glucose
+                String jsonPayload = String.format(
+                    "{\"gender\":%d,\"age\":%.1f,\"hypertension\":%d,\"heart_disease\":%d,\"work_type\":%d,\"Residence_type\":%d,\"avg_glucose_level\":%.2f,\"bmi\":%.2f,\"smoking_status\":%d}",
+                    genderVal, ageVal, hyperVal, heartVal, workVal, resVal, avgGlucoseMgDl, bmiVal, smokeVal
+                );
+
+                HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(2))
+                    .build();
+
+                HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://127.0.0.1:8000/predict"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .timeout(Duration.ofSeconds(3))
+                    .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (response.statusCode() == 200) {
+                    String responseBody = response.body();
+                    double riskPercentage = 0.0;
+                    String riskLevel = "Low";
+
+                    if (responseBody.contains("risk_percentage")) {
+                        int idx = responseBody.indexOf("risk_percentage");
+                        int start = responseBody.indexOf(":", idx) + 1;
+                        int end = responseBody.indexOf(",", start);
+                        if (end == -1) end = responseBody.indexOf("}", start);
+                        riskPercentage = Double.parseDouble(responseBody.substring(start, end).trim());
+                    }
+                    if (responseBody.contains("risk_level")) {
+                        int idx = responseBody.indexOf("risk_level");
+                        int start = responseBody.indexOf("\"", responseBody.indexOf(":", idx)) + 1;
+                        int end = responseBody.indexOf("\"", start);
+                        riskLevel = responseBody.substring(start, end).trim();
+                    }
+
+                    // Delete existing weekly assessments for this week
+                    for (Map<String, Object> row : existing) {
+                        Long oldId = ((Number) row.get("id")).longValue();
+                        jdbcTemplate.update("DELETE FROM risk_assessments WHERE id = ?", oldId);
+                    }
+
+                    // Insert new prediction linked to the latest log of the week
+                    String aiSummary = "Dựa trên mô hình học máy Random Forest phân tích chỉ số trung bình tuần này, nguy cơ xảy ra biến chứng đột quỵ của bạn là " + String.format("%.2f", riskPercentage) + "% (Mức độ: " + riskLevel + ").";
+                    String recommendation = "Hãy tiếp tục duy trì chế độ sinh hoạt lành mạnh và kiểm soát lượng đường huyết trung bình ở mức an toàn.";
+
+                    jdbcTemplate.update(
+                        "INSERT INTO risk_assessments (patient_id, daily_health_log_id, assessment_type, risk_level, risk_percentage, ai_summary, recommendation, assessed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        patient.getId(),
+                        latestLogWithSugar.getId(),
+                        "WEEKLY_AI_PREDICTION",
+                        riskLevel,
+                        new java.math.BigDecimal(riskPercentage),
+                        aiSummary,
+                        recommendation,
+                        java.time.LocalDateTime.now()
+                    );
+
+                    // --- GENERATE & SAVE WEEKLY REPORT ---
+                    LocalDate prevStartOfWeek = startOfWeek.minusWeeks(1);
+                    LocalDate prevEndOfWeek = endOfWeek.minusWeeks(1);
+                    List<Map<String, Object>> prevReports = jdbcTemplate.queryForList(
+                        "SELECT id, average_blood_sugar, average_systolic, average_diastolic, average_sleep_hours, average_water_ml " +
+                        "FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
+                        patientId, prevStartOfWeek, prevEndOfWeek
+                    );
+
+                    BigDecimal prevSugar = null;
+                    BigDecimal prevSystolic = null;
+                    BigDecimal prevDiastolic = null;
+                    BigDecimal prevSleep = null;
+                    BigDecimal prevWater = null;
+                    Long prevReportId = null;
+
+                    if (!prevReports.isEmpty()) {
+                        Map<String, Object> prev = prevReports.get(0);
+                        prevReportId = ((Number) prev.get("id")).longValue();
+                        prevSugar = getBigDecimalSafe(prev.get("average_blood_sugar"));
+                        prevSystolic = getBigDecimalSafe(prev.get("average_systolic"));
+                        prevDiastolic = getBigDecimalSafe(prev.get("average_diastolic"));
+                        prevSleep = getBigDecimalSafe(prev.get("average_sleep_hours"));
+                        prevWater = getBigDecimalSafe(prev.get("average_water_ml"));
+                    }
+
+                    // Averages
+                    BigDecimal avgSugarVal = BigDecimal.valueOf(avgSugarMmol).setScale(2, java.math.RoundingMode.HALF_UP);
+                    BigDecimal avgSystolicVal = countSystolic > 0 ? BigDecimal.valueOf(sumSystolic / countSystolic).setScale(2, java.math.RoundingMode.HALF_UP) : null;
+                    BigDecimal avgDiastolicVal = countDiastolic > 0 ? BigDecimal.valueOf(sumDiastolic / countDiastolic).setScale(2, java.math.RoundingMode.HALF_UP) : null;
+                    BigDecimal avgSleepVal = countSleep > 0 ? BigDecimal.valueOf(sumSleep / countSleep).setScale(2, java.math.RoundingMode.HALF_UP) : null;
+                    BigDecimal avgWaterVal = countWater > 0 ? BigDecimal.valueOf(sumWater / countWater).setScale(2, java.math.RoundingMode.HALF_UP) : null;
+
+                    // Changes
+                    BigDecimal sugarChange = null;
+                    BigDecimal sugarChangePercent = null;
+                    if (prevSugar != null) {
+                        sugarChange = avgSugarVal.subtract(prevSugar);
+                        if (prevSugar.compareTo(BigDecimal.ZERO) > 0) {
+                            sugarChangePercent = sugarChange.multiply(BigDecimal.valueOf(100)).divide(prevSugar, 2, java.math.RoundingMode.HALF_UP);
+                        }
+                    }
+
+                    BigDecimal systolicChange = null;
+                    if (avgSystolicVal != null && prevSystolic != null) {
+                        systolicChange = avgSystolicVal.subtract(prevSystolic);
+                    }
+
+                    BigDecimal diastolicChange = null;
+                    if (avgDiastolicVal != null && prevDiastolic != null) {
+                        diastolicChange = avgDiastolicVal.subtract(prevDiastolic);
+                    }
+
+                    BigDecimal sleepChange = null;
+                    if (avgSleepVal != null && prevSleep != null) {
+                        sleepChange = avgSleepVal.subtract(prevSleep);
+                    }
+
+                    // Trend and health status
+                    String trendStatus = "STABLE";
+                    if (sugarChange != null) {
+                        int cmp = sugarChange.compareTo(BigDecimal.ZERO);
+                        if (cmp > 0) {
+                            trendStatus = "WORSENING";
+                        } else if (cmp < 0) {
+                            trendStatus = "IMPROVING";
+                        }
+                    }
+
+                    String healthStatus = "GOOD";
+                    if (warningCount > 0) {
+                        if (highSugarDays > 2 || warningCount > 4) {
+                            healthStatus = "DANGER";
+                        } else {
+                            healthStatus = "WARNING";
+                        }
+                    }
+
+                    // Delete existing report
+                    jdbcTemplate.update(
+                        "DELETE FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
+                        patientId, startOfWeek, endOfWeek
+                    );
+
+                    // Insert new report
+                    jdbcTemplate.update(
+                        "INSERT INTO weekly_health_reports (" +
+                        "patient_id, baseline_id, previous_report_id, week_start, week_end, " +
+                        "average_blood_sugar, average_systolic, average_diastolic, average_sleep_hours, average_water_ml, " +
+                        "high_sugar_days, warning_count, blood_sugar_change, blood_sugar_change_percent, " +
+                        "systolic_change, diastolic_change, sleep_hours_change, trend_status, health_status, " +
+                        "ai_summary, recommendation, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        patientId,
+                        null,
+                        prevReportId,
+                        startOfWeek,
+                        endOfWeek,
+                        avgSugarVal,
+                        avgSystolicVal,
+                        avgDiastolicVal,
+                        avgSleepVal,
+                        avgWaterVal,
+                        highSugarDays,
+                        warningCount,
+                        sugarChange,
+                        sugarChangePercent,
+                        systolicChange,
+                        diastolicChange,
+                        sleepChange,
+                        trendStatus,
+                        healthStatus,
+                        aiSummary,
+                        recommendation,
+                        java.time.LocalDateTime.now()
+                    );
+                }
+            } catch (Exception e) {
+                System.err.println("Error calculating weekly AI prediction and report: " + e.getMessage());
+            }
+        }
     }
 }
