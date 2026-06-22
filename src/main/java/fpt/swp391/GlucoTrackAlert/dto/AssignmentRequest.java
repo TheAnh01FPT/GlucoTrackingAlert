@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 public class AssignmentRequest {
 
-    private Integer doctorId;
+    private Long doctorId;
     private Long patientId;
     private String note;
     private String status;

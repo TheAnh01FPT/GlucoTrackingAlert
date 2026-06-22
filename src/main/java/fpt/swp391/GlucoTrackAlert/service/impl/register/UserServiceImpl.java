@@ -24,10 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.security.SecureRandom;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -83,7 +85,7 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(u);
 
         // Tạo OTP 6 số
-        String otp = String.format("%06d", new Random().nextInt(999999));
+        String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
         EmailVerificationToken ev = EmailVerificationToken.builder()
                 .user(saved)
                 .verificationToken(otp)
@@ -148,7 +150,7 @@ public class UserServiceImpl implements UserService {
         String roleName = user.getRole() != null ? user.getRole().getName() : "UNKNOWN";
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
-        Integer doctorId = null;
+        Long doctorId = null;
         if ("DOCTOR".equals(roleName)) {
             doctorId = doctorRepository.findAll().stream()
                     .filter(d -> d.getUser().getId().equals(user.getId()))
@@ -176,7 +178,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // Tạo OTP 6 số
-        String otp = String.format("%06d", new Random().nextInt(999999));
+        String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .user(user)
                 .resetToken(otp)
@@ -282,4 +284,37 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedAt(java.time.LocalDateTime.now());
         userRepository.save(user);
     }
+    @Override
+@Transactional
+public void resendOtp(String email) throws Exception {
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
+
+    if (user.getEmailVerified()) {
+        throw new Exception("Tài khoản đã được xác thực rồi");
+    }
+
+    // Hủy các OTP cũ còn pending
+    tokenRepository.findByUser(user).stream()
+            .filter(t -> "pending".equals(t.getStatus()))
+            .forEach(t -> {
+                t.setStatus("expired");
+                tokenRepository.save(t);
+            });
+
+    // Tạo OTP mới
+    String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
+    EmailVerificationToken ev = EmailVerificationToken.builder()
+            .user(user)
+            .verificationToken(otp)
+            .expiredAt(LocalDateTime.now().plusMinutes(10))
+            .status("pending")
+            .createdAt(LocalDateTime.now())
+            .build();
+    tokenRepository.save(ev);
+
+    // Gửi mail
+    String body = buildOtpEmail(user.getFullName(), otp);
+    emailService.sendHtmlMessage(user.getEmail(), "Mã xác nhận tài khoản GlucoTrackAlert", body);
+}
 }

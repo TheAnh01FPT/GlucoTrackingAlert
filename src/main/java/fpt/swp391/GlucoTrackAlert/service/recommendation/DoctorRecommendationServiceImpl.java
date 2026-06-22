@@ -2,6 +2,7 @@ package fpt.swp391.GlucoTrackAlert.service.recommendation;
 
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationRequest;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationResponse;
+
 import fpt.swp391.GlucoTrackAlert.model.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.DoctorRecommendation;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
@@ -113,6 +114,24 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
         recommendationRepository.save(rec);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<DoctorRecommendationResponse> getAllByDoctorAndPatient(String doctorEmail, Long patientId) {
+        Doctor doctor = getDoctorByEmail(doctorEmail);
+        validateAssignment(doctor.getId(), patientId);
+        return recommendationRepository
+                .findByDoctorIdAndPatientIdOrderByCreatedAtDesc(doctor.getId(), patientId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DoctorRecommendationResponse> getAllByPatient(Long patientId) {
+        return recommendationRepository
+                .findByPatientIdOrderByCreatedAtDesc(patientId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
     // ========== PRIVATE HELPERS ==========
 
     private Doctor getDoctorByEmail(String email) {
@@ -132,7 +151,7 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân"));
     }
 
-    private void validateAssignment(Integer doctorId, Long patientId) {
+    private void validateAssignment(Long doctorId, Long patientId) {
         boolean isAssigned = assignmentRepository
                 .findByDoctorIdAndPatientId(doctorId, patientId)
                 .map(a -> "active".equals(a.getStatus()))
@@ -149,7 +168,7 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
                 .title(rec.getTitle())
                 .recommendation(rec.getRecommendation())
                 .status(rec.getStatus())
-                .doctorId(rec.getDoctor().getId().longValue())
+                .doctorId(rec.getDoctor().getId())
                 .doctorName(rec.getDoctor().getFullName())
                 .patientId(rec.getPatient().getId())
                 .patientName(rec.getPatient().getFullName())

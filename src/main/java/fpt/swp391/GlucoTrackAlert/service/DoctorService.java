@@ -9,19 +9,19 @@ public interface DoctorService {
 
     DoctorResponse adminCreateDoctor(AdminCreateDoctorRequest request) throws Exception;
 
-    DoctorResponse updateDoctor(Integer id, DoctorRequest request);
+    DoctorResponse updateDoctor(Long id, DoctorRequest request);
 
-    DoctorResponse getDoctorById(Integer id);
+    DoctorResponse getDoctorById(Long id);
 
     List<DoctorResponse> getAllDoctors();
 
-    void deactivateDoctor(Integer id);
+    void deactivateDoctor(Long id);
 
     /**
      * Bác sĩ upload ảnh CCCD, chứng chỉ hành nghề, avatar + nhập số CCCD & số
      * chứng chỉ. Status chuyển sang pending_approval để admin duyệt.
      */
-    DoctorResponse uploadVerificationImages(Integer doctorId,
+    DoctorResponse uploadVerificationImages(Long doctorId,
             String nationalIdImageUrl,
             String practiceLicenseImageUrl,
             String avatarUrl,
@@ -30,7 +30,7 @@ public interface DoctorService {
 
     List<DoctorResponse> getPendingDoctors();
 
-    DoctorResponse approveDoctor(Integer id);
+    DoctorResponse approveDoctor(Long id);
 
-    DoctorResponse rejectDoctor(Integer id, String reason);
+    DoctorResponse rejectDoctor(Long id, String reason);
 }

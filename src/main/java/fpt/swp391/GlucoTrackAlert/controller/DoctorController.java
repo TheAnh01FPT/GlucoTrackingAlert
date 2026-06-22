@@ -72,7 +72,7 @@ public class DoctorController {
      * [ADMIN] Lấy thông tin 1 bác sĩ theo id
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DoctorResponse> getDoctorById(@PathVariable Integer id) {
+    public ResponseEntity<DoctorResponse> getDoctorById(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.getDoctorById(id));
     }
 
@@ -81,7 +81,7 @@ public class DoctorController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<DoctorResponse> updateDoctor(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @Valid @RequestBody DoctorRequest request) {
         return ResponseEntity.ok(doctorService.updateDoctor(id, request));
     }
@@ -93,7 +93,7 @@ public class DoctorController {
      */
     @PostMapping(value = "/{id}/upload-verification", consumes = "multipart/form-data")
     public ResponseEntity<?> uploadVerification(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestParam(value = "nationalIdImage", required = false) MultipartFile nationalIdImage,
             @RequestParam(value = "practiceLicenseImage", required = false) MultipartFile practiceLicenseImage,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar,
@@ -191,7 +191,7 @@ public class DoctorController {
      * [ADMIN] Duyệt bác sĩ → status = active
      */
     @PutMapping("/{id}/approve")
-    public ResponseEntity<?> approveDoctor(@PathVariable Integer id) {
+    public ResponseEntity<?> approveDoctor(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(doctorService.approveDoctor(id));
         } catch (Exception e) {
@@ -204,7 +204,7 @@ public class DoctorController {
      */
     @PutMapping("/{id}/reject")
     public ResponseEntity<?> rejectDoctor(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestParam(value = "reason", required = false) String reason) {
         try {
             return ResponseEntity.ok(doctorService.rejectDoctor(id, reason));
@@ -214,7 +214,7 @@ public class DoctorController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deactivateDoctor(@PathVariable Integer id) {
+    public ResponseEntity<String> deactivateDoctor(@PathVariable Long id) {
         try {
             doctorService.deactivateDoctor(id);
             return ResponseEntity.ok("Bác sĩ đã được ngừng hoạt động và toàn bộ phân công active đã được hủy.");

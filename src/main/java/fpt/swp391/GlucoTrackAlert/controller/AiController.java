@@ -6,7 +6,7 @@ import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
-import fpt.swp391.GlucoTrackAlert.service.GeminiService;
+import fpt.swp391.GlucoTrackAlert.service.MlAnalysisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AiController {
 
-    private final GeminiService geminiService;
+    private final MlAnalysisService mlAnalysisService;  // thay GeminiService
     private final DailyHealthLogService dailyHealthLogService;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
@@ -52,7 +52,7 @@ public class AiController {
             return ResponseEntity.ok(Map.of("result", "⚠️ Bệnh nhân chưa có dữ liệu sức khỏe nào để phân tích."));
         }
 
-        String result = geminiService.analyzePatient(patient, logs);
+        String result = mlAnalysisService.analyzePatient(patient, logs);
         return ResponseEntity.ok(Map.of("result", result));
     }
 }

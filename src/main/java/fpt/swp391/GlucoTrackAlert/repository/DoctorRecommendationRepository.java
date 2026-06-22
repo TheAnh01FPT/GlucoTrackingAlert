@@ -15,11 +15,18 @@ public interface DoctorRecommendationRepository extends JpaRepository<DoctorReco
 
     // Lấy tất cả khuyến nghị bác sĩ đã tạo (bác sĩ quản lý của mình)
     List<DoctorRecommendation> findByDoctorIdAndPatientIdAndStatusOrderByCreatedAtDesc(
-            Integer doctorId, Long patientId, String status);
+            Long doctorId, Long patientId, String status);
 
     // Kiểm tra khuyến nghị có thuộc về bác sĩ này không (dùng để phân quyền)
-    Optional<DoctorRecommendation> findByIdAndDoctorId(Long id, Integer doctorId);
+    Optional<DoctorRecommendation> findByIdAndDoctorId(Long id, Long doctorId);
 
     // Kiểm tra bác sĩ có được assign với bệnh nhân không (dùng trong service)
-    boolean existsByDoctorIdAndPatientId(Integer doctorId, Long patientId);
+    boolean existsByDoctorIdAndPatientId(Long doctorId, Long patientId);
+
+    // Lấy tất cả kể cả inactive (bác sĩ xem lịch sử đã xóa)
+    List<DoctorRecommendation> findByDoctorIdAndPatientIdOrderByCreatedAtDesc(
+            Long doctorId, Long patientId);
+
+    // Bệnh nhân xem tất cả kể cả inactive
+    List<DoctorRecommendation> findByPatientIdOrderByCreatedAtDesc(Long patientId);
 }

@@ -3,6 +3,8 @@ package fpt.swp391.GlucoTrackAlert.controller.recommendation;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationRequest;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationResponse;
 import fpt.swp391.GlucoTrackAlert.service.recommendation.DoctorRecommendationService;
+
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -57,5 +59,20 @@ public class DoctorRecommendationController {
             @PathVariable Long id) {
         recommendationService.delete(principal.getName(), id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Bác sĩ xem tất cả kể cả đã xóa (includeInactive=true)
+    @GetMapping("/doctor/patient/{patientId}/all")
+    public ResponseEntity<List<DoctorRecommendationResponse>> getAllByDoctorAndPatient(
+            Principal principal,
+            @PathVariable Long patientId) {
+        return ResponseEntity.ok(recommendationService.getAllByDoctorAndPatient(principal.getName(), patientId));
+    }
+
+    // Bệnh nhân xem tất cả kể cả đã xóa
+    @GetMapping("/patient/{patientId}/all")
+    public ResponseEntity<List<DoctorRecommendationResponse>> getAllByPatient(
+            @PathVariable Long patientId) {
+        return ResponseEntity.ok(recommendationService.getAllByPatient(patientId));
     }
 }

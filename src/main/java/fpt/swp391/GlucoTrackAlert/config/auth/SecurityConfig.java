@@ -19,16 +19,19 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                // Public endpoints (không cần login)
                 .requestMatchers("/api/auth/**", "/login", "/register", "/forgot-password", "/error", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
-                // FIX LỖI 3: /api/users/** có thể tra email→userId của bất kỳ user nào → chỉ ADMIN được dùng
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
                 .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
+                // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
+                .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR")
                 .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                 .requestMatchers("/patient/**").hasRole("PATIENT")
-                .requestMatchers("/doctor/**", "/api/doctor/**").hasRole("DOCTOR")
+                .requestMatchers("/doctor/**").hasRole("DOCTOR")
+                // /api/doctor/** cho cả ADMIN (admin xem bệnh nhân của bác sĩ)
+                .requestMatchers("/api/doctor/**").hasAnyRole("DOCTOR", "ADMIN")
                 .requestMatchers("/ai/**").hasAnyRole("ADMIN", "DOCTOR")
                 .requestMatchers(HttpMethod.GET, "/api/recommendations/patient/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                 .requestMatchers("/api/recommendations/**").hasRole("DOCTOR")

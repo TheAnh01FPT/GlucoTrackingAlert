@@ -74,7 +74,7 @@ public class DoctorServiceImp implements DoctorService {
 
     // ── Admin sửa hồ sơ ──────────────────────────────────────────────────────
     @Override
-    public DoctorResponse updateDoctor(Integer id, DoctorRequest request) {
+    public DoctorResponse updateDoctor(Long id, DoctorRequest request) {
         Doctor doctor = findOrThrow(id);
         applyAdminFieldsFromRequest(doctor, request);
         return DoctorResponse.from(doctorRepository.save(doctor));
@@ -87,14 +87,14 @@ public class DoctorServiceImp implements DoctorService {
     }
 
     @Override
-    public DoctorResponse getDoctorById(Integer id) {
+    public DoctorResponse getDoctorById(Long id) {
         return DoctorResponse.from(findOrThrow(id));
     }
 
     // ── Soft-delete ───────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public void deactivateDoctor(Integer id) {
+    public void deactivateDoctor(Long id) {
         Doctor doctor = findOrThrow(id);
         doctor.setStatus("inactive");
         doctorRepository.save(doctor);
@@ -113,7 +113,7 @@ public class DoctorServiceImp implements DoctorService {
     // ── Bác sĩ upload ảnh CCCD + chứng chỉ + avatar + nhập số ───────────────
     @Override
     @Transactional
-    public DoctorResponse uploadVerificationImages(Integer doctorId,
+    public DoctorResponse uploadVerificationImages(Long doctorId,
             String nationalIdImageUrl,
             String practiceLicenseImageUrl,
             String avatarUrl,
@@ -166,7 +166,7 @@ public class DoctorServiceImp implements DoctorService {
     // ── Admin duyệt ──────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public DoctorResponse approveDoctor(Integer id) {
+    public DoctorResponse approveDoctor(Long id) {
         Doctor doctor = findOrThrow(id);
         doctor.setStatus("active");
         doctor.getUser().setStatus("active");
@@ -184,7 +184,7 @@ public class DoctorServiceImp implements DoctorService {
     // ── Admin từ chối ─────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public DoctorResponse rejectDoctor(Integer id, String reason) {
+    public DoctorResponse rejectDoctor(Long id, String reason) {
         Doctor doctor = findOrThrow(id);
         doctor.setStatus("rejected");
         String reasonText = (reason != null && !reason.isBlank()) ? reason : "Không đủ điều kiện";
@@ -199,7 +199,7 @@ public class DoctorServiceImp implements DoctorService {
         return DoctorResponse.from(doctorRepository.save(doctor));
     }
 
-    private Doctor findOrThrow(Integer id) {
+    private Doctor findOrThrow(Long id) {
         return doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ id=" + id));
     }

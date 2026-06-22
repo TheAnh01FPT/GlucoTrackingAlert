@@ -1,8 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.service.recommendation;
 
+
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationRequest;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationResponse;
-
 import java.util.List;
 
 public interface DoctorRecommendationService {
@@ -21,4 +21,10 @@ public interface DoctorRecommendationService {
 
     // Bác sĩ xóa mềm khuyến nghị (chỉ được xóa của mình)
     void delete(String doctorEmail, Long recommendationId);
+
+    // Bác sĩ xem tất cả kể cả đã xóa (inactive)
+    List<DoctorRecommendationResponse> getAllByDoctorAndPatient(String doctorEmail, Long patientId);
+
+    // Bệnh nhân xem tất cả kể cả đã xóa
+    List<DoctorRecommendationResponse> getAllByPatient(Long patientId);
 }

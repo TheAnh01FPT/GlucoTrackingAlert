@@ -25,13 +25,13 @@ app.json_encoder = NumpyEncoder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ============================================
-# Load 3 models
+# Load models (V3 đã bỏ - xem ghi chú trong ensemble_predict())
 # ============================================
-model_v3 = joblib.load(os.path.join(BASE_DIR, 'gluco_model_final.pkl'))   # CDC BRFSS
 model_v4 = joblib.load(os.path.join(BASE_DIR, 'gluco_model_v4.pkl'))      # Pima
 model_v5 = joblib.load(os.path.join(BASE_DIR, 'gluco_model_v5.pkl'))      # Diabetes Prediction
 
-print("✅ Models loaded: V3 (CDC) + V4 (Pima) + V5 (Diabetes Prediction)")
+print("✅ Models loaded: V4 (Pima) + V5 (Diabetes Prediction)")
+print("   (V3/CDC đã bỏ vì cần dữ liệu lifestyle chưa thu thập được - tránh bịa dữ liệu)")
 
 # ============================================
 # Khuyến nghị
@@ -39,12 +39,17 @@ print("✅ Models loaded: V3 (CDC) + V4 (Pima) + V5 (Diabetes Prediction)")
 def generate_advice(risk_level, blood_sugar, systolic, bmi):
     advice = []
 
+    # Lưu ý: hệ thống chưa lưu thông tin "bệnh nhân đã được chẩn đoán tiểu
+    # đường hay chưa" -- toàn bộ app này vốn dành cho người đã mắc tiểu
+    # đường, nên các câu dưới đây mô tả MỨC ĐỘ KIỂM SOÁT của chỉ số đo
+    # được trong ngày, KHÔNG phải chẩn đoán lại từ đầu (tránh gây hiểu lầm
+    # kiểu "tiền tiểu đường" nghe như bệnh nhẹ hơn bệnh đã có).
     if blood_sugar >= 11.1:
-        advice.append("Đường huyết vượt ngưỡng chẩn đoán tiểu đường (ADA: ≥11.1 mmol/L). Cần kiểm tra HbA1c ngay.")
+        advice.append("Đường huyết hôm nay rất cao (≥11.1 mmol/L) - kiểm soát kém. Cần kiểm tra HbA1c và xem xét điều chỉnh phác đồ ngay.")
     elif blood_sugar >= 7.8:
-        advice.append("Đường huyết trong vùng nghi ngờ tiểu đường. Khuyến nghị nhịn ăn và đo lại sau 2 giờ.")
+        advice.append("Đường huyết hôm nay cao hơn mục tiêu - kiểm soát chưa tốt. Khuyến nghị nhịn ăn và đo lại sau 2 giờ.")
     elif blood_sugar >= 5.6:
-        advice.append("Đường huyết ở mức tiền tiểu đường. Theo dõi chặt chẽ và điều chỉnh chế độ ăn.")
+        advice.append("Đường huyết hôm nay ở mức khá - vẫn cần theo dõi chặt chẽ và điều chỉnh chế độ ăn, không chủ quan dù chỉ số đẹp.")
 
     if systolic >= 140:
         advice.append("Huyết áp cao (≥140 mmHg). Xem xét điều chỉnh thuốc hạ áp.")
@@ -77,9 +82,7 @@ def ensemble_predict(data: dict) -> dict:
     age         = int(data.get('age', 40))
     gender      = data.get('gender', 'MALE')
     is_pregnant = bool(data.get('isPregnant', False))
-    smoker      = bool(data.get('smoker', False))
-    phys_active = bool(data.get('physActivity', True))
-    gen_health  = int(data.get('genHealth', 3))
+    # smoker/physActivity/genHealth không còn dùng (V3 đã bỏ) -- xem ghi chú trong ensemble_predict()
     hypertension = 1 if systolic >= 140 else 0
 
     # ---- Rule ADA cứng ----
@@ -94,17 +97,6 @@ def ensemble_predict(data: dict) -> dict:
         glucose_mgdl = blood_sugar * 18.0
         high_bp = 1 if systolic >= 130 else 0
 
-        # Model V3 — CDC BRFSS (lifestyle)
-        x_v3 = np.array([[
-            high_bp, 0, bmi,
-            1 if smoker else 0, 0, 0,
-            1 if phys_active else 0,
-            1, 1, 0, gen_health, 0, 0, 0,
-            0 if gender == 'MALE' else 1,
-            min(13, max(1, age // 5)), 3
-        ]])
-        proba_v3 = float(model_v3.predict_proba(x_v3)[0][2])  # prob tiểu đường
-
         # Model V4 — Pima (glucose trực tiếp)
         x_v4 = np.array([[
             1 if is_pregnant else 0,
@@ -114,7 +106,11 @@ def ensemble_predict(data: dict) -> dict:
         proba_v4 = float(model_v4.predict_proba(x_v4)[0][1])
 
         # Model V5 — Diabetes Prediction (blood_glucose + hypertension)
-        smoke_enc = 2 if smoker else 0
+        # Lưu ý: hệ thống chưa thu thập "smoker" thật từ bệnh nhân, nên KHÔNG
+        # bịa khẳng định "không hút" (sẽ làm model lệch lạc quan quá mức).
+        # Dùng giá trị trung tính (1, nằm giữa 0=không hút và 2=có hút) để
+        # model dựa chủ yếu vào các chỉ số có thật khác (glucose, bmi, age...).
+        smoke_enc = 1  # trung tính - chưa có dữ liệu thật, xem TODO ở MlAnalysisService.java
         gender_enc = 1 if gender == 'FEMALE' else 0
         x_v5 = np.array([[
             glucose_mgdl, bmi, age,
@@ -123,9 +119,11 @@ def ensemble_predict(data: dict) -> dict:
         ]])
         proba_v5 = float(model_v5.predict_proba(x_v5)[0][1])
 
-        # Weighted ensemble
-        # V5 có recall tốt nhất (87%) → weight cao nhất
-        ensemble_score = (proba_v3 * 0.20) + (proba_v4 * 0.35) + (proba_v5 * 0.45)
+        # Weighted ensemble (chỉ còn V4 + V5 -- đã bỏ V3 vì V3 cần 3 input
+        # (physActivity, genHealth) mà hệ thống chưa thu thập được, trước đây
+        # bị hardcode giả -> bỏ hẳn để tránh sai lệch)
+        # Giữ nguyên tỉ lệ tương đối cũ giữa V4:V5 (0.35:0.45 -> chia lại tổng=1)
+        ensemble_score = (proba_v4 * 0.4375) + (proba_v5 * 0.5625)
 
         if ensemble_score >= 0.55:
             risk = 2
@@ -134,7 +132,7 @@ def ensemble_predict(data: dict) -> dict:
         else:
             risk = 0
 
-    risk_labels = {0: 'Nguy cơ THẤP', 1: 'Nguy cơ TRUNG BÌNH', 2: 'Nguy cơ CAO'}
+    risk_labels = {0: 'Kiểm soát TỐT', 1: 'Kiểm soát TRUNG BÌNH', 2: 'Kiểm soát KÉM'}
     risk_colors = {0: 'GREEN', 1: 'YELLOW', 2: 'RED'}
 
     advice = generate_advice(risk, blood_sugar, systolic, bmi)
@@ -145,12 +143,11 @@ def ensemble_predict(data: dict) -> dict:
         'riskColor': risk_colors[risk],
         'ruleApplied': rule_applied,
         'advice': advice,
-        'summary': f"Phân tích AI ({'Rule ADA' if rule_applied else 'Ensemble V3+V4+V5'}): {risk_labels[risk]}"
+        'summary': f"Phân tích AI ({'Rule ADA' if rule_applied else 'Ensemble V4+V5'}): {risk_labels[risk]}"
     }
 
     if not rule_applied:
         result['scores'] = {
-            'v3_lifestyle': round(proba_v3, 3),
             'v4_glucose':   round(proba_v4, 3),
             'v5_clinical':  round(proba_v5, 3),
             'ensemble':     round(ensemble_score, 3)
@@ -166,9 +163,9 @@ def ensemble_predict(data: dict) -> dict:
 def health():
     return jsonify({
         'status': 'ok',
-        'models': ['V3_CDC', 'V4_Pima', 'V5_DiabetesPrediction'],
-        'version': '2.0',
-        'ensemble_weights': {'v3': 0.20, 'v4': 0.35, 'v5': 0.45}
+        'models': ['V4_Pima', 'V5_DiabetesPrediction'],
+        'version': '2.1',
+        'ensemble_weights': {'v4': 0.4375, 'v5': 0.5625}
     })
 
 

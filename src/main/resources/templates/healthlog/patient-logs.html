@@ -1,759 +1,808 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlucoTrackAlert - Nhật Ký Sức Khỏe Của Tôi</title>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #f8fafc;
-            --card-bg: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: #e2e8f0;
-            --indigo-light: #e0e7ff;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        /* Navbar Layout */
-        .navbar {
-            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-            padding: 1rem 2rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #ffffff;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .navbar-brand:hover {
-            opacity: 0.9;
-        }
-
-        .navbar-menu {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .navbar-link {
-            color: #cbd5e1;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-        }
-
-        .navbar-link:hover,
-        .navbar-link.active {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Main Container */
-        .main-container {
-            max-width: 1250px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-            animation: fadeIn 0.6s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GlucoTrackAlert - Nhật Ký Sức Khỏe Của Tôi</title>
+        <!-- Google Fonts: Inter -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+            :root {
+                --bg-primary: #f8fafc;
+                --card-bg: #ffffff;
+                --text-primary: #0f172a;
+                --text-secondary: #475569;
+                --primary: #4f46e5;
+                --primary-hover: #4338ca;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --border: #e2e8f0;
+                --indigo-light: #e0e7ff;
+                --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+                --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
             }
-        }
 
-        /* Upper Action Bar */
-        .action-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
-            border: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
+            /* Navbar Layout */
+            .navbar {
+                background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+                padding: 1rem 2rem;
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
 
-        .page-heading {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+            .navbar-brand {
+                font-size: 1.5rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: #ffffff;
+                text-decoration: none;
+                transition: var(--transition);
+            }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
-        }
+            .navbar-brand:hover {
+                opacity: 0.9;
+            }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
+            .navbar-menu {
+                display: flex;
+                gap: 1.5rem;
+                align-items: center;
+            }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
-        }
+            .navbar-link {
+                color: #cbd5e1;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 0.95rem;
+                transition: var(--transition);
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+            }
 
-        /* Health Stats Card Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+            .navbar-link:hover,
+            .navbar-link.active {
+                color: white;
+                background-color: rgba(255, 255, 255, 0.1);
+            }
 
-        .stat-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: var(--transition);
-        }
+            /* Main Container */
+            .main-container {
+                max-width: 1250px;
+                margin: 2rem auto;
+                padding: 0 1.5rem;
+                animation: fadeIn 0.6s ease;
+            }
 
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08);
-        }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(15px);
+                }
 
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
 
-        .stat-icon-blood {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
+            /* Upper Action Bar */
+            .action-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: var(--card-bg);
+                padding: 1.5rem;
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                margin-bottom: 2rem;
+                border: 1px solid var(--border);
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
 
-        .stat-icon-pressure {
-            background-color: #e0e7ff;
-            color: #6366f1;
-        }
+            .page-heading {
+                font-size: 1.15rem;
+                font-weight: 700;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
 
-        .stat-icon-sleep {
-            background-color: #fef3c7;
-            color: #f59e0b;
-        }
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.65rem 1.25rem;
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 0.9rem;
+                cursor: pointer;
+                text-decoration: none;
+                transition: var(--transition);
+                border: none;
+            }
 
-        .stat-icon-water {
-            background-color: #e0f2fe;
-            color: #0284c7;
-        }
+            .btn-primary {
+                background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+                color: white;
+                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            }
 
-        .stat-info {
-            display: flex;
-            flex-direction: column;
-        }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+            }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+            /* Health Stats Card Grid */
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
 
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-top: 0.25rem;
-        }
+            .stat-card {
+                background: var(--card-bg);
+                padding: 1.5rem;
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                border: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                transition: var(--transition);
+            }
 
-        /* Table Card */
-        .table-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
+            .stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08);
+            }
 
-        .table-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+            }
 
-        .table-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin: 0;
-            color: var(--text-primary);
-        }
+            .stat-icon-blood {
+                background-color: #fee2e2;
+                color: #ef4444;
+            }
 
-        .table-responsive {
-            overflow-x: auto;
-        }
+            .stat-icon-pressure {
+                background-color: #e0e7ff;
+                color: #6366f1;
+            }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
+            .stat-icon-sleep {
+                background-color: #fef3c7;
+                color: #f59e0b;
+            }
 
-        th {
-            background-color: #f8fafc;
-            padding: 1rem 1.5rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border);
-        }
+            .stat-icon-water {
+                background-color: #e0f2fe;
+                color: #0284c7;
+            }
 
-        td {
-            padding: 1.1rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            transition: var(--transition);
-        }
+            .stat-info {
+                display: flex;
+                flex-direction: column;
+            }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
+            .stat-label {
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
 
-        tr:hover td {
-            background-color: #f8fafc;
-        }
+            .stat-value {
+                font-size: 1.4rem;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-top: 0.25rem;
+            }
 
-        /* Alert row styles */
-        .row-alert-danger {
-            background-color: #fef2f2;
-        }
+            /* Table Card */
+            .table-card {
+                background: var(--card-bg);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                border: 1px solid var(--border);
+                overflow: hidden;
+                margin-bottom: 2rem;
+            }
 
-        .row-alert-danger:hover td {
-            background-color: #fee2e2;
-        }
+            .table-header {
+                padding: 1.5rem;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
 
-        /* Value Badges */
-        .value-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 0.25rem 0.6rem;
-            border-radius: 8px;
-        }
+            .table-title {
+                font-size: 1.15rem;
+                font-weight: 700;
+                margin: 0;
+                color: var(--text-primary);
+            }
 
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
+            .table-responsive {
+                overflow-x: auto;
+            }
 
-        .badge-success {
-            background-color: #d1fae5;
-            color: #10b981;
-        }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                text-align: left;
+            }
 
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #d97706;
-        }
+            th {
+                background-color: #f8fafc;
+                padding: 1rem 1.5rem;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                border-bottom: 1px solid var(--border);
+            }
 
-        .badge-neutral {
-            background-color: #f1f5f9;
-            color: #475569;
-        }
+            td {
+                padding: 1.1rem 1.5rem;
+                border-bottom: 1px solid var(--border);
+                font-size: 0.95rem;
+                color: var(--text-primary);
+                transition: var(--transition);
+            }
 
-        /* Actions styling */
-        .action-links {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
+            tr:last-child td {
+                border-bottom: none;
+            }
 
-        .btn-action {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-        }
+            tr:hover td {
+                background-color: #f8fafc;
+            }
 
-        .btn-view {
-            background-color: #eff6ff;
-            color: #3b82f6;
-        }
+            /* Alert row styles */
+            .row-alert-danger {
+                background-color: #fef2f2;
+            }
 
-        .btn-view:hover {
-            background-color: #dbeafe;
-            transform: scale(1.1);
-        }
+            .row-alert-danger:hover td {
+                background-color: #fee2e2;
+            }
 
-        .btn-edit {
-            background-color: #fef3c7;
-            color: #d97706;
-        }
+            /* Value Badges */
+            .value-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                font-weight: 600;
+                font-size: 0.9rem;
+                padding: 0.25rem 0.6rem;
+                border-radius: 8px;
+            }
 
-        .btn-edit:hover {
-            background-color: #fde68a;
-            transform: scale(1.1);
-        }
+            .badge-danger {
+                background-color: #fee2e2;
+                color: #ef4444;
+            }
 
-        .btn-delete {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
+            .badge-success {
+                background-color: #d1fae5;
+                color: #10b981;
+            }
 
-        .btn-delete:hover {
-            background-color: #fca5a5;
-            transform: scale(1.1);
-        }
+            .badge-warning {
+                background-color: #fef3c7;
+                color: #d97706;
+            }
 
-        /* Pagination container */
-        .pagination-container {
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #ffffff;
-            border-top: 1px solid var(--border);
-        }
+            .badge-neutral {
+                background-color: #f1f5f9;
+                color: #475569;
+            }
 
-        .pagination-info {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
+            /* Actions styling */
+            .action-links {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+            }
 
-        .pagination-buttons {
-            display: flex;
-            gap: 0.35rem;
-        }
+            .btn-action {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                transition: var(--transition);
+                border: none;
+                cursor: pointer;
+            }
 
-        .pagination-btn {
-            padding: 0.5rem 0.9rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background-color: white;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            text-decoration: none;
-            transition: var(--transition);
-        }
+            .btn-view {
+                background-color: #eff6ff;
+                color: #3b82f6;
+            }
 
-        .pagination-btn:hover:not(.disabled) {
-            background-color: #f1f5f9;
-            color: var(--text-primary);
-            border-color: #cbd5e1;
-        }
+            .btn-view:hover {
+                background-color: #dbeafe;
+                transform: scale(1.1);
+            }
 
-        .pagination-btn.active {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
+            .btn-edit {
+                background-color: #fef3c7;
+                color: #d97706;
+            }
 
-        .pagination-btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
+            .btn-edit:hover {
+                background-color: #fde68a;
+                transform: scale(1.1);
+            }
 
-        .empty-state {
-            padding: 4rem 2rem;
-            text-align: center;
-            color: var(--text-secondary);
-        }
+            .btn-delete {
+                background-color: #fee2e2;
+                color: #ef4444;
+            }
 
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
+            .btn-delete:hover {
+                background-color: #fca5a5;
+                transform: scale(1.1);
+            }
 
-        /* Page size selector */
-        .page-size-selector {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+            /* Pagination container */
+            .pagination-container {
+                padding: 1.25rem 1.5rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: #ffffff;
+                border-top: 1px solid var(--border);
+            }
 
-        .page-size-selector label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
+            .pagination-info {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+            }
 
-        .page-size-select {
-            padding: 0.35rem 0.6rem;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            font-size: 0.85rem;
-            font-family: inherit;
-            background-color: white;
-            cursor: pointer;
-            outline: none;
-            transition: var(--transition);
-        }
+            .pagination-buttons {
+                display: flex;
+                gap: 0.35rem;
+            }
 
-        .page-size-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
-        }
-    </style>
-</head>
+            .pagination-btn {
+                padding: 0.5rem 0.9rem;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background-color: white;
+                color: var(--text-secondary);
+                font-weight: 500;
+                font-size: 0.875rem;
+                text-decoration: none;
+                transition: var(--transition);
+            }
 
-<body>
+            .pagination-btn:hover:not(.disabled) {
+                background-color: #f1f5f9;
+                color: var(--text-primary);
+                border-color: #cbd5e1;
+            }
 
-    <!-- Header Navigation -->
-    <header class="navbar">
-        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
-            🩸 GlucoTrackAlert
-        </a>
-        <nav class="navbar-menu">
-            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
-            <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            <div style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
-                <span style="font-size:1.3rem;">🔔</span>
-                <span id="notiCount" style="display:none; position:absolute; top:-6px; right:-8px; background:#ef4444; color:white; border-radius:50%; font-size:0.65rem; font-weight:700; min-width:18px; height:18px; line-height:18px; text-align:center; padding:0 3px;"></span>
-            </div>
-            <div id="notiDropdown" style="display:none; position:absolute; top:60px; right:20px; width:340px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:999;">
-                <div style="padding:0.75rem 1rem; border-bottom:1px solid #e2e8f0; font-weight:600; font-size:0.9rem; color:#1e293b;">🔔 Thông Báo</div>
-                <div id="notiList" style="max-height:320px; overflow-y:auto; padding:0.5rem 0;"><p style="padding:1rem; color:#94a3b8; font-size:0.88rem;">Đang tải...</p></div>
-            </div>
-        </nav>
-    </header>
+            .pagination-btn.active {
+                background-color: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
 
-    <!-- Main Content -->
-    <main class="main-container">
+            .pagination-btn.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
 
-        <!-- Action Bar -->
-        <section class="action-bar">
-            <div class="page-heading">
-                📋 Nhật Ký Sức Khỏe Của Tôi
-            </div>
-            <div class="actions">
-                <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}" class="btn btn-primary">
-                    ➕ Ghi Nhật Ký Mới
-                </a>
-            </div>
-        </section>
+            .empty-state {
+                padding: 4rem 2rem;
+                text-align: center;
+                color: var(--text-secondary);
+            }
 
-        <!-- Dynamic Statistics Row -->
-        <section class="stats-grid" th:if="${!#lists.isEmpty(logs)}">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-blood">🩸</div>
-                <div class="stat-info">
-                    <span class="stat-label">Số Lần Đo Gần Đây</span>
-                    <span class="stat-value" th:text="${#lists.size(logs)}">0</span>
+            .empty-state-icon {
+                font-size: 3rem;
+                margin-bottom: 1rem;
+                display: block;
+            }
+
+            /* Page size selector */
+            .page-size-selector {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .page-size-selector label {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+                font-weight: 500;
+            }
+
+            .page-size-select {
+                padding: 0.35rem 0.6rem;
+                border-radius: 6px;
+                border: 1px solid var(--border);
+                font-size: 0.85rem;
+                font-family: inherit;
+                background-color: white;
+                cursor: pointer;
+                outline: none;
+                transition: var(--transition);
+            }
+
+            .page-size-select:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <!-- Header Navigation -->
+        <header class="navbar">
+            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+                🩸 GlucoTrackAlert
+            </a>
+            <nav class="navbar-menu">
+                <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
+                <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+                <div style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
+                    <span style="font-size:1.3rem;">🔔</span>
+                    <span id="notiCount" style="display:none; position:absolute; top:-6px; right:-8px; background:#ef4444; color:white; border-radius:50%; font-size:0.65rem; font-weight:700; min-width:18px; height:18px; line-height:18px; text-align:center; padding:0 3px;"></span>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-pressure">💖</div>
-                <div class="stat-info">
-                    <span class="stat-label">Huyết Áp Gần Nhất</span>
-                    <span class="stat-value"
-                        th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
+                <div id="notiDropdown" style="display:none; position:absolute; top:60px; right:20px; width:340px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:999;">
+                    <div style="padding:0.75rem 1rem; border-bottom:1px solid #e2e8f0; font-weight:600; font-size:0.9rem; color:#1e293b;">🔔 Thông Báo</div>
+                    <div id="notiList" style="max-height:320px; overflow-y:auto; padding:0.5rem 0;"><p style="padding:1rem; color:#94a3b8; font-size:0.88rem;">Đang tải...</p></div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-sleep">🛌</div>
-                <div class="stat-info">
-                    <span class="stat-label">Giờ Ngủ Gần Nhất</span>
-                    <span class="stat-value"
-                        th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-container">
+
+            <!-- Action Bar -->
+            <section class="action-bar">
+                <div class="page-heading">
+                    📋 Nhật Ký Sức Khỏe Của Tôi
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-water">🥛</div>
-                <div class="stat-info">
-                    <span class="stat-label">Nước Uống Gần Nhất</span>
-                    <span class="stat-value" th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500
-                        ml</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Log List Card -->
-        <section class="table-card">
-            <div class="table-header">
-                <h2 class="table-title">📅 Lịch Sử Chỉ Số Sức Khỏe</h2>
-            </div>
-
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ngày Ghi</th>
-                            <th>Đường Huyết (mmol/L)</th>
-                            <th>Huyết Áp (mmHg)</th>
-                            <th>Giờ Ngủ (giờ)</th>
-                            <th>Lượng Nước (ml)</th>
-                            <th>Mức Đường Tiêu Thụ</th>
-                            <th>Triệu Chứng</th>
-                            <th>Ghi Chú</th>
-                            <th style="width: 120px;">Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="log : ${logs}"
-                            th:class="${log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'} ? 'row-alert-danger' : ''">
-
-                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
-                                30/05/2026</td>
-
-                            <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
-                            <td>
-                                <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
-                                <span th:if="${log.bloodSugar != null}"
-                                    th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
-                                    th:text="${log.bloodSugar}"
-                                    th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
-                                </span>
-                            </td>
-
-                            <!-- Blood Pressure display -->
-                            <td>
-                                <span th:if="${log.systolic != null && log.diastolic != null}"
-                                    th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
-                                    th:text="${log.systolic + '/' + log.diastolic}">
-                                    120/80
-                                </span>
-                                <span th:if="${log.systolic == null || log.diastolic == null}"
-                                    class="value-badge badge-neutral">--</span>
-                            </td>
-
-                            <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">8.0</td>
-                            <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
-
-                            <td>
-                                <span th:if="${log.sugarConsumptionLevel == null}"
-                                    class="value-badge badge-neutral">--</span>
-                                <span th:if="${log.sugarConsumptionLevel != null}"
-                                    th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
-                                    th:text="${log.sugarConsumptionLevel}">
-                                    low
-                                </span>
-                            </td>
-
-                            <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
-                                style="color: var(--text-secondary); font-size: 0.85rem;">
-                                Triệu chứng...
-                            </td>
-
-                            <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
-                                style="color: var(--text-secondary); font-size: 0.85rem;">
-                                Ghi chú...
-                            </td>
-
-                            <td>
-                                <div class="action-links">
-                                    <!-- View Detail -->
-                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${userId}, source='my-logs')}" class="btn-action btn-view"
-                                        title="Xem Chi Tiết">👁️</a>
-                                    <!-- Edit -->
-                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
-                                        class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
-                                    <!-- Delete -->
-                                    <form
-                                        th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
-                                        method="POST" style="display: inline;"
-                                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
-                                        <button type="submit" class="btn-action btn-delete"
-                                            title="Xóa Nhật Ký">🗑️</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr th:if="${#lists.isEmpty(logs)}">
-                            <td colspan="9">
-                                <div class="empty-state">
-                                    <span class="empty-state-icon">📋</span>
-                                    <h3>Chưa Có Nhật Ký Sức Khỏe Nào</h3>
-                                    <p>Hãy bắt đầu thêm nhật ký đầu tiên để theo dõi sức khỏe tốt hơn.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination Bar -->
-            <div class="pagination-container" th:if="${totalPages > 0}">
-                <div class="pagination-info">
-                    Hiển thị
-                    <strong th:text="${currentPage * pageSize + 1}">1</strong>-<strong
-                        th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong>
-                    trong tổng <strong th:text="${totalElements}">100</strong> bản ghi
-                </div>
-
-                <div class="pagination-buttons" th:if="${totalPages > 1}">
-                    <a th:href="@{/health-logs/my-logs(page=${currentPage - 1}, size=${pageSize}, userId=${userId})}"
-                        th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
-                        &laquo; Trước
-                    </a>
-
-                    <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                        th:href="@{/health-logs/my-logs(page=${i}, size=${pageSize}, userId=${userId})}"
-                        th:text="${i + 1}" th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
-                        1
-                    </a>
-
-                    <a th:href="@{/health-logs/my-logs(page=${currentPage + 1}, size=${pageSize}, userId=${userId})}"
-                        th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
-                        Sau &raquo;
+                <div class="actions">
+                    <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}" class="btn btn-primary">
+                        ➕ Ghi Nhật Ký Mới
                     </a>
                 </div>
+            </section>
 
-                <div class="page-size-selector">
-                    <label for="pageSizeSelect">Hiển thị:</label>
-                    <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
-                        <option value="5" th:selected="${pageSize == 5}">5</option>
-                        <option value="10" th:selected="${pageSize == 10}">10</option>
-                        <option value="20" th:selected="${pageSize == 20}">20</option>
-                        <option value="50" th:selected="${pageSize == 50}">50</option>
-                    </select>
-                    <span style="font-size: 0.85rem; color: var(--text-secondary);">/ trang</span>
+            <!-- Dynamic Statistics Row -->
+            <section class="stats-grid" th:if="${!#lists.isEmpty(logs)}">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-blood">🩸</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Số Lần Đo Gần Đây</span>
+                        <span class="stat-value" th:text="${#lists.size(logs)}">0</span>
+                    </div>
                 </div>
-            </div>
-        </section>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-pressure">💖</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Huyết Áp Gần Nhất</span>
+                        <span class="stat-value"
+                              th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-sleep">🛌</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Giờ Ngủ Gần Nhất</span>
+                        <span class="stat-value"
+                              th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-water">🥛</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Nước Uống Gần Nhất</span>
+                        <span class="stat-value" th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500
+                            ml</span>
+                    </div>
+                </div>
+            </section>
 
-        <!-- Khuyến Nghị Từ Bác Sĩ -->
-        <section class="table-card" style="margin-top: 2rem;">
-            <div class="table-header">
-                <h2 class="table-title">💊 Khuyến Nghị Từ Bác Sĩ</h2>
-            </div>
-            <div id="patientRecItems" style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.75rem;">
-                <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
-            </div>
-        </section>
-    </main>
+            <!-- Log List Card -->
+            <section class="table-card">
+                <div class="table-header">
+                    <h2 class="table-title">📅 Lịch Sử Chỉ Số Sức Khỏe</h2>
+                </div>
 
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        async function loadNotifications() {
-            const userId = /*[[${userId}]]*/ null;
-            if (!userId) return;
-            try {
-                const res = await fetch(`/api/notifications?userId=${userId}`);
-                const list = await res.json();
-                const count = list.filter(n => !n.isRead).length;
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ngày Ghi</th>
+                                <th>Đường Huyết (mmol/L)</th>
+                                <th>Huyết Áp (mmHg)</th>
+                                <th>Giờ Ngủ (giờ)</th>
+                                <th>Lượng Nước (ml)</th>
+                                <th>Mức Đường Tiêu Thụ</th>
+                                <th>Triệu Chứng</th>
+                                <th>Ghi Chú</th>
+                                <th style="width: 120px;">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="log : ${logs}"
+                                th:class="${log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'} ? 'row-alert-danger' : ''">
+
+                                <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
+                                    30/05/2026</td>
+
+                                <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
+                                <td>
+                                    <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
+                                    <span th:if="${log.bloodSugar != null}"
+                                          th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
+                                          th:text="${log.bloodSugar}"
+                                          th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
+                                    </span>
+                                </td>
+
+                                <!-- Blood Pressure display -->
+                                <td>
+                                    <span th:if="${log.systolic != null && log.diastolic != null}"
+                                          th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
+                                          th:text="${log.systolic + '/' + log.diastolic}">
+                                        120/80
+                                    </span>
+                                    <span th:if="${log.systolic == null || log.diastolic == null}"
+                                          class="value-badge badge-neutral">--</span>
+                                </td>
+
+                                <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">8.0</td>
+                                <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
+
+                                <td>
+                                    <span th:if="${log.sugarConsumptionLevel == null}"
+                                          class="value-badge badge-neutral">--</span>
+                                    <span th:if="${log.sugarConsumptionLevel != null}"
+                                          th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
+                                          th:text="${log.sugarConsumptionLevel}">
+                                        low
+                                    </span>
+                                </td>
+
+                                <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
+                                    style="color: var(--text-secondary); font-size: 0.85rem;">
+                                    Triệu chứng...
+                                </td>
+
+                                <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
+                                    style="color: var(--text-secondary); font-size: 0.85rem;">
+                                    Ghi chú...
+                                </td>
+
+                                <td>
+                                    <div class="action-links">
+                                        <!-- View Detail -->
+                                        <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${userId}, source='my-logs')}" class="btn-action btn-view"
+                                           title="Xem Chi Tiết">👁️</a>
+                                        <!-- Edit -->
+                                        <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                           class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
+                                        <!-- Delete -->
+                                        <form
+                                            th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                            method="POST" style="display: inline;"
+                                            onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
+                                            <button type="submit" class="btn-action btn-delete"
+                                                    title="Xóa Nhật Ký">🗑️</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(logs)}">
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <span class="empty-state-icon">📋</span>
+                                        <h3>Chưa Có Nhật Ký Sức Khỏe Nào</h3>
+                                        <p>Hãy bắt đầu thêm nhật ký đầu tiên để theo dõi sức khỏe tốt hơn.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Bar -->
+                <div class="pagination-container" th:if="${totalPages > 0}">
+                    <div class="pagination-info">
+                        Hiển thị
+                        <strong th:text="${currentPage * pageSize + 1}">1</strong>-<strong
+                            th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong>
+                        trong tổng <strong th:text="${totalElements}">100</strong> bản ghi
+                    </div>
+
+                    <div class="pagination-buttons" th:if="${totalPages > 1}">
+                        <a th:href="@{/health-logs/my-logs(page=${currentPage - 1}, size=${pageSize}, userId=${userId})}"
+                           th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
+                            &laquo; Trước
+                        </a>
+
+                        <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                           th:href="@{/health-logs/my-logs(page=${i}, size=${pageSize}, userId=${userId})}"
+                           th:text="${i + 1}" th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
+                            1
+                        </a>
+
+                        <a th:href="@{/health-logs/my-logs(page=${currentPage + 1}, size=${pageSize}, userId=${userId})}"
+                           th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
+                            Sau &raquo;
+                        </a>
+                    </div>
+
+                    <div class="page-size-selector">
+                        <label for="pageSizeSelect">Hiển thị:</label>
+                        <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
+                            <option value="5" th:selected="${pageSize == 5}">5</option>
+                            <option value="10" th:selected="${pageSize == 10}">10</option>
+                            <option value="20" th:selected="${pageSize == 20}">20</option>
+                            <option value="50" th:selected="${pageSize == 50}">50</option>
+                        </select>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">/ trang</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Khuyến Nghị Từ Bác Sĩ -->
+            <section class="table-card" style="margin-top: 2rem;">
+                <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2 class="table-title">💊 Khuyến Nghị Từ Bác Sĩ</h2>
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#64748b; cursor:pointer;">
+                        <input type="checkbox" id="showInactiveRec" onchange="loadPatientRecommendations()" style="cursor:pointer;"/>
+                        Hiển thị đã thu hồi
+                    </label>
+                </div>
+                <div id="patientRecItems" style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.75rem; padding: 0 1.5rem 1.5rem;">
+                    <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
+                </div>
+            </section>
+        </main>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            async function loadNotifications() {
+                const userId = /*[[${userId}]]*/ null;
+                if (!userId)
+                    return;
+                try {
+                    const res = await fetch(`/api/notifications?userId=${userId}`);
+                    const list = await res.json();
+                    const count = list.filter(n => !n.isRead).length;
+                    const badge = document.getElementById("notiCount");
+                    if (count > 0) {
+                        badge.style.display = "block";
+                        badge.textContent = count > 99 ? "99+" : count;
+                    }
+                    const notiList = document.getElementById("notiList");
+                    if (!list.length) {
+                        notiList.innerHTML = "<p style='padding:1rem; color:#94a3b8; font-size:0.88rem;'>Chưa có thông báo nào.</p>";
+                        return;
+                    }
+                    notiList.innerHTML = list.map(n => `<div onclick="markRead(${n.id}, this)" style="padding:0.75rem 1rem; border-bottom:1px solid #f1f5f9; cursor:pointer; background:${n.isRead ? '#fff' : '#f0f9ff'}"><div style="font-size:0.88rem; font-weight:${n.isRead ? 400 : 600}; color:#1e293b;">${n.title}</div><div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">${n.message}</div><div style="font-size:0.75rem; color:#94a3b8; margin-top:0.25rem;">${new Date(n.createdAt).toLocaleString("vi-VN")}</div></div>`).join("");
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            function toggleNotifications() {
+                const dd = document.getElementById("notiDropdown");
+                dd.style.display = dd.style.display === "none" ? "block" : "none";
+                if (dd.style.display === "block")
+                    loadNotifications();
+            }
+            async function markRead(id, el) {
+                await fetch(`/api/notifications/${id}/read`, {method: "POST"});
+                el.style.background = "#fff";
                 const badge = document.getElementById("notiCount");
-                if (count > 0) { badge.style.display="block"; badge.textContent = count > 99 ? "99+" : count; }
-                const notiList = document.getElementById("notiList");
-                if (!list.length) { notiList.innerHTML = "<p style='padding:1rem; color:#94a3b8; font-size:0.88rem;'>Chưa có thông báo nào.</p>"; return; }
-                notiList.innerHTML = list.map(n => `<div onclick="markRead(${n.id}, this)" style="padding:0.75rem 1rem; border-bottom:1px solid #f1f5f9; cursor:pointer; background:${n.isRead ? '#fff' : '#f0f9ff'}"><div style="font-size:0.88rem; font-weight:${n.isRead ? 400 : 600}; color:#1e293b;">${n.title}</div><div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">${n.message}</div><div style="font-size:0.75rem; color:#94a3b8; margin-top:0.25rem;">${new Date(n.createdAt).toLocaleString("vi-VN")}</div></div>`).join("");
-            } catch(e) { console.error(e); }
-        }
-        function toggleNotifications() {
-            const dd = document.getElementById("notiDropdown");
-            dd.style.display = dd.style.display === "none" ? "block" : "none";
-            if (dd.style.display === "block") loadNotifications();
-        }
-        async function markRead(id, el) {
-            await fetch(`/api/notifications/${id}/read`, { method: "POST" });
-            el.style.background = "#fff";
-            const badge = document.getElementById("notiCount");
-            const count = parseInt(badge.textContent || "0") - 1;
-            if (count <= 0) badge.style.display = "none"; else badge.textContent = count;
-        }
-        document.addEventListener("click", function(e) {
-            if (!e.target.closest("#notiDropdown") && !e.target.closest("div[onclick]")) {
-                const dd = document.getElementById("notiDropdown"); if (dd) dd.style.display = "none";
+                const count = parseInt(badge.textContent || "0") - 1;
+                if (count <= 0)
+                    badge.style.display = "none";
+                else
+                    badge.textContent = count;
             }
-        });
-        async function loadPatientRecommendations() {
-            const patientId = /*[[${patientId}]]*/ null;
-            if (!patientId) { document.getElementById("patientRecItems").innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Không xác định được bệnh nhân.</p>"; return; }
-            const res = await fetch(`/api/recommendations/patient/${patientId}`);
-            const list = await res.json();
-            const container = document.getElementById("patientRecItems");
-            if (!list.length) { container.innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Chưa có khuyến nghị nào từ bác sĩ.</p>"; return; }
-            container.innerHTML = list.map(r => `<div style="padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;"><div style="display:flex; justify-content:space-between;"><strong style="font-size:0.95rem; color:#15803d;">${r.title}</strong><span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span></div><p style="margin-top:0.5rem; font-size:0.88rem; color:#475569;">${r.recommendation}</p><span style="font-size:0.8rem; color:#64748b;">👨‍⚕️ BS. ${r.doctorName}</span></div>`).join("");
-        }
-        window.onload = () => loadPatientRecommendations();
+            document.addEventListener("click", function (e) {
+                if (!e.target.closest("#notiDropdown") && !e.target.closest("div[onclick]")) {
+                    const dd = document.getElementById("notiDropdown");
+                    if (dd)
+                        dd.style.display = "none";
+                }
+            });
+            async function loadPatientRecommendations() {
+                const patientId = /*[[${patientId}]]*/ null;
+                if (!patientId) {
+                    document.getElementById("patientRecItems").innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Không xác định được bệnh nhân.</p>";
+                    return;
+                }
+                const showInactive = document.getElementById('showInactiveRec') && document.getElementById('showInactiveRec').checked;
+                const url = showInactive
+                        ? `/api/recommendations/patient/${patientId}/all`
+                        : `/api/recommendations/patient/${patientId}`;
+                const res = await fetch(url);
+                const list = await res.json();
+                const container = document.getElementById("patientRecItems");
+                if (!list.length) {
+                    container.innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Chưa có khuyến nghị nào từ bác sĩ.</p>";
+                    return;
+                }
+                container.innerHTML = list.map(r => {
+                    const isInactive = r.status === 'inactive';
+                    if (isInactive) {
+                        return `<div style="padding:1rem 1.25rem; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; opacity:0.6;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:0.95rem; color:#94a3b8; text-decoration:line-through;">${r.title}</strong>
+                                <span style="font-size:0.75rem; background:#f1f5f9; color:#94a3b8; padding:0.2rem 0.6rem; border-radius:6px;">Đã thu hồi</span>
+                            </div>
+                            <p style="margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;">${r.recommendation}</p>
+                            <span style="font-size:0.8rem; color:#cbd5e1;">👨‍⚕️ BS. ${r.doctorName}</span>
+                        </div>`;
+                    }
+                    return `<div style="padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="font-size:0.95rem; color:#15803d;">${r.title}</strong>
+                            <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
+                        </div>
+                        <p style="margin-top:0.5rem; font-size:0.88rem; color:#475569;">${r.recommendation}</p>
+                        <span style="font-size:0.8rem; color:#64748b;">👨‍⚕️ BS. ${r.doctorName}</span>
+                    </div>`;
+                }).join("");
+            }
+            window.onload = () => loadPatientRecommendations();
 
-        function changePageSize() {
-            var size = document.getElementById('pageSizeSelect').value;
-            var userId = /*[[${userId}]]*/ '';
-            var url = '/health-logs/my-logs?page=0&size=' + size + '&userId=' + userId;
-            location.href = url;
-        }
-        /*]]>*/
-    </script>
+            function changePageSize() {
+                var size = document.getElementById('pageSizeSelect').value;
+                var userId = /*[[${userId}]]*/ '';
+                var url = '/health-logs/my-logs?page=0&size=' + size + '&userId=' + userId;
+                location.href = url;
+            }
+            /*]]>*/
+        </script>
 
-</body>
+    </body>
 
 </html>

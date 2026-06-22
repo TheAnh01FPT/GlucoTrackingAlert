@@ -45,7 +45,7 @@ public class DoctorPatientAssignmentController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AssignmentResponse> updateAssignment(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestBody AssignmentRequest request
     ) {
         return ResponseEntity.ok(
@@ -54,13 +54,13 @@ public class DoctorPatientAssignmentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteAssignment(@PathVariable Integer id) {
+    public ResponseEntity<String> deleteAssignment(@PathVariable Long id) {
         assignmentService.deleteAssignment(id);
         return ResponseEntity.ok("Assignment deleted");
     }
 
     @DeleteMapping("/{id}/permanent")
-    public ResponseEntity<String> hardDeleteAssignment(@PathVariable Integer id) {
+    public ResponseEntity<String> hardDeleteAssignment(@PathVariable Long id) {
         assignmentService.hardDeleteAssignment(id);
         return ResponseEntity.ok("Assignment permanently deleted");
     }
