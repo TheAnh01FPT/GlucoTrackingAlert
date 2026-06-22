@@ -240,6 +240,56 @@ public class DailyHealthLogController {
                 selectedPatient = patientOpt.get();
             }
 
+            // Trigger weekly AI prediction calculation (On-Demand)
+            try {
+                dailyHealthLogService.assessWeeklyRisk(selectedPatientId);
+            } catch (Exception e) {
+                // ignore
+            }
+
+            // Get the latest weekly AI prediction for this patient
+            List<Map<String, Object>> riskList = jdbcTemplate.queryForList(
+                "SELECT ra.id, ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at " +
+                "FROM risk_assessments ra " +
+                "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
+                "ORDER BY ra.assessed_at DESC LIMIT 1",
+                selectedPatientId
+            );
+
+            Map<String, Object> latestRisk = null;
+            if (!riskList.isEmpty()) {
+                Map<String, Object> raw = riskList.get(0);
+                latestRisk = new HashMap<>();
+                latestRisk.put("id", raw.get("id"));
+                
+                Object pct = raw.get("risk_percentage");
+                if (pct instanceof java.math.BigDecimal) {
+                    latestRisk.put("riskPercentage", String.format("%.2f", ((java.math.BigDecimal) pct).doubleValue()));
+                } else if (pct instanceof Number) {
+                    latestRisk.put("riskPercentage", String.format("%.2f", ((Number) pct).doubleValue()));
+                } else {
+                    latestRisk.put("riskPercentage", pct != null ? pct.toString() : "0.00");
+                }
+                
+                latestRisk.put("riskLevel", raw.get("risk_level"));
+                latestRisk.put("aiSummary", raw.get("ai_summary"));
+                latestRisk.put("recommendation", raw.get("recommendation"));
+                
+                Object assessedAtObj = raw.get("assessed_at");
+                if (assessedAtObj != null) {
+                    if (assessedAtObj instanceof java.time.LocalDateTime) {
+                        java.time.LocalDateTime ldt = (java.time.LocalDateTime) assessedAtObj;
+                        latestRisk.put("assessedAtStr", ldt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                    } else if (assessedAtObj instanceof java.util.Date) {
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+                        latestRisk.put("assessedAtStr", sdf.format((java.util.Date) assessedAtObj));
+                    } else {
+                        latestRisk.put("assessedAtStr", assessedAtObj.toString());
+                    }
+                }
+            }
+            model.addAttribute("latestRisk", latestRisk);
+
             Pageable pageable = PageRequest.of(page, size);
             Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(selectedPatientId, pageable);
             model.addAttribute("logs", logsPage.getContent());
@@ -250,6 +300,7 @@ public class DailyHealthLogController {
             model.addAttribute("selectedUserId", selectedPatientId);
             model.addAttribute("selectedPatientId", selectedPatientId);
         } else {
+            model.addAttribute("latestRisk", null);
             model.addAttribute("logs", Collections.emptyList());
             model.addAttribute("currentPage", 0);
             model.addAttribute("totalPages", 0);
@@ -659,8 +710,17 @@ public class DailyHealthLogController {
 
         Long patientId = resolvePatientId(targetUserId);
         if (patientId == null) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
-            return "redirect:/";
+            // Fallback: Check if targetUserId is actually a patientId
+            if (targetUserId != null && patientRepository.existsById(targetUserId)) {
+                patientId = targetUserId;
+                Patient p = patientRepository.findById(patientId).orElse(null);
+                if (p != null && p.getUser() != null) {
+                    targetUserId = p.getUser().getId();
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+                return "redirect:/";
+            }
         }
 
         Patient patient = patientRepository.findById(patientId).orElse(null);
@@ -845,6 +905,9 @@ public class DailyHealthLogController {
                 }
             }
         }
+
+        boolean isDocOrAdmin = hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN");
+        model.addAttribute("isDoctorOrAdmin", isDocOrAdmin);
 
         model.addAttribute("patient", patient);
         model.addAttribute("userId", targetUserId);

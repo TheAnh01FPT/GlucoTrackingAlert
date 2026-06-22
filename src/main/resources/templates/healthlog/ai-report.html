@@ -618,12 +618,26 @@
 
     <!-- Header Navigation -->
     <header class="navbar">
-        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+        <!-- Brand Link -->
+        <a th:if="${isDoctorOrAdmin}" th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-brand">
             🩸 GlucoTrackAlert
         </a>
+        <a th:unless="${isDoctorOrAdmin}" th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+            🩸 GlucoTrackAlert
+        </a>
+        
+        <!-- Menu Navigation -->
         <nav class="navbar-menu">
-            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
-            <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            <!-- Doctor/Admin Navbar -->
+            <th:block th:if="${isDoctorOrAdmin}">
+                <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-link">Nhật Ký Bệnh Nhân</a>
+                <a th:href="@{/health-logs/doctor-chart(userId=${patient.id})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            </th:block>
+            <!-- Patient Navbar -->
+            <th:block th:unless="${isDoctorOrAdmin}">
+                <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
+                <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            </th:block>
             <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
         </nav>
     </header>
@@ -680,7 +694,7 @@
                     </div>
                 </div>
 
-                <a th:href="@{/patients/profile/edit(userId=${userId})}" class="btn-edit-profile">✏️ Chỉnh Sửa Hồ Sơ</a>
+                <a th:if="${!isDoctorOrAdmin}" th:href="@{/patient/profile/edit}" class="btn-edit-profile">✏️ Chỉnh Sửa Hồ Sơ</a>
             </section>
 
             <!-- Report Area -->
