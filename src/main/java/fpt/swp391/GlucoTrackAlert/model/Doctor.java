@@ -41,6 +41,12 @@ public class Doctor {
     private String nationalId;       // Căn cước công dân
 
     private String practiceLicense;  // Chứng chỉ hành nghề
+
+    @Column(name = "national_id_image_url")
+    private String nationalIdImageUrl;      // Ảnh CCCD
+
+    @Column(name = "practice_license_image_url")
+    private String practiceLicenseImageUrl; // Ảnh chứng chỉ hành nghề
     private String status = "active";
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

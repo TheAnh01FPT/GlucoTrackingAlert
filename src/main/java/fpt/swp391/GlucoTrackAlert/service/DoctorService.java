@@ -32,4 +32,21 @@ public interface DoctorService {
      * được khi bác sĩ đang ở trạng thái inactive.
      */
     void hardDeleteDoctor(Long id);
+
+    /**
+     * Bác sĩ upload ảnh CCCD, chứng chỉ hành nghề, avatar + nhập số CCCD & số
+     * chứng chỉ. Status chuyển sang pending_approval để admin duyệt.
+     */
+    DoctorResponse uploadVerificationImages(Long doctorId,
+            String nationalIdImageUrl,
+            String practiceLicenseImageUrl,
+            String avatarUrl,
+            String nationalId,
+            String practiceLicense);
+
+    List<DoctorResponse> getPendingDoctors();
+
+    DoctorResponse approveDoctor(Long id);
+
+    DoctorResponse rejectDoctor(Long id, String reason);
 }

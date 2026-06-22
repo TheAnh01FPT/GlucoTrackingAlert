@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlucoTrackAlert - Nhật Ký Sức Khỏe Của Tôi</title>
-    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -33,7 +32,6 @@
             min-height: 100vh;
         }
 
-        /* Navbar Layout */
         .navbar {
             background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
             padding: 1rem 2rem;
@@ -84,7 +82,6 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
 
-        /* Main Container */
         .main-container {
             max-width: 1250px;
             margin: 2rem auto;
@@ -93,18 +90,10 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Upper Action Bar */
         .action-bar {
             display: flex;
             justify-content: space-between;
@@ -153,7 +142,6 @@
             box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
         }
 
-        /* Health Stats Card Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -188,25 +176,10 @@
             font-size: 1.5rem;
         }
 
-        .stat-icon-blood {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
-
-        .stat-icon-pressure {
-            background-color: #e0e7ff;
-            color: #6366f1;
-        }
-
-        .stat-icon-sleep {
-            background-color: #fef3c7;
-            color: #f59e0b;
-        }
-
-        .stat-icon-water {
-            background-color: #e0f2fe;
-            color: #0284c7;
-        }
+        .stat-icon-blood { background-color: #fee2e2; color: #ef4444; }
+        .stat-icon-pressure { background-color: #e0e7ff; color: #6366f1; }
+        .stat-icon-sleep { background-color: #fef3c7; color: #f59e0b; }
+        .stat-icon-water { background-color: #e0f2fe; color: #0284c7; }
 
         .stat-info {
             display: flex;
@@ -228,7 +201,6 @@
             margin-top: 0.25rem;
         }
 
-        /* Table Card */
         .table-card {
             background: var(--card-bg);
             border-radius: 16px;
@@ -282,24 +254,12 @@
             transition: var(--transition);
         }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f8fafc; }
 
-        tr:hover td {
-            background-color: #f8fafc;
-        }
+        .row-alert-danger { background-color: #fef2f2; }
+        .row-alert-danger:hover td { background-color: #fee2e2; }
 
-        /* Alert row styles */
-        .row-alert-danger {
-            background-color: #fef2f2;
-        }
-
-        .row-alert-danger:hover td {
-            background-color: #fee2e2;
-        }
-
-        /* Value Badges */
         .value-badge {
             display: inline-flex;
             align-items: center;
@@ -310,27 +270,11 @@
             border-radius: 8px;
         }
 
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
+        .badge-danger { background-color: #fee2e2; color: #ef4444; }
+        .badge-success { background-color: #d1fae5; color: #10b981; }
+        .badge-warning { background-color: #fef3c7; color: #d97706; }
+        .badge-neutral { background-color: #f1f5f9; color: #475569; }
 
-        .badge-success {
-            background-color: #d1fae5;
-            color: #10b981;
-        }
-
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #d97706;
-        }
-
-        .badge-neutral {
-            background-color: #f1f5f9;
-            color: #475569;
-        }
-
-        /* Actions styling */
         .action-links {
             display: flex;
             gap: 0.5rem;
@@ -350,37 +294,13 @@
             cursor: pointer;
         }
 
-        .btn-view {
-            background-color: #eff6ff;
-            color: #3b82f6;
-        }
+        .btn-view { background-color: #eff6ff; color: #3b82f6; }
+        .btn-view:hover { background-color: #dbeafe; transform: scale(1.1); }
+        .btn-edit { background-color: #fef3c7; color: #d97706; }
+        .btn-edit:hover { background-color: #fde68a; transform: scale(1.1); }
+        .btn-delete { background-color: #fee2e2; color: #ef4444; }
+        .btn-delete:hover { background-color: #fca5a5; transform: scale(1.1); }
 
-        .btn-view:hover {
-            background-color: #dbeafe;
-            transform: scale(1.1);
-        }
-
-        .btn-edit {
-            background-color: #fef3c7;
-            color: #d97706;
-        }
-
-        .btn-edit:hover {
-            background-color: #fde68a;
-            transform: scale(1.1);
-        }
-
-        .btn-delete {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
-
-        .btn-delete:hover {
-            background-color: #fca5a5;
-            transform: scale(1.1);
-        }
-
-        /* Pagination container */
         .pagination-container {
             padding: 1.25rem 1.5rem;
             display: flex;
@@ -442,7 +362,6 @@
             display: block;
         }
 
-        /* Page size selector */
         .page-size-selector {
             display: flex;
             align-items: center;
@@ -484,7 +403,16 @@
         <nav class="navbar-menu">
             <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
             <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            <a th:href="@{/health-logs/ai-report(userId=${userId})}" class="navbar-link" style="background-color: rgba(99, 102, 241, 0.2); border: 1px solid #818cf8; color: #fff;">🤖 Báo Cáo AI</a>
             <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang Chủ</a>
+            <div style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
+                <span style="font-size:1.3rem;">🔔</span>
+                <span id="notiCount" style="display:none; position:absolute; top:-6px; right:-8px; background:#ef4444; color:white; border-radius:50%; font-size:0.65rem; font-weight:700; min-width:18px; height:18px; line-height:18px; text-align:center; padding:0 3px;"></span>
+            </div>
+            <div id="notiDropdown" style="display:none; position:absolute; top:60px; right:20px; width:340px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:999;">
+                <div style="padding:0.75rem 1rem; border-bottom:1px solid #e2e8f0; font-weight:600; font-size:0.9rem; color:#1e293b;">🔔 Thông Báo</div>
+                <div id="notiList" style="max-height:320px; overflow-y:auto; padding:0.5rem 0;"><p style="padding:1rem; color:#94a3b8; font-size:0.88rem;">Đang tải...</p></div>
+            </div>
         </nav>
     </header>
 
@@ -532,8 +460,8 @@
                 <div class="stat-icon stat-icon-water">🥛</div>
                 <div class="stat-info">
                     <span class="stat-label">Nước Uống Gần Nhất</span>
-                    <span class="stat-value" th:text="${latestLog != null && latestLog.waterMl != null ? latestLog.waterMl + ' ml' : '--'}">1500
-                        ml</span>
+                    <span class="stat-value"
+                        th:text="${latestLog != null && latestLog.waterMl != null ? latestLog.waterMl + ' ml' : '--'}">1500 ml</span>
                 </div>
             </div>
         </section>
@@ -563,10 +491,8 @@
                         <tr th:each="log : ${logs}"
                             th:class="${(log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' or (log.systolicStatus != null and (log.systolicStatus == 'LOW_DANGER' or log.systolicStatus == 'HIGH_DANGER')) or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_DANGER' or log.diastolicStatus == 'HIGH_DANGER'))) ? 'row-alert-danger' : ''}">
 
-                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
-                                30/05/2026</td>
+                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">30/05/2026</td>
 
-                            <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
                             <td>
                                 <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
                                 <span th:if="${log.bloodSugar != null}"
@@ -576,10 +502,9 @@
                                 </span>
                             </td>
 
-                            <!-- Blood Pressure display -->
                             <td>
                                 <span th:if="${log.systolic != null && log.diastolic != null}"
-                                        th:class="${( (log.systolicStatus != null and (log.systolicStatus.contains('DANGER'))) or (log.diastolicStatus != null and (log.diastolicStatus.contains('DANGER'))) ) ? 'value-badge badge-danger' : ( (log.systolicStatus != null and log.systolicStatus.contains('WARNING')) or (log.diastolicStatus != null and log.diastolicStatus.contains('WARNING')) ) ? 'value-badge badge-warning' : (log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : 'value-badge badge-neutral' }"
+                                    th:class="${( (log.systolicStatus != null and (log.systolicStatus.contains('DANGER'))) or (log.diastolicStatus != null and (log.diastolicStatus.contains('DANGER'))) ) ? 'value-badge badge-danger' : ( (log.systolicStatus != null and log.systolicStatus.contains('WARNING')) or (log.diastolicStatus != null and log.diastolicStatus.contains('WARNING')) ) ? 'value-badge badge-warning' : (log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : 'value-badge badge-neutral' }"
                                     th:text="${log.systolic + '/' + log.diastolic}">
                                     120/80
                                 </span>
@@ -591,8 +516,7 @@
                             <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
 
                             <td>
-                                <span th:if="${log.sugarConsumptionLevel == null}"
-                                    class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.sugarConsumptionLevel == null}" class="value-badge badge-neutral">--</span>
                                 <span th:if="${log.sugarConsumptionLevel != null}"
                                     th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
                                     th:text="${log.sugarConsumptionLevel}">
@@ -601,30 +525,19 @@
                             </td>
 
                             <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
-                                style="color: var(--text-secondary); font-size: 0.85rem;">
-                                Triệu chứng...
-                            </td>
+                                style="color: var(--text-secondary); font-size: 0.85rem;">Triệu chứng...</td>
 
                             <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
-                                style="color: var(--text-secondary); font-size: 0.85rem;">
-                                Ghi chú...
-                            </td>
+                                style="color: var(--text-secondary); font-size: 0.85rem;">Ghi chú...</td>
 
                             <td>
                                 <div class="action-links">
-                                    <!-- View Detail -->
-                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${userId}, source='my-logs')}" class="btn-action btn-view"
-                                        title="Xem Chi Tiết">👁️</a>
-                                    <!-- Edit -->
-                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
-                                        class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
-                                    <!-- Delete -->
-                                    <form
-                                        th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${userId}, source='my-logs')}" class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
+                                    <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}" class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
+                                    <form th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
                                         method="POST" style="display: inline;"
                                         onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
-                                        <button type="submit" class="btn-action btn-delete"
-                                            title="Xóa Nhật Ký">🗑️</button>
+                                        <button type="submit" class="btn-action btn-delete" title="Xóa Nhật Ký">🗑️</button>
                                     </form>
                                 </div>
                             </td>
@@ -657,13 +570,10 @@
                         th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
                         &laquo; Trước
                     </a>
-
                     <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                         th:href="@{/health-logs/my-logs(page=${i}, size=${pageSize}, userId=${userId})}"
-                        th:text="${i + 1}" th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
-                        1
-                    </a>
-
+                        th:text="${i + 1}"
+                        th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">1</a>
                     <a th:href="@{/health-logs/my-logs(page=${currentPage + 1}, size=${pageSize}, userId=${userId})}"
                         th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
                         Sau &raquo;
@@ -682,50 +592,150 @@
                 </div>
             </div>
         </section>
+
+        <!-- Khuyến Nghị Từ Bác Sĩ -->
+        <section class="table-card" style="margin-top: 2rem;">
+            <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 class="table-title">💊 Khuyến Nghị Từ Bác Sĩ</h2>
+                <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#64748b; cursor:pointer;">
+                    <input type="checkbox" id="showInactiveRec" onchange="loadPatientRecommendations()" style="cursor:pointer;"/>
+                    Hiển thị đã thu hồi
+                </label>
+            </div>
+            <div id="patientRecItems" style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.75rem; padding: 0 1.5rem 1.5rem;">
+                <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
+            </div>
+        </section>
+
     </main>
 
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        function changePageSize() {
-            var size = document.getElementById('pageSizeSelect').value;
-            var userId = /*[[${userId}]]*/ '';
-            var url = '/health-logs/my-logs?page=0&size=' + size + '&userId=' + userId;
-            location.href = url;
-        }
-        /*]]>*/
-    </script>
-
-        <!-- Error Modal (shows when flash attribute 'error' exists) -->
-        <div th:if="${error}">
-            <div id="errorModalOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000">
-                <div style="background:#fff;border-radius:12px;max-width:520px;width:90%;padding:1.5rem;box-shadow:0 8px 30px rgba(0,0,0,0.2);">
-                    <div style="display:flex;gap:1rem;align-items:flex-start">
-                        <div style="font-size:2rem;color:#dc2626">⚠️</div>
-                        <div style="flex:1">
-                            <h3 style="margin:0 0 0.5rem 0;color:#111827">Lỗi khi xóa</h3>
-                            <p style="margin:0 0 1rem 0;color:#374151;font-size:0.95rem;white-space:pre-wrap;" th:text="${error}">Thông báo lỗi</p>
-                            <div style="text-align:right">
-                                <button id="closeErrorModal" style="background:#ef4444;color:#fff;border:none;padding:0.6rem 1rem;border-radius:8px;cursor:pointer">Đóng</button>
-                            </div>
+    <!-- Error Modal -->
+    <div th:if="${error}">
+        <div id="errorModalOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000">
+            <div style="background:#fff;border-radius:12px;max-width:520px;width:90%;padding:1.5rem;box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+                <div style="display:flex;gap:1rem;align-items:flex-start">
+                    <div style="font-size:2rem;color:#dc2626">⚠️</div>
+                    <div style="flex:1">
+                        <h3 style="margin:0 0 0.5rem 0;color:#111827">Lỗi khi xóa</h3>
+                        <p style="margin:0 0 1rem 0;color:#374151;font-size:0.95rem;white-space:pre-wrap;" th:text="${error}">Thông báo lỗi</p>
+                        <div style="text-align:right">
+                            <button id="closeErrorModal" style="background:#ef4444;color:#fff;border:none;padding:0.6rem 1rem;border-radius:8px;cursor:pointer">Đóng</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <script th:inline="javascript">
-                /*<![CDATA[*/
-                (function(){
-                    var btn = document.getElementById('closeErrorModal');
-                    if(btn){
-                        btn.addEventListener('click', function(e){
-                            var ov = document.getElementById('errorModalOverlay');
-                            if(ov) ov.style.display = 'none';
-                        });
-                    }
-                })();
-                /*]]>*/
-            </script>
         </div>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            (function(){
+                var btn = document.getElementById('closeErrorModal');
+                if(btn){
+                    btn.addEventListener('click', function(){
+                        var ov = document.getElementById('errorModalOverlay');
+                        if(ov) ov.style.display = 'none';
+                    });
+                }
+            })();
+            /*]]>*/
+        </script>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        async function loadNotifications() {
+            const userId = /*[[${userId}]]*/ null;
+            if (!userId) return;
+            try {
+                const res = await fetch(`/api/notifications?userId=${userId}`);
+                const list = await res.json();
+                const count = list.filter(n => !n.isRead).length;
+                const badge = document.getElementById("notiCount");
+                if (count > 0) {
+                    badge.style.display = "block";
+                    badge.textContent = count > 99 ? "99+" : count;
+                }
+                const notiList = document.getElementById("notiList");
+                if (!list.length) {
+                    notiList.innerHTML = "<p style='padding:1rem; color:#94a3b8; font-size:0.88rem;'>Chưa có thông báo nào.</p>";
+                    return;
+                }
+                notiList.innerHTML = list.map(n => `<div onclick="markRead(${n.id}, this)" style="padding:0.75rem 1rem; border-bottom:1px solid #f1f5f9; cursor:pointer; background:${n.isRead ? '#fff' : '#f0f9ff'}"><div style="font-size:0.88rem; font-weight:${n.isRead ? 400 : 600}; color:#1e293b;">${n.title}</div><div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">${n.message}</div><div style="font-size:0.75rem; color:#94a3b8; margin-top:0.25rem;">${new Date(n.createdAt).toLocaleString("vi-VN")}</div></div>`).join("");
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function toggleNotifications() {
+            const dd = document.getElementById("notiDropdown");
+            dd.style.display = dd.style.display === "none" ? "block" : "none";
+            if (dd.style.display === "block") loadNotifications();
+        }
+
+        async function markRead(id, el) {
+            await fetch(`/api/notifications/${id}/read`, {method: "POST"});
+            el.style.background = "#fff";
+            const badge = document.getElementById("notiCount");
+            const count = parseInt(badge.textContent || "0") - 1;
+            if (count <= 0) badge.style.display = "none";
+            else badge.textContent = count;
+        }
+
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest("#notiDropdown") && !e.target.closest("div[onclick]")) {
+                const dd = document.getElementById("notiDropdown");
+                if (dd) dd.style.display = "none";
+            }
+        });
+
+        async function loadPatientRecommendations() {
+            const patientId = /*[[${patientId}]]*/ null;
+            if (!patientId) {
+                document.getElementById("patientRecItems").innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Không xác định được bệnh nhân.</p>";
+                return;
+            }
+            const showInactive = document.getElementById('showInactiveRec') && document.getElementById('showInactiveRec').checked;
+            const url = showInactive
+                ? `/api/recommendations/patient/${patientId}/all`
+                : `/api/recommendations/patient/${patientId}`;
+            const res = await fetch(url);
+            const list = await res.json();
+            const container = document.getElementById("patientRecItems");
+            if (!list.length) {
+                container.innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Chưa có khuyến nghị nào từ bác sĩ.</p>";
+                return;
+            }
+            container.innerHTML = list.map(r => {
+                const isInactive = r.status === 'inactive';
+                if (isInactive) {
+                    return `<div style="padding:1rem 1.25rem; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; opacity:0.6;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="font-size:0.95rem; color:#94a3b8; text-decoration:line-through;">${r.title}</strong>
+                            <span style="font-size:0.75rem; background:#f1f5f9; color:#94a3b8; padding:0.2rem 0.6rem; border-radius:6px;">Đã thu hồi</span>
+                        </div>
+                        <p style="margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;">${r.recommendation}</p>
+                        <span style="font-size:0.8rem; color:#cbd5e1;">👨‍⚕️ BS. ${r.doctorName}</span>
+                    </div>`;
+                }
+                return `<div style="padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="font-size:0.95rem; color:#15803d;">${r.title}</strong>
+                        <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
+                    </div>
+                    <p style="margin-top:0.5rem; font-size:0.88rem; color:#475569;">${r.recommendation}</p>
+                    <span style="font-size:0.8rem; color:#64748b;">👨‍⚕️ BS. ${r.doctorName}</span>
+                </div>`;
+            }).join("");
+        }
+
+        window.onload = () => loadPatientRecommendations();
+
+        function changePageSize() {
+            var size = document.getElementById('pageSizeSelect').value;
+            var userId = /*[[${userId}]]*/ '';
+            location.href = '/health-logs/my-logs?page=0&size=' + size + '&userId=' + userId;
+        }
+        /*]]>*/
+    </script>
 
 </body>
-
 </html>

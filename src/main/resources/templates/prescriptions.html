@@ -615,6 +615,18 @@
 
                     // Xoá các item cũ, thêm item từ AI
                     document.getElementById('itemsContainer').innerHTML = '';
+                    // Xoá cảnh báo cũ nếu có
+                    const oldWarning = document.getElementById('ai-warning-box');
+                    if (oldWarning) oldWarning.remove();
+
+                    // Hiển thị cảnh báo đặc biệt (vd: pediatric, needsManualReview)
+                    if (suggestion.warning || suggestion.needsManualReview) {
+                        const warningBox = document.createElement('div');
+                        warningBox.id = 'ai-warning-box';
+                        warningBox.style = 'background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:#856404;';
+                        warningBox.innerHTML = `⚠️ <strong>Lưu ý:</strong> ${suggestion.warning || 'Độ tin cậy AI thấp — bác sĩ cần xem xét kỹ hơn bình thường.'}`;
+                        document.getElementById('itemsContainer').before(warningBox);
+                    }
                     (suggestion.items || []).forEach(item => {
                         addItemRow();
                         const cards = document.querySelectorAll('#itemsContainer .item-card');
@@ -625,6 +637,14 @@
                         card.querySelector('.item-timeOfDay').value = item.timeOfDay || '';
                         card.querySelector('.item-durationDays').value = item.durationDays || '';
                         card.querySelector('.item-instructions').value = item.instructions || '';
+
+                        // Hiển thị chống chỉ định ngay dưới mỗi thuốc
+                        if (item.contraindications) {
+                            const contra = document.createElement('div');
+                            contra.style = 'background:#fff5f5;border-left:3px solid #e53e3e;padding:6px 10px;margin-top:6px;font-size:.8rem;color:#c53030;border-radius:0 4px 4px 0;';
+                            contra.innerHTML = `🚫 <strong>Chống chỉ định:</strong> ${item.contraindications}`;
+                            card.appendChild(contra);
+                        }
                     });
 
                     showToast('✅ AI đã gợi ý đơn thuốc. Vui lòng xem lại trước khi kê đơn.', 'success');

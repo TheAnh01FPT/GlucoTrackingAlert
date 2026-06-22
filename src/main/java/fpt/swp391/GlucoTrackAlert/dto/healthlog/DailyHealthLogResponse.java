@@ -34,5 +34,7 @@ public class DailyHealthLogResponse {
     private String patientType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+    private BigDecimal riskPercentage;
+    private String riskLevel;
+    private String aiSummary;
 }

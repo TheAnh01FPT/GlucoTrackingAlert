@@ -2,20 +2,22 @@ package fpt.swp391.GlucoTrackAlert.config.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                             "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
@@ -28,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/reminders/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
                         .requestMatchers("/api/ai/**").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/ai/**").hasAnyRole("ADMIN", "DOCTOR")
 
                         .requestMatchers("/patient/medications").hasAnyRole("PATIENT", "ADMIN")
                         // Phải đặt rule cụ thể trước rule wildcard để Spring Security match đúng
@@ -42,23 +45,26 @@ public class SecurityConfig {
                         .requestMatchers("/health-logs/kidney-risk/doctor/**", "/health-logs/kidney-risk/doctor/dashboard").hasAnyRole("DOCTOR", "ADMIN")
                         .requestMatchers("/health-logs/doctor-view/thresholds/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
+                        // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
+                        .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/patient/**").hasRole("PATIENT")
                         .requestMatchers("/health-reminders").hasAnyRole("PATIENT", "ADMIN")
+                        // /api/doctor/** cho cả ADMIN (admin xem bệnh nhân của bác sĩ)
                         .requestMatchers("/doctor/**", "/api/doctor/**").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/recommendations/patient/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/recommendations/**").hasRole("DOCTOR")
+                        .requestMatchers("/api/notifications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                         .anyRequest().authenticated()
                 )
-
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
                 .formLogin(form -> form.disable())
-
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

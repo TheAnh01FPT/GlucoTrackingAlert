@@ -343,6 +343,12 @@
           class="navbar-link"
           >Biểu Đồ Xu Hướng</a
         >
+        <a
+          th:href="${source == 'doctor-view' ? '/health-logs/ai-report?userId=' + log.patientId : '/health-logs/ai-report?userId=' + log.userId}"
+          class="navbar-link"
+          style="background-color: rgba(99, 102, 241, 0.2); border: 1px solid #818cf8; color: #fff;"
+          >🤖 Báo Cáo AI</a
+        >
       </nav>
     </header>
 
@@ -372,6 +378,32 @@
 
         <div class="detail-body">
           <!-- Smart Alert Banners -->
+          <!-- AI Stroke Risk Alert Banner -->
+          <div
+            th:if="${log.riskLevel != null && (log.riskLevel == 'High' || log.riskLevel == 'Critical')}"
+            class="alert-banner alert-banner-danger"
+            style="background-color: #fff1f2; border: 1px solid #fecdd3; color: #9f1239;"
+          >
+            <span>🤖</span>
+            <div>
+              <strong>Cảnh Báo Từ AI: Nguy Cơ Biến Chứng/Đột Quỵ Cao (<span th:text="${log.riskPercentage}">0.0</span>%)</strong>
+              <br />
+              <span th:text="${log.aiSummary}">Tóm tắt nhận xét của AI.</span>
+            </div>
+          </div>
+
+          <div
+            th:if="${log.riskLevel != null && log.riskLevel == 'Medium'}"
+            class="alert-banner alert-banner-warning"
+          >
+            <span>🤖</span>
+            <div>
+              <strong>Lưu Ý Từ AI: Nguy Cơ Biến Chứng Trung Bình (<span th:text="${log.riskPercentage}">0.0</span>%)</strong>
+              <br />
+              <span th:text="${log.aiSummary}">Tóm tắt nhận xét của AI.</span>
+            </div>
+          </div>
+
           <div
             th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER')}"
             class="alert-banner alert-banner-danger"
