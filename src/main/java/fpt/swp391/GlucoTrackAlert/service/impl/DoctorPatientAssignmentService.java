@@ -12,6 +12,7 @@ import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import jakarta.annotation.PreDestroy;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -33,8 +34,8 @@ public class DoctorPatientAssignmentService {
 
     private static final LocalTime WORK_START = WorkShift.START;
     private static final LocalTime WORK_END = WorkShift.END;
-    private final ScheduledExecutorService scheduler
-            = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService scheduler
+      = Executors.newSingleThreadScheduledExecutor();
 
     private static final int MAX_PATIENTS_PER_DOCTOR = 5;
 
@@ -183,6 +184,7 @@ public class DoctorPatientAssignmentService {
             }
         }
 
+
         if (updatedAssignment.getDoctor() != null) {
             assignment.setDoctor(updatedAssignment.getDoctor());
         }
@@ -193,6 +195,11 @@ public class DoctorPatientAssignmentService {
         if (updatedAssignment.getStatus() != null) {
             assignment.setStatus(updatedAssignment.getStatus());
         }
+
+        assignment.setDoctor(updatedAssignment.getDoctor());
+        assignment.setPatient(updatedAssignment.getPatient());
+        assignment.setNote(updatedAssignment.getNote());
+        assignment.setStatus(updatedAssignment.getStatus());
         return assignmentRepository.save(assignment);
     }
 

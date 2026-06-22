@@ -637,6 +637,14 @@
                                     <label class="form-label">Nơi công tác</label>
                                     <input type="text" class="form-control" id="workplace" placeholder="VD: Bệnh viện Bạch Mai"/>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Số CCCD <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nationalId" placeholder="VD: 001234567890" maxlength="12"/>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Số chứng chỉ hành nghề <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="practiceLicense" placeholder="VD: 027552/BYT-CCHN"/>
+                                </div>
                         <div class="col-md-6" id="statusField" style="display:none">
                                     <label class="form-label">Trạng thái</label>
                                     <select class="form-select" id="status">
@@ -686,7 +694,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Modal Xem ảnh xác minh + Duyệt/Từ chối -->
             <div class="modal fade" id="verifyModal" tabindex="-1">
                 <div class="modal-dialog modal-xl">
@@ -770,6 +777,19 @@
                             <button type="button" class="btn btn-danger" onclick="confirmReject()">
                                 <i class="bi bi-send me-1"></i>Xác nhận từ chối
                             </button>
+            <!-- Modal Xác nhận Xóa vĩnh viễn -->
+            <div class="modal fade" id="hardDeleteModal" tabindex="-1">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-body text-center py-4">
+                            <div style="font-size:2.5rem; color:var(--danger)"><i class="bi bi-trash3-fill"></i></div>
+                            <h6 class="fw-700 mt-2">Xóa vĩnh viễn bác sĩ</h6>
+                            <p class="text-muted small mb-0">Hành động này <strong>không thể hoàn tác</strong>.</p>
+                            <p class="text-danger small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Toàn bộ hồ sơ bác sĩ, tài khoản đăng nhập và lịch sử phân công sẽ bị xóa vĩnh viễn khỏi hệ thống.</p>
+                        </div>
+                        <div class="modal-footer border-0 justify-content-center gap-2">
+                            <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                            <button class="btn btn-danger" onclick="confirmHardDelete()">Xóa vĩnh viễn</button>
                         </div>
                     </div>
                 </div>
@@ -782,6 +802,8 @@
                                 let filteredDoctors = [];
                                 let deactivateTargetId = null;
                                 let doctorModal, deactivateModal, toastEl;
+                                let hardDeleteTargetId = null;
+                                let doctorModal, deactivateModal, hardDeleteModal, toastEl;
                                 const PAGE_SIZE = 10;
                                 let docPage = 1;
 
@@ -789,6 +811,7 @@
                                 document.addEventListener('DOMContentLoaded', function () {
                                     doctorModal = new bootstrap.Modal(document.getElementById('doctorModal'));
                                     deactivateModal = new bootstrap.Modal(document.getElementById('deactivateModal'));
+                                    hardDeleteModal = new bootstrap.Modal(document.getElementById('hardDeleteModal'));
                                     toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
                                     loadWorkingHours();
                                     loadDoctors();
@@ -931,6 +954,8 @@
                             <button class="action-btn edit" onclick='openEdit(${JSON.stringify(d)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
                             ${(d.status === 'pending_approval') ? `<button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt"><i class="bi bi-shield-check"></i></button>` : ''}
                             <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
+                            <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
+                            <button class="action-btn" style="color:var(--danger);opacity:${d.status === 'inactive' ? '1' : '0.3'};cursor:${d.status === 'inactive' ? 'pointer' : 'not-allowed'}" onclick="${d.status === 'inactive' ? 'openHardDelete(' + d.id + ')' : 'void(0)'}" title="${d.status === 'inactive' ? 'Xóa vĩnh viễn' : 'Phải ngừng hoạt động trước'}"><i class="bi bi-trash3"></i></button>
                         </td>
                     </tr>
                 `).join('');
@@ -969,6 +994,8 @@
                                     document.getElementById('experienceYears').value = '';
                                     document.getElementById('phone').value = '';
                                     document.getElementById('workplace').value = '';
+                                    document.getElementById('nationalId').value = '';
+                                    document.getElementById('practiceLicense').value = '';
                                     document.getElementById('introduction').value = '';
                                     document.getElementById('statusField').style.display = 'none';
                                     doctorModal.show();
@@ -985,6 +1012,8 @@
                                     document.getElementById('experienceYears').value = d.experienceYears || '';
                                     document.getElementById('phone').value = d.phone || '';
                                     document.getElementById('workplace').value = d.workplace || '';
+                                    document.getElementById('nationalId').value = d.nationalId || '';
+                                    document.getElementById('practiceLicense').value = d.practiceLicense || '';
                                     document.getElementById('introduction').value = d.introduction || '';
                                     document.getElementById('status').value = d.status || 'active';
                                     document.getElementById('statusField').style.display = 'block';
@@ -1016,6 +1045,8 @@
                                             experienceYears: parseInt(document.getElementById('experienceYears').value) || null,
                                             phone: document.getElementById('phone').value.trim(),
                                             workplace: document.getElementById('workplace').value.trim(),
+                                            nationalId: document.getElementById('nationalId').value.trim(),
+                                            practiceLicense: document.getElementById('practiceLicense').value.trim(),
                                             introduction: document.getElementById('introduction').value.trim()
                                         };
                                         try {
@@ -1043,6 +1074,8 @@
                                             experienceYears: parseInt(document.getElementById('experienceYears').value) || null,
                                             phone: document.getElementById('phone').value.trim(),
                                             workplace: document.getElementById('workplace').value.trim(),
+                                            nationalId: document.getElementById('nationalId').value.trim(),
+                                            practiceLicense: document.getElementById('practiceLicense').value.trim(),
                                             introduction: document.getElementById('introduction').value.trim(),
                                             status: document.getElementById('status').value
                                         };
@@ -1084,10 +1117,26 @@
                                     }
                                 }
 
+                                function openHardDelete(id) {
+                                    hardDeleteTargetId = id;
+                                    hardDeleteModal.show();
+                                }
 
+                                async function confirmHardDelete() {
+                                    try {
+                                        const res = await fetch(`/api/doctors/${hardDeleteTargetId}/permanent`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}, method: 'DELETE'});
+                                        const msg = await res.text();
+                                        if (!res.ok)
+                                            throw new Error(msg);
+                                        hardDeleteModal.hide();
+                                        showToast('Đã xóa vĩnh viễn bác sĩ khỏi hệ thống!', 'success');
+                                        loadDoctors();
+                                    } catch (e) {
+                                        showToast('Lỗi: ' + (e.message || 'Vui lòng thử lại!'), 'danger');
+                                    }
+                                }
 
                                 // ── Invite ─────────────────────────────────────────────
-
 
                                 // ── Tab switching ──────────────────────────────────────
                                 let currentTab = 'doctors';

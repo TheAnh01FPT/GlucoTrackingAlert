@@ -336,6 +336,7 @@ public class DailyHealthLogController {
         if (doctor == null) {
             return false;
         }
+
         return assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId).isPresent();
     }
 

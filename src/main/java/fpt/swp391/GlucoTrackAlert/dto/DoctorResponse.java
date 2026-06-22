@@ -31,6 +31,7 @@ public class DoctorResponse {
     private String nationalIdImageUrl;
     private String practiceLicenseImageUrl;
 
+
     // Giờ làm việc cố định – mọi bác sĩ đều giống nhau, không lưu DB
     private final String workingHours = WorkShift.DISPLAY;
     private final String workingDays = WorkShift.DAYS;

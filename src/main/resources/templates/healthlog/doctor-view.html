@@ -1029,5 +1029,876 @@
         </script>
 
     </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlucoTrackAlert - Theo Dõi Sức Khỏe Bệnh Nhân</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+            --indigo-light: #e0e7ff;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Navbar Layout */
+        .navbar {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            padding: 1rem 2rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #ffffff;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .navbar-brand:hover {
+            opacity: 0.9;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .navbar-link:hover,
+        .navbar-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-admin {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .navbar-admin:hover {
+            background-color: #2563eb;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1250px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            margin-top: 0;
+        }
+
+        /* Upper Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .user-selector-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .user-selector-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .user-select {
+            padding: 0.6rem 2.5rem 0.6rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            font-family: inherit;
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+            transition: var(--transition);
+            font-weight: 500;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1rem;
+            -webkit-appearance: none;
+            appearance: none;
+            min-width: 200px;
+        }
+
+        .user-select:focus {
+            border-color: var(--primary);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        /* Patient Info Card */
+        .patient-info-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .patient-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .patient-info-main {
+            flex: 1;
+        }
+
+        .patient-info-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .patient-info-details {
+            display: flex;
+            gap: 2rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .patient-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .patient-info-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .patient-info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Patient Type Badges */
+        .patient-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 8px;
+            vertical-align: middle;
+        }
+
+        .badge-adult {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .badge-elderly {
+            background-color: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-pregnant {
+            background-color: #fce7f3;
+            color: #be185d;
+        }
+
+        .badge-child {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Health Stats Card Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon-blood {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .stat-icon-pressure {
+            background-color: #e0e7ff;
+            color: #6366f1;
+        }
+
+        .stat-icon-sleep {
+            background-color: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .stat-icon-water {
+            background-color: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 0.25rem;
+        }
+
+        /* Table Card */
+        .table-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 1rem 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Alert row styles */
+        .row-alert-danger {
+            background-color: #fef2f2;
+        }
+
+        .row-alert-danger:hover td {
+            background-color: #fee2e2;
+        }
+
+        /* Value Badges */
+        .value-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 8px;
+        }
+
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #10b981;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-neutral {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        /* Actions styling */
+        .action-links {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-view {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .btn-view:hover {
+            background-color: #fca5a5;
+            transform: scale(1.1);
+        }
+
+        /* Pagination container */
+        .pagination-container {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .pagination-btn {
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: white;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .pagination-btn:hover:not(.disabled) {
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            border-color: #cbd5e1;
+        }
+
+        .pagination-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* Page size selector */
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-size-selector label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .page-size-select {
+            padding: 0.35rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-family: inherit;
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .page-size-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+        }
+
+        .btn-threshold {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: #6366f1;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-threshold:hover { background: #4f46e5; }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="/health-logs/doctor-view" class="navbar-brand">
+            🩸 GlucoTrackAlert
+        </a>
+        <nav class="navbar-menu">
+            <a href="/health-logs/doctor-view" class="navbar-link active">Xem Nhật Ký Bệnh Nhân</a>
+            <a th:href="@{/health-logs/doctor-chart(userId=${selectedUserId})}"class="navbar-link">Biểu Đồ Xu Hướng</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <!-- Page Title -->
+        <h1 class="page-title">Theo Dõi Sức Khỏe Bệnh Nhân 👨‍⚕️</h1>
+
+        <!-- Filter Bar -->
+        <section class="action-bar">
+            <div class="user-selector-container">
+                <div>
+                    <label class="user-selector-label" for="patientTypeSelect">Lọc theo loại:</label>
+                    <select id="patientTypeSelect" class="user-select" onchange="filterByPatientType()">
+                        <option value="" th:selected="${patientType == null or patientType == ''}">Tất cả bệnh nhân
+                        </option>
+                        <option value="adult" th:selected="${patientType == 'adult'}">🧑 Người trưởng thành</option>
+                        <option value="elderly" th:selected="${patientType == 'elderly'}">👴 Người cao tuổi</option>
+                        <option value="pregnant" th:selected="${patientType == 'pregnant'}">🤰 Phụ nữ có thai</option>
+                        <option value="child" th:selected="${patientType == 'child'}">👶 Trẻ em</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="user-selector-label" for="patientSelect">Bệnh Nhân Đang Xem:</label>
+                    <select id="patientSelect" class="user-select" onchange="selectPatient()">
+                        <option th:each="patient : ${patients}" th:value="${patient.id}"
+                            th:selected="${patient.id == selectedUserId}"
+                            th:text="${patient.fullName + (patient.patientType == 'adult' ? ' 🧑' : (patient.patientType == 'elderly' ? ' 👴' : (patient.patientType == 'pregnant' ? ' 🤰' : (patient.patientType == 'child' ? ' 👶' : ''))))}">
+                            Patient Name</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Patient Information Card -->
+        <section class="patient-info-card" th:if="${selectedPatient != null}">
+            <div class="patient-info-header">
+                <div class="patient-info-main">
+                    <h2 class="patient-info-name">
+                        <span th:text="${selectedPatient.fullName}">Nguyễn Văn A</span>
+                        <a th:href="@{/health-logs/doctor-view/thresholds(patientId=${selectedPatient.id})}"
+                           class="btn-threshold"
+                           style="margin-left:12px;">⚙️ Cài ngưỡng riêng</a>
+                        <span th:class="${'patient-type-badge badge-' + selectedPatient.patientType}"
+                            th:text="${selectedPatient.patientType == 'adult' ? '🧑 Người trưởng thành' : (selectedPatient.patientType == 'elderly' ? '👴 Người cao tuổi' : (selectedPatient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (selectedPatient.patientType == 'child' ? '👶 Trẻ em' : '')))}">
+                            Adult
+                        </span>
+                    </h2>
+                    <div class="patient-info-details">
+                        <div class="patient-info-item">
+                            <span class="patient-info-label">Tuổi</span>
+                            <span class="patient-info-value"
+                                th:text="${selectedPatient.age != null ? selectedPatient.age : '--'}">25</span>
+                        </div>
+                        <div class="patient-info-item">
+                            <span class="patient-info-label">Giới tính</span>
+                            <span class="patient-info-value"
+                                th:text="${selectedPatient.gender != null ? (selectedPatient.gender.equalsIgnoreCase('male') ? '👨 Nam' : '👩 Nữ') : '--'}">Nam</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Statistics Row -->
+        <section class="stats-grid" th:if="${!#lists.isEmpty(logs)}">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-blood">🩸</div>
+                <div class="stat-info">
+                    <span class="stat-label">Số Lần Đo Gần Đây</span>
+                    <span class="stat-value" th:text="${#lists.size(logs)}">0</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-pressure">💖</div>
+                <div class="stat-info">
+                    <span class="stat-label">Huyết Áp Gần Nhất</span>
+                    <span class="stat-value"
+                        th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-sleep">🛌</div>
+                <div class="stat-info">
+                    <span class="stat-label">Giờ Ngủ Gần Nhất</span>
+                    <span class="stat-value"
+                        th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-water">🥛</div>
+                <div class="stat-info">
+                    <span class="stat-label">Nước Uống Gần Nhất</span>
+                    <span class="stat-value" th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500
+                        ml</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Log List Card -->
+        <section class="table-card">
+            <div class="table-header">
+                <h2 class="table-title">📅 Lịch Sử Chỉ Số Sức Khỏe</h2>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ngày Ghi</th>
+                            <th>Đường Huyết (mmol/L)</th>
+                            <th>Huyết Áp (mmHg)</th>
+                            <th>Giờ Ngủ (giờ)</th>
+                            <th>Lượng Nước (ml)</th>
+                            <th>Mức Đường Tiêu Thụ</th>
+                            <th>Triệu Chứng</th>
+                            <th>Ghi Chú</th>
+                            <th style="width: 100px;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${logs}"
+                            th:class="${log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'} ? 'row-alert-danger' : ''">
+
+                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
+                                30/05/2026</td>
+
+                            <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
+                            <td>
+                                <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.bloodSugar != null}"
+                                    th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
+                                    th:text="${log.bloodSugar}"
+                                    th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
+                                </span>
+                            </td>
+
+                            <!-- Blood Pressure display -->
+                            <td>
+                                <span th:if="${log.systolic != null && log.diastolic != null}"
+                                    th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
+                                    th:text="${log.systolic + '/' + log.diastolic}">
+                                    120/80
+                                </span>
+                                <span th:if="${log.systolic == null || log.diastolic == null}"
+                                    class="value-badge badge-neutral">--</span>
+                            </td>
+
+                            <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">8.0</td>
+                            <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
+
+                            <td>
+                                <span th:if="${log.sugarConsumptionLevel == null}"
+                                    class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.sugarConsumptionLevel != null}"
+                                    th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
+                                    th:text="${log.sugarConsumptionLevel}">
+                                    low
+                                </span>
+                            </td>
+
+                            <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
+                                style="color: var(--text-secondary); font-size: 0.85rem;">
+                                Triệu chứng...
+                            </td>
+
+                            <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
+                                style="color: var(--text-secondary); font-size: 0.85rem;">
+                                Ghi chú...
+                            </td>
+
+                            <td>
+                                <div class="action-links">
+                                    <!-- View Detail only -->
+                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${selectedUserId}, source='doctor-view')}" class="btn-action btn-view"
+                                        title="Xem Chi Tiết">🔴</a>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr th:if="${#lists.isEmpty(logs)}">
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <span class="empty-state-icon">📋</span>
+                                    <h3>Chưa Có Nhật Ký Sức Khỏe Nào</h3>
+                                    <p>Bệnh nhân này chưa có nhật ký sức khỏe nào.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-container" th:if="${totalPages > 0}">
+                <div class="pagination-info">
+                    Hiển thị
+                    <strong th:text="${currentPage * pageSize + 1}">1</strong>-<strong
+                        th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong>
+                    trong tổng <strong th:text="${totalElements}">100</strong> bản ghi
+                </div>
+
+                <div class="pagination-buttons" th:if="${totalPages > 1}">
+                    <a th:href="@{/health-logs/doctor-view(page=${currentPage - 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                        th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
+                        &laquo; Trước
+                    </a>
+
+                    <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:href="@{/health-logs/doctor-view(page=${i}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                        th:text="${i + 1}" th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
+                        1
+                    </a>
+
+                    <a th:href="@{/health-logs/doctor-view(page=${currentPage + 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                        th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
+                        Sau &raquo;
+                    </a>
+                </div>
+
+                <div class="page-size-selector">
+                    <label for="pageSizeSelect">Hiển thị:</label>
+                    <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
+                        <option value="5" th:selected="${pageSize == 5}">5</option>
+                        <option value="10" th:selected="${pageSize == 10}">10</option>
+                        <option value="20" th:selected="${pageSize == 20}">20</option>
+                        <option value="50" th:selected="${pageSize == 50}">50</option>
+                    </select>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">/ trang</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        function filterByPatientType() {
+            var patientType = document.getElementById('patientTypeSelect').value;
+            var url = '/health-logs/doctor-view?patientType=' + encodeURIComponent(patientType);
+            location.href = url;
+        }
+
+        function selectPatient() {
+            var userId = document.getElementById('patientSelect').value;
+            var patientType = /*[[${patientType}]]*/ '';
+            var pageSize = /*[[${pageSize}]]*/ 10;
+            var url = '/health-logs/doctor-view?userId=' + userId + '&size=' + pageSize;
+            if (patientType) {
+                url += '&patientType=' + encodeURIComponent(patientType);
+            }
+            location.href = url;
+        }
+
+        function changePageSize() {
+            var size = document.getElementById('pageSizeSelect').value;
+            var userId = /*[[${selectedUserId}]]*/ '';
+            var patientType = /*[[${patientType}]]*/ '';
+            var url = '/health-logs/doctor-view?page=0&size=' + size;
+            if (userId) {
+                url += '&userId=' + userId;
+            }
+            if (patientType) {
+                url += '&patientType=' + encodeURIComponent(patientType);
+            }
+            location.href = url;
+        }
+        /*]]>*/
+    </script>
+
+</body>
 
 </html>

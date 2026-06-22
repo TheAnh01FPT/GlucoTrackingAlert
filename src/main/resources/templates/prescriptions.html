@@ -627,7 +627,6 @@
                         warningBox.innerHTML = `⚠️ <strong>Lưu ý:</strong> ${suggestion.warning || 'Độ tin cậy AI thấp — bác sĩ cần xem xét kỹ hơn bình thường.'}`;
                         document.getElementById('itemsContainer').before(warningBox);
                     }
-
                     (suggestion.items || []).forEach(item => {
                         addItemRow();
                         const cards = document.querySelectorAll('#itemsContainer .item-card');

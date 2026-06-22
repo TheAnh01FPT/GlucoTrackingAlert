@@ -23,6 +23,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Tất cả endpoint trong controller này chỉ dành cho ADMIN. Bác sĩ KHÔNG có
+ * quyền tự sửa bất kỳ thông tin nào của mình. Admin là người quản lý toàn bộ dữ
+ * liệu bác sĩ.
+ */
 @RestController
 @RequestMapping("/api/doctors")
 @RequiredArgsConstructor
@@ -36,6 +41,12 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorRepository doctorRepository;
 
+    /**
+     * [PUBLIC] Giờ làm việc cố định của tất cả bác sĩ trong hệ thống. Hardcode
+     * trong WorkShift – không có DB, không cần auth. Dùng để hiển thị trên
+     * trang admin và làm điều kiện gửi thông báo.
+     */
+
     @GetMapping("/working-hours")
     public ResponseEntity<Map<String, String>> getWorkingHours() {
         Map<String, String> info = new LinkedHashMap<>();
@@ -48,7 +59,9 @@ public class DoctorController {
     }
 
     /**
-     * [ADMIN] Tạo tài khoản bác sĩ mới
+     * [ADMIN] Tạo tài khoản bác sĩ mới. - Tạo User (email + mật khẩu tạm) +
+     * Doctor profile cùng lúc. - Hệ thống tự gửi email cho bác sĩ kèm username
+     * & mật khẩu. - Bác sĩ KHÔNG tự đăng ký được qua form thông thường.
      */
     @PostMapping("/admin-create")
     public ResponseEntity<?> adminCreateDoctor(@Valid @RequestBody AdminCreateDoctorRequest request) {
@@ -77,16 +90,20 @@ public class DoctorController {
     }
 
     /**
-     * [ADMIN] Cập nhật thông tin bác sĩ
+     * [ADMIN] Cập nhật thông tin bác sĩ. Admin có thể sửa mọi trường bao gồm:
+     * fullName, phone, specialization, degree, workplace, introduction,
+     * avatarUrl, status.
      */
     @PutMapping("/{id}")
     public ResponseEntity<DoctorResponse> updateDoctor(
             @PathVariable Long id,
             @Valid @RequestBody DoctorRequest request) {
+
         return ResponseEntity.ok(doctorService.updateDoctor(id, request));
     }
 
     /**
+
      * [DOCTOR] Upload ảnh CCCD, chứng chỉ hành nghề, avatar + nhập số CCCD & số
      * chứng chỉ. Bác sĩ phải hoàn tất bước này trước khi được phân công và khám
      * bệnh. Sau khi submit, status chuyển sang pending_approval để admin duyệt.
@@ -213,11 +230,28 @@ public class DoctorController {
         }
     }
 
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deactivateDoctor(@PathVariable Long id) {
         try {
             doctorService.deactivateDoctor(id);
             return ResponseEntity.ok("Bác sĩ đã được ngừng hoạt động và toàn bộ phân công active đã được hủy.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * [ADMIN] Xóa vĩnh viễn bác sĩ khỏi hệ thống. Yêu cầu bác sĩ phải ở trạng
+     * thái inactive trước. Xóa toàn bộ: Doctor profile + User (tài khoản đăng
+     * nhập) + tất cả assignment. Hành động này KHÔNG THỂ hoàn tác.
+     */
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<String> hardDeleteDoctor(@PathVariable Long id) {
+        try {
+            doctorService.hardDeleteDoctor(id);
+            return ResponseEntity.ok("Bác sĩ đã được xóa vĩnh viễn khỏi hệ thống.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

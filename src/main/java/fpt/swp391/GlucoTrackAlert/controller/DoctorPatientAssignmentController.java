@@ -2,6 +2,7 @@ package fpt.swp391.GlucoTrackAlert.controller;
 
 import fpt.swp391.GlucoTrackAlert.dto.AssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.dto.AssignmentResponse;
+import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

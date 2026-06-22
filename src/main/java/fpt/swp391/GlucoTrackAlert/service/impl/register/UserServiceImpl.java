@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.security.SecureRandom;
 
@@ -44,13 +43,13 @@ public class UserServiceImpl implements UserService {
     private String frontendUrl;
 
     public UserServiceImpl(UserRepository userRepository,
-            RoleRepository roleRepository,
-            EmailVerificationTokenRepository tokenRepository,
-            PasswordResetTokenRepository passwordResetTokenRepository,
-            EmailService emailService,
-            BCryptPasswordEncoder passwordEncoder,
-            JwtUtil jwtUtil,
-            DoctorRepository doctorRepository) {
+                           RoleRepository roleRepository,
+                           EmailVerificationTokenRepository tokenRepository,
+                           PasswordResetTokenRepository passwordResetTokenRepository,
+                           EmailService emailService,
+                           BCryptPasswordEncoder passwordEncoder,
+                           JwtUtil jwtUtil,
+                           DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
@@ -61,109 +60,141 @@ public class UserServiceImpl implements UserService {
         this.doctorRepository = doctorRepository;
     }
 
+    private String generateOtp() {
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    }
+
     @Override
     @Transactional
     public User register(RegisterRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email đã được sử dụng");
+        if (userRepository.existsByEmail(request.getEmail().trim())) {
+            throw new Exception("Email này đã được sử dụng trong hệ thống.");
+        }
+
+        if (userRepository.existsByPhone(request.getPhone().trim())) {
+            throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
         }
 
         Role role = roleRepository.findByName("PATIENT")
-                .orElseThrow(() -> new Exception("Role not found"));
+                .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
 
-        User u = User.builder()
-                .email(request.getEmail())
+        User user = User.builder()
+                .email(request.getEmail().trim())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
-                .phone(request.getPhone())
+                .fullName(request.getFullName().trim())
+                .phone(request.getPhone().trim())
                 .role(role)
                 .status("pending_verification")
                 .emailVerified(false)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-        User saved = userRepository.save(u);
+        userRepository.save(user);
 
-        // Tạo OTP 6 số
-        String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
-        EmailVerificationToken ev = EmailVerificationToken.builder()
-                .user(saved)
+        String otp = generateOtp();
+        EmailVerificationToken verificationToken = EmailVerificationToken.builder()
+                .user(user)
                 .verificationToken(otp)
                 .expiredAt(LocalDateTime.now().plusMinutes(10))
                 .status("pending")
                 .createdAt(LocalDateTime.now())
                 .build();
-        tokenRepository.save(ev);
+        tokenRepository.save(verificationToken);
 
-        // Gửi email chứa OTP
-        String body = buildOtpEmail(saved.getFullName(), otp);
-        emailService.sendHtmlMessage(saved.getEmail(), "Mã xác nhận tài khoản GlucoTrackAlert", body);
+        sendOtpEmail(request.getEmail().trim(), request.getFullName().trim(), otp);
 
-        return saved;
+        return user;
     }
 
     @Override
     @Transactional
-    public User activateUser(String otp) throws Exception {
-        EmailVerificationToken ev = tokenRepository.findByVerificationToken(otp)
-                .orElseThrow(() -> new Exception("Mã OTP không hợp lệ"));
-        if (ev.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new Exception("Mã OTP đã hết hạn");
-        }
-        if (!"pending".equals(ev.getStatus())) {
-            throw new Exception("Mã OTP đã được sử dụng");
+    public User activateUser(String token) throws Exception {
+        EmailVerificationToken verificationToken = tokenRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new Exception("Mã xác nhận không đúng."));
+
+        if (verificationToken.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new Exception("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
         }
 
-        User u = ev.getUser();
-        u.setEmailVerified(true);
-        u.setStatus("active");
-        u.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(u);
+        if ("verified".equals(verificationToken.getStatus())) {
+            throw new Exception("Mã xác nhận đã được sử dụng rồi.");
+        }
 
-        ev.setVerifiedAt(LocalDateTime.now());
-        ev.setStatus("verified");
-        tokenRepository.save(ev);
-        return u;
+        if ("expired".equals(verificationToken.getStatus())) {
+            throw new Exception("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
+        }
+
+        User user = verificationToken.getUser();
+        user.setEmailVerified(true);
+        user.setStatus("active");
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        verificationToken.setStatus("verified");
+        verificationToken.setVerifiedAt(LocalDateTime.now());
+        tokenRepository.save(verificationToken);
+
+        return user;
+    }
+
+    @Override
+    @Transactional
+    public void resendOtp(String email) throws Exception {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản với email này."));
+
+        if (Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new Exception("Tài khoản này đã được xác nhận rồi.");
+        }
+
+        tokenRepository.expireAllPendingByUserId(user.getId());
+
+        String otp = generateOtp();
+        EmailVerificationToken verificationToken = EmailVerificationToken.builder()
+                .user(user)
+                .verificationToken(otp)
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
+                .status("pending")
+                .createdAt(LocalDateTime.now())
+                .build();
+        tokenRepository.save(verificationToken);
+
+        sendOtpEmail(email, user.getFullName(), otp);
     }
 
     @Override
     public LoginResponse login(LoginRequest request) throws Exception {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
-
-        if (!user.getEmailVerified()) {
-            throw new Exception("Tài khoản chưa xác thực email. Vui lòng kiểm tra hộp thư.");
-        }
-
-        if (!"active".equalsIgnoreCase(user.getStatus())) {
-            throw new Exception("Tài khoản đã bị khóa hoặc chưa kích hoạt.");
-        }
+                .orElseThrow(() -> new Exception("Email hoặc mật khẩu không đúng."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new Exception("Mật khẩu không chính xác");
+            throw new Exception("Email hoặc mật khẩu không đúng.");
         }
 
-        user.setLastLoginAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new Exception("Tài khoản chưa được xác nhận email. Vui lòng kiểm tra hộp thư.");
+        }
 
-        String roleName = user.getRole() != null ? user.getRole().getName() : "UNKNOWN";
+        if (!"active".equals(user.getStatus())) {
+            throw new Exception("Tài khoản đã bị khóa hoặc chưa được kích hoạt.");
+        }
+
+        String roleName = user.getRole() != null ? user.getRole().getName() : "PATIENT";
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
         Long doctorId = null;
         if ("DOCTOR".equals(roleName)) {
-            doctorId = doctorRepository.findAll().stream()
-                    .filter(d -> d.getUser().getId().equals(user.getId()))
-                    .findFirst()
-                    .map(d -> d.getId())
+            doctorId = doctorRepository.findByUserId(user.getId())
+                    .map(Doctor::getId)
                     .orElse(null);
         }
+
         return LoginResponse.builder()
                 .token(token)
                 .email(user.getEmail())
                 .role(roleName)
                 .doctorId(doctorId)
-                .message("Đăng nhập thành công")
+                .message("Đăng nhập thành công.")
                 .build();
     }
 
@@ -177,8 +208,7 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Tài khoản chưa được kích hoạt hoặc đã bị khóa");
         }
 
-        // Tạo OTP 6 số
-        String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
+        String otp = generateOtp();
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .user(user)
                 .resetToken(otp)
@@ -221,6 +251,38 @@ public class UserServiceImpl implements UserService {
         passwordResetTokenRepository.save(token);
     }
 
+    @Override
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản"));
+
+        oldPassword = oldPassword.trim();
+        newPassword = newPassword.trim();
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu hiện tại không đúng");
+        }
+
+        if (newPassword.length() < 6) {
+            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu mới không được trùng mật khẩu hiện tại");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    private void sendOtpEmail(String toEmail, String fullName, String otp) {
+        String subject = "Mã xác nhận đăng ký tài khoản GlucoTrackAlert";
+        String htmlContent = buildOtpEmail(fullName, otp);
+        emailService.sendHtmlMessage(toEmail, subject, htmlContent);
+    }
+
     private String buildOtpEmail(String fullName, String otp) {
         return """
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -258,63 +320,4 @@ public class UserServiceImpl implements UserService {
             </div>
             """.formatted(fullName, otp);
     }
-
-    @Override
-    @Transactional
-    public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("Không tìm thấy tài khoản"));
-
-        oldPassword = oldPassword.trim();
-        newPassword = newPassword.trim();
-
-        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
-            throw new Exception("Mật khẩu hiện tại không đúng");
-        }
-
-        if (newPassword.length() < 6) {
-            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
-        }
-
-        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
-            throw new Exception("Mật khẩu mới không được trùng mật khẩu hiện tại");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(java.time.LocalDateTime.now());
-        userRepository.save(user);
-    }
-    @Override
-@Transactional
-public void resendOtp(String email) throws Exception {
-    User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
-
-    if (user.getEmailVerified()) {
-        throw new Exception("Tài khoản đã được xác thực rồi");
-    }
-
-    // Hủy các OTP cũ còn pending
-    tokenRepository.findByUser(user).stream()
-            .filter(t -> "pending".equals(t.getStatus()))
-            .forEach(t -> {
-                t.setStatus("expired");
-                tokenRepository.save(t);
-            });
-
-    // Tạo OTP mới
-    String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
-    EmailVerificationToken ev = EmailVerificationToken.builder()
-            .user(user)
-            .verificationToken(otp)
-            .expiredAt(LocalDateTime.now().plusMinutes(10))
-            .status("pending")
-            .createdAt(LocalDateTime.now())
-            .build();
-    tokenRepository.save(ev);
-
-    // Gửi mail
-    String body = buildOtpEmail(user.getFullName(), otp);
-    emailService.sendHtmlMessage(user.getEmail(), "Mã xác nhận tài khoản GlucoTrackAlert", body);
-}
 }
