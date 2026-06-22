@@ -102,8 +102,26 @@ public class PatientServiceImpl implements PatientService {
         }
         patient.setIsPregnant(isPregnantVal);
         
-        patient.setHypertension(request.getHypertension());
-        patient.setHeartDisease(request.getHeartDisease());
+        // Enforce One-Way Lock for hypertension
+        if (Boolean.TRUE.equals(patient.getHypertension())) {
+            if (request.getHypertension() != null && !request.getHypertension()) {
+                throw new RuntimeException("Không thể tự ý hủy bỏ trạng thái Tăng huyết áp. Vui lòng gửi yêu cầu thay đổi kèm bằng chứng y tế.");
+            }
+            patient.setHypertension(true);
+        } else {
+            patient.setHypertension(request.getHypertension() != null ? request.getHypertension() : false);
+        }
+
+        // Enforce One-Way Lock for heart disease
+        if (Boolean.TRUE.equals(patient.getHeartDisease())) {
+            if (request.getHeartDisease() != null && !request.getHeartDisease()) {
+                throw new RuntimeException("Không thể tự ý hủy bỏ trạng thái Tiền sử bệnh tim. Vui lòng gửi yêu cầu thay đổi kèm bằng chứng y tế.");
+            }
+            patient.setHeartDisease(true);
+        } else {
+            patient.setHeartDisease(request.getHeartDisease() != null ? request.getHeartDisease() : false);
+        }
+
         patient.setEverMarried(request.getEverMarried());
         patient.setWorkType(request.getWorkType());
         patient.setResidenceType(request.getResidenceType());

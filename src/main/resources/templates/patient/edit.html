@@ -55,7 +55,7 @@
 
                     <div class="form-group">
                         <label class="form-label" for="dateOfBirth">Ngày tháng năm sinh</label>
-                        <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" class="form-input">
+                        <input type="date" id="dateOfBirth" name="dateOfBirth" th:value="${profileForm.dateOfBirth != null ? #temporals.format(profileForm.dateOfBirth, 'yyyy-MM-dd') : ''}" class="form-input">
                         <span class="error-text" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}">Lỗi ngày sinh</span>
                     </div>
 
@@ -123,18 +123,26 @@
                     <!-- === Bổ sung các trường nhập liệu phục vụ AI dự báo === -->
                     <div class="form-group">
                         <label class="form-label" for="hypertension">Tiền sử tăng huyết áp</label>
-                        <select id="hypertension" th:field="*{hypertension}" class="form-input">
+                        <select id="hypertension" th:field="*{hypertension}" class="form-input" th:disabled="${profileForm.hypertension}">
                             <option value="false">Không có tiền sử tăng huyết áp</option>
                             <option value="true">Có tiền sử tăng huyết áp</option>
                         </select>
+                        <span th:if="${profileForm.hypertension}" style="font-size: 12px; color: #d97706; margin-top: 6px; display: block; font-weight: 500;">
+                            🔒 Đang bị khóa một chiều. Vui lòng gửi yêu cầu thay đổi từ trang hồ sơ chính.
+                        </span>
+                        <input type="hidden" th:if="${profileForm.hypertension}" name="hypertension" value="true">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="heartDisease">Tiền sử bệnh tim mạch</label>
-                        <select id="heartDisease" th:field="*{heartDisease}" class="form-input">
+                        <select id="heartDisease" th:field="*{heartDisease}" class="form-input" th:disabled="${profileForm.heartDisease}">
                             <option value="false">Không có tiền sử bệnh tim</option>
                             <option value="true">Có tiền sử bệnh tim</option>
                         </select>
+                        <span th:if="${profileForm.heartDisease}" style="font-size: 12px; color: #d97706; margin-top: 6px; display: block; font-weight: 500;">
+                            🔒 Đang bị khóa một chiều. Vui lòng gửi yêu cầu thay đổi từ trang hồ sơ chính.
+                        </span>
+                        <input type="hidden" th:if="${profileForm.heartDisease}" name="heartDisease" value="true">
                     </div>
 
                     <div class="form-group">
