@@ -214,6 +214,35 @@
                 background: #f8d7da;
                 color: #721c24;
             }
+            .badge-pending {
+                background: #fff3cd;
+                color: #856404;
+            }
+            .badge-rejected {
+                background: #e2e3e5;
+                color: #383d41;
+            }
+            .action-btn.approve {
+                color: #27ae60;
+            }
+            .action-btn.approve:hover {
+                background: #d4edda;
+            }
+            .action-btn.reject {
+                color: #e74c3c;
+            }
+            .action-btn.reject:hover {
+                background: #fde8e8;
+            }
+            .img-preview {
+                width: 100%;
+                max-height: 280px;
+                object-fit: contain;
+                border-radius: 8px;
+                border: 1px solid #dee2e6;
+                background: #f8f9fa;
+                padding: 4px;
+            }
 
             /* Modal */
             .modal-header {
@@ -396,6 +425,8 @@
                 <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
                 <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
                 <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+                <a href="/admin/patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
+                <a href="/admin/thresholds" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
             </nav>
             <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
                 <div style="color:rgba(255,255,255,.5); font-size:.75rem">Admin</div>
@@ -462,6 +493,10 @@
                             <i class="bi bi-person-badge me-1"></i>Bác sĩ
                             <span class="tab-count" id="tabCountDoctors">–</span>
                         </button>
+                        <button id="tabBtnPending" class="tab-btn" onclick="switchTab('pending')">
+                            <i class="bi bi-clock-history me-1"></i>Chờ duyệt
+                            <span class="tab-count" id="tabCountPending" style="background:#fff3cd;color:#856404">–</span>
+                        </button>
                     </div>
                     <!-- Actions: change based on tab -->
                     <div id="tabActions" style="display:flex; gap:8px; padding:10px 12px;">
@@ -474,6 +509,9 @@
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="active">Đang hoạt động</option>
                                 <option value="inactive">Ngừng hoạt động</option>
+                                <option value="pending_verification">Chờ upload giấy tờ</option>
+                                <option value="pending_approval">Chờ duyệt</option>
+                                <option value="rejected">Đã từ chối</option>
                             </select>
                         </div>
                     </div>
@@ -515,6 +553,32 @@
                 <div id="paginationDoctors" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-top:1px solid #f0f0f0;">
                     <div id="doctorPagInfo" style="font-size:.8rem; color:#6c757d;"></div>
                     <div id="doctorPagBtns" style="display:flex; gap:4px;"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Chờ duyệt -->
+            <div id="panelPending" style="display:none;">
+                <table class="table table-hover" style="margin:0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Họ tên</th>
+                            <th>Chuyên khoa</th>
+                            <th>Học vị</th>
+                            <th>Điện thoại</th>
+                            <th>CCCD</th>
+                            <th>Chứng chỉ HN</th>
+                            <th>Trạng thái</th>
+                            <th style="width:130px">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTable">
+                        <tr><td colspan="9" class="text-center py-4 text-muted"><i class="bi bi-arrow-clockwise me-1"></i>Đang tải...</td></tr>
+                    </tbody>
+                </table>
+                <div id="paginationPending" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-top:1px solid #f0f0f0;">
+                    <div id="pendingPagInfo" style="font-size:.8rem; color:#6c757d;"></div>
+                    <div id="pendingPagBtns" style="display:flex; gap:4px;"></div>
                 </div>
             </div>
             <!-- Toast -->
@@ -633,7 +697,89 @@
                     </div>
                 </div>
             </div>
+            <!-- Modal Xem ảnh xác minh + Duyệt/Từ chối -->
+            <div class="modal fade" id="verifyModal" tabindex="-1">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header" style="background:var(--primary); color:#fff;">
+                            <h5 class="modal-title text-white"><i class="bi bi-shield-check me-2"></i>Xét duyệt hồ sơ bác sĩ</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Thông tin cơ bản + Avatar -->
+                            <div class="row g-3 mb-3 align-items-center">
+                                <div class="col-auto">
+                                    <div id="vfAvatarWrap">
+                                        <div style="width:72px;height:72px;border-radius:50%;background:#e8f5f1;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;color:var(--primary);" id="vfAvatarInitial">?</div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div style="font-size:1.15rem;font-weight:700;color:#1a1a2e;" id="vfName">–</div>
+                                    <div style="font-size:.85rem;color:#6c757d;" id="vfEmail">–</div>
+                                    <div style="font-size:.85rem;color:#495057;" id="vfSpec">–</div>
+                                </div>
+                            </div>
+                            <!-- Số CCCD + Số chứng chỉ -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div style="font-size:.78rem;font-weight:600;color:#495057;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Số CCCD / CMND</div>
+                                    <div id="vfNationalId" style="font-size:.95rem;font-weight:600;color:#1a1a2e;background:#f8f9fa;padding:8px 12px;border-radius:8px;border:1px solid #dee2e6;">–</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="font-size:.78rem;font-weight:600;color:#495057;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Số chứng chỉ hành nghề</div>
+                                    <div id="vfPracticeLicense" style="font-size:.95rem;font-weight:600;color:#1a1a2e;background:#f8f9fa;padding:8px 12px;border-radius:8px;border:1px solid #dee2e6;">–</div>
+                                </div>
+                            </div>
+                            <!-- Ảnh CCCD + Ảnh chứng chỉ -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div style="font-size:.85rem;font-weight:600;color:#495057;margin-bottom:8px;"><i class="bi bi-card-image me-1"></i>Ảnh CCCD / CMND</div>
+                                    <div id="vfNationalIdWrap">
+                                        <div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:8px;padding:40px;text-align:center;color:#aaa;">
+                                            <i class="bi bi-image" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Chưa upload
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="font-size:.85rem;font-weight:600;color:#495057;margin-bottom:8px;"><i class="bi bi-file-medical me-1"></i>Chứng chỉ hành nghề</div>
+                                    <div id="vfLicenseWrap">
+                                        <div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:8px;padding:40px;text-align:center;color:#aaa;">
+                                            <i class="bi bi-image" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Chưa upload
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 gap-2">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                            <button type="button" class="btn btn-danger" onclick="openRejectReason()" id="btnReject">
+                                <i class="bi bi-x-circle me-1"></i>Từ chối
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="confirmApprove()" id="btnApprove">
+                                <i class="bi bi-check-circle me-1"></i>Duyệt hồ sơ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Modal Nhập lý do từ chối -->
+            <div class="modal fade" id="rejectModal" tabindex="-1">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="bi bi-x-circle me-2 text-danger"></i>Từ chối hồ sơ</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="form-label">Lý do từ chối <span class="text-muted small">(tuỳ chọn)</span></label>
+                            <textarea class="form-control" id="rejectReason" rows="3" placeholder="VD: Ảnh CCCD không rõ nét, chứng chỉ hết hạn..."></textarea>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-danger" onclick="confirmReject()">
+                                <i class="bi bi-send me-1"></i>Xác nhận từ chối
+                            </button>
             <!-- Modal Xác nhận Xóa vĩnh viễn -->
             <div class="modal fade" id="hardDeleteModal" tabindex="-1">
                 <div class="modal-dialog modal-sm">
@@ -658,6 +804,7 @@
                                 let allShifts = [];
                                 let filteredDoctors = [];
                                 let deactivateTargetId = null;
+                                let doctorModal, deactivateModal, toastEl;
                                 let hardDeleteTargetId = null;
                                 let doctorModal, deactivateModal, hardDeleteModal, toastEl;
                                 const PAGE_SIZE = 10;
@@ -699,6 +846,11 @@
                                 async function loadDoctors() {
                                     try {
                                         const res = await fetch('/api/doctors', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                        if (!res.ok) {
+                                            document.getElementById('doctorTable').innerHTML =
+                                                '<tr><td colspan="9" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-1"></i>Lỗi tải dữ liệu (HTTP ' + res.status + '). Vui lòng đăng nhập lại.</td></tr>';
+                                            return;
+                                        }
                                         allDoctors = await res.json();
                                         filteredDoctors = [...allDoctors];
                                         updateStats(allDoctors);
@@ -803,6 +955,8 @@
                         </span></td>
                         <td>
                             <button class="action-btn edit" onclick='openEdit(${JSON.stringify(d)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
+                            ${(d.status === 'pending_approval') ? `<button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt"><i class="bi bi-shield-check"></i></button>` : ''}
+                            <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
                             <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
                             <button class="action-btn" style="color:var(--danger);opacity:${d.status === 'inactive' ? '1' : '0.3'};cursor:${d.status === 'inactive' ? 'pointer' : 'not-allowed'}" onclick="${d.status === 'inactive' ? 'openHardDelete(' + d.id + ')' : 'void(0)'}" title="${d.status === 'inactive' ? 'Xóa vĩnh viễn' : 'Phải ngừng hoạt động trước'}"><i class="bi bi-trash3"></i></button>
                         </td>
@@ -987,6 +1141,202 @@
 
                                 // ── Invite ─────────────────────────────────────────────
 
+                                // ── Tab switching ──────────────────────────────────────
+                                let currentTab = 'doctors';
+                                function switchTab(tab) {
+                                    currentTab = tab;
+                                    document.getElementById('panelDoctors').style.display = tab === 'doctors' ? '' : 'none';
+                                    document.getElementById('panelPending').style.display = tab === 'pending' ? '' : 'none';
+                                    document.getElementById('tabBtnDoctors').classList.toggle('tab-active', tab === 'doctors');
+                                    document.getElementById('tabBtnPending').classList.toggle('tab-active', tab === 'pending');
+                                    // Show/hide add button only on doctors tab
+                                    document.getElementById('btnMainAction').style.display = tab === 'doctors' ? '' : 'none';
+                                    // Show/hide filter only on doctors tab
+                                    document.getElementById('doctorActions').style.display = tab === 'doctors' ? 'flex' : 'none';
+                                    if (tab === 'pending') loadPending();
+                                }
+
+                                // ── Status badge helper ─────────────────────────────────
+                                function statusBadge(status) {
+                                    const map = {
+                                        'active': ['badge-active', 'Hoạt động'],
+                                        'inactive': ['badge-inactive', 'Ngừng HĐ'],
+                                        'pending_verification': ['badge-pending', 'Chờ upload'],
+                                        'pending_approval': ['badge-pending', 'Chờ duyệt'],
+                                        'rejected': ['badge-rejected', 'Đã từ chối'],
+                                    };
+                                    const [cls, label] = map[status] || ['badge-pending', status || '–'];
+                                    return `<span class="badge-status ${cls}">${label}</span>`;
+                                }
+
+                                // ── Pending Tab ─────────────────────────────────────────
+                                let allPending = [];
+                                let pendingPage = 1;
+
+                                async function loadPending() {
+                                    try {
+                                        const res = await fetch('/api/doctors/pending', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                        allPending = await res.json();
+                                        document.getElementById('tabCountPending').textContent = allPending.length;
+                                        renderPendingPage();
+                                    } catch {
+                                        document.getElementById('pendingTable').innerHTML =
+                                            '<tr><td colspan="9" class="text-center text-danger py-4"><i class="bi bi-wifi-off me-1"></i>Không thể kết nối API</td></tr>';
+                                    }
+                                }
+
+                                function renderPendingPage() {
+                                    const total = allPending.length;
+                                    const pageData = allPending.slice((pendingPage - 1) * PAGE_SIZE, pendingPage * PAGE_SIZE);
+                                    const tbody = document.getElementById('pendingTable');
+                                    const globalOffset = (pendingPage - 1) * PAGE_SIZE;
+
+                                    if (!total) {
+                                        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-check2-all me-1"></i>Không có hồ sơ nào chờ duyệt</td></tr>';
+                                        document.getElementById('pendingPagInfo').textContent = '';
+                                        document.getElementById('pendingPagBtns').innerHTML = '';
+                                        return;
+                                    }
+
+                                    tbody.innerHTML = pageData.map((d, i) => `
+                    <tr>
+                        <td class="text-muted">${globalOffset + i + 1}</td>
+                        <td>
+                            <span class="avatar-circle">${getInitials(d.fullName)}</span>
+                            <strong>${d.fullName || '–'}</strong>
+                            <div style="font-size:.75rem;color:#888">${d.userEmail || ''}</div>
+                        </td>
+                        <td>${d.specialization || '–'}</td>
+                        <td><span class="badge bg-light text-dark">${d.degree || '–'}</span></td>
+                        <td>${d.phone || '–'}</td>
+                        <td style="text-align:center">${d.nationalIdImageUrl
+                            ? `<a href="${d.nationalIdImageUrl}" target="_blank"><img src="${d.nationalIdImageUrl}" style="height:40px;border-radius:4px;border:1px solid #dee2e6;cursor:pointer" title="Xem CCCD"></a>`
+                            : '<span class="text-muted small">Chưa upload</span>'}</td>
+                        <td style="text-align:center">${d.practiceLicenseImageUrl
+                            ? `<a href="${d.practiceLicenseImageUrl}" target="_blank"><img src="${d.practiceLicenseImageUrl}" style="height:40px;border-radius:4px;border:1px solid #dee2e6;cursor:pointer" title="Xem chứng chỉ"></a>`
+                            : '<span class="text-muted small">Chưa upload</span>'}</td>
+                        <td>${statusBadge(d.status)}</td>
+                        <td>
+                            <button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt">
+                                <i class="bi bi-shield-check"></i>
+                            </button>
+                            <button class="action-btn reject" onclick="openVerifyReject(${d.id})" title="Từ chối nhanh">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                                    buildPagination('pendingPagBtns', 'pendingPagInfo', pendingPage, total, 'gotoPendingPage');
+                                }
+
+                                function gotoPendingPage(p) {
+                                    pendingPage = p;
+                                    renderPendingPage();
+                                }
+
+                                // ── Verify Modal ────────────────────────────────────────
+                                let verifyModal, rejectModal;
+                                let verifyTargetId = null;
+
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    verifyModal = new bootstrap.Modal(document.getElementById('verifyModal'));
+                                    rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+                                    // Also count pending on initial load
+                                    fetch('/api/doctors/pending', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}})
+                                        .then(r => r.json())
+                                        .then(data => { document.getElementById('tabCountPending').textContent = data.length; })
+                                        .catch(() => {});
+                                });
+
+                                async function openVerify(id) {
+                                    verifyTargetId = id;
+                                    let d = allDoctors.find(x => x.id === id) || allPending.find(x => x.id === id);
+                                    if (!d) {
+                                        try {
+                                            const res = await fetch(`/api/doctors/${id}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                            d = await res.json();
+                                        } catch { showToast('Không thể tải thông tin bác sĩ', 'danger'); return; }
+                                    }
+
+                                    // Thông tin cơ bản
+                                    document.getElementById('vfName').textContent = d.fullName || '–';
+                                    document.getElementById('vfSpec').textContent = d.specialization || '–';
+                                    document.getElementById('vfEmail').textContent = d.userEmail || '–';
+
+                                    // Số CCCD + số chứng chỉ
+                                    document.getElementById('vfNationalId').textContent = d.nationalId || 'Chưa nhập';
+                                    document.getElementById('vfPracticeLicense').textContent = d.practiceLicense || 'Chưa nhập';
+
+                                    // Avatar
+                                    const avatarWrap = document.getElementById('vfAvatarWrap');
+                                    const initial = document.getElementById('vfAvatarInitial');
+                                    if (d.avatarUrl) {
+                                        avatarWrap.innerHTML = `<img src="${d.avatarUrl}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);" alt="Avatar">`;
+                                    } else {
+                                        avatarWrap.innerHTML = `<div style="width:72px;height:72px;border-radius:50%;background:#e8f5f1;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;color:var(--primary);">${getInitials(d.fullName)}</div>`;
+                                    }
+                                    // Ảnh CCCD
+                                    const cccdWrap = document.getElementById('vfNationalIdWrap');
+                                    if (d.nationalIdImageUrl) {
+                                        cccdWrap.innerHTML = `<a href="${d.nationalIdImageUrl}" target="_blank"><img src="${d.nationalIdImageUrl}" class="img-preview" alt="CCCD" style="width:100%;border-radius:8px;border:1px solid #dee2e6;"></a>`;
+                                    } else {
+                                        cccdWrap.innerHTML = `<div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:8px;padding:40px;text-align:center;color:#aaa;"><i class="bi bi-image" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Chưa upload</div>`;
+                                    }
+                                    // Ảnh chứng chỉ
+                                    const licWrap = document.getElementById('vfLicenseWrap');
+                                    if (d.practiceLicenseImageUrl) {
+                                        licWrap.innerHTML = `<a href="${d.practiceLicenseImageUrl}" target="_blank"><img src="${d.practiceLicenseImageUrl}" class="img-preview" alt="Chứng chỉ HN"></a>`;
+                                    } else {
+                                        licWrap.innerHTML = `<div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:8px;padding:40px;text-align:center;color:#aaa;"><i class="bi bi-image" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Chưa upload</div>`;
+                                    }
+                                    verifyModal.show();
+                                }
+
+                                function openRejectReason() {
+                                    document.getElementById('rejectReason').value = '';
+                                    rejectModal.show();
+                                }
+
+                                function openVerifyReject(id) {
+                                    verifyTargetId = id;
+                                    document.getElementById('rejectReason').value = '';
+                                    rejectModal.show();
+                                }
+
+                                async function confirmApprove() {
+                                    try {
+                                        const res = await fetch(`/api/doctors/${verifyTargetId}/approve`, {
+                                            method: 'PUT',
+                                            headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}
+                                        });
+                                        if (!res.ok) throw new Error(await res.text());
+                                        verifyModal.hide();
+                                        showToast('✅ Đã duyệt hồ sơ bác sĩ! Email thông báo đã được gửi.', 'success');
+                                        loadDoctors();
+                                        loadPending();
+                                    } catch(e) {
+                                        showToast('❌ ' + (e.message || 'Lỗi khi duyệt!'), 'danger');
+                                    }
+                                }
+
+                                async function confirmReject() {
+                                    const reason = document.getElementById('rejectReason').value.trim();
+                                    try {
+                                        const url = `/api/doctors/${verifyTargetId}/reject${reason ? '?reason=' + encodeURIComponent(reason) : ''}`;
+                                        const res = await fetch(url, {
+                                            method: 'PUT',
+                                            headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}
+                                        });
+                                        if (!res.ok) throw new Error(await res.text());
+                                        rejectModal.hide();
+                                        verifyModal.hide();
+                                        showToast('Đã từ chối hồ sơ bác sĩ. Email thông báo đã được gửi.', 'warning');
+                                        loadDoctors();
+                                        loadPending();
+                                    } catch(e) {
+                                        showToast('❌ ' + (e.message || 'Lỗi khi từ chối!'), 'danger');
+                                    }
+                                }
 
                                 function handleAuthError(status) {
                 if (status === 401 || status === 403) {

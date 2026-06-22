@@ -1,0 +1,35 @@
+{
+  "v3_weight": 0.35,
+  "v4_weight": 0.65,
+  "threshold_high": 0.6,
+  "threshold_medium": 0.35,
+  "features_v3": [
+    "HighBP",
+    "HighChol",
+    "BMI",
+    "Smoker",
+    "Stroke",
+    "HeartDiseaseorAttack",
+    "PhysActivity",
+    "Fruits",
+    "Veggies",
+    "HvyAlcoholConsump",
+    "GenHlth",
+    "MentHlth",
+    "PhysHlth",
+    "DiffWalk",
+    "Sex",
+    "Age",
+    "Income"
+  ],
+  "features_v4": [
+    "Glucose",
+    "BloodPressure",
+    "BMI",
+    "Age",
+    "Pregnancies",
+    "DiabetesPedigreeFunction",
+    "SkinThickness"
+  ],
+  "description": "Ensemble XGBoost: V3=CDC BRFSS (lifestyle), V4=Pima (glucose direct)"
+}

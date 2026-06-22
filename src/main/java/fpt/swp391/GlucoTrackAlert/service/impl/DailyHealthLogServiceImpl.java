@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.time.DayOfWeek;
@@ -551,7 +550,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             } else if (assessedAtObj instanceof java.sql.Timestamp) {
                 assessedAt = ((java.sql.Timestamp) assessedAtObj).toLocalDateTime();
             }
-            
+
             // If the latest update in logs is not after the assessment time, and we have exactly 1 record, we don't need to recalculate
             if (assessedAt != null && maxUpdatedAt != null && !maxUpdatedAt.isAfter(assessedAt) && existing.size() == 1) {
                 needUpdate = false;
