@@ -13,4 +13,3 @@ public class AppErrorController implements ErrorController {
         return "error";
     }
 }
-

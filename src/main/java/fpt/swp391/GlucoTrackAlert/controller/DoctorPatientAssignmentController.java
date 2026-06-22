@@ -1,5 +1,6 @@
 package fpt.swp391.GlucoTrackAlert.controller;
 
+import fpt.swp391.GlucoTrackAlert.dto.AssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.dto.AssignmentResponse;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;
@@ -26,10 +27,10 @@ public class DoctorPatientAssignmentController {
 
     @PostMapping
     public ResponseEntity<AssignmentResponse> assignDoctor(
-            @RequestBody DoctorPatientAssignment assignment
+            @RequestBody AssignmentRequest request
     ) {
         return ResponseEntity.ok(
-                AssignmentResponse.from(assignmentService.assignDoctor(assignment))
+                AssignmentResponse.from(assignmentService.assignDoctor(request))
         );
     }
 
@@ -46,10 +47,10 @@ public class DoctorPatientAssignmentController {
     @PutMapping("/{id}")
     public ResponseEntity<AssignmentResponse> updateAssignment(
             @PathVariable Long id,
-            @RequestBody DoctorPatientAssignment assignment
+            @RequestBody AssignmentRequest request
     ) {
         return ResponseEntity.ok(
-                AssignmentResponse.from(assignmentService.updateAssignment(id, assignment))
+                AssignmentResponse.from(assignmentService.updateAssignment(id, request))
         );
     }
 

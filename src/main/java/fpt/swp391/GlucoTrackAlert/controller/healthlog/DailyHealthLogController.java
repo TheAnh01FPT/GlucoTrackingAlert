@@ -171,10 +171,14 @@ public class DailyHealthLogController {
             // Admin xem tất cả
             if (patientType != null && !patientType.isEmpty()) {
                 patients = patientRepository.findAllByStatusAndPatientType("active", patientType);
-                if (patients.isEmpty()) patients = patientRepository.findAllByStatus("active");
+                if (patients.isEmpty()) {
+                    patients = patientRepository.findAllByStatus("active");
+                }
             } else {
                 patients = patientRepository.findAllByStatus("active");
-                if (patients.isEmpty()) patients = patientRepository.findAll();
+                if (patients.isEmpty()) {
+                    patients = patientRepository.findAll();
+                }
             }
         } else if (hasRole("ROLE_DOCTOR")) {
             Long currentUserId = getCurrentUserId();
@@ -191,19 +195,19 @@ public class DailyHealthLogController {
                 model.addAttribute("pageSize", size);
                 return "healthlog/doctor-view";
             }
-            List<DoctorPatientAssignment> assignments =
-                assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
+            List<DoctorPatientAssignment> assignments
+                    = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
             patients = assignments.stream()
-                .map(DoctorPatientAssignment::getPatient)
-                .filter(p -> "active".equals(p.getStatus()))
-                .collect(Collectors.toList());
+                    .map(DoctorPatientAssignment::getPatient)
+                    .filter(p -> "active".equals(p.getStatus()))
+                    .collect(Collectors.toList());
 
             // Lọc thêm theo patientType nếu có
             if (patientType != null && !patientType.isEmpty()) {
                 String finalPatientType = patientType;
                 patients = patients.stream()
-                    .filter(p -> finalPatientType.equals(p.getPatientType()))
-                    .collect(Collectors.toList());
+                        .filter(p -> finalPatientType.equals(p.getPatientType()))
+                        .collect(Collectors.toList());
             }
         } else {
             return "redirect:/login";
@@ -280,6 +284,7 @@ public class DailyHealthLogController {
         model.addAttribute("totalElements", logsPage.getTotalElements());
         model.addAttribute("pageSize", size);
         model.addAttribute("userId", userId);
+        model.addAttribute("patientId", patientId);
         return "healthlog/patient-logs";
     }
 
@@ -316,15 +321,22 @@ public class DailyHealthLogController {
     }
 
     /**
-     * Kiểm tra doctor hiện tại có được phân công bệnh nhân này không.
-     * Admin luôn trả về true.
+     * Kiểm tra doctor hiện tại có được phân công bệnh nhân này không. Admin
+     * luôn trả về true.
      */
     private boolean isDoctorAssignedToPatient(Long patientId) {
-        if (hasRole("ROLE_ADMIN")) return true;
-        if (!hasRole("ROLE_DOCTOR")) return false;
+        if (hasRole("ROLE_ADMIN")) {
+            return true;
+        }
+        if (!hasRole("ROLE_DOCTOR")) {
+            return false;
+        }
         Long currentUserId = getCurrentUserId();
         Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
-        if (doctor == null) return false;
+        if (doctor == null) {
+            return false;
+        }
+
         return assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId).isPresent();
     }
 
