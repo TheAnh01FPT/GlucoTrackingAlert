@@ -28,6 +28,12 @@ public class PatientProfileResponse {
     private String insuranceNumber;
     private String patientType;
     private Boolean isPregnant;
+    private Boolean hypertension;
+    private Boolean heartDisease;
+    private String everMarried;
+    private String workType;
+    private String residenceType;
+    private String smokingStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

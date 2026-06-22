@@ -5,6 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hồ sơ sức khỏe bệnh nhân | GlucoTrack</title>
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <style>
+        /* Request Change Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .badge-pending-req {
+            background-color: #fef3c7;
+            color: #d97706;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .request-update-btn {
+            background: none;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .request-update-btn:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 <body>
 
@@ -18,6 +89,9 @@
                 <!-- Back to Home Button -->
                 <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">
                     🏠 Trang chủ
+                </a>
+                <a th:href="@{/patient/profile/requests}" class="action-btn btn-secondary">
+                    📁 Lịch sử yêu cầu
                 </a>
                 <a th:href="@{/patient/profile/edit}" class="action-btn btn-primary">
                     ✏️ Chỉnh sửa hồ sơ
@@ -72,6 +146,46 @@
                     <span class="detail-label">Phân loại bệnh nhân</span>
                     <span class="detail-value" th:text="${profile.patientType == 'pregnant' ? 'Phụ nữ có thai' : (profile.patientType == 'elderly' ? 'Người cao tuổi' : (profile.patientType == 'child' ? 'Trẻ em' : 'Người trưởng thành'))}">Người trưởng thành</span>
                 </div>
+                <div class="detail-item" style="align-items: center;">
+                    <span class="detail-label">Tăng huyết áp</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="detail-value" th:style="${profile.hypertension} ? 'color: #ef4444;' : ''">
+                            <span th:text="${profile.hypertension ? 'Có tiền sử 🔒' : 'Không có tiền sử'}">Không có tiền sử</span>
+                        </span>
+                        <th:block th:if="${profile.hypertension}">
+                            <span th:if="${pendingHypertension}" class="badge-pending-req">Đang chờ duyệt... ⏳</span>
+                            <button th:unless="${pendingHypertension}" type="button" class="request-update-btn" onclick="openRequestModal('hypertension', 'Tăng huyết áp')">🔄 Yêu cầu cập nhật lại</button>
+                        </th:block>
+                    </div>
+                </div>
+                <div class="detail-item" style="align-items: center;">
+                    <span class="detail-label">Tiền sử bệnh tim</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="detail-value" th:style="${profile.heartDisease} ? 'color: #ef4444;' : ''">
+                            <span th:text="${profile.heartDisease ? 'Có tiền sử 🔒' : 'Không có tiền sử'}">Không có tiền sử</span>
+                        </span>
+                        <th:block th:if="${profile.heartDisease}">
+                            <span th:if="${pendingHeartDisease}" class="badge-pending-req">Đang chờ duyệt... ⏳</span>
+                            <button th:unless="${pendingHeartDisease}" type="button" class="request-update-btn" onclick="openRequestModal('heartDisease', 'Tiền sử bệnh tim')">🔄 Yêu cầu cập nhật lại</button>
+                        </th:block>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Đã từng kết hôn</span>
+                    <span class="detail-value" th:text="${profile.everMarried == 'Yes' ? 'Đã kết hôn' : 'Chưa kết hôn'}">Chưa kết hôn</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Loại công việc</span>
+                    <span class="detail-value" th:text="${profile.workType == 'Private' ? 'Tư nhân' : (profile.workType == 'Self-employed' ? 'Tự kinh doanh' : (profile.workType == 'Govt_job' ? 'Công chức' : (profile.workType == 'children' ? 'Trẻ em' : (profile.workType == 'Never_worked' ? 'Chưa từng đi làm' : 'Chưa cập nhật'))))}">Tư nhân</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Khu vực sinh sống</span>
+                    <span class="detail-value" th:text="${profile.residenceType == 'Urban' ? 'Thành thị (Urban)' : (profile.residenceType == 'Rural' ? 'Nông thôn (Rural)' : 'Chưa cập nhật')}">Chưa cập nhật</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tình trạng hút thuốc</span>
+                    <span class="detail-value" th:text="${profile.smokingStatus == 'never smoked' ? 'Chưa từng hút thuốc' : (profile.smokingStatus == 'formerly smoked' ? 'Đã từng hút thuốc' : (profile.smokingStatus == 'smokes' ? 'Đang hút thuốc' : 'Không rõ'))}">Không rõ</span>
+                </div>
             </div>
 
             <!-- Right Card: Health Indicators & BMI -->
@@ -115,8 +229,82 @@
                 </div>
             </div>
 
+            <!-- Success & Error Alert Banners -->
+            <div class="success-banner" th:if="${successMessage != null}" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-top: 25px; display: flex; align-items: center; gap: 10px;">
+                <span>✔️</span>
+                <span th:text="${successMessage}">Thành công.</span>
+            </div>
+            <div class="error-banner" th:if="${errorMessage != null}" style="background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-top: 25px; display: flex; align-items: center; gap: 10px;">
+                <span>⚠️</span>
+                <span th:text="${errorMessage}">Đã xảy ra lỗi.</span>
+            </div>
+
+
+
         </div>
     </div>
 
+    <!-- Modal Yêu cầu Thay đổi -->
+    <div id="requestChangeModal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 12px;">
+                <h3 id="modalTitle" style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--primary-color);">🔄 Yêu cầu cập nhật lại bệnh lý</h3>
+                <span onclick="closeRequestModal()" style="font-size: 24px; cursor: pointer; color: var(--text-muted); font-weight: bold; line-height: 1;">&times;</span>
+            </div>
+            
+            <form th:action="@{/patient/profile/request-change}" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="modalFieldName" name="fieldName">
+                
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 4px;">Mục thay đổi:</label>
+                    <input type="text" id="modalFieldDisplayName" class="form-input" style="background-color: #f1f5f9; font-weight: 600;" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="requestReason">Lý do thay đổi *</label>
+                    <textarea id="requestReason" name="reason" class="form-input" rows="4" placeholder="Nhập lý do chi tiết (Ví dụ: Ấn nhầm khi tạo tài khoản, hoặc có kết quả khám mới...)" required style="resize: vertical; font-family: inherit;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="modalEvidenceFile">Minh chứng y tế đính kèm *</label>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-style: italic; line-height: 1.4;">
+                        Bắt buộc tải lên sổ khám bệnh, phiếu xét nghiệm hoặc chẩn đoán có dấu đỏ xác nhận của cơ sở y tế.
+                    </p>
+                    <input type="file" id="modalEvidenceFile" name="evidenceFile" class="form-input" accept="image/*,.pdf,.doc,.docx" required>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 15px;">
+                    <button type="button" class="action-btn btn-secondary" onclick="closeRequestModal()" style="padding: 10px 18px; font-size: 14px;">Hủy bỏ</button>
+                    <button type="submit" class="action-btn btn-primary" style="padding: 10px 22px; font-size: 14px;">Gửi yêu cầu 📤</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openRequestModal(fieldName, fieldDisplayName) {
+            document.getElementById('modalFieldName').value = fieldName;
+            document.getElementById('modalFieldDisplayName').value = fieldDisplayName;
+            document.getElementById('modalTitle').innerText = '🔄 Yêu cầu cập nhật lại: ' + fieldDisplayName;
+            document.getElementById('requestChangeModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock background scrolling
+        }
+
+        function closeRequestModal() {
+            document.getElementById('requestChangeModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            // Reset form inputs
+            document.getElementById('requestReason').value = '';
+            document.getElementById('modalEvidenceFile').value = '';
+        }
+
+        // Close when clicking outside content area
+        window.onclick = function(event) {
+            var modal = document.getElementById('requestChangeModal');
+            if (event.target == modal) {
+                closeRequestModal();
+            }
+        }
+    </script>
 </body>
 </html>
