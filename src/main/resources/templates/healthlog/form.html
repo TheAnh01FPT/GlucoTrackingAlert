@@ -453,8 +453,8 @@
                     th:disabled="${source == 'doctor-view'}"
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 120"
-                    min="50"
-                    max="250"
+                    min="30"
+                    max="300"
                   />
                   <span class="input-unit">mmHg</span>
                 </div>
@@ -473,8 +473,8 @@
                     th:disabled="${source == 'doctor-view'}"
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 80"
-                    min="30"
-                    max="150"
+                    min="20"
+                    max="200"
                   />
                   <span class="input-unit">mmHg</span>
                 </div>
@@ -494,7 +494,7 @@
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 2000"
                     min="0"
-                    max="20000"
+                    max="10000"
                   />
                   <span class="input-unit">ml</span>
                 </div>
@@ -533,7 +533,7 @@
 
               <!-- Note -->
               <div class="form-group form-group-full">
-                <label class="form-label" for="note">Ghi Chú Nhắc Nhở</label>
+                <label class="form-label" for="note">Ghi Chú</label>
                 <textarea
                   id="note"
                   th:field="*{note}"

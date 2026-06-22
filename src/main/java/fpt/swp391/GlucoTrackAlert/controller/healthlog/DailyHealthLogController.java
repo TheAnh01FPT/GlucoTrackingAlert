@@ -541,7 +541,29 @@ public String createLog(@RequestParam Long userId,
             return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : userId);
         }
 
-        dailyHealthLogService.deleteLog(id);
+        try {
+            dailyHealthLogService.deleteLog(id);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            String msg = ex.getMostSpecificCause() != null && ex.getMostSpecificCause().getMessage() != null
+                    ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+            redirectAttributes.addFlashAttribute("error", msg != null ? msg : "Không thể xóa nhật ký do ràng buộc dữ liệu.");
+            if ("my-logs".equals(source)) {
+                return "redirect:/health-logs/my-logs?userId=" + userId;
+            } else if ("doctor-view".equals(source)) {
+                return "redirect:/health-logs/doctor-view?userId=" + userId;
+            }
+            return "redirect:/health-logs?userId=" + userId;
+        } catch (RuntimeException ex) {
+            String msg = ex.getMessage() != null ? ex.getMessage() : "Không thể xóa nhật ký.";
+            redirectAttributes.addFlashAttribute("error", msg);
+            if ("my-logs".equals(source)) {
+                return "redirect:/health-logs/my-logs?userId=" + userId;
+            } else if ("doctor-view".equals(source)) {
+                return "redirect:/health-logs/doctor-view?userId=" + userId;
+            }
+            return "redirect:/health-logs?userId=" + userId;
+        }
+
         if ("my-logs".equals(source)) {
             return "redirect:/health-logs/my-logs?userId=" + userId;
         } else if ("doctor-view".equals(source)) {

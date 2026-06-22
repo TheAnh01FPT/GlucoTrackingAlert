@@ -512,7 +512,7 @@
 
           <!-- Notes Section -->
           <div class="notes-section">
-            <h3 class="notes-title">📝 Ghi Chú & Lời Khuyên</h3>
+            <h3 class="notes-title">📝 Ghi Chú </h3>
             <p
               class="notes-content"
               th:text="${log.note != null && !log.note.isEmpty() ? log.note : 'Không có ghi chú thêm.'}"
@@ -555,9 +555,7 @@
                   'Bạn có chắc chắn muốn xóa nhật ký sức khỏe này?',
                 );
               "
-              <button type="submit" class="btn btn-delete">
-                🗑️ Xóa Nhật Ký
-              </button>
+              
             </form>
           </div>
         </div>

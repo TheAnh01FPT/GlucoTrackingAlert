@@ -47,7 +47,8 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
         Double diastolicObj = log.getDiastolic() != null ? log.getDiastolic().doubleValue() : null;
         double diastolic = diastolicObj != null ? diastolicObj : 80.0;
         Double bloodSugarObj = log.getBloodSugar() != null ? log.getBloodSugar().doubleValue() : null;
-        double bloodSugar = bloodSugarObj != null ? bloodSugarObj : 120.0;
+        // default in mmol/L (approx 6.7 mmol/L ~ 120 mg/dL)
+        double bloodSugar = bloodSugarObj != null ? bloodSugarObj : 6.7;
 
         boolean lowConfidenceFlag = (patientAgeObj == null) || (diastolicObj == null) || (bloodSugarObj == null);
 
@@ -98,7 +99,7 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
         aiAnalysisLogRepository.save(aiLog);
     }
 
-    private String getRecommendation(RiskLevel level) {
+    public static String getRecommendation(RiskLevel level) {
         return switch (level) {
             case LOW -> "Nguy cơ thấp. Duy trì lối sống lành mạnh, kiểm tra định kỳ 6 tháng/lần.";
             case MEDIUM -> "Nguy cơ trung bình. Kiểm soát đường huyết và huyết áp, tái khám 3 tháng/lần.";

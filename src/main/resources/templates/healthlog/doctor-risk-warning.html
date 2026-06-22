@@ -104,6 +104,13 @@
                             <td><span th:class="'badge badge-' + ${w.riskLevel}" th:text="${w.riskLevel}"></span></td>
                             <td th:text="${w.message}" style="max-width:300px;"></td>
                             <td th:text="${w.status}"></td>
+                            <td>
+                                <form th:action="@{/health-logs/risk-warnings/{id}/delete(id=${w.id})}" method="post" style="display:inline"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa cảnh báo này?');">
+                                    <input type="hidden" name="userId" th:value="${userId}"/>
+                                    <button type="submit" style="background:transparent;border:none;cursor:pointer;font-size:1rem;color:#ef4444" title="Xóa">🗑️</button>
+                                </form>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

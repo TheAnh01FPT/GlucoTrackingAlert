@@ -43,7 +43,7 @@ public class RiskAssessment {
     @Column(name = "assessed_at")
     private LocalDateTime assessedAt;
 
-    // Not persisted by default; set to true when inputs were incomplete/defaulted.
-    @Transient
-    private boolean lowConfidence = false;
+    // Persisted flag to indicate inputs were incomplete/defaulted when assessment ran.
+    @Column(name = "low_confidence")
+    private Boolean lowConfidence = false;
 }

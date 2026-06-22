@@ -799,7 +799,7 @@
             <tbody>
               <tr
                 th:each="log : ${logs}"
-                th:class="${log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'} ? 'row-alert-danger' : ''"
+                th:class="${(log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' or (log.systolicStatus != null and (log.systolicStatus == 'LOW_DANGER' or log.systolicStatus == 'HIGH_DANGER')) or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_DANGER' or log.diastolicStatus == 'HIGH_DANGER'))) ? 'row-alert-danger' : ''}"
               >
                 <td
                   th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}"
@@ -828,7 +828,7 @@
                 <td>
                   <span
                     th:if="${log.systolic != null && log.diastolic != null}"
-                    th:class="${(log.systolicStatus != null and log.systolicStatus.contains('HIGH')) or (log.diastolicStatus != null and log.diastolicStatus.contains('HIGH')) ? 'value-badge badge-warning' : 'value-badge badge-neutral'}"
+                    th:class="${( (log.systolicStatus != null and log.systolicStatus.contains('DANGER')) or (log.diastolicStatus != null and log.diastolicStatus.contains('DANGER')) ) ? 'value-badge badge-danger' : ( (log.systolicStatus != null and log.systolicStatus.contains('WARNING')) or (log.diastolicStatus != null and log.diastolicStatus.contains('WARNING')) ) ? 'value-badge badge-warning' : (log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : 'value-badge badge-neutral'}"
                     th:text="${log.systolic + '/' + log.diastolic}"
                   >
                     120/80

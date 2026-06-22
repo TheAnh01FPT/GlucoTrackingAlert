@@ -22,10 +22,19 @@ public class GlobalExceptionHandler {
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.CONFLICT.value());
         body.put("error", "Conflict");
-
         String message = "Dữ liệu bị trùng lặp.";
-        if (ex.getMessage() != null && ex.getMessage().contains("idx_patient_log_date")) {
-            message = "Bạn đã nhập nhật ký sức khỏe cho ngày này rồi. Vui lòng chỉnh sửa thay vì tạo mới.";
+        String detailed = null;
+        if (ex.getMostSpecificCause() != null && ex.getMostSpecificCause().getMessage() != null) {
+            detailed = ex.getMostSpecificCause().getMessage();
+        } else if (ex.getMessage() != null) {
+            detailed = ex.getMessage();
+        }
+        if (detailed != null) {
+            if (detailed.contains("idx_patient_log_date")) {
+                message = "Bạn đã nhập nhật ký sức khỏe cho ngày này rồi. Vui lòng chỉnh sửa thay vì tạo mới.";
+            } else if (detailed.contains("fk_ai_analysis_logs_daily_log_id") || detailed.contains("ai_analysis_logs") ) {
+                message = "Không thể xóa nhật ký: tồn tại bản ghi phân tích liên quan (AI). Vui lòng xóa các bản ghi phụ trước.";
+            }
         }
         body.put("message", message);
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);

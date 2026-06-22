@@ -46,12 +46,23 @@
     </style>
 </head>
 <body>
+    <script>
+        // Redirect this entire page to weekly kidney risk page
+        (function(){
+            var target = '/health-logs/kidney-risk/weekly';
+            if(window.location.search && window.location.search.indexOf('userId')!==-1){
+                // preserve query if present
+                target += window.location.search;
+            }
+            window.location.replace(target);
+        })();
+    </script>
     <header class="navbar">
         <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">🩸 GlucoTrackAlert</a>
         <nav class="navbar-menu">
             <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
             <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            <a th:href="@{/health-logs/risk-warnings(userId=${userId})}" class="navbar-link active">⚠️ Cảnh Báo Biến Chứng</a>
+            <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}" class="navbar-link active">📈 Báo Cáo Tuần</a>
         </nav>
     </header>
 
@@ -105,13 +116,7 @@
                             <td th:text="${w.message}" style="max-width:300px;"></td>
                             <td th:text="${w.status}"></td>
                             <td>
-                                <form th:if="${w.status == 'new'}"
-                                      th:action="@{/health-logs/risk-warnings/{id}/acknowledge(id=${w.id})}"
-                                      method="post">
-                                    <input type="hidden" name="userId" th:value="${userId}"/>
-                                    <button type="submit" class="btn-ack">Đã xem</button>
-                                </form>
-                                <span th:if="${w.status != 'new'}" style="color:var(--text-secondary); font-size:0.85rem;">✓ Đã xem</span>
+                                <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}" class="btn-ack">Xem báo cáo tuần</a>
                             </td>
                         </tr>
                     </tbody>

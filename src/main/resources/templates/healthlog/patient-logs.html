@@ -484,7 +484,6 @@
         <nav class="navbar-menu">
             <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
             <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            <a th:href="@{/health-logs/risk-warnings(userId=${userId})}" class="navbar-link">⚠️ Cảnh Báo Biến Chứng</a>
             <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang Chủ</a>
         </nav>
     </header>
@@ -562,7 +561,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="log : ${logs}"
-                            th:class="${log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'} ? 'row-alert-danger' : ''">
+                            th:class="${(log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' or (log.systolicStatus != null and (log.systolicStatus == 'LOW_DANGER' or log.systolicStatus == 'HIGH_DANGER')) or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_DANGER' or log.diastolicStatus == 'HIGH_DANGER'))) ? 'row-alert-danger' : ''}">
 
                             <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
                                 30/05/2026</td>
@@ -580,7 +579,7 @@
                             <!-- Blood Pressure display -->
                             <td>
                                 <span th:if="${log.systolic != null && log.diastolic != null}"
-                                        th:class="${(log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : (log.systolicStatus == 'NORMAL' or log.diastolicStatus == 'NORMAL') ? 'value-badge badge-warning' : (log.systolicStatus != 'NORMAL' or log.diastolicStatus != 'NORMAL') ? 'value-badge badge-danger' : 'value-badge badge-neutral' }"
+                                        th:class="${( (log.systolicStatus != null and (log.systolicStatus.contains('DANGER'))) or (log.diastolicStatus != null and (log.diastolicStatus.contains('DANGER'))) ) ? 'value-badge badge-danger' : ( (log.systolicStatus != null and log.systolicStatus.contains('WARNING')) or (log.diastolicStatus != null and log.diastolicStatus.contains('WARNING')) ) ? 'value-badge badge-warning' : (log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : 'value-badge badge-neutral' }"
                                     th:text="${log.systolic + '/' + log.diastolic}">
                                     120/80
                                 </span>
@@ -695,6 +694,37 @@
         }
         /*]]>*/
     </script>
+
+        <!-- Error Modal (shows when flash attribute 'error' exists) -->
+        <div th:if="${error}">
+            <div id="errorModalOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000">
+                <div style="background:#fff;border-radius:12px;max-width:520px;width:90%;padding:1.5rem;box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+                    <div style="display:flex;gap:1rem;align-items:flex-start">
+                        <div style="font-size:2rem;color:#dc2626">⚠️</div>
+                        <div style="flex:1">
+                            <h3 style="margin:0 0 0.5rem 0;color:#111827">Lỗi khi xóa</h3>
+                            <p style="margin:0 0 1rem 0;color:#374151;font-size:0.95rem;white-space:pre-wrap;" th:text="${error}">Thông báo lỗi</p>
+                            <div style="text-align:right">
+                                <button id="closeErrorModal" style="background:#ef4444;color:#fff;border:none;padding:0.6rem 1rem;border-radius:8px;cursor:pointer">Đóng</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script th:inline="javascript">
+                /*<![CDATA[*/
+                (function(){
+                    var btn = document.getElementById('closeErrorModal');
+                    if(btn){
+                        btn.addEventListener('click', function(e){
+                            var ov = document.getElementById('errorModalOverlay');
+                            if(ov) ov.style.display = 'none';
+                        });
+                    }
+                })();
+                /*]]>*/
+            </script>
+        </div>
 
 </body>
 
