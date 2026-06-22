@@ -105,10 +105,10 @@ public class DailyHealthLogController {
 
     @GetMapping
     public String getLogs(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String patientType,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Model model) {
+                          @RequestParam(required = false) String patientType,
+                          @RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "10") int size,
+                          Model model) {
         // Redirect về đúng trang theo role, tránh để /health-logs là trang chung
         if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
             return "redirect:/health-logs/doctor-view" + (userId != null ? "?userId=" + userId : "");
@@ -170,10 +170,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/doctor-view")
     public String getDoctorView(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String patientType,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Model model) {
+                                @RequestParam(required = false) String patientType,
+                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "10") int size,
+                                Model model) {
         List<Patient> patients;
 
         if (hasRole("ROLE_ADMIN")) {
@@ -201,18 +201,18 @@ public class DailyHealthLogController {
                 return "healthlog/doctor-view";
             }
             List<DoctorPatientAssignment> assignments =
-                assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
+                    assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
             patients = assignments.stream()
-                .map(DoctorPatientAssignment::getPatient)
-                .filter(p -> "active".equals(p.getStatus()))
-                .collect(Collectors.toList());
+                    .map(DoctorPatientAssignment::getPatient)
+                    .filter(p -> "active".equals(p.getStatus()))
+                    .collect(Collectors.toList());
 
             // Lọc thêm theo patientType nếu có
             if (patientType != null && !patientType.isEmpty()) {
                 String finalPatientType = patientType;
                 patients = patients.stream()
-                    .filter(p -> finalPatientType.equals(p.getPatientType()))
-                    .collect(Collectors.toList());
+                        .filter(p -> finalPatientType.equals(p.getPatientType()))
+                        .collect(Collectors.toList());
             }
         } else {
             return "redirect:/login";
@@ -249,11 +249,11 @@ public class DailyHealthLogController {
 
             // Get the latest weekly AI prediction for this patient
             List<Map<String, Object>> riskList = jdbcTemplate.queryForList(
-                "SELECT ra.id, ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at " +
-                "FROM risk_assessments ra " +
-                "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
-                "ORDER BY ra.assessed_at DESC LIMIT 1",
-                selectedPatientId
+                    "SELECT ra.id, ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at " +
+                            "FROM risk_assessments ra " +
+                            "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
+                            "ORDER BY ra.assessed_at DESC LIMIT 1",
+                    selectedPatientId
             );
 
             Map<String, Object> latestRisk = null;
@@ -261,7 +261,7 @@ public class DailyHealthLogController {
                 Map<String, Object> raw = riskList.get(0);
                 latestRisk = new HashMap<>();
                 latestRisk.put("id", raw.get("id"));
-                
+
                 Object pct = raw.get("risk_percentage");
                 if (pct instanceof java.math.BigDecimal) {
                     latestRisk.put("riskPercentage", String.format("%.2f", ((java.math.BigDecimal) pct).doubleValue()));
@@ -270,11 +270,11 @@ public class DailyHealthLogController {
                 } else {
                     latestRisk.put("riskPercentage", pct != null ? pct.toString() : "0.00");
                 }
-                
+
                 latestRisk.put("riskLevel", raw.get("risk_level"));
                 latestRisk.put("aiSummary", raw.get("ai_summary"));
                 latestRisk.put("recommendation", raw.get("recommendation"));
-                
+
                 Object assessedAtObj = raw.get("assessed_at");
                 if (assessedAtObj != null) {
                     if (assessedAtObj instanceof java.time.LocalDateTime) {
@@ -316,9 +316,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/my-logs")
     public String getMyLogs(@RequestParam Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Model model) {
+                            @RequestParam(defaultValue = "0") int page,
+                            @RequestParam(defaultValue = "10") int size,
+                            Model model) {
         // If caller is not admin/doctor and the requested userId is not their own,
         // redirect to login to prevent tampering with the `userId` query parameter.
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
@@ -345,10 +345,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/detail")
     public String getLogById(@RequestParam Long logId,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String source,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+                             @RequestParam(required = false) Long userId,
+                             @RequestParam(required = false) String source,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse log = dailyHealthLogService.getLogById(logId);
         if (log == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
@@ -390,9 +390,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/create")
     public String createLogForm(@RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+                                @RequestParam(required = false) String source,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
         if (!hasRole("ROLE_ADMIN")) {
             if (hasRole("ROLE_DOCTOR")) {
                 Long patientId = resolvePatientId(userId);
@@ -422,10 +422,10 @@ public class DailyHealthLogController {
 
     @PostMapping("/create")
     public String createLog(@RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
-            BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
+                            @RequestParam(required = false) String source,
+                            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+                            BindingResult bindingResult,
+                            RedirectAttributes redirectAttributes) {
         if (!hasRole("ROLE_ADMIN")) {
             if (hasRole("ROLE_DOCTOR")) {
                 Long patientId = resolvePatientId(userId);
@@ -475,10 +475,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/{id}/edit")
     public String editLogForm(@PathVariable Long id,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String source,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+                              @RequestParam(required = false) Long userId,
+                              @RequestParam(required = false) String source,
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
 
         if (response == null) {
@@ -519,11 +519,11 @@ public class DailyHealthLogController {
 
     @PostMapping("/{id}/edit")
     public String updateLog(@PathVariable Long id,
-            @RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
-            BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
+                            @RequestParam Long userId,
+                            @RequestParam(required = false) String source,
+                            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+                            BindingResult bindingResult,
+                            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
             redirectAttributes.addFlashAttribute("log", request);
@@ -561,9 +561,9 @@ public class DailyHealthLogController {
 
     @PostMapping("/{id}/delete")
     public String deleteLog(@PathVariable Long id,
-            @RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            RedirectAttributes redirectAttributes) {
+                            @RequestParam Long userId,
+                            @RequestParam(required = false) String source,
+                            RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
         if (response == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
@@ -586,9 +586,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/chart")
     public String getChart(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            Model model) {
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                           Model model) {
         List<Patient> patients = patientRepository.findAllByStatus("active");
         if (patients.isEmpty()) {
             patients = patientRepository.findAll();
@@ -630,9 +630,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/my-chart")
     public String getMyChart(@RequestParam Long userId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            Model model) {
+                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                             Model model) {
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             patientId = userId;
@@ -651,9 +651,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/doctor-chart")
     public String getDoctorChart(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            Model model) {
+                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                                 Model model) {
         // Chỉ DOCTOR/ADMIN mới vào được
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
             return "redirect:/login";
@@ -688,14 +688,14 @@ public class DailyHealthLogController {
     }
 
     @GetMapping("/ai-report")
-    public String getAiReport(@RequestParam(required = false) Long userId, 
-                              @RequestParam(required = false) Long assessmentId, 
+    public String getAiReport(@RequestParam(required = false) Long userId,
+                              @RequestParam(required = false) Long assessmentId,
                               Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
         if (curUserId == null) {
             return "redirect:/login";
         }
-        
+
         Long targetUserId = userId;
         if (targetUserId == null) {
             targetUserId = curUserId;
@@ -741,11 +741,11 @@ public class DailyHealthLogController {
 
         // Get all weekly assessments for this patient
         List<Map<String, Object>> allAssessmentsRaw = jdbcTemplate.queryForList(
-            "SELECT ra.id, ra.assessed_at, dhl.log_date FROM risk_assessments ra " +
-            "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
-            "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
-            "ORDER BY ra.assessed_at DESC",
-            patientId
+                "SELECT ra.id, ra.assessed_at, dhl.log_date FROM risk_assessments ra " +
+                        "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
+                        "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
+                        "ORDER BY ra.assessed_at DESC",
+                patientId
         );
 
         List<Map<String, Object>> allAssessments = new java.util.ArrayList<>();
@@ -759,7 +759,7 @@ public class DailyHealthLogController {
             } else if (assessedAtObj instanceof java.sql.Timestamp) {
                 ldt = ((java.sql.Timestamp) assessedAtObj).toLocalDateTime();
             }
-            
+
             Object logDateObj = raw.get("log_date");
             LocalDate logDate = null;
             if (logDateObj instanceof LocalDate) {
@@ -769,12 +769,12 @@ public class DailyHealthLogController {
             } else if (logDateObj instanceof java.util.Date) {
                 logDate = new java.sql.Date(((java.util.Date) logDateObj).getTime()).toLocalDate();
             }
-            
+
             String label = "Không rõ ngày";
             if (logDate != null) {
                 LocalDate start = logDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
                 LocalDate end = logDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-                
+
                 LocalDate assessDate = LocalDate.now();
                 if (ldt != null) {
                     assessDate = ldt.toLocalDate();
@@ -797,15 +797,15 @@ public class DailyHealthLogController {
         List<Map<String, Object>> list = Collections.emptyList();
         if (selectedId != null) {
             list = jdbcTemplate.queryForList(
-                "SELECT ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at, dhl.blood_sugar, dhl.systolic, dhl.diastolic, dhl.log_date, " +
-                "       whr.average_blood_sugar, whr.average_systolic, whr.average_diastolic, whr.average_sleep_hours, whr.average_water_ml, " +
-                "       whr.high_sugar_days, whr.warning_count, whr.blood_sugar_change, whr.blood_sugar_change_percent, " +
-                "       whr.systolic_change, whr.diastolic_change, whr.sleep_hours_change, whr.trend_status, whr.health_status, whr.week_start " +
-                "FROM risk_assessments ra " +
-                "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
-                "LEFT JOIN weekly_health_reports whr ON whr.patient_id = ra.patient_id AND dhl.log_date >= whr.week_start AND dhl.log_date <= whr.week_end " +
-                "WHERE ra.id = ? AND ra.patient_id = ?",
-                selectedId, patientId
+                    "SELECT ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at, dhl.blood_sugar, dhl.systolic, dhl.diastolic, dhl.log_date, " +
+                            "       whr.average_blood_sugar, whr.average_systolic, whr.average_diastolic, whr.average_sleep_hours, whr.average_water_ml, " +
+                            "       whr.high_sugar_days, whr.warning_count, whr.blood_sugar_change, whr.blood_sugar_change_percent, " +
+                            "       whr.systolic_change, whr.diastolic_change, whr.sleep_hours_change, whr.trend_status, whr.health_status, whr.week_start " +
+                            "FROM risk_assessments ra " +
+                            "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
+                            "LEFT JOIN weekly_health_reports whr ON whr.patient_id = ra.patient_id AND dhl.log_date >= whr.week_start AND dhl.log_date <= whr.week_end " +
+                            "WHERE ra.id = ? AND ra.patient_id = ?",
+                    selectedId, patientId
             );
         }
 
@@ -813,7 +813,7 @@ public class DailyHealthLogController {
         if (!list.isEmpty()) {
             Map<String, Object> raw = list.get(0);
             latestRisk = new HashMap<>();
-            
+
             // Safe decimal conversion
             Object pct = raw.get("risk_percentage");
             if (pct instanceof java.math.BigDecimal) {
@@ -823,11 +823,11 @@ public class DailyHealthLogController {
             } else {
                 latestRisk.put("riskPercentage", pct != null ? pct.toString() : "0.00");
             }
-            
+
             latestRisk.put("riskLevel", raw.get("risk_level"));
             latestRisk.put("aiSummary", raw.get("ai_summary"));
             latestRisk.put("recommendation", raw.get("recommendation"));
-            
+
             // Safe date formatting in Java
             Object assessedAtObj = raw.get("assessed_at");
             if (assessedAtObj != null) {
@@ -841,7 +841,7 @@ public class DailyHealthLogController {
                     latestRisk.put("assessedAtStr", assessedAtObj.toString());
                 }
             }
-            
+
             Object logDateObj = raw.get("log_date");
             if (logDateObj != null) {
                 if (logDateObj instanceof java.time.LocalDate) {
@@ -864,16 +864,16 @@ public class DailyHealthLogController {
             latestRisk.put("avgDiastolic", formatDecimal(raw.get("average_diastolic")));
             latestRisk.put("avgSleep", formatDecimal(raw.get("average_sleep_hours")));
             latestRisk.put("avgWater", formatDecimal(raw.get("average_water_ml")));
-            
+
             latestRisk.put("highSugarDays", raw.get("high_sugar_days"));
             latestRisk.put("warningCount", raw.get("warning_count"));
-            
+
             latestRisk.put("sugarChange", formatDecimal(raw.get("blood_sugar_change")));
             latestRisk.put("sugarChangePercent", formatDecimal(raw.get("blood_sugar_change_percent")));
             latestRisk.put("systolicChange", formatDecimal(raw.get("systolic_change")));
             latestRisk.put("diastolicChange", formatDecimal(raw.get("diastolic_change")));
             latestRisk.put("sleepChange", formatDecimal(raw.get("sleep_hours_change")));
-            
+
             latestRisk.put("trendStatus", raw.get("trend_status"));
             latestRisk.put("healthStatus", raw.get("health_status"));
             latestRisk.put("waterChange", null); // Initialize default to prevent SpelEvaluationException
@@ -892,8 +892,8 @@ public class DailyHealthLogController {
             if (weekStart != null) {
                 LocalDate prevStart = weekStart.minusWeeks(1);
                 List<Map<String, Object>> prevList = jdbcTemplate.queryForList(
-                    "SELECT average_water_ml FROM weekly_health_reports WHERE patient_id = ? AND week_start = ?",
-                    patientId, prevStart
+                        "SELECT average_water_ml FROM weekly_health_reports WHERE patient_id = ? AND week_start = ?",
+                        patientId, prevStart
                 );
                 if (!prevList.isEmpty() && raw.get("average_water_ml") != null) {
                     java.math.BigDecimal currentWater = getBigDecimalSafe(raw.get("average_water_ml"));
