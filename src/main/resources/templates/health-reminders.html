@@ -467,7 +467,7 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
   function applyFilter() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     const now = new Date();
-    let list = allReminders;
+    let list = allReminders.filter(r => r.status !== 'CANCELLED');
 
     if (currentFilter === 'ACTIVE') list = list.filter(r => r.status === 'ACTIVE');
     else if (currentFilter === 'COMPLETED') list = list.filter(r => r.status === 'COMPLETED');

@@ -313,7 +313,7 @@ function renderPrescriptions(list) {
   }
   el.innerHTML = list.map(p => {
     const badgeCls = (p.status || '').toLowerCase();
-    const badgeLabel = p.status === 'ACTIVE' ? '🟢 Đang dùng' : p.status === 'EXPIRED' ? 'Hết hạn' : 'Đã huỷ';
+    const badgeLabel = p.status === 'ACTIVE' ? '🟢 Đang dùng' : p.status === 'CANCELLED' ? '🚫 Đã huỷ' : 'Hết hạn';
     const items = (p.items || []).map(item => {
       const times = (item.timeOfDay || '').split(',').filter(Boolean).join(' & ');
       return `

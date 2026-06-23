@@ -516,13 +516,8 @@
                                         fetchJson('/api/patient')
                                     ]);
                                     allAssignments = Array.isArray(a) ? a : [];
-<<<<<<< HEAD
                                     allDoctors = Array.isArray(d) ? d : [];
                                     allPatients = Array.isArray(p) ? p : [];
-=======
-                                    allDoctors     = Array.isArray(d) ? d : [];
-                                    allPatients    = Array.isArray(p) ? p : [];
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                     populateDoctorSelect();
                                     filteredList = [...allAssignments];
                                     applyFilters();
@@ -697,7 +692,6 @@
                                 const doctorSel = document.getElementById('doctorSelect');
                                 if (a.doctorId) {
                                     const matchIndex = Array.from(doctorSel.options).findIndex(o => {
-<<<<<<< HEAD
                                         try {
                                             return JSON.parse(o.value)?.id == a.doctorId;
                                         } catch {
@@ -706,11 +700,6 @@
                                     });
                                     if (matchIndex >= 0)
                                         doctorSel.selectedIndex = matchIndex;
-=======
-                                        try { return JSON.parse(o.value)?.id == a.doctorId; } catch { return false; }
-                                    });
-                                    if (matchIndex >= 0) doctorSel.selectedIndex = matchIndex;
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                 }
                                 assignModal.show();
                             }
@@ -729,7 +718,6 @@
                                         showToast('Vui lòng chọn bệnh nhân!', 'danger');
                                         return;
                                     }
-<<<<<<< HEAD
                                     const doctorObj = JSON.parse(doctorRaw);
                                     const patientObj = JSON.parse(patientRaw);
                                     payload = {
@@ -737,13 +725,6 @@
                                         patientId: patientObj.id,
                                         note: document.getElementById('note').value,
                                         status: document.getElementById('assignStatus').value
-=======
-                                    payload = {
-                                        note: document.getElementById('note').value,
-                                        status: document.getElementById('assignStatus').value,
-                                        patient: JSON.parse(patientRaw),
-                                        doctor: JSON.parse(doctorRaw)
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                     };
                                 } else {
                                     const doctorRaw = document.getElementById('doctorSelect').value;
@@ -756,13 +737,9 @@
                                         showToast('Vui lòng chọn bệnh nhân!', 'danger');
                                         return;
                                     }
-<<<<<<< HEAD
                                     const doctorObj = JSON.parse(doctorRaw);
                                     const patientObj = JSON.parse(patientRaw);
                                     payload = {doctorId: doctorObj.id, patientId: patientObj.id, note: document.getElementById('note').value};
-=======
-                                    payload = {doctor: JSON.parse(doctorRaw), patient: JSON.parse(patientRaw), note: document.getElementById('note').value};
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                 }
 
 
@@ -821,7 +798,6 @@
                             }
 
                             function handleAuthError(status) {
-<<<<<<< HEAD
                                 if (status === 401 || status === 403) {
                                     localStorage.clear();
                                     document.cookie = 'jwt=; path=/; max-age=0';
@@ -832,18 +808,6 @@
                             }
 
                             function showToast(msg, type) {
-=======
-                if (status === 401 || status === 403) {
-                    localStorage.clear();
-                    document.cookie = 'jwt=; path=/; max-age=0';
-                    window.location.href = '/login';
-                    return true;
-                }
-                return false;
-            }
-
-            function showToast(msg, type) {
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                 const el = document.getElementById('toast');
                                 el.className = `toast align-items-center text-bg-${type} border-0`;
                                 // Strip HTML tags từ server error response
