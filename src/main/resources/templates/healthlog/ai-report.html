@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlucoTrackAlert - Báo Cáo Sức Khỏe AI</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Navbar Layout */
+        .navbar {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            padding: 1rem 2rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .navbar-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid #818cf8;
+        }
+
+        /* Container */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-heading {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #1e1b4b;
+        }
+
+        /* Dashboard Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Profile Sidebar Card */
+        .profile-sidebar {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .profile-header {
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-avatar {
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .profile-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .profile-type {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            background-color: var(--indigo-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-block;
+            margin-top: 0.5rem;
+            background-color: #e0e7ff;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .badge-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .badge-yes {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .badge-no {
+            background-color: #d1fae5;
+            color: #10b981;
+        }
+
+        .btn-edit-profile {
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+            padding: 0.65rem 1rem;
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .btn-edit-profile:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* AI Risk Report Area */
+        .report-area {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Large AI Card */
+        .ai-card {
+            background-color: var(--card-bg);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .ai-card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Risk visual gauge */
+        .risk-gauge-container {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            background: #fafafa;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid #f1f5f9;
+        }
+
+        @media (max-width: 600px) {
+            .risk-gauge-container {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        .risk-circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+        }
+
+        .risk-circle-low {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .risk-circle-medium {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .risk-circle-high {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .risk-circle-critical {
+            background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+        }
+
+        .risk-circle-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+        }
+
+        .risk-circle-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.9;
+        }
+
+        .risk-details {
+            flex-grow: 1;
+        }
+
+        .risk-status-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+        }
+        .color-low { color: #10b981; }
+        .color-medium { color: #d97706; }
+        .color-high { color: #ef4444; }
+        .color-critical { color: #991b1b; }
+
+        .risk-status-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Detail sections */
+        .section-box {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-box-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-box-content {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 5rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .btn-action {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+            transition: var(--transition);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Other diseases grid */
+        .other-diseases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .disease-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0.75;
+            transition: var(--transition);
+        }
+
+        .disease-card:hover {
+            opacity: 0.9;
+        }
+
+        .disease-icon {
+            font-size: 2.25rem;
+            background-color: #f1f5f9;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .disease-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .disease-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .disease-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            background-color: #f1f5f9;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 0.25rem;
+            width: fit-content;
+        }
+
+        /* Tab Navigation styles */
+        .tab-navigation {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.75rem;
+            padding-bottom: 0.25rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+            outline: none;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background-color: #f1f5f9;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            background-color: transparent;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--primary);
+            border-radius: 9999px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Complication Grid & Card styles */
+        .complications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .complication-card {
+            background-color: var(--bg-primary);
+            border-radius: 16px;
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .complication-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .complication-card.active {
+            background-color: #f5f3ff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+        }
+
+        .complication-card.disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .complication-icon {
+            font-size: 2rem;
+            background-color: #ffffff;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+        }
+        
+        .complication-card.active .complication-icon {
+            border-color: #c7d2fe;
+            background-color: #ffffff;
+        }
+
+        .complication-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            flex-grow: 1;
+        }
+
+        .complication-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .complication-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            width: fit-content;
+        }
+
+        .status-evaluated {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-pending {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .stroke-details-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @media (max-width: 768px) {
+            .stroke-details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-content-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .dashboard-content-grid > div:last-child {
+                border-left: none !important;
+                padding-left: 0 !important;
+                border-top: 1px solid var(--border);
+                padding-top: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <!-- Brand Link -->
+        <a th:if="${isDoctorOrAdmin}" th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-brand">
+            🩸 GlucoTrackAlert
+        </a>
+        <a th:unless="${isDoctorOrAdmin}" th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+            🩸 GlucoTrackAlert
+        </a>
+        
+        <!-- Menu Navigation -->
+        <nav class="navbar-menu">
+            <!-- Doctor/Admin Navbar -->
+            <th:block th:if="${isDoctorOrAdmin}">
+                <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-link">Nhật Ký Bệnh Nhân</a>
+                <a th:href="@{/health-logs/doctor-chart(userId=${patient.id})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            </th:block>
+            <!-- Patient Navbar -->
+            <th:block th:unless="${isDoctorOrAdmin}">
+                <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
+                <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            </th:block>
+            <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        
+        <h1 class="page-heading">🤖 Dashboard Cảnh Báo Sức Khỏe AI</h1>
+
+        <div class="dashboard-grid">
+            
+            <!-- Sidebar: Patient Info -->
+            <section class="profile-sidebar">
+                <div class="profile-header">
+                    <span class="profile-avatar">👤</span>
+                    <h2 class="profile-name" th:text="${patient.fullName}">Nguyễn Văn A</h2>
+                    <span class="profile-type" th:text="${patient.patientType != null ? 'Loại: ' + patient.patientType.toUpperCase() : 'Bệnh nhân'}">Loại: Adult</span>
+                </div>
+
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">Tuổi</span>
+                        <span class="info-value" th:text="${patient.age != null ? patient.age + ' tuổi' : '--'}">72 tuổi</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Giới tính</span>
+                        <span class="info-value" th:text="${patient.gender != null ? patient.gender : '--'}">Nam</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Chỉ số BMI</span>
+                        <span class="info-value" th:text="${patient.bmi != null ? patient.bmi : '--'}">28.4</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tăng huyết áp</span>
+                        <span th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" 
+                              th:text="${patient.hypertension == true ? 'Có' : 'Không'}">Có</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bệnh tim mạch</span>
+                        <span th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" 
+                              th:text="${patient.heartDisease == true ? 'Có' : 'Không'}">Có</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Hút thuốc</span>
+                        <span class="info-value" th:text="${patient.smokingStatus != null ? patient.smokingStatus : '--'}">smokes</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Công việc</span>
+                        <span class="info-value" th:text="${patient.workType != null ? patient.workType : '--'}">Private</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Nơi ở</span>
+                        <span class="info-value" th:text="${patient.residenceType != null ? patient.residenceType : '--'}">Urban</span>
+                    </div>
+                </div>
+
+                <a th:if="${!isDoctorOrAdmin}" th:href="@{/patient/profile/edit}" class="btn-edit-profile">✏️ Chỉnh Sửa Hồ Sơ</a>
+            </section>
+
+            <!-- Report Area -->
+            <div class="report-area">
+
+                <!-- Week Selector Dropdown -->
+                <div class="selector-card" th:if="${allAssessments != null && !allAssessments.isEmpty()}" style="background-color: var(--card-bg); border-radius: 15px; padding: 1.25rem 2rem; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">📅</span>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #1e1b4b;">Chọn tuần theo dõi</h3>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Xem lại các báo cáo phân tích nguy cơ trong quá khứ</p>
+                            </div>
+                        </div>
+                        <form th:action="@{/health-logs/ai-report}" method="get" style="margin: 0; display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="hidden" name="userId" th:value="${userId}" />
+                            <select name="assessmentId" onchange="this.form.submit()" style="font-family: inherit; font-size: 0.95rem; font-weight: 500; color: var(--text-primary); padding: 0.6rem 2.5rem 0.6rem 1.25rem; border: 1px solid var(--border); border-radius: 10px; background-color: #f8fafc; cursor: pointer; outline: none; transition: var(--transition); appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 0.65rem auto; min-width: 320px;">
+                                <option th:each="opt : ${allAssessments}" th:value="${opt.id}" th:text="${opt.label}" th:selected="${opt.id == selectedAssessmentId}"></option>
+                            </select>
+                        </form>
+                    </div>
+                    
+                    <!-- AI Prediction Result (When data is present) -->
+                    <div th:if="${hasRiskData}" style="background-color: #f5f3ff; border-radius: 18px; padding: 1.5rem; border: 1px solid #c7d2fe; display: flex; flex-direction: column; gap: 1.25rem; width: 100%; box-sizing: border-box; box-shadow: var(--shadow);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-bottom: 1px dashed #c7d2fe; padding-bottom: 1rem; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 1.75rem;">🤖</span>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e1b4b; display: flex; align-items: center; gap: 0.5rem;">Kết quả dự báo biến chứng AI <span style="font-size: 0.75rem; background-color: #e0e7ff; color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 600;">Đột quỵ (Stroke)</span></h3>
+                                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Đánh giá lúc: <span th:text="${latestRisk.assessedAtStr}">--</span></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Circular progress & Risk Status -->
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div th:class="${latestRisk.riskLevel == 'Low' ? 'risk-circle risk-circle-low' : (latestRisk.riskLevel == 'Medium' ? 'risk-circle risk-circle-medium' : (latestRisk.riskLevel == 'High' ? 'risk-circle risk-circle-high' : 'risk-circle risk-circle-critical'))}" style="width: 48px; height: 48px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 8px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                    <span th:text="${latestRisk.riskPercentage + '%'}">45%</span>
+                                </div>
+                                <div>
+                                    <span th:class="${latestRisk.riskLevel == 'Low' ? 'color-low' : (latestRisk.riskLevel == 'Medium' ? 'color-medium' : (latestRisk.riskLevel == 'High' ? 'color-high' : 'color-critical'))}" style="font-weight: 800; font-size: 1.05rem; display: block;" th:text="${latestRisk.riskLevel}">Medium</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Nguy cơ biến chứng</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; width: 100%;">
+                            <!-- AI Comments -->
+                            <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                                <h4 style="margin: 0; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.35rem;">
+                                    <span>💬</span> Nhận xét AI:
+                                </h4>
+                                <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); background: #f8fafc; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--border); line-height: 1.5;" th:text="${latestRisk.aiSummary}"></p>
+                            </div>
+                            <!-- Recommendations -->
+                            <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                                <h4 style="margin: 0; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.35rem;">
+                                    <span>🩺</span> Khuyến nghị y tế:
+                                </h4>
+                                <p style="margin: 0; font-size: 0.85rem; color: #4338ca; background: #f5f3ff; padding: 0.75rem 1rem; border-radius: 10px; border-left: 4px solid var(--primary); line-height: 1.5;" th:text="${latestRisk.recommendation}"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Banner (Original placeholder for when hasRiskData is false) -->
+                    <div th:if="${!hasRiskData}" style="background-color: #f0f9ff; border-radius: 10px; padding: 0.75rem 1.25rem; border: 1px solid #bae6fd; display: flex; align-items: flex-start; gap: 0.75rem; width: 100%; box-sizing: border-box;">
+                        <span style="font-size: 1.25rem; color: #0284c7; line-height: 1.2;">💡</span>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; font-size: 0.825rem; color: #0369a1; font-weight: 500; line-height: 1.4;">
+                                <strong>Lưu ý về chu kỳ báo cáo:</strong> Báo cáo sức khỏe tuần được tự động tổng hợp vào <strong>thứ Hai hàng tuần</strong> cho tuần đã kết thúc hoàn toàn (từ thứ Hai đến hết Chủ Nhật của tuần trước). Tuần đang diễn ra sẽ chưa có báo cáo để đảm bảo tính đầy đủ và chính xác của dữ liệu.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. Weekly Health Summary & AI Prediction Dashboard -->
+                <section class="weekly-dashboard-card" th:if="${hasRiskData}" style="background-color: var(--card-bg); border-radius: 24px; padding: 2rem; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 2rem;">
+                    
+                    <!-- Header with Title & Status Badges -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem;">
+                        <h2 class="ai-card-title" style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">📊 Dashboard Báo Cáo Sức Khỏe Tuần</h2>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <!-- Health Status Badge -->
+                            <span th:if="${latestRisk.healthStatus == 'GOOD'}" style="background-color: #d1fae5; color: #065f46; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                🟢 Khỏe mạnh
+                            </span>
+                            <span th:if="${latestRisk.healthStatus == 'WARNING'}" style="background-color: #fef3c7; color: #92400e; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                🟡 Cần chú ý
+                            </span>
+                            <span th:if="${latestRisk.healthStatus == 'DANGER'}" style="background-color: #fee2e2; color: #991b1b; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                🔴 Nguy cơ cao
+                            </span>
+
+                            <!-- Trend Status Badge -->
+                            <span th:if="${latestRisk.trendStatus == 'IMPROVING'}" style="background-color: #ecfdf5; color: #047857; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.8rem; border: 1px solid #a7f3d0;">
+                                📈 Tốt lên
+                            </span>
+                            <span th:if="${latestRisk.trendStatus == 'WORSENING'}" style="background-color: #fdf2f8; color: #be185d; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.8rem; border: 1px solid #fbcfe8;">
+                                📉 Xấu đi
+                            </span>
+                            <span th:if="${latestRisk.trendStatus == 'STABLE'}" style="background-color: #f8fafc; color: #475569; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.8rem; border: 1px solid #e2e8f0;">
+                                📊 Ổn định
+                            </span>
+                        </div>
+                    </div>
+
+
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <h3 style="margin: 0; font-size: 1.05rem; color: #1e1b4b; font-weight: 700;">📈 Chỉ số trung bình tuần qua</h3>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+                                
+                                <!-- 1. Blood Sugar KPI -->
+                                <div style="background-color: #f8fafc; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 1.25rem;">🩸</span>
+                                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Đường Huyết</span>
+                                        </div>
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                            <span th:text="${latestRisk.avgSugar != null ? latestRisk.avgSugar : '--'}">--</span>
+                                            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);">mmol/L</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div th:if="${latestRisk.sugarChange != null}" style="margin-top: 0.25rem;">
+                                            <span th:if="${!#strings.startsWith(latestRisk.sugarChange, '-') && latestRisk.sugarChange != '0.00'}" style="color: #ef4444; font-weight: 600; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                ▲ +<span th:text="${latestRisk.sugarChange}"></span> (+<span th:text="${latestRisk.sugarChangePercent}"></span>%)
+                                            </span>
+                                            <span th:if="${#strings.startsWith(latestRisk.sugarChange, '-')}" style="color: #10b981; font-weight: 600; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                ▼ <span th:text="${latestRisk.sugarChange}"></span> (<span th:text="${latestRisk.sugarChangePercent}"></span>%)
+                                            </span>
+                                            <span th:if="${latestRisk.sugarChange == '0.00'}" style="color: #64748b; font-weight: 600; font-size: 0.8rem;">
+                                                ▬ Không đổi
+                                            </span>
+                                        </div>
+                                        <div th:if="${latestRisk.sugarChange == null}" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; font-style: italic;">
+                                            Chưa có dữ liệu so sánh
+                                        </div>
+                                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem;">
+                                            <span style="color: var(--text-secondary);">Vượt ngưỡng:</span>
+                                            <span th:class="${latestRisk.highSugarDays > 0 ? 'color-high font-bold' : 'color-low'}" style="font-weight: 700;" th:text="${latestRisk.highSugarDays != null ? latestRisk.highSugarDays + ' ngày' : '0 ngày'}">0 ngày</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Blood Pressure KPI -->
+                                <div style="background-color: #f8fafc; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 1.25rem;">💓</span>
+                                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Huyết Áp</span>
+                                        </div>
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                            <span th:text="${latestRisk.avgSystolic ?: '--'}">--</span>/<span th:text="${latestRisk.avgDiastolic ?: '--'}">--</span>
+                                            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);">mmHg</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div th:if="${latestRisk.systolicChange != null || latestRisk.diastolicChange != null}" style="margin-top: 0.25rem;">
+                                            <div style="display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.75rem; font-weight: 600;">
+                                                <div th:if="${latestRisk.systolicChange != null}">
+                                                    <span style="color: var(--text-secondary); font-weight: 500;">Thu:</span>
+                                                    <span th:if="${!#strings.startsWith(latestRisk.systolicChange, '-') && latestRisk.systolicChange != '0.00'}" style="color: #ef4444;">▲ +<span th:text="${latestRisk.systolicChange}"></span></span>
+                                                    <span th:if="${#strings.startsWith(latestRisk.systolicChange, '-')}" style="color: #10b981;">▼ <span th:text="${latestRisk.systolicChange}"></span></span>
+                                                    <span th:if="${latestRisk.systolicChange == '0.00'}" style="color: #64748b;">▬ 0</span>
+                                                </div>
+                                                <div th:if="${latestRisk.diastolicChange != null}">
+                                                    <span style="color: var(--text-secondary); font-weight: 500;">Trương:</span>
+                                                    <span th:if="${!#strings.startsWith(latestRisk.diastolicChange, '-') && latestRisk.diastolicChange != '0.00'}" style="color: #ef4444;">▲ +<span th:text="${latestRisk.diastolicChange}"></span></span>
+                                                    <span th:if="${#strings.startsWith(latestRisk.diastolicChange, '-')}" style="color: #10b981;">▼ <span th:text="${latestRisk.diastolicChange}"></span></span>
+                                                    <span th:if="${latestRisk.diastolicChange == '0.00'}" style="color: #64748b;">▬ 0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div th:if="${latestRisk.systolicChange == null && latestRisk.diastolicChange == null}" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; font-style: italic;">
+                                            Chưa có dữ liệu so sánh
+                                        </div>
+                                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem;">
+                                            <span style="color: var(--text-secondary);">Đánh giá:</span>
+                                            <span style="font-weight: 700; color: var(--text-primary);">Tự động</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Sleep Hours KPI -->
+                                <div style="background-color: #f8fafc; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 1.25rem;">😴</span>
+                                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Giấc Ngủ</span>
+                                        </div>
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                            <span th:text="${latestRisk.avgSleep ?: '--'}">--</span>
+                                            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);">giờ/ngày</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div th:if="${latestRisk.sleepChange != null}" style="margin-top: 0.25rem;">
+                                            <span th:if="${!#strings.startsWith(latestRisk.sleepChange, '-') && latestRisk.sleepChange != '0.00'}" style="color: #10b981; font-weight: 600; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                ▲ +<span th:text="${latestRisk.sleepChange}"></span> giờ
+                                            </span>
+                                            <span th:if="${#strings.startsWith(latestRisk.sleepChange, '-')}" style="color: #ef4444; font-weight: 600; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                ▼ <span th:text="${latestRisk.sleepChange}"></span> giờ
+                                            </span>
+                                            <span th:if="${latestRisk.sleepChange == '0.00'}" style="color: #64748b; font-weight: 600; font-size: 0.8rem;">
+                                                ▬ Không đổi
+                                            </span>
+                                        </div>
+                                        <div th:if="${latestRisk.sleepChange == null}" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; font-style: italic;">
+                                            Chưa có dữ liệu so sánh
+                                        </div>
+                                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem;">
+                                            <span style="color: var(--text-secondary);">Khuyến cáo:</span>
+                                            <span style="font-weight: 700; color: #1e1b4b;">7-8 giờ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Water Intake KPI -->
+                                <div style="background-color: #f8fafc; border-radius: 16px; padding: 1.25rem; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 1.25rem;">💧</span>
+                                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Nước Uống</span>
+                                        </div>
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                            <span th:text="${latestRisk.avgWater ?: '--'}">--</span>
+                                            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);">ml/ngày</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div th:if="${latestRisk.waterChange != null}" style="margin-top: 0.25rem;">
+                                            <span th:if="${!#strings.startsWith(latestRisk.waterChange, '-') && latestRisk.waterChange != '0.00'}" style="color: #10b981; font-weight: 600; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                ▲ +<span th:text="${latestRisk.waterChange}"></span> ml
+                                            </span>
+                                            <span th:if="${#strings.startsWith(latestRisk.waterChange, '-')}" style="color: #ef4444; font-weight: 600; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                ▼ <span th:text="${latestRisk.waterChange}"></span> ml
+                                            </span>
+                                            <span th:if="${latestRisk.waterChange == '0.00'}" style="color: #64748b; font-weight: 600; font-size: 0.8rem;">
+                                                ▬ Không đổi
+                                            </span>
+                                        </div>
+                                        <div th:if="${latestRisk.waterChange == null}" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; font-style: italic;">
+                                            Chưa có dữ liệu so sánh
+                                        </div>
+                                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem;">
+                                            <span style="color: var(--text-secondary);">Mục tiêu:</span>
+                                            <span style="font-weight: 700; color: #0284c7;">2000 ml</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Warnings summary box -->
+                            <div style="background-color: #fee2e2; border-radius: 16px; padding: 1rem 1.25rem; border: 1px solid #fecaca; display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;" th:if="${latestRisk.warningCount != null && latestRisk.warningCount > 0}">
+                                <span style="font-size: 1.5rem;">⚠️</span>
+                                <div>
+                                    <h4 style="margin: 0; color: #991b1b; font-size: 0.85rem; font-weight: 700;">Phát hiện chỉ số đo bất thường</h4>
+                                    <p style="margin: 0.15rem 0 0 0; color: #7f1d1d; font-size: 0.8rem;">Hệ thống ghi nhận <strong th:text="${latestRisk.warningCount}">0</strong> lần chỉ số vượt ngưỡng an toàn trong tuần qua.</p>
+                                </div>
+                            </div>
+                            <div style="background-color: #ecfdf5; border-radius: 16px; padding: 1rem 1.25rem; border: 1px solid #a7f3d0; display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;" th:if="${latestRisk.warningCount == null || latestRisk.warningCount == 0}">
+                                <span style="font-size: 1.5rem;">✅</span>
+                                <div>
+                                    <h4 style="margin: 0; color: #065f46; font-size: 0.85rem; font-weight: 700;">Tất cả chỉ số ổn định</h4>
+                                    <p style="margin: 0.15rem 0 0 0; color: #047857; font-size: 0.8rem;">Không có cảnh báo bất thường nào được ghi nhận trong tuần.</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+                </section>
+
+                <!-- Empty State (No log / No assessment yet) -->
+                <section class="weekly-dashboard-card" th:if="${!hasRiskData}" style="background-color: var(--card-bg); border-radius: 24px; padding: 2.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 2rem;">
+                    <div class="empty-state">
+                        <span class="empty-state-icon">🧠</span>
+                        <h2>Chưa Có Báo Cáo Sức Khỏe AI</h2>
+                        <p>Hệ thống cần ít nhất 1 bản ghi nhật ký sức khỏe hàng ngày có đo chỉ số đường huyết để tiến hành phân tích và đưa ra dự báo nguy cơ.</p>
+                        <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}" class="btn-action">
+                            ➕ Nhập Chỉ Số Ngay
+                        </a>
+                        
+                        <!-- Empty State Info Banner -->
+                        <div style="background-color: #f0f9ff; border-radius: 10px; padding: 0.75rem 1.25rem; border: 1px solid #bae6fd; display: flex; align-items: flex-start; gap: 0.75rem; max-width: 600px; margin: 2rem auto 0; text-align: left; box-sizing: border-box;">
+                            <span style="font-size: 1.25rem; color: #0284c7; line-height: 1.2;">💡</span>
+                            <div style="flex: 1;">
+                                <p style="margin: 0; font-size: 0.825rem; color: #0369a1; font-weight: 500; line-height: 1.4;">
+                                    <strong>Thông tin thêm về chu kỳ báo cáo:</strong> Báo cáo tuần được tổng hợp định kỳ cho các tuần đã kết thúc hoàn toàn (tính hết ngày Chủ Nhật của tuần đó). Các chỉ số sức khỏe bạn ghi nhận trong tuần đang diễn ra sẽ được sử dụng để tạo báo cáo vào thứ Hai tuần kế tiếp.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Disease Modules Section -->
+                <section style="margin-top: 1.5rem;">
+                    <h2 class="ai-card-title" style="margin-bottom: 1rem; font-size: 1.25rem;">🩺 Các Module Bệnh Lý Phân Tích</h2>
+                    <div class="other-diseases-grid">
+                        <div class="disease-card active" style="opacity: 1; border-color: #10b981; background-color: #ecfdf5;">
+                            <div class="disease-icon">🧠</div>
+                            <div class="disease-info">
+                                <span class="disease-name" style="font-weight: 700;">Biến Chứng Đột Quỵ</span>
+                                <span class="disease-status" style="background-color: #d1fae5; color: #065f46;">Đang hoạt động</span>
+                            </div>
+                        </div>
+                        <div class="disease-card">
+                            <div class="disease-icon">🫀</div>
+                            <div class="disease-info">
+                                <span class="disease-name">Suy Tim & Mạch Vành</span>
+                                <span class="disease-status">Đang phát triển (v2.0)</span>
+                            </div>
+                        </div>
+                        <div class="disease-card">
+                            <div class="disease-icon">🧪</div>
+                            <div class="disease-info">
+                                <span class="disease-name">Biến Chứng Suy Thận</span>
+                                <span class="disease-status">Đang phát triển (v2.0)</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+    </main>
+
+
+
+</body>
+</html>

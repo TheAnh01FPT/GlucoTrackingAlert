@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.config.auth;
+package fpt.swp391.GlucoTrackAlert.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +18,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadPath = Paths.get("uploads").toAbsolutePath().toUri().toString();
+        String uploadPath = Paths.get("uploads").toFile().getAbsolutePath()
+                .replace("\\", "/");
+        if (!uploadPath.endsWith("/")) {
+            uploadPath += "/";
+        }
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadPath + "/");
+                .addResourceLocations("file:" + uploadPath);
     }
 }
