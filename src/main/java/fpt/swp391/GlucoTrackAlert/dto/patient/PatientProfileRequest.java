@@ -50,16 +50,11 @@ public class PatientProfileRequest {
     private Boolean isPregnant;
 
     // --- 🔀 ĐỒNG BỘ ĐẦU VÀO PHÂN LỒNG AI ---
-    private Integer cp;          // Loại đau ngực (0: Điển hình, 1: Không điển hình, 2: Đau không do tim, 3: Không triệu chứng)
-    private Integer trestbps;    // Huyết áp tâm thu đo lúc nghỉ ngơi (mmHg)
-    private Integer fbs;         // Đường huyết lúc đói > 120 mg/dl (1: Đúng, 0: Sai)
-    private Integer exang;       // Xuất hiện đau ngực khi vận động gắng sức (1: Có, 0: Không)
-
-    private Integer chol;        // Hàm lượng Cholesterol trong máu (mg/dl)
-    private Integer restecg;     // Kết quả điện tâm đồ (0: Bình thường, 1: Bất thường ST, 2: Phì đại thất trái)
-    private Integer thalach;     // Nhịp tim đạt mức tối đa (bpm)
-    private BigDecimal oldpeak;  // Độ suy giảm đoạn ST sau vận động
-    private Integer slope;       // Độ dốc đoạn ST kiểm tra gắng sức (0-2)
-    private Integer ca;          // Số lượng mạch máu lớn bị nghẽn (0-4)
-    private Integer thal;        // Kết quả xạ hình tim (0-3)
+    private Integer apHi;        // Huyết áp tâm thu (Ví dụ: 120)
+    private Integer apLo;        // Huyết áp tâm trương (Ví dụ: 80)
+    private Integer cholesterol; // 1: Bình thường, 2: Trên chuẩn, 3: Cao
+    private Double gluc;         // Chỉ số đường huyết (mg/dL)
+    private Integer smoke;       // 1: Có hút thuốc, 0: Không
+    private Integer alco;        // 1: Có uống rượu, 0: Không
+    private Integer active;      // 1: Có thể thao/vận động, 0: Khô
 }

@@ -65,17 +65,13 @@ public class PatientWebController {
                     .insuranceNumber(profile.getInsuranceNumber())
                     .isPregnant(profile.getIsPregnant())
                     // Map đồng bộ các chỉ số Cleveland chuẩn mới vào Form sửa
-                    .cp(profile.getCp())
-                    .trestbps(profile.getTrestbps())
-                    .fbs(profile.getFbs())
-                    .exang(profile.getExang())
-                    .chol(profile.getChol())
-                    .restecg(profile.getRestecg())
-                    .thalach(profile.getThalach())
-                    .oldpeak(profile.getOldpeak())
-                    .slope(profile.getSlope())
-                    .ca(profile.getCa())
-                    .thal(profile.getThal())
+                    .apHi(profile.getApHi())
+                    .apLo(profile.getApLo())
+                    .cholesterol(profile.getCholesterol())
+                    .gluc(profile.getGluc())
+                    .smoke(profile.getSmoke())
+                    .alco(profile.getAlco())
+                    .active(profile.getActive())
                     .build();
             model.addAttribute("profileForm", request);
             model.addAttribute("isNew", false);
@@ -97,6 +93,9 @@ public class PatientWebController {
                               Model model) {
         User loggedInUser = getLoggedInUser();
         request.setUserId(loggedInUser.getId());
+        if (request.getSmoke() == null) request.setSmoke(0);
+        if (request.getAlco() == null) request.setAlco(0);
+        if (request.getActive() == null) request.setActive(0);
 
         if (result.hasErrors()) {
             model.addAttribute("isNew", isNew);

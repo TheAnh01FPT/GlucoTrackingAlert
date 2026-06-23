@@ -70,19 +70,14 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(request.getInsuranceNumber())
                 .isPregnant(isPregnantVal)
                 .status("active")
-                // 🏠 Nhóm thông số tại nhà (Bắt buộc)
-                .cp(request.getCp())
-                .trestbps(request.getTrestbps())
-                .fbs(request.getFbs())
-                .exang(request.getExang())
-                // 🏥 Nhóm thông số bệnh viện (Có thể để trống - Null)
-                .chol(request.getChol())
-                .restecg(request.getRestecg())
-                .thalach(request.getThalach())
-                .oldpeak(request.getOldpeak())
-                .slope(request.getSlope())
-                .ca(request.getCa())
-                .thal(request.getThal())
+                // Đóng gói chỉ số lâm sàng người dùng tự chọn
+                .apHi(request.getApHi())
+                .apLo(request.getApLo())
+                .cholesterol(request.getCholesterol())
+                .gluc(request.getGluc())
+                .smoke(request.getSmoke())
+                .alco(request.getAlco())
+                .active(request.getActive())
                 .build();
 
         calculateAgeAndBmi(patient);
@@ -114,19 +109,14 @@ public class PatientServiceImpl implements PatientService {
         }
         patient.setIsPregnant(isPregnantVal);
 
-        // Cập nhật cấu trúc 13 trường chuẩn mới
-        patient.setCp(request.getCp());
-        patient.setTrestbps(request.getTrestbps());
-        patient.setFbs(request.getFbs());
-        patient.setExang(request.getExang());
-
-        patient.setChol(request.getChol());
-        patient.setRestecg(request.getRestecg());
-        patient.setThalach(request.getThalach());
-        patient.setOldpeak(request.getOldpeak());
-        patient.setSlope(request.getSlope());
-        patient.setCa(request.getCa());
-        patient.setThal(request.getThal());
+        // Cập nhật chỉ số lâm sàng động từ form chỉnh sửa
+        patient.setApHi(request.getApHi());
+        patient.setApLo(request.getApLo());
+        patient.setCholesterol(request.getCholesterol());
+        patient.setGluc(request.getGluc());
+        patient.setSmoke(request.getSmoke());
+        patient.setAlco(request.getAlco());
+        patient.setActive(request.getActive());
 
         calculateAgeAndBmi(patient);
         patient.setPatientType(determinePatientType(patient));
@@ -176,71 +166,48 @@ public class PatientServiceImpl implements PatientService {
         Double riskPercent = 0.0;
         String riskLevel = "NORMAL";
         String alertMsg = "Chỉ số tim mạch của bạn ở mức an toàn.";
-        String streamType = "LUONG_2";
+
 
         try {
-            if (patient.getDateOfBirth() != null) {
-                int ageYears = patient.getAge() != null ? patient.getAge() : Period.between(patient.getDateOfBirth(), LocalDate.now()).getYears();
-                int sexCode = "Nam".equalsIgnoreCase(patient.getGender()) ? 1 : 0;
+            if (patient.getDateOfBirth() != null && patient.getHeightCm() != null && patient.getWeightKg() != null) {
 
-                // 1. Khởi tạo Request Body với LinkedHashMap để giữ thứ tự các trường
-                Map<String, Object> requestBody = new java.util.LinkedHashMap<>();
-                requestBody.put("age", ageYears);
-                requestBody.put("sex", sexCode);
-                requestBody.put("cp", patient.getCp() != null ? patient.getCp() : 0);
-                requestBody.put("trestbps", patient.getTrestbps() != null ? patient.getTrestbps() : 120);
-                requestBody.put("fbs", patient.getFbs() != null ? patient.getFbs() : 0);
-                requestBody.put("exang", patient.getExang() != null ? patient.getExang() : 0);
+                long ageDays = java.time.temporal.ChronoUnit.DAYS.between(patient.getDateOfBirth(), LocalDate.now());
+                int genderCode = "Male".equalsIgnoreCase(patient.getGender()) || "Nam".equalsIgnoreCase(patient.getGender()) ? 2 : 1;
 
-                // 2. Phân luồng dữ liệu
-                if (patient.getChol() != null && patient.getRestecg() != null && patient.getThalach() != null) {
-                    requestBody.put("chol", patient.getChol());
-                    requestBody.put("restecg", patient.getRestecg());
-                    requestBody.put("thalach", patient.getThalach());
-                    requestBody.put("oldpeak", patient.getOldpeak() != null ? patient.getOldpeak().doubleValue() : 0.0);
-                    requestBody.put("slope", patient.getSlope() != null ? patient.getSlope() : 1);
-                    requestBody.put("ca", patient.getCa() != null ? patient.getCa() : 0);
-                    requestBody.put("thal", patient.getThal() != null ? patient.getThal() : 2);
-                    streamType = "LUONG_1";
-                } else {
-                    requestBody.put("chol", 200);
-                    requestBody.put("restecg", 0);
-                    requestBody.put("thalach", 150);
-                    requestBody.put("oldpeak", 0.0);
-                    requestBody.put("slope", 1);
-                    requestBody.put("ca", 0);
-                    requestBody.put("thal", 2);
-                    streamType = "LUONG_2";
-                }
+                // Đóng gói JSON lấy ĐÚNG dữ liệu thực tế người dùng đã lưu trong DB
+                Map<String, Object> requestBody = new HashMap<>();
+                requestBody.put("age_days", ageDays);
+                requestBody.put("gender", genderCode);
+                requestBody.put("height", patient.getHeightCm().doubleValue());
+                requestBody.put("weight", patient.getWeightKg().doubleValue());
 
-                // 3. DEBUG LOG: In ra console để kiểm tra dữ liệu trước khi gửi sang Python
-                System.out.println("=== [DEBUG] JAVA GỬI AI: " + requestBody.toString());
+                // Kiểm tra nếu Null thì dùng mức nền mặc định an toàn
+                requestBody.put("ap_hi", patient.getApHi() != null ? patient.getApHi() : 120);
+                requestBody.put("ap_lo", patient.getApLo() != null ? patient.getApLo() : 80);
+                requestBody.put("cholesterol", patient.getCholesterol() != null ? patient.getCholesterol() : 1);
+                requestBody.put("gluc", patient.getGluc() != null ? patient.getGluc() : 100.0);
+                requestBody.put("smoke", patient.getSmoke() != null ? patient.getSmoke() : 0);
+                requestBody.put("alco", patient.getAlco() != null ? patient.getAlco() : 0);
+                requestBody.put("active", patient.getActive() != null ? patient.getActive() : 1);
 
-                // 4. Gọi Python API
-                String pythonApiUrl = "http://127.0.0.1:5000/predict";
+                String pythonApiUrl = "http://127.0.0.1:5000/predict-cardio";
+
                 Map<String, Object> response = restTemplate.postForObject(pythonApiUrl, requestBody, Map.class);
 
-                // 5. Xử lý phản hồi từ AI
-                if (response != null) {
-                    System.out.println("=== [DEBUG] AI PHẢN HỒI: " + response.toString());
+                if (response != null && response.containsKey("cardio_risk_percentage")) {
+                    riskPercent = Double.parseDouble(response.get("cardio_risk_percentage").toString());
 
-                    if (response.containsKey("risk_percentage")) {
-                        Object riskObj = response.get("risk_percentage");
-                        riskPercent = Double.parseDouble(riskObj.toString());
-                        String aiRisk = response.getOrDefault("risk_level", "LOW").toString();
-
-                        if ("HIGH".equalsIgnoreCase(aiRisk) || riskPercent > 50.0) {
-                            riskLevel = "HIGH_RISK";
-                            alertMsg = "⚠️ Cảnh báo nguy cơ tim mạch ở mức cao!";
-                        } else if (riskPercent > 20.0) {
-                            riskLevel = "MODERATE_RISK";
-                            alertMsg = "⚡ Nguy cơ tim mạch ở mức trung bình.";
-                        }
+                    if (riskPercent > 50.0) {
+                        riskLevel = "HIGH_RISK";
+                        alertMsg = "⚠️ Nguy cơ tim mạch cao! Bạn nên điều chỉnh chế độ sinh hoạt, hạn chế các chất kích thích và theo dõi huyết áp thường xuyên.";
+                    } else if (riskPercent > 20.0) {
+                        riskLevel = "MODERATE_RISK";
+                        alertMsg = "⚡ Nguy cơ tim mạch ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("=== [ERROR] KẾT NỐI AI THẤT BẠI: " + e.getMessage());
+            System.err.println("⚠️ Chưa kết nối được trạm AI Python: " + e.getMessage());
         }
 
         // 6. Build response cuối cùng
@@ -264,21 +231,19 @@ public class PatientServiceImpl implements PatientService {
                 .isPregnant(patient.getIsPregnant())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
-                .cp(patient.getCp())
-                .trestbps(patient.getTrestbps())
-                .fbs(patient.getFbs())
-                .exang(patient.getExang())
-                .chol(patient.getChol())
-                .restecg(patient.getRestecg())
-                .thalach(patient.getThalach())
-                .oldpeak(patient.getOldpeak())
-                .slope(patient.getSlope())
-                .ca(patient.getCa())
-                .thal(patient.getThal())
+                // Trả về dữ liệu gốc lâm sàng để hiển thị Form Chỉnh Sửa
+                .apHi(patient.getApHi())
+                .apLo(patient.getApLo())
+                .cholesterol(patient.getCholesterol())
+                .gluc(patient.getGluc())
+                .smoke(patient.getSmoke())
+                .alco(patient.getAlco())
+                .active(patient.getActive())
+                // Kết quả phân tích từ AI
+
                 .cardioRiskPercentage(riskPercent)
                 .cardioRiskLevel(riskLevel)
                 .cardioAlertMessage(alertMsg)
-                .cardioStreamType(streamType)
                 .build();
     }
 }

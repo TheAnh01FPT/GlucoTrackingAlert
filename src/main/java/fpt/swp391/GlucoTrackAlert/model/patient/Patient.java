@@ -69,39 +69,22 @@ public class Patient {
     @Builder.Default
     private Boolean isPregnant = false;
 
-    // --- 🏥 CẤU TRÚC 13 TRƯỜNG LÂM SÀNG TIM MẠCH MỚI (CLEVELAND UCI) ---
-    @Column(name = "cp")
-    private Integer cp;
+    // --- CÁC TRƯỜNG CHỈ SỐ LÂM SÀNG MỚI ĐƯỢC THÊM VÀO ---
+    @Column(name = "ap_hi")
+    private Integer apHi;
 
-    @Column(name = "trestbps")
-    private Integer trestbps;
+    @Column(name = "ap_lo")
+    private Integer apLo;
 
-    @Column(name = "fbs")
-    private Integer fbs;
+    private Integer cholesterol;
 
-    @Column(name = "exang")
-    private Integer exang;
+    private Double gluc;
 
-    @Column(name = "chol")
-    private Integer chol;
+    private Integer smoke;
 
-    @Column(name = "restecg")
-    private Integer restecg;
+    private Integer alco;
 
-    @Column(name = "thalach")
-    private Integer thalach;
-
-    @Column(name = "oldpeak", precision = 4, scale = 1)
-    private BigDecimal oldpeak;
-
-    @Column(name = "slope")
-    private Integer slope;
-
-    @Column(name = "ca")
-    private Integer ca;
-
-    @Column(name = "thal")
-    private Integer thal;
+    private Integer active;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
