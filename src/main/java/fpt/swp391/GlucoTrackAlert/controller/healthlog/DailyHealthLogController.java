@@ -765,7 +765,7 @@ public String createLog(@RequestParam Long userId,
     }
 
     @GetMapping("/ai-report")
-    public String getAiReport(@RequestParam(required = false) Long userId,
+    public String getAiReport(@RequestParam(required = false) Long patientId,
                               @RequestParam(required = false) Long assessmentId,
                               Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
@@ -773,31 +773,21 @@ public String createLog(@RequestParam Long userId,
             return "redirect:/login";
         }
 
-        Long targetUserId = userId;
-        if (targetUserId == null) {
-            targetUserId = curUserId;
-        }
+        boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
 
-        // Access check
-        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
-            if (!curUserId.equals(targetUserId)) {
-                return "redirect:/login";
-            }
-        }
-
-        Long patientId = resolvePatientId(targetUserId);
         if (patientId == null) {
-            // Fallback: Check if targetUserId is actually a patientId
-            if (targetUserId != null && patientRepository.existsById(targetUserId)) {
-                patientId = targetUserId;
-                Patient p = patientRepository.findById(patientId).orElse(null);
-                if (p != null && p.getUser() != null) {
-                    targetUserId = p.getUser().getId();
-                }
+            if (isDoctorOrAdminCaller) {
+                redirectAttributes.addFlashAttribute("error", "Thiếu thông tin bệnh nhân cần xem.");
+                return "redirect:/health-logs/doctor-view";
             } else {
-                redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
-                return "redirect:/";
+                // patient caller: resolve their own patient id
+                patientId = resolvePatientId(curUserId);
             }
+        }
+
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
         }
 
         Patient patient = patientRepository.findById(patientId).orElse(null);
@@ -806,8 +796,15 @@ public String createLog(@RequestParam Long userId,
             return "redirect:/";
         }
 
-        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
-            if (!isDoctorAssignedToPatient(patientId)) {
+        // Access check: patient callers can only view their own record
+        if (!isDoctorOrAdminCaller) {
+            Long ownPatientId = resolvePatientId(curUserId);
+            if (ownPatientId == null || !ownPatientId.equals(patientId)) {
+                return "redirect:/login";
+            }
+        } else {
+            // doctor/admin must be assigned to patient
+            if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem báo cáo của bệnh nhân này.");
                 return "redirect:/health-logs/doctor-view";
             }
@@ -987,7 +984,9 @@ public String createLog(@RequestParam Long userId,
         model.addAttribute("isDoctorOrAdmin", isDocOrAdmin);
 
         model.addAttribute("patient", patient);
+        Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;
         model.addAttribute("userId", targetUserId);
+        model.addAttribute("patientId", patientId);
         model.addAttribute("latestRisk", latestRisk);
         model.addAttribute("hasRiskData", latestRisk != null);
         model.addAttribute("allAssessments", allAssessments);

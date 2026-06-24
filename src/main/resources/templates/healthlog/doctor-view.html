@@ -471,12 +471,9 @@
         <nav class="navbar-menu">
             <a href="/health-logs/doctor-view" class="navbar-link active">Xem Nhật Ký Bệnh Nhân</a>
             <a th:href="@{/health-logs/doctor-chart(userId=${selectedUserId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            <a th:if="${selectedUserId != null}"
-               th:href="@{/health-logs/ai-report(userId=${selectedUserId})}"
-               class="navbar-link">🤖 Báo Cáo AI</a>
-            <a th:if="${selectedUserId != null}"
-               th:href="@{/health-logs/doctor/risk-warnings(userId=${selectedUserId}, patientId=${selectedUserId})}"
-               class="navbar-link">⚠️ Cảnh Báo Biến Chứng</a>
+                <a th:if="${selectedUserId != null}"
+                    th:href="@{/health-logs/ai-report(patientId=${selectedUserId})}"
+                    class="navbar-link">🤖 Báo Cáo AI</a>
             <a th:href="@{/doctor/home}" class="navbar-link">🏠 Trang Chủ</a>
         </nav>
     </header>
@@ -523,9 +520,6 @@
                         <a th:href="@{/health-logs/doctor-view/thresholds(patientId=${selectedPatient.id})}"
                            class="btn-threshold"
                            style="margin-left:12px;">⚙️ Cài ngưỡng riêng</a>
-                        <a th:href="@{/health-logs/doctor/risk-warnings(userId=${selectedPatient.id}, patientId=${selectedPatient.id})}"
-                           class="btn-threshold"
-                           style="background:#f97316; margin-left:8px;">⚠️ Xem Cảnh Báo Thận</a>
                         <span th:class="${'patient-type-badge badge-' + selectedPatient.patientType}"
                               th:text="${selectedPatient.patientType == 'adult' ? '🧑 Người trưởng thành' : (selectedPatient.patientType == 'elderly' ? '👴 Người cao tuổi' : (selectedPatient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (selectedPatient.patientType == 'child' ? '👶 Trẻ em' : '')))}">
                             Adult
@@ -570,9 +564,9 @@
                               style="font-size:0.85rem; font-weight:700; padding:0.3rem 0.75rem; border-radius:9999px;">
                             Medium (45%)
                         </span>
-                        <a th:href="@{/health-logs/ai-report(userId=${selectedUserId})}"
-                           class="btn-threshold"
-                           style="background-color:var(--primary); font-size:0.8rem; padding:0.35rem 0.85rem;">
+                                <a th:href="@{/health-logs/ai-report(patientId=${selectedUserId})}"
+                                    class="btn-threshold"
+                                    style="background-color:var(--primary); font-size:0.8rem; padding:0.35rem 0.85rem;">
                             Chi tiết báo cáo
                         </a>
                     </div>

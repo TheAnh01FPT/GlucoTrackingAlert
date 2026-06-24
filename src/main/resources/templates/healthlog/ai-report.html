@@ -628,17 +628,8 @@
         
         <!-- Menu Navigation -->
         <nav class="navbar-menu">
-            <!-- Doctor/Admin Navbar -->
-            <th:block th:if="${isDoctorOrAdmin}">
-                <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-link">Nhật Ký Bệnh Nhân</a>
-                <a th:href="@{/health-logs/doctor-chart(userId=${patient.id})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            </th:block>
-            <!-- Patient Navbar -->
-            <th:block th:unless="${isDoctorOrAdmin}">
-                <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
-                <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            </th:block>
             <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
+            <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
         </nav>
     </header>
 
@@ -1010,13 +1001,13 @@
                                 <span class="disease-status">Đang phát triển (v2.0)</span>
                             </div>
                         </div>
-                        <div class="disease-card">
+                        <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}" class="disease-card active" style="border-color: #6366f1; background-color: #eef2ff; text-decoration: none;">
                             <div class="disease-icon">🧪</div>
                             <div class="disease-info">
                                 <span class="disease-name">Biến Chứng Suy Thận</span>
-                                <span class="disease-status">Đang phát triển (v2.0)</span>
+                                <span class="disease-status" style="background: #e0e7ff; color: #3730a3; font-weight: 700;">Đang hoạt động</span>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </section>
 

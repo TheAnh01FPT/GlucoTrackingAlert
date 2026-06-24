@@ -33,52 +33,85 @@ public class WeeklyKidneyRiskController {
 
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return null;
+        if (auth == null) {
+            return null;
+        }
         User user = userRepository.findByEmail(auth.getName()).orElse(null);
         return user != null ? user.getId() : null;
     }
 
     private Long resolvePatientId(Long userId) {
-        if (userId == null) return null;
+        if (userId == null) {
+            return null;
+        }
         return patientRepository.findByUserId(userId).map(p -> p.getId()).orElse(null);
     }
 
     private boolean isDoctorAssignedToPatient(Long patientId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return false;
+        if (auth == null) {
+            return false;
+        }
         // Allow admin
-        if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) return true;
+        if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return true;
+        }
         // Find doctor for current user
         User user = userRepository.findByEmail(auth.getName()).orElse(null);
-        if (user == null) return false;
+        if (user == null) {
+            return false;
+        }
         var docOpt = doctorRepository.findByUserId(user.getId());
-        if (docOpt.isEmpty()) return false;
+        if (docOpt.isEmpty()) {
+            return false;
+        }
         var doc = docOpt.get();
         return assignmentRepository.findByDoctorIdAndPatientId(doc.getId(), patientId).isPresent();
     }
 
     @GetMapping("/weekly")
-    public String myWeeklyReports(@RequestParam(required = false) Long userId, Model model) {
-        // If caller is not admin/doctor, force userId to current user
+    public String myWeeklyReports(@RequestParam(required = false) Long userId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isDoctorOrAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR") || a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isDoctor = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"));
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isDoctorOrAdmin = isDoctor || isAdmin;
+
         if (!isDoctorOrAdmin) {
-            Long cur = getCurrentUserId();
-            userId = cur;
+            // Bệnh nhân: luôn force về userId của chính mình
+            userId = getCurrentUserId();
+        } else if (userId != null && isDoctor) {
+            // Bác sĩ truy cập userId khác: phải được phân công
+            Long patientId = resolvePatientId(userId);
+            if (patientId != null && !isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem hồ sơ này.");
+                return "redirect:/health-logs/kidney-risk/doctor/dashboard";
+            }
         }
 
         Long patientId = resolvePatientId(userId);
+        // isDoctorView = true khi bác sĩ/admin xem userId khác với chính mình
+        boolean isDoctorView = isDoctorOrAdmin
+                && userId != null
+                && !userId.equals(getCurrentUserId());
+
         if (patientId == null) {
             model.addAttribute("reports", List.of());
-            model.addAttribute("isDoctorView", false);
-            model.addAttribute("userId", userId); 
+            model.addAttribute("isDoctorView", isDoctorView);
+            model.addAttribute("userId", userId);
+            model.addAttribute("patientId", null);
             return "healthlog/weekly-kidney-risk";
         }
 
-        List<WeeklyHealthReport> reports = weeklyHealthReportRepository.findByPatientIdOrderByWeekStartDesc(patientId);
+        List<WeeklyHealthReport> reports
+                = weeklyHealthReportRepository.findByPatientIdOrderByWeekStartDesc(patientId);
         model.addAttribute("reports", reports);
-        model.addAttribute("isDoctorView", false);
-        model.addAttribute("userId", userId); 
+        model.addAttribute("isDoctorView", isDoctorView);
+        model.addAttribute("userId", userId);
+        model.addAttribute("patientId", patientId);
         if (!reports.isEmpty()) {
             model.addAttribute("latestAssessment", reports.get(0));
         }
@@ -96,7 +129,14 @@ public class WeeklyKidneyRiskController {
         model.addAttribute("isDoctorView", true);
         Patient p = patientRepository.findById(patientId).orElse(null);
         model.addAttribute("patientName", p != null ? p.getFullName() : "Bệnh nhân");
-        if (!reports.isEmpty()) model.addAttribute("latestAssessment", reports.get(0));
+
+        Long resolvedUserId = (p != null && p.getUser() != null) ? p.getUser().getId() : null;
+        model.addAttribute("userId", resolvedUserId);
+        model.addAttribute("patientId", patientId);
+
+        if (!reports.isEmpty()) {
+            model.addAttribute("latestAssessment", reports.get(0));
+        }
         return "healthlog/weekly-kidney-risk";
     }
 
@@ -107,7 +147,7 @@ public class WeeklyKidneyRiskController {
         var doctor = user != null ? doctorRepository.findByUserId(user.getId()).orElse(null) : null;
         List<Patient> patients = List.of();
         if (doctor != null) {
-                patients = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active")
+            patients = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active")
                     .stream()
                     .map(a -> a.getPatient())
                     .filter(p -> p != null)

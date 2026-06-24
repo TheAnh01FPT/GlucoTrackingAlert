@@ -414,9 +414,11 @@
                     placeholder="Ví dụ: 5.60"
                     min="0"
                     max="50"
+                    required
                   />
                   <span class="input-unit">mmol/L</span>
                 </div>
+                <div th:if="${#fields.hasErrors('bloodSugar')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{bloodSugar}"></div>
               </div>
 
               <!-- Sleep Hours -->
@@ -435,9 +437,11 @@
                     placeholder="Ví dụ: 7.50"
                     min="0"
                     max="24"
+                    required
                   />
                   <span class="input-unit">giờ</span>
                 </div>
+                <div th:if="${#fields.hasErrors('sleepHours')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{sleepHours}"></div>
               </div>
 
               <!-- Blood Pressure Sys -->
@@ -455,9 +459,11 @@
                     placeholder="Ví dụ: 120"
                     min="30"
                     max="300"
+                    required
                   />
                   <span class="input-unit">mmHg</span>
                 </div>
+                <div th:if="${#fields.hasErrors('systolic')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{systolic}"></div>
               </div>
 
               <!-- Blood Pressure Dia -->
@@ -475,9 +481,11 @@
                     placeholder="Ví dụ: 80"
                     min="20"
                     max="200"
+                    required
                   />
                   <span class="input-unit">mmHg</span>
                 </div>
+                <div th:if="${#fields.hasErrors('diastolic')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{diastolic}"></div>
               </div>
 
               <!-- Water consumed -->
@@ -495,9 +503,11 @@
                     placeholder="Ví dụ: 2000"
                     min="0"
                     max="10000"
+                    required
                   />
                   <span class="input-unit">ml</span>
                 </div>
+                <div th:if="${#fields.hasErrors('waterMl')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{waterMl}"></div>
               </div>
 
               <!-- Sugar Consumption Level -->

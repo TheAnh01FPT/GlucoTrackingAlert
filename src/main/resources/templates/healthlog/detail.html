@@ -344,7 +344,7 @@
           >Biểu Đồ Xu Hướng</a
         >
         <a
-          th:href="${source == 'doctor-view' ? '/health-logs/ai-report?userId=' + log.patientId : '/health-logs/ai-report?userId=' + log.userId}"
+          th:href="${'/health-logs/ai-report?patientId=' + log.patientId}"
           class="navbar-link"
           style="background-color: rgba(99, 102, 241, 0.2); border: 1px solid #818cf8; color: #fff;"
           >🤖 Báo Cáo AI</a
