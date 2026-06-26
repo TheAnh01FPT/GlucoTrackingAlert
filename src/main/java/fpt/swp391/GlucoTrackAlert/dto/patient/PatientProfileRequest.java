@@ -49,6 +49,22 @@ public class PatientProfileRequest {
 
     private Boolean isPregnant;
 
+    private Boolean hypertension;
+
+    private Boolean heartDisease;
+
+    @Size(max = 20, message = "Tình trạng hôn nhân không được vượt quá 20 ký tự")
+    private String everMarried;
+
+    @Size(max = 50, message = "Loại hình công việc không được vượt quá 50 ký tự")
+    private String workType;
+
+    @Size(max = 20, message = "Khu vực sinh sống không được vượt quá 20 ký tự")
+    private String residenceType;
+
+    @Size(max = 50, message = "Tình trạng hút thuốc không được vượt quá 50 ký tự")
+    private String smokingStatus;
+
     // --- 🔀 ĐỒNG BỘ ĐẦU VÀO PHÂN LỒNG AI ---
     private Integer apHi;        // Huyết áp tâm thu (Ví dụ: 120)
     private Integer apLo;        // Huyết áp tâm trương (Ví dụ: 80)
@@ -58,3 +74,6 @@ public class PatientProfileRequest {
     private Integer alco;        // 1: Có uống rượu, 0: Không
     private Integer active;      // 1: Có thể thao/vận động, 0: Khô
 }
+
+
+

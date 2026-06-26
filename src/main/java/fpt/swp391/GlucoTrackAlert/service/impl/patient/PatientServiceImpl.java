@@ -70,6 +70,12 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(request.getInsuranceNumber())
                 .isPregnant(isPregnantVal)
                 .status("active")
+                .hypertension(request.getHypertension() != null ? request.getHypertension() : false)
+                .heartDisease(request.getHeartDisease() != null ? request.getHeartDisease() : false)
+                .everMarried(request.getEverMarried() != null ? request.getEverMarried() : "No")
+                .workType(request.getWorkType())
+                .residenceType(request.getResidenceType())
+                .smokingStatus(request.getSmokingStatus() != null ? request.getSmokingStatus() : "Unknown")
                 // Đóng gói chỉ số lâm sàng người dùng tự chọn
                 .apHi(request.getApHi())
                 .apLo(request.getApLo())
@@ -108,6 +114,31 @@ public class PatientServiceImpl implements PatientService {
             isPregnantVal = request.getIsPregnant();
         }
         patient.setIsPregnant(isPregnantVal);
+
+        // Enforce One-Way Lock for hypertension
+        if (Boolean.TRUE.equals(patient.getHypertension())) {
+            if (request.getHypertension() != null && !request.getHypertension()) {
+                throw new RuntimeException("Không thể tự ý hủy bỏ trạng thái Tăng huyết áp. Vui lòng gửi yêu cầu thay đổi kèm bằng chứng y tế.");
+            }
+            patient.setHypertension(true);
+        } else {
+            patient.setHypertension(request.getHypertension() != null ? request.getHypertension() : false);
+        }
+
+        // Enforce One-Way Lock for heart disease
+        if (Boolean.TRUE.equals(patient.getHeartDisease())) {
+            if (request.getHeartDisease() != null && !request.getHeartDisease()) {
+                throw new RuntimeException("Không thể tự ý hủy bỏ trạng thái Tiền sử bệnh tim. Vui lòng gửi yêu cầu thay đổi kèm bằng chứng y tế.");
+            }
+            patient.setHeartDisease(true);
+        } else {
+            patient.setHeartDisease(request.getHeartDisease() != null ? request.getHeartDisease() : false);
+        }
+
+        patient.setEverMarried(request.getEverMarried());
+        patient.setWorkType(request.getWorkType());
+        patient.setResidenceType(request.getResidenceType());
+        patient.setSmokingStatus(request.getSmokingStatus());
 
         // Cập nhật chỉ số lâm sàng động từ form chỉnh sửa
         patient.setApHi(request.getApHi());
@@ -229,6 +260,12 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(patient.getInsuranceNumber())
                 .patientType(patient.getPatientType())
                 .isPregnant(patient.getIsPregnant())
+                .hypertension(patient.getHypertension())
+                .heartDisease(patient.getHeartDisease())
+                .everMarried(patient.getEverMarried())
+                .workType(patient.getWorkType())
+                .residenceType(patient.getResidenceType())
+                .smokingStatus(patient.getSmokingStatus())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
                 // Trả về dữ liệu gốc lâm sàng để hiển thị Form Chỉnh Sửa

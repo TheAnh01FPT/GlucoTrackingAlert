@@ -42,7 +42,6 @@ public class DoctorServiceImp implements DoctorService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new Exception("Email \"" + request.getEmail() + "\" đã tồn tại trong hệ thống");
         }
-
         // 1. Tạo mật khẩu tạm thời (admin đặt hoặc auto-generate)
         String plainPassword = (request.getTemporaryPassword() != null
                 && !request.getTemporaryPassword().isBlank())
@@ -67,7 +66,7 @@ public class DoctorServiceImp implements DoctorService {
         // 3. Tạo Doctor profile
         Doctor doctor = new Doctor();
         doctor.setUser(user);
-        doctor.setStatus("active");
+        doctor.setStatus("pending_verification"); // chờ bác sĩ upload CCCD + chứng chỉ + avatar
         applyAdminFields(doctor, request);
         doctorRepository.save(doctor);
 
@@ -79,7 +78,7 @@ public class DoctorServiceImp implements DoctorService {
 
     // ── Admin sửa hồ sơ (bao gồm phone) ──────────────────────────────────────
     @Override
-    public DoctorResponse updateDoctor(Integer id, DoctorRequest request) {
+    public DoctorResponse updateDoctor(Long id, DoctorRequest request) {
         Doctor doctor = findOrThrow(id);
         applyAdminFieldsFromRequest(doctor, request);
         return DoctorResponse.from(doctorRepository.save(doctor));
@@ -92,14 +91,14 @@ public class DoctorServiceImp implements DoctorService {
     }
 
     @Override
-    public DoctorResponse getDoctorById(Integer id) {
+    public DoctorResponse getDoctorById(Long id) {
         return DoctorResponse.from(findOrThrow(id));
     }
 
     // ── Soft-delete (ngừng hoạt động) ────────────────────────────────────────
     @Override
     @Transactional
-    public void deactivateDoctor(Integer id) {
+    public void deactivateDoctor(Long id) {
         Doctor doctor = findOrThrow(id);
         doctor.setStatus("inactive");
         doctorRepository.save(doctor);
@@ -115,10 +114,99 @@ public class DoctorServiceImp implements DoctorService {
         }
     }
 
+    // ── Bác sĩ upload ảnh CCCD + chứng chỉ + avatar + nhập số ───────────────
+    @Override
+    @Transactional
+    public DoctorResponse uploadVerificationImages(Long doctorId,
+            String nationalIdImageUrl,
+            String practiceLicenseImageUrl,
+            String avatarUrl,
+            String nationalId,
+            String practiceLicense) {
+
+        Doctor doctor = findOrThrow(doctorId);
+
+        // Kiểm tra số CCCD trùng (nếu có nhập)
+        if (nationalId != null && !nationalId.isBlank()) {
+            doctorRepository.findByNationalId(nationalId).ifPresent(existing -> {
+                if (!existing.getId().equals(doctorId)) {
+                    throw new RuntimeException("Số CCCD \"" + nationalId + "\" đã được đăng ký bởi bác sĩ khác");
+                }
+            });
+            doctor.setNationalId(nationalId);
+        }
+
+        // Kiểm tra số chứng chỉ trùng (nếu có nhập)
+        if (practiceLicense != null && !practiceLicense.isBlank()) {
+            doctorRepository.findByPracticeLicense(practiceLicense).ifPresent(existing -> {
+                if (!existing.getId().equals(doctorId)) {
+                    throw new RuntimeException("Số chứng chỉ \"" + practiceLicense + "\" đã được đăng ký bởi bác sĩ khác");
+                }
+            });
+            doctor.setPracticeLicense(practiceLicense);
+        }
+
+        if (nationalIdImageUrl != null) {
+            doctor.setNationalIdImageUrl(nationalIdImageUrl);
+        }
+        if (practiceLicenseImageUrl != null) {
+            doctor.setPracticeLicenseImageUrl(practiceLicenseImageUrl);
+        }
+        if (avatarUrl != null) {
+            doctor.setAvatarUrl(avatarUrl);
+        }
+
+        doctor.setStatus("pending_approval");
+        return DoctorResponse.from(doctorRepository.save(doctor));
+    }
+
+    // ── Admin lấy danh sách chờ duyệt ────────────────────────────────────────
+    @Override
+    public List<DoctorResponse> getPendingDoctors() {
+        return doctorRepository.findByStatus("pending_approval")
+                .stream().map(DoctorResponse::from).toList();
+    }
+
+    // ── Admin duyệt ──────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public DoctorResponse approveDoctor(Long id) {
+        Doctor doctor = findOrThrow(id);
+        doctor.setStatus("active");
+        doctor.getUser().setStatus("active");
+        userRepository.save(doctor.getUser());
+        emailService.sendSimpleMessage(
+                doctor.getUser().getEmail(),
+                "[GlucoTrackAlert] Hồ sơ của bạn đã được duyệt",
+                "Xin chào Bác sĩ " + doctor.getFullName() + ",\n\n"
+                + "Hồ sơ của bạn đã được Admin xác minh và chấp thuận.\n"
+                + "Bạn có thể đăng nhập và sử dụng hệ thống ngay bây giờ.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert");
+        return DoctorResponse.from(doctorRepository.save(doctor));
+    }
+
+    // ── Admin từ chối ─────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public DoctorResponse rejectDoctor(Long id, String reason) {
+        Doctor doctor = findOrThrow(id);
+        doctor.setStatus("rejected");
+        String reasonText = (reason != null && !reason.isBlank()) ? reason : "Không đủ điều kiện";
+        emailService.sendSimpleMessage(
+                doctor.getUser().getEmail(),
+                "[GlucoTrackAlert] Hồ sơ của bạn chưa được duyệt",
+                "Xin chào Bác sĩ " + doctor.getFullName() + ",\n\n"
+                + "Rất tiếc, hồ sơ của bạn chưa được chấp thuận.\n"
+                + "Lý do: " + reasonText + "\n\n"
+                + "Vui lòng liên hệ Admin để biết thêm thông tin.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert");
+        return DoctorResponse.from(doctorRepository.save(doctor));
+    }
+
     // ── Hard-delete (xóa vĩnh viễn) ──────────────────────────────────────────
     @Override
     @Transactional
-    public void hardDeleteDoctor(Integer id) {
+    public void hardDeleteDoctor(Long id) {
         Doctor doctor = findOrThrow(id);
         if (!"inactive".equals(doctor.getStatus())) {
             throw new RuntimeException(
@@ -144,11 +232,10 @@ public class DoctorServiceImp implements DoctorService {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-    private Doctor findOrThrow(Integer id) {
+    private Doctor findOrThrow(Long id) {
         return doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ id=" + id));
     }
-
     /**
      * Áp dụng các field từ AdminCreateDoctorRequest vào Doctor entity
      */
@@ -176,6 +263,12 @@ public class DoctorServiceImp implements DoctorService {
         }
         if (req.getAvatarUrl() != null) {
             doctor.setAvatarUrl(req.getAvatarUrl());
+        }
+        if (req.getNationalId() != null) {
+            doctor.setNationalId(req.getNationalId());
+        }
+        if (req.getPracticeLicense() != null) {
+            doctor.setPracticeLicense(req.getPracticeLicense());
         }
     }
 
@@ -210,8 +303,13 @@ public class DoctorServiceImp implements DoctorService {
         if (req.getStatus() != null) {
             doctor.setStatus(req.getStatus());
         }
+        if (req.getNationalId() != null) {
+            doctor.setNationalId(req.getNationalId());
+        }
+        if (req.getPracticeLicense() != null) {
+            doctor.setPracticeLicense(req.getPracticeLicense());
+        }
     }
-
     /**
      * Sinh mật khẩu ngẫu nhiên 10 ký tự gồm chữ hoa, chữ thường, số
      */
@@ -237,9 +335,9 @@ public class DoctorServiceImp implements DoctorService {
                 + "Admin đã tạo tài khoản GlucoTrackAlert cho bạn với thông tin sau:\n\n"
                 + "  Email đăng nhập : " + email + "\n"
                 + "  Mật khẩu tạm thời: " + plainPassword + "\n\n"
-                + "Vui lòng đăng nhập và đổi mật khẩu ngay sau lần đăng nhập đầu tiên.\n\n"
-                + "Lưu ý: Thông tin tài khoản có tính bảo mật cao. "
-                + "Không chia sẻ mật khẩu với bất kỳ ai.\n\n"
+                + "Vui lòng đăng nhập và hoàn tất hồ sơ (upload CCCD, chứng chỉ hành nghề, ảnh đại diện)\n"
+                + "trước khi có thể sử dụng hệ thống.\n\n"
+                + "Lưu ý: Không chia sẻ mật khẩu với bất kỳ ai.\n\n"
                 + "Trân trọng,\nGlucoTrackAlert";
         emailService.sendSimpleMessage(email, subject, body);
     }

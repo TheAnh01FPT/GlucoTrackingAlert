@@ -58,7 +58,6 @@ public class Patient {
 
     @Column(name = "patient_type", length = 20)
     private String patientType;
-
     @Column(name = "identity_card", length = 20)
     private String identityCard;
 
@@ -68,6 +67,28 @@ public class Patient {
     @Column(name = "is_pregnant")
     @Builder.Default
     private Boolean isPregnant = false;
+
+    @Column(name = "hypertension")
+    @Builder.Default
+    private Boolean hypertension = false;
+
+    @Column(name = "heart_disease")
+    @Builder.Default
+    private Boolean heartDisease = false;
+
+    @Column(name = "ever_married", length = 20)
+    @Builder.Default
+    private String everMarried = "No";
+
+    @Column(name = "work_type", length = 50)
+    private String workType;
+
+    @Column(name = "residence_type", length = 20)
+    private String residenceType;
+
+    @Column(name = "smoking_status", length = 50)
+    @Builder.Default
+    private String smokingStatus = "Unknown";
 
     // --- CÁC TRƯỜNG CHỈ SỐ LÂM SÀNG MỚI ĐƯỢC THÊM VÀO ---
     @Column(name = "ap_hi")

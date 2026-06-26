@@ -12,6 +12,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import fpt.swp391.GlucoTrackAlert.model.patient.ProfileChangeRequest;
+import fpt.swp391.GlucoTrackAlert.service.patient.ProfileChangeRequestService;
+import org.springframework.data.domain.Page;
+import java.util.List;
 
 @Controller
 @RequestMapping("/patient")
@@ -19,11 +23,13 @@ public class PatientWebController {
 
     private final PatientService patientService;
     private final UserRepository userRepository;
+    private final ProfileChangeRequestService requestService;
 
     @Autowired
-    public PatientWebController(PatientService patientService, UserRepository userRepository) {
+    public PatientWebController(PatientService patientService, UserRepository userRepository, ProfileChangeRequestService requestService) {
         this.patientService = patientService;
         this.userRepository = userRepository;
+        this.requestService = requestService;
     }
 
     private User getLoggedInUser() {
@@ -40,9 +46,40 @@ public class PatientWebController {
             PatientProfileResponse profile = patientService.getProfileByUserId(userId);
             model.addAttribute("profile", profile);
             model.addAttribute("userId", userId);
+
+            // Check only active pending requests for locks on profile view
+            boolean pendingHypertension = requestService.hasPendingRequest(profile.getId(), "hypertension");
+            boolean pendingHeartDisease = requestService.hasPendingRequest(profile.getId(), "heartDisease");
+            model.addAttribute("pendingHypertension", pendingHypertension);
+            model.addAttribute("pendingHeartDisease", pendingHeartDisease);
+
             return "patient/profile";
         } catch (Exception e) {
             return "redirect:/patient/profile/edit";
+        }
+    }
+
+    @GetMapping("/profile/requests")
+    public String viewProfileRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            Model model) {
+        User loggedInUser = getLoggedInUser();
+        Long userId = loggedInUser.getId();
+        try {
+            PatientProfileResponse profile = patientService.getProfileByUserId(userId);
+
+            Page<ProfileChangeRequest> requestsPage = requestService.getRequestsByPatientPaged(profile.getId(), page, size);
+
+            model.addAttribute("requestsPage", requestsPage);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", requestsPage.getTotalPages());
+            model.addAttribute("totalItems", requestsPage.getTotalElements());
+            model.addAttribute("pageSize", size);
+
+            return "patient/requests";
+        } catch (Exception e) {
+            return "redirect:/patient/profile";
         }
     }
 
@@ -64,6 +101,12 @@ public class PatientWebController {
                     .identityCard(profile.getIdentityCard())
                     .insuranceNumber(profile.getInsuranceNumber())
                     .isPregnant(profile.getIsPregnant())
+                    .hypertension(profile.getHypertension())
+                    .heartDisease(profile.getHeartDisease())
+                    .everMarried(profile.getEverMarried())
+                    .workType(profile.getWorkType())
+                    .residenceType(profile.getResidenceType())
+                    .smokingStatus(profile.getSmokingStatus())
                     // Map đồng bộ các chỉ số Cleveland chuẩn mới vào Form sửa
                     .apHi(profile.getApHi())
                     .apLo(profile.getApLo())

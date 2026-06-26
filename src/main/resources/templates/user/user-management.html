@@ -51,6 +51,7 @@
         <a href="/admin/dashboard" class="btn btn-blue" style="background-color: #3b82f6;">👤 Quản Lý Tài Khoản</a>
         <a href="/admin/doctors" class="btn btn-blue" style="background-color: #10b981;">🩺 Quản Lý Bác Sĩ</a>
         <a href="/admin/assignments" class="btn btn-blue" style="background-color: #8b5cf6;">📋 Phân Công Bác Sĩ</a>
+        <a href="/admin/requests" class="btn btn-blue" style="background-color: #f59e0b;">📁 Yêu Cầu Thay Đổi</a>
     </div>
 </div>
 
@@ -114,8 +115,7 @@
             <td th:text="${user.email}" style="font-weight: 500;">user@gmail.com</td>
             <td>
                 <span th:text="${user.role != null ? user.role.name : 'Chưa gán'}"
-                      th:class="${user.role != null && user.role.name == 'DOCTOR'} ? 'badge' : 'badge'"
-                      th:style="${user.role != null && user.role.name == 'DOCTOR'} ? 'background-color: #e0f2fe; color: #0369a1;' : 'background-color: #f3e8ff; color: #6b21a8;'">
+                      th:class="${user.role != null && user.role.name == 'DOCTOR'} ? 'badge badge-doctor' : 'badge badge-patient'">
                     PATIENT
                 </span>
             </td>

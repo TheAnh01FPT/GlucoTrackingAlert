@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử yêu cầu thay đổi dữ liệu bệnh lý | GlucoTrack</title>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <style>
+        .badge-pending-req {
+            background-color: #fef3c7;
+            color: #d97706;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        th {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover {
+            background-color: rgba(0, 138, 138, 0.02);
+        }
+        
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding-top: 20px;
+        }
+        
+        .page-link {
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            font-size: 13px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            transition: var(--transition-smooth);
+        }
+        
+        .page-link:hover {
+            background: rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+        
+        .page-link.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-wrapper" style="max-width: 950px;">
+        <!-- Header -->
+        <div class="profile-header">
+            <h1 class="brand-title">
+                <span class="brand-icon">🩸</span> GlucoTrack
+            </h1>
+            <div>
+                <!-- Back to Profile Button -->
+                <a th:href="@{/patient/profile}" class="action-btn btn-secondary">
+                    ⬅️ Quay lại hồ sơ
+                </a>
+            </div>
+        </div>
+
+        <h2 class="card-title">📋 Lịch sử yêu cầu thay đổi dữ liệu bệnh lý</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">
+            Dưới đây là danh sách các yêu cầu cập nhật lại trạng thái bệnh lý của bạn đã gửi lên hệ thống.
+        </p>
+
+        <!-- Requests Table -->
+        <div class="info-card" style="width: 100%;">
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mục bệnh lý</th>
+                            <th>Lý do thay đổi</th>
+                            <th>Minh chứng y tế</th>
+                            <th>Trạng thái</th>
+                            <th>Phản hồi từ Admin</th>
+                            <th>Thời gian gửi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="req : ${requestsPage.content}">
+                            <td style="font-weight: 600; color: var(--text-main);" th:text="${req.fieldName == 'hypertension' ? 'Tăng huyết áp' : 'Tiền sử bệnh tim'}">Tăng huyết áp</td>
+                            <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main);" th:text="${req.reason}">Lý do</td>
+                            <td>
+                                <a th:href="${req.evidenceUrl}" target="_blank" style="color: var(--primary-color); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                                    📄 Xem minh chứng
+                                </a>
+                            </td>
+                            <td>
+                                <span th:if="${req.status == 'PENDING'}" class="badge-pending-req">Đang chờ duyệt</span>
+                                <span th:if="${req.status == 'APPROVED'}" style="background-color: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">Đã phê duyệt</span>
+                                <span th:if="${req.status == 'REJECTED'}" style="background-color: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">Bị từ chối</span>
+                            </td>
+                            <td style="max-width: 200px; color: #b91c1c; font-style: italic;" th:text="${req.rejectionReason != null ? req.rejectionReason : '-'}">-</td>
+                            <td style="color: var(--text-muted);" th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy HH:mm')}">22/06/2026</td>
+                        </tr>
+                        <tr th:if="${requestsPage.totalElements == 0}">
+                            <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted); font-style: italic;">
+                                Chưa có yêu cầu thay đổi thông tin sức khỏe nào được gửi.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paging section -->
+            <div class="pagination-container" th:if="${requestsPage.totalPages > 0}">
+                <span style="font-size: 13px; color: var(--text-muted);">
+                    Hiển thị trang <strong th:text="${currentPage + 1}"></strong> / <strong th:text="${totalPages}"></strong> 
+                    (Tổng số <strong th:text="${totalItems}"></strong> yêu cầu)
+                </span>
+                
+                <div style="display: flex; gap: 8px;">
+                    <!-- Back Link -->
+                    <a th:if="${currentPage > 0}"
+                       th:href="@{/patient/profile/requests(page=${currentPage - 1}, size=${pageSize})}"
+                       class="page-link">
+                        ← Trước
+                    </a>
+                    
+                    <!-- Dynamic Page Numbers (Sliding Window of 5 pages) -->
+                    <th:block th:with="start=${currentPage - 2 < 0 ? 0 : currentPage - 2}, end=${currentPage + 2 >= totalPages ? totalPages - 1 : currentPage + 2}">
+                        <th:block th:each="i : ${#numbers.sequence(start, end)}">
+                            <a th:href="@{/patient/profile/requests(page=${i}, size=${pageSize})}"
+                               th:text="${i + 1}"
+                               th:class="${i == currentPage} ? 'page-link active' : 'page-link'">
+                            </a>
+                        </th:block>
+                    </th:block>
+                    
+                    <!-- Next Link -->
+                    <a th:if="${currentPage < totalPages - 1}"
+                       th:href="@{/patient/profile/requests(page=${currentPage + 1}, size=${pageSize})}"
+                       class="page-link">
+                        Sau →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

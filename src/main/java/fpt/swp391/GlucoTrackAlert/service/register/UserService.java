@@ -15,5 +15,7 @@ public interface UserService {
     void forgotPassword(fpt.swp391.GlucoTrackAlert.dto.login.ForgotPasswordRequest request) throws Exception;
     void resetPassword(fpt.swp391.GlucoTrackAlert.dto.login.ResetPasswordRequest request) throws Exception;
 
+    void resendOtp(String email) throws Exception;
+
     void changePassword(String email, String oldPassword, String newPassword) throws Exception;
 }

@@ -3,6 +3,7 @@ package fpt.swp391.GlucoTrackAlert.model.user;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
