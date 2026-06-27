@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
 import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
+import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,11 +35,15 @@ import java.util.HashMap;
 
 import java.time.LocalDate;
 import java.time.DayOfWeek;
+import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Controller
@@ -767,6 +772,7 @@ public String createLog(@RequestParam Long userId,
     @GetMapping("/ai-report")
     public String getAiReport(@RequestParam(required = false) Long patientId,
                               @RequestParam(required = false) Long assessmentId,
+                              @RequestParam(required = false) String chartMonth,
                               Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
         if (curUserId == null) {
@@ -808,6 +814,83 @@ public String createLog(@RequestParam Long userId,
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem báo cáo của bệnh nhân này.");
                 return "redirect:/health-logs/doctor-view";
             }
+        }
+
+        YearMonth selectedMonth = YearMonth.now();
+        if (chartMonth != null && !chartMonth.isBlank()) {
+            try {
+                selectedMonth = YearMonth.parse(chartMonth);
+            } catch (Exception ignored) {
+                selectedMonth = YearMonth.now();
+            }
+        }
+
+        LocalDate monthStart = selectedMonth.atDay(1);
+        LocalDate monthEnd = selectedMonth.atEndOfMonth();
+        List<DailyHealthLog> monthLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, monthStart, monthEnd);
+        monthLogs.sort(java.util.Comparator.comparing(DailyHealthLog::getLogDate));
+
+        List<String> chartDays = new java.util.ArrayList<>();
+        List<Object> chartSugar = new java.util.ArrayList<>();
+        List<Object> chartSystolic = new java.util.ArrayList<>();
+        List<Object> chartDiastolic = new java.util.ArrayList<>();
+        List<Object> chartSleep = new java.util.ArrayList<>();
+        List<Object> chartWater = new java.util.ArrayList<>();
+
+        for (int day = 1; day <= selectedMonth.lengthOfMonth(); day++) {
+            LocalDate currentDate = selectedMonth.atDay(day);
+            chartDays.add(String.valueOf(day));
+            DailyHealthLog dayLog = monthLogs.stream()
+                    .filter(log -> currentDate.equals(log.getLogDate()))
+                    .findFirst()
+                    .orElse(null);
+            if (dayLog == null) {
+                chartSugar.add(null);
+                chartSystolic.add(null);
+                chartDiastolic.add(null);
+                chartSleep.add(null);
+                chartWater.add(null);
+                continue;
+            }
+            chartSugar.add(dayLog.getBloodSugar() != null ? dayLog.getBloodSugar().doubleValue() : null);
+            chartSystolic.add(dayLog.getSystolic() != null ? dayLog.getSystolic() : null);
+            chartDiastolic.add(dayLog.getDiastolic() != null ? dayLog.getDiastolic() : null);
+            chartSleep.add(dayLog.getSleepHours() != null ? dayLog.getSleepHours().doubleValue() : null);
+            chartWater.add(dayLog.getWaterMl() != null ? dayLog.getWaterMl() : null);
+        }
+
+        BigDecimal monthlyAvgSugar = calculateAverage(monthLogs, log -> log.getBloodSugar());
+        BigDecimal monthlyAvgSystolic = calculateAverage(monthLogs, log -> log.getSystolic() != null ? BigDecimal.valueOf(log.getSystolic()) : null);
+        BigDecimal monthlyAvgDiastolic = calculateAverage(monthLogs, log -> log.getDiastolic() != null ? BigDecimal.valueOf(log.getDiastolic()) : null);
+        BigDecimal monthlyAvgSleep = calculateAverage(monthLogs, log -> log.getSleepHours());
+        BigDecimal monthlyAvgWater = calculateAverage(monthLogs, log -> log.getWaterMl() != null ? BigDecimal.valueOf(log.getWaterMl()) : null);
+
+        YearMonth previousMonth = selectedMonth.minusMonths(1);
+        List<DailyHealthLog> previousMonthLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, previousMonth.atDay(1), previousMonth.atEndOfMonth());
+        BigDecimal previousAvgSugar = calculateAverage(previousMonthLogs, log -> log.getBloodSugar());
+
+        String monthlyProgressStatus = "STABLE";
+        String monthlyProgressLabel = "Đường huyết ổn định so với tháng trước.";
+        if (monthlyAvgSugar != null && previousAvgSugar != null) {
+            BigDecimal delta = monthlyAvgSugar.subtract(previousAvgSugar);
+            if (delta.compareTo(new BigDecimal("0.3")) <= -1) {
+                monthlyProgressStatus = "IMPROVING";
+                monthlyProgressLabel = "Đường huyết cải thiện rõ rệt so với tháng trước.";
+            } else if (delta.compareTo(new BigDecimal("0.3")) >= 1) {
+                monthlyProgressStatus = "WORSENING";
+                monthlyProgressLabel = "Đường huyết có xu hướng xấu đi so với tháng trước.";
+            }
+        }
+
+        List<Map<String, Object>> monthOptions = new java.util.ArrayList<>();
+        YearMonth currentMonth = YearMonth.now();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth optionMonth = currentMonth.minusMonths(i);
+            Map<String, Object> option = new HashMap<>();
+            option.put("value", optionMonth.toString());
+            option.put("label", String.format(Locale.US, "Tháng %d/%d", optionMonth.getMonthValue(), optionMonth.getYear()));
+            option.put("selected", optionMonth.equals(selectedMonth));
+            monthOptions.add(option);
         }
 
         // Trigger weekly AI prediction calculation (On-Demand)
@@ -991,6 +1074,24 @@ public String createLog(@RequestParam Long userId,
         model.addAttribute("hasRiskData", latestRisk != null);
         model.addAttribute("allAssessments", allAssessments);
         model.addAttribute("selectedAssessmentId", selectedId);
+        model.addAttribute("chartMonth", selectedMonth.toString());
+        model.addAttribute("chartMonthLabel", String.format(Locale.US, "Tháng %d/%d", selectedMonth.getMonthValue(), selectedMonth.getYear()));
+        model.addAttribute("chartDays", chartDays);
+        model.addAttribute("chartSugar", chartSugar);
+        model.addAttribute("chartSystolic", chartSystolic);
+        model.addAttribute("chartDiastolic", chartDiastolic);
+        model.addAttribute("chartSleep", chartSleep);
+        model.addAttribute("chartWater", chartWater);
+        model.addAttribute("monthlyAvgSugar", formatMetricValue(monthlyAvgSugar));
+        model.addAttribute("monthlyAvgSystolic", formatMetricValue(monthlyAvgSystolic));
+        model.addAttribute("monthlyAvgDiastolic", formatMetricValue(monthlyAvgDiastolic));
+        model.addAttribute("monthlyAvgSleep", formatMetricValue(monthlyAvgSleep));
+        model.addAttribute("monthlyAvgWater", formatMetricValue(monthlyAvgWater));
+        model.addAttribute("monthlyProgressStatus", monthlyProgressStatus);
+        model.addAttribute("monthlyProgressLabel", monthlyProgressLabel);
+        model.addAttribute("monthOptions", monthOptions);
+        model.addAttribute("monthlyAiEvaluation", null);
+        model.addAttribute("monthlyLogCount", monthLogs.size());
 
         return "healthlog/ai-report";
     }
@@ -1003,6 +1104,32 @@ public String createLog(@RequestParam Long userId,
             return String.format("%.2f", ((Number) obj).doubleValue());
         }
         return obj.toString();
+    }
+
+    private String formatMetricValue(BigDecimal value) {
+        if (value == null) {
+            return "—";
+        }
+        return String.format(Locale.US, "%.1f", value.setScale(1, RoundingMode.HALF_UP).doubleValue());
+    }
+
+    private BigDecimal calculateAverage(List<DailyHealthLog> logs, java.util.function.Function<DailyHealthLog, BigDecimal> extractor) {
+        if (logs == null || logs.isEmpty()) {
+            return null;
+        }
+        BigDecimal sum = BigDecimal.ZERO;
+        int count = 0;
+        for (DailyHealthLog log : logs) {
+            BigDecimal value = extractor.apply(log);
+            if (value != null) {
+                sum = sum.add(value);
+                count++;
+            }
+        }
+        if (count == 0) {
+            return null;
+        }
+        return sum.divide(BigDecimal.valueOf(count), 1, RoundingMode.HALF_UP);
     }
 
     private java.math.BigDecimal getBigDecimalSafe(Object obj) {
