@@ -470,15 +470,15 @@
                     <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Chọn Từ ngày - Đến ngày để phân tích chỉ số và dự báo đột quỵ</p>
                   </div>
                 </div>
-                <form th:action="@{/health-logs/stroke-risk}" method="get" style="margin: 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <form id="dateFilterForm" th:action="@{/health-logs/stroke-risk}" method="get" style="margin: 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                   <input th:if="${isDoctorOrAdmin}" type="hidden" name="patientId" th:value="${patientId}" />
                   <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Từ ngày:</label>
-                    <input type="date" name="from" th:value="${from}" style="font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px; background-color: #f8fafc; outline: none; color: var(--text-primary);" required />
+                    <input type="date" id="from" name="from" th:value="${from}" style="font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px; background-color: #f8fafc; outline: none; color: var(--text-primary);" required />
                   </div>
                   <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Đến ngày:</label>
-                    <input type="date" name="to" th:value="${to}" style="font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px; background-color: #f8fafc; outline: none; color: var(--text-primary);" required />
+                    <input type="date" id="to" name="to" th:value="${to}" style="font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px; background-color: #f8fafc; outline: none; color: var(--text-primary);" required />
                   </div>
                   <button type="submit" style="font-family: inherit; font-size: 0.9rem; font-weight: 600; color: white; background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%); border: none; padding: 0.55rem 1.25rem; border-radius: 8px; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 6px rgba(79, 70, 229, 0.15);">Xem phân tích</button>
                 </form>
@@ -490,8 +490,7 @@
                   <span style="font-size: 1.75rem;">🤖</span>
                   <div>
                     <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e1b4b; display: flex; align-items: center; gap: 0.5rem;">
-                      Kết quả dự báo đột quỵ AI 
-                      <span style="font-size: 0.75rem; background-color: #e0e7ff; color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 600;">Random Forest</span>
+                      Kết quả dự báo đột quỵ AI
                     </h3>
                     <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Đánh giá lúc: <span th:text="${latestRisk.assessedAtStr}">--</span></p>
                   </div>
@@ -616,5 +615,50 @@
         </div>
       </div>
     </main>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const fromInput = document.getElementById("from");
+        const toInput = document.getElementById("to");
+        const filterForm = document.getElementById("dateFilterForm");
+
+        // Limit both inputs to prevent future dates selection
+        const todayStr = new Date().toISOString().split("T")[0];
+        fromInput.setAttribute("max", todayStr);
+        toInput.setAttribute("max", todayStr);
+
+        // Function to adjust available dates dynamically
+        function updateDateConstraints() {
+          if (fromInput.value) {
+            toInput.setAttribute("min", fromInput.value);
+          }
+          if (toInput.value) {
+            fromInput.setAttribute("max", toInput.value);
+          } else {
+            fromInput.setAttribute("max", todayStr);
+          }
+        }
+
+        fromInput.addEventListener("change", updateDateConstraints);
+        toInput.addEventListener("change", updateDateConstraints);
+
+        // Run initial constraints setting
+        updateDateConstraints();
+
+        // Double check on form submission to block invalid dates
+        filterForm.addEventListener("submit", function(event) {
+          const fromDate = new Date(fromInput.value);
+          const toDate = new Date(toInput.value);
+          const today = new Date(todayStr);
+
+          if (fromDate > toDate) {
+            event.preventDefault();
+            alert("⚠️ Ngày bắt đầu (Từ ngày) không thể sau Ngày kết thúc (Đến ngày)!");
+          } else if (fromDate > today || toDate > today) {
+            event.preventDefault();
+            alert("⚠️ Không được chọn ngày trong tương lai!");
+          }
+        });
+      });
+    </script>
   </body>
 </html>
