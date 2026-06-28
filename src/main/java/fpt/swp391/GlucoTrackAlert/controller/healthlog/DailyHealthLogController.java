@@ -1005,6 +1005,12 @@ public String createLog(@RequestParam Long userId,
             fromDate = toDate.minusDays(6);
         }
 
+        if (fromDate.isAfter(toDate)) {
+            LocalDate temp = fromDate;
+            fromDate = toDate;
+            toDate = temp;
+        }
+
         Map<String, Object> latestRisk = dailyHealthLogService.calculateDynamicRisk(patientId, fromDate, toDate);
 
         // Fetch detailed logs in the range to display on the explanation table
