@@ -33,7 +33,10 @@ public class PatientWebController {
     }
 
     private User getLoggedInUser() {
-        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // Dùng getName() thay vì cast getPrincipal() sang String
+        // vì getPrincipal() trả về UserDetails object, không phải String
+        // → cast thẳng sẽ throw ClassCastException khi chạy thật
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Tài khoản chưa đăng nhập hoặc không tồn tại"));
     }

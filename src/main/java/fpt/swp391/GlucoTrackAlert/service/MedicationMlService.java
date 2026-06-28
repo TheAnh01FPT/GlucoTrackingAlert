@@ -26,13 +26,15 @@ public class MedicationMlService {
     private static final String MEDICATION_SERVICE_URL = "http://localhost:5001/suggest-medication";
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> suggestMedication(int age, String gender, double bmi,
-                                                   double bloodSugar, Integer systolic, Integer diastolic) {
+    public Map<String, Object> suggestMedication(Integer age, String gender, Double bmi,
+                                                   Double bloodSugar, Integer systolic, Integer diastolic) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("age", age);
         payload.put("gender", gender);
         payload.put("bmi", bmi);
         payload.put("bloodSugar", bloodSugar);
+        // systolic/diastolic chỉ là input phụ (không quyết định case), giữ default 120/80
+        // khi bác sĩ không nhập, khớp với fallback đã có sẵn ở medication_service.py
         payload.put("systolic", systolic != null ? systolic : 120);
         payload.put("diastolic", diastolic != null ? diastolic : 80);
 

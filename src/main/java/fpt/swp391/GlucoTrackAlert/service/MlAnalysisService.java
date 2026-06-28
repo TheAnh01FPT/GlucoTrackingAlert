@@ -33,18 +33,32 @@ public class MlAnalysisService {
                 latest.getBloodSugar() != null ? latest.getBloodSugar().doubleValue() : 5.5
         );
 
+        // Kiểm tra các field BẮT BUỘC phải có dữ liệu thật, không cho phép AI tự bịa số
+        // (trước đây hardcode mặc định 120/80/22.0/40/MALE khi null -> sai lệch kết quả phân tích)
+        List<String> missingFields = new ArrayList<>();
+        if (patient.getBmi() == null) missingFields.add("BMI");
+        if (patient.getAge() == null) missingFields.add("tuổi");
+        if (patient.getGender() == null || patient.getGender().isBlank()) missingFields.add("giới tính");
+        if (latest.getSystolic() == null) missingFields.add("huyết áp tâm thu (hôm nay)");
+        if (latest.getDiastolic() == null) missingFields.add("huyết áp tâm trương (hôm nay)");
+
+        if (!missingFields.isEmpty()) {
+            return "⚠️ Không thể phân tích AI vì thiếu dữ liệu: " + String.join(", ", missingFields) + ". "
+                    + "Vui lòng cập nhật hồ sơ bệnh nhân hoặc bổ sung nhật ký sức khỏe đầy đủ trước khi phân tích.";
+        }
+
         // Build payload gửi sang Flask
         Map<String, Object> payload = new HashMap<>();
         payload.put("bloodSugar", bloodSugar);
-        payload.put("systolic", latest.getSystolic() != null ? latest.getSystolic() : 120);
-        payload.put("diastolic", latest.getDiastolic() != null ? latest.getDiastolic() : 80);
-        payload.put("bmi", patient.getBmi() != null ? patient.getBmi().doubleValue() : 22.0);
-        payload.put("age", patient.getAge() != null ? patient.getAge() : 40);
-        payload.put("gender", patient.getGender() != null ? patient.getGender() : "MALE");
+        payload.put("systolic", latest.getSystolic());
+        payload.put("diastolic", latest.getDiastolic());
+        payload.put("bmi", patient.getBmi().doubleValue());
+        payload.put("age", patient.getAge());
+        payload.put("gender", patient.getGender());
         payload.put("isPregnant", patient.getIsPregnant() != null && patient.getIsPregnant());
-        payload.put("physActivity", true);
-        payload.put("smoker", false);
-        payload.put("genHealth", 3);
+        // smokingStatus: dùng đúng dữ liệu thật của patient (DB đã có cột này),
+        // không còn để Python tự gán giá trị trung tính giả định
+        payload.put("smokingStatus", patient.getSmokingStatus());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -112,7 +126,7 @@ public class MlAnalysisService {
         sb.append("🤖 KẾT QUẢ PHÂN TÍCH (").append(logs.size()).append(" ngày gần nhất)\n");
         sb.append("─────────────────────────────────────\n");
         sb.append(riskEmoji).append(" Mức nguy cơ: ").append(riskLabel).append("\n");
-        sb.append("   Phương pháp: ").append(ruleApplied ? "Rule ADA Guideline" : "Ensemble AI (CDC + Pima)").append("\n\n");
+        sb.append("   Phương pháp: ").append(ruleApplied ? "Rule ADA Guideline" : "Ensemble AI (V4+V5)").append("\n\n");
 
         // Chỉ số trung bình
         sb.append("📊 CHỈ SỐ TRUNG BÌNH\n");
@@ -127,6 +141,7 @@ public class MlAnalysisService {
         if (latest.getWaterMl() != null) {
             sb.append(String.format("   Nước uống:      %d ml/ngày\n", latest.getWaterMl()));
         }
+        sb.append(buildTrendLine(logs));
         sb.append("\n");
 
         // Khuyến nghị
@@ -144,5 +159,52 @@ public class MlAnalysisService {
         sb.append("═══════════════════════════════════════");
 
         return sb.toString();
+    }
+
+    /**
+     * So sánh đường huyết trung bình của nửa kỳ GẦN ĐÂY vs nửa kỳ TRƯỚC ĐÓ
+     * (logs đã được sort DESC theo logDate - index 0 là mới nhất).
+     * Không cần thêm cột DB mới, chỉ dùng lại dữ liệu logDate + bloodSugar đã có.
+     * Cần tối thiểu 4 log để chia 2 nửa có ý nghĩa, tránh trend bị nhiễu vì quá ít data.
+     */
+    private String buildTrendLine(List<DailyHealthLogResponse> logs) {
+        if (logs.size() < 4) {
+            return "";
+        }
+
+        int mid = logs.size() / 2;
+        // logs[0..mid-1] = nửa gần đây (mới hơn), logs[mid..end] = nửa trước đó (cũ hơn)
+        OptionalDouble recentAvg = logs.subList(0, mid).stream()
+                .filter(l -> l.getBloodSugar() != null)
+                .mapToDouble(l -> l.getBloodSugar().doubleValue())
+                .average();
+        OptionalDouble olderAvg = logs.subList(mid, logs.size()).stream()
+                .filter(l -> l.getBloodSugar() != null)
+                .mapToDouble(l -> l.getBloodSugar().doubleValue())
+                .average();
+
+        if (recentAvg.isEmpty() || olderAvg.isEmpty()) {
+            // Một trong hai nửa không có đủ dữ liệu đường huyết -> không tính trend
+            // Thông báo rõ để bác sĩ biết lý do, thay vì âm thầm bỏ qua
+            return "   Xu hướng:       ⚠️ Không đủ dữ liệu đường huyết để tính xu hướng\n";
+        }
+
+        double diff = recentAvg.getAsDouble() - olderAvg.getAsDouble();
+        // Ngưỡng 0.3 mmol/L để tránh báo "tăng/giảm" với sai số đo nhỏ không đáng kể
+        String arrow;
+        String desc;
+        if (diff > 0.3) {
+            arrow = "📈";
+            desc = "tăng";
+        } else if (diff < -0.3) {
+            arrow = "📉";
+            desc = "giảm";
+        } else {
+            arrow = "➡️";
+            desc = "ổn định";
+        }
+
+        return String.format("   Xu hướng:       %s Đường huyết %s %.1f mmol/L so với kỳ trước (%.1f → %.1f)\n",
+                arrow, desc, Math.abs(diff), olderAvg.getAsDouble(), recentAvg.getAsDouble());
     }
 }

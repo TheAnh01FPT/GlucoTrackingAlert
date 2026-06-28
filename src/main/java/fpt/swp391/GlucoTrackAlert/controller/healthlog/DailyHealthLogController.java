@@ -368,13 +368,8 @@ public class DailyHealthLogController {
             return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
         }
 
-        // Chỉ ADMIN hoặc doctor được phân công mới xem được
-        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
-            if (!isDoctorAssignedToPatient(log.getPatientId())) {
-                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem nhật ký này");
-                return "redirect:/health-logs/doctor-view";
-            }
-        }
+        // checkOwnership() đã xử lý cả ADMIN và DOCTOR được phân công
+        // không cần check lại lần 2 ở đây (trước đây check lại gây Admin bị redirect nhầm)
         model.addAttribute("log", log);
         model.addAttribute("source", source);
         return "healthlog/detail";
@@ -671,9 +666,28 @@ public class DailyHealthLogController {
             return "redirect:/login";
         }
 
-        List<Patient> patients = patientRepository.findAllByStatus("active");
-        if (patients.isEmpty()) {
-            patients = patientRepository.findAll();
+        // Lọc danh sách bệnh nhân theo role -- giống getDoctorView()
+        // Trước đây lấy tất cả active patients -> bác sĩ A xem được chart bệnh nhân của bác sĩ B
+        List<Patient> patients;
+        if (hasRole("ROLE_ADMIN")) {
+            patients = patientRepository.findAllByStatus("active");
+            if (patients.isEmpty()) patients = patientRepository.findAll();
+        } else {
+            Long currentUserId = getCurrentUserId();
+            Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+            if (doctor == null) {
+                model.addAttribute("patients", Collections.emptyList());
+                model.addAttribute("chartData", Collections.emptyList());
+                model.addAttribute("selectedUserId", null);
+                model.addAttribute("from", LocalDate.now().minusDays(30));
+                model.addAttribute("to", LocalDate.now());
+                return "healthlog/doctor-chart";
+            }
+            patients = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active")
+                    .stream()
+                    .map(DoctorPatientAssignment::getPatient)
+                    .filter(p -> "active".equals(p.getStatus()))
+                    .collect(Collectors.toList());
         }
         model.addAttribute("patients", patients);
 
@@ -948,5 +962,3 @@ public class DailyHealthLogController {
         return new java.math.BigDecimal(obj.toString());
     }
 }
-
-

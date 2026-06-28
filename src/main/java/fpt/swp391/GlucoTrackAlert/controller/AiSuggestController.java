@@ -24,12 +24,29 @@ public class AiSuggestController {
 
     @PostMapping("/suggest")
     public ResponseEntity<?> suggest(@RequestBody Map<String, Object> patientData) {
-        double bloodSugar = parseDouble(patientData.get("bloodSugar"), 10.0);
-        double bmi        = parseDouble(patientData.get("patientBmi"), 22.0);
-        int    age        = parseInt(patientData.get("patientAge"), 40);
-        String gender     = String.valueOf(patientData.getOrDefault("patientGender", "MALE")).toUpperCase();
-        Integer systolic  = patientData.get("systolic") != null ? parseInt(patientData.get("systolic"), 120) : null;
-        Integer diastolic = patientData.get("diastolic") != null ? parseInt(patientData.get("diastolic"), 80) : null;
+        // bloodSugar/bmi/age/gender quyết định trực tiếp việc phân loại case (resolve_case)
+        // trong medication_service.py -> KHÔNG được bịa default (10.0/22.0/40/MALE cũ),
+        // vì sẽ ra sai nhóm phác đồ thuốc. Thiếu thì báo lỗi để bác sĩ bổ sung trước.
+        Double bloodSugar = parseDoubleStrict(patientData.get("bloodSugar"));
+        Double bmi        = parseDoubleStrict(patientData.get("patientBmi"));
+        Integer age       = parseIntStrict(patientData.get("patientAge"));
+        Object genderRaw  = patientData.get("patientGender");
+
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        if (bloodSugar == null) missing.add("bloodSugar");
+        if (bmi == null) missing.add("patientBmi");
+        if (age == null) missing.add("patientAge");
+        if (genderRaw == null || genderRaw.toString().isBlank()) missing.add("patientGender");
+
+        if (!missing.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Thiếu dữ liệu bắt buộc để gợi ý thuốc: " + String.join(", ", missing)
+            ));
+        }
+
+        String gender = genderRaw.toString().toUpperCase();
+        Integer systolic  = parseIntStrict(patientData.get("systolic"));
+        Integer diastolic = parseIntStrict(patientData.get("diastolic"));
 
         try {
             Map<String, Object> flaskResult = medicationMlService.suggestMedication(
@@ -55,12 +72,12 @@ public class AiSuggestController {
         }
     }
 
-    private double parseDouble(Object value, double def) {
-        if (value == null) return def;
-        try { return Double.parseDouble(value.toString()); } catch (Exception e) { return def; }
+    private Double parseDoubleStrict(Object value) {
+        if (value == null) return null;
+        try { return Double.parseDouble(value.toString()); } catch (Exception e) { return null; }
     }
-    private int parseInt(Object value, int def) {
-        if (value == null) return def;
-        try { return Integer.parseInt(value.toString()); } catch (Exception e) { return def; }
+    private Integer parseIntStrict(Object value) {
+        if (value == null) return null;
+        try { return Integer.parseInt(value.toString()); } catch (Exception e) { return null; }
     }
 }
