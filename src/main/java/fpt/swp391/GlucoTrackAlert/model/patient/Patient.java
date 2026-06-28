@@ -68,9 +68,6 @@ public class Patient {
     @Builder.Default
     private Boolean isPregnant = false;
 
-    @Column(name = "hypertension_diagnosed")
-    @Builder.Default
-    private Boolean hypertensionDiagnosed = false;
     @Column(name = "hypertension")
     @Builder.Default
     private Boolean hypertension = false;

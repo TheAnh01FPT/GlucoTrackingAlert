@@ -43,7 +43,7 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
 
         Double patientAgeObj = patient.getAge() != null ? patient.getAge().doubleValue() : null;
         double age = patientAgeObj != null ? patientAgeObj : 50.0;
-        boolean htn = Boolean.TRUE.equals(patient.getHypertensionDiagnosed());
+        boolean htn = Boolean.TRUE.equals(patient.getHypertension());
         Double diastolicObj = log.getDiastolic() != null ? log.getDiastolic().doubleValue() : null;
         double diastolic = diastolicObj != null ? diastolicObj : 80.0;
         Double bloodSugarObj = log.getBloodSugar() != null ? log.getBloodSugar().doubleValue() : null;
