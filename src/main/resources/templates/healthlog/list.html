@@ -1,0 +1,24 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GlucoTrackAlert - Bảng Bệnh Nhân</title>
+  </head>
+  <body>
+    <main style="max-width:900px;margin:3rem auto;font-family:Inter, sans-serif;">
+      <h1 style="font-size:1.25rem">Danh sách bệnh nhân</h1>
+      <p>Trang này được dùng cho admin/doctor. Chọn một bệnh nhân để xem nhật ký.</p>
+      <div th:if="${patients != null}">
+        <ul>
+          <li th:each="p : ${patients}">
+            <a th:href="@{/health-logs/doctor-view(userId=${p.id})}" th:text="${p.fullName}">Bệnh nhân</a>
+          </li>
+        </ul>
+      </div>
+      <div th:if="${patients == null || #lists.isEmpty(patients)}">
+        <p>Không có bệnh nhân để hiển thị.</p>
+      </div>
+    </main>
+  </body>
+</html>
