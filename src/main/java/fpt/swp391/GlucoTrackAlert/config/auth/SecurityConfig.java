@@ -40,6 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/medications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
                         .requestMatchers("/health-logs/doctor-view", "/health-logs/doctor-chart").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers("/health-logs/kidney-risk/weekly").hasAnyRole("PATIENT", "ADMIN", "DOCTOR")
+                        .requestMatchers("/health-logs/kidney-risk/weekly/**").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers("/health-logs/kidney-risk/doctor/**", "/health-logs/kidney-risk/doctor/dashboard").hasAnyRole("DOCTOR", "ADMIN")
                         .requestMatchers("/health-logs/doctor-view/thresholds/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")

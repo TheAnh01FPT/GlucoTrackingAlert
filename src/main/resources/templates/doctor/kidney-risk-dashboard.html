@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Kidney Risk Dashboard</title>
+</head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <h2>Kidney Risk - Doctor Dashboard</h2>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Patient</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${patients}">
+            <td th:text="${p.fullName}"></td>
+            <td><a th:href="@{'/health-logs/kidney-risk/weekly/' + ${p.id}}">View Weekly Reports</a></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(patients)}"><td colspan="2">No patients assigned.</td></tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
