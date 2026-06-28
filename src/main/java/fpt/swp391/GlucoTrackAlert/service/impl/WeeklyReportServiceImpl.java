@@ -84,7 +84,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             return sysHigh || diaHigh;
         }).count();
 
-        boolean htn = Boolean.TRUE.equals(patient.getHypertensionDiagnosed()) || highBpDays >= 3;
+        boolean htn = Boolean.TRUE.equals(patient.getHypertension()) || highBpDays >= 3;
 
         double age = patient.getAge() != null ? patient.getAge().doubleValue() : 50.0;
         double avgDiaForModel = avgDiastolic != null ? avgDiastolic.doubleValue() : 80.0;
