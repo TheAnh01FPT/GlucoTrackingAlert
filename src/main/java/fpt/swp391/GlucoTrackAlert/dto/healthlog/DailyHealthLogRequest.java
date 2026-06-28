@@ -1,5 +1,6 @@
 package fpt.swp391.GlucoTrackAlert.dto.healthlog;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 public class DailyHealthLogRequest {
     @NotNull(message = "Ngày ghi nhật ký không được để trống")
     @PastOrPresent(message = "Ngày ghi nhật ký không được ở tương lai")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate logDate;
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Chỉ số đường huyết phải lớn hơn 0")
