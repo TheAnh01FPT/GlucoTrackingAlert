@@ -812,11 +812,28 @@
                             &laquo; Trước
                         </a>
 
+                        <!-- FIX 5: Thymeleaf không hỗ trợ điều kiện phức tạp trong th:each,
+                             dùng th:if để chỉ render các trang trong khoảng [currentPage-2, currentPage+2]
+                             và luôn hiển thị trang đầu/cuối kèm dấu "..." -->
+                        <!-- Trang đầu (nếu currentPage > 2) -->
+                        <a th:if="${currentPage > 2}"
+                           th:href="@{/health-logs/doctor-view(page=0, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                           class="pagination-btn">1</a>
+                        <span th:if="${currentPage > 3}" class="pagination-btn disabled" style="border:none; cursor:default;">…</span>
+
+                        <!-- Các trang xung quanh trang hiện tại (±2) -->
                         <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                           th:if="${i >= currentPage - 2 and i <= currentPage + 2}"
                            th:href="@{/health-logs/doctor-view(page=${i}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
                            th:text="${i + 1}" th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
                             1
                         </a>
+
+                        <!-- Trang cuối (nếu currentPage < totalPages - 3) -->
+                        <span th:if="${currentPage < totalPages - 4}" class="pagination-btn disabled" style="border:none; cursor:default;">…</span>
+                        <a th:if="${currentPage < totalPages - 3}"
+                           th:href="@{/health-logs/doctor-view(page=${totalPages - 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                           th:text="${totalPages}" class="pagination-btn"></a>
 
                         <a th:href="@{/health-logs/doctor-view(page=${currentPage + 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
                            th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
@@ -847,16 +864,20 @@
                         ✨ Phân Tích Ngay
                     </button>
                 </div>
+                <!-- FIX 1: aiLoading tách ra ngoài aiResultBox để không bị ẩn theo -->
+                <div id="aiLoading" style="display:none; margin-top: 1rem; text-align:center; color: #6366f1; font-weight:500; padding: 1rem;">
+                    ⏳ Đang phân tích dữ liệu bệnh nhân...
+                </div>
                 <div id="aiResultBox" style="display:none; margin-top: 1rem; padding: 1.25rem 1.5rem;
                      background: #f8f7ff; border: 1px solid #e0e7ff; border-radius: 12px;
                      font-size: 0.93rem; line-height: 2; color: #1e1b4b; white-space: pre-wrap;
                      font-family: 'Inter', monospace; max-height: 600px; overflow-y: auto;">
-                    <div id="aiLoading" style="display:none; margin-top: 1rem; text-align:center; color: #6366f1; font-weight:500;">
-                        ⏳ Đang phân tích dữ liệu bệnh nhân...
-                    </div>
-                    <p style="margin-top: 0.75rem; font-size: 0.82rem; color: #94a3b8;">
+                    <!-- FIX 2: nội dung AI sẽ được đặt vào đây, disclaimer giữ riêng bên dưới -->
+                    <div id="aiResultText"></div>
+                    <p style="margin-top: 0.75rem; font-size: 0.82rem; color: #94a3b8; border-top: 1px solid #e0e7ff; padding-top: 0.75rem;">
                         * Kết quả chỉ mang tính tham khảo, không thay thế chẩn đoán lâm sàng của bác sĩ.
                     </p>
+                </div>
             </section>
 
             <!-- Recommendation Panel -->
@@ -914,20 +935,24 @@
 
                 const btn = document.getElementById('btnAnalyze');
                 const resultBox = document.getElementById('aiResultBox');
+                const resultText = document.getElementById('aiResultText');
                 const loading = document.getElementById('aiLoading');
 
                 btn.disabled = true;
                 btn.textContent = '⏳ Đang phân tích...';
+                // FIX 1+2: ẩn resultBox, hiện loading (loading đã nằm ngoài resultBox)
                 resultBox.style.display = 'none';
+                resultText.textContent = '';
                 loading.style.display = 'block';
 
                 try {
                     const response = await fetch(`/ai/analyze?patientId=${patientId}`, {method: 'POST'});
                     const data = await response.json();
-                    resultBox.textContent = data.result || data.error || 'Không có kết quả.';
+                    // FIX 2: ghi vào aiResultText, không dùng textContent trên resultBox (tránh xóa disclaimer)
+                    resultText.textContent = data.result || data.error || 'Không có kết quả.';
                     resultBox.style.display = 'block';
                 } catch (e) {
-                    resultBox.textContent = '❌ Lỗi kết nối đến AI. Vui lòng thử lại.';
+                    resultText.textContent = '❌ Lỗi kết nối đến AI. Vui lòng thử lại.';
                     resultBox.style.display = 'block';
                 } finally {
                     loading.style.display = 'none';
@@ -939,43 +964,63 @@
 
             const patientIdForRec = /*[[${selectedUserId}]]*/ null;
 
+            // FIX 3: hàm escape chống XSS khi render innerHTML từ dữ liệu server
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
             async function loadRecommendations() {
                 if (!patientIdForRec)
                     return;
-                const showInactive = document.getElementById('showInactive') && document.getElementById('showInactive').checked;
-                const url = showInactive
-                        ? `/api/recommendations/doctor/patient/${patientIdForRec}/all`
-                        : `/api/recommendations/doctor/patient/${patientIdForRec}`;
-                const res = await fetch(url);
-                const list = await res.json();
                 const container = document.getElementById("recItems");
-                if (!list.length) {
-                    container.innerHTML = "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>";
-                    return;
+                // FIX 4: try/catch để bắt lỗi network/API
+                try {
+                    const showInactive = document.getElementById('showInactive') && document.getElementById('showInactive').checked;
+                    const url = showInactive
+                            ? `/api/recommendations/doctor/patient/${patientIdForRec}/all`
+                            : `/api/recommendations/doctor/patient/${patientIdForRec}`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const list = await res.json();
+                    if (!list.length) {
+                        container.innerHTML = "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>";
+                        return;
+                    }
+                    container.innerHTML = list.map(r => {
+                        const isInactive = r.status === 'inactive';
+                        const cardStyle = isInactive
+                                ? 'background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:1rem 1.25rem; opacity:0.65;'
+                                : 'background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:1rem 1.25rem;';
+                        const titleStyle = isInactive
+                                ? 'font-size:0.95rem; color:#94a3b8; text-decoration:line-through;'
+                                : 'font-size:0.95rem; color:#1e293b;';
+                        const contentStyle = isInactive
+                                ? 'margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;'
+                                : 'margin-top:0.5rem; font-size:0.88rem; color:#475569;';
+                        const actionBtn = isInactive
+                                ? `<span style="font-size:0.78rem; background:#f1f5f9; color:#94a3b8; padding:0.25rem 0.7rem; border-radius:6px;">Đã xóa</span>`
+                                : `<button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer;">🗑 Xóa</button>`;
+                        // FIX 3: dùng escapeHtml() cho r.title và r.recommendation trước khi nhét vào innerHTML
+                        return `<div style="${cardStyle}">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="${titleStyle}">${escapeHtml(r.title)}</strong>
+                                <div style="display:flex; gap:0.5rem; align-items:center;">${actionBtn}</div>
+                            </div>
+                            <p style="${contentStyle}">${escapeHtml(r.recommendation)}</p>
+                            <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
+                        </div>`;
+                    }).join("");
+                } catch (err) {
+                    // FIX 4: hiện thông báo lỗi thay vì im lặng
+                    container.innerHTML = "<p style='color:#ef4444; font-size:0.9rem;'>❌ Không thể tải khuyến nghị. Vui lòng thử lại.</p>";
+                    console.error('loadRecommendations error:', err);
                 }
-                container.innerHTML = list.map(r => {
-                    const isInactive = r.status === 'inactive';
-                    const cardStyle = isInactive
-                            ? 'background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:1rem 1.25rem; opacity:0.65;'
-                            : 'background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:1rem 1.25rem;';
-                    const titleStyle = isInactive
-                            ? 'font-size:0.95rem; color:#94a3b8; text-decoration:line-through;'
-                            : 'font-size:0.95rem; color:#1e293b;';
-                    const contentStyle = isInactive
-                            ? 'margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;'
-                            : 'margin-top:0.5rem; font-size:0.88rem; color:#475569;';
-                    const actionBtn = isInactive
-                            ? `<span style="font-size:0.78rem; background:#f1f5f9; color:#94a3b8; padding:0.25rem 0.7rem; border-radius:6px;">Đã xóa</span>`
-                            : `<button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer;">🗑 Xóa</button>`;
-                    return `<div style="${cardStyle}">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong style="${titleStyle}">${r.title}</strong>
-                            <div style="display:flex; gap:0.5rem; align-items:center;">${actionBtn}</div>
-                        </div>
-                        <p style="${contentStyle}">${r.recommendation}</p>
-                        <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
-                    </div>`;
-                }).join("");
             }
 
             async function saveRecommendation() {

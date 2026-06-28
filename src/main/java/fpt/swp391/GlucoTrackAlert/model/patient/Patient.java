@@ -68,6 +68,28 @@ public class Patient {
     @Builder.Default
     private Boolean isPregnant = false;
 
+    @Column(name = "hypertension")
+    @Builder.Default
+    private Boolean hypertension = false;
+
+    @Column(name = "heart_disease")
+    @Builder.Default
+    private Boolean heartDisease = false;
+
+    @Column(name = "ever_married", length = 20)
+    @Builder.Default
+    private String everMarried = "No";
+
+    @Column(name = "work_type", length = 50)
+    private String workType;
+
+    @Column(name = "residence_type", length = 20)
+    private String residenceType;
+
+    @Column(name = "smoking_status", length = 50)
+    @Builder.Default
+    private String smokingStatus = "Unknown";
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -15,4 +15,5 @@ public interface DailyHealthLogService {
     DailyHealthLogResponse updateLog(Long id, DailyHealthLogRequest request);
     void deleteLog(Long id);
     List<DailyHealthLogResponse> getChartData(Long patientId, LocalDate from, LocalDate to);
+    void assessWeeklyRisk(Long patientId);
 }
