@@ -332,26 +332,70 @@
 
         <div class="form-body">
           <form th:action="@{${action}}" th:object="${log}" method="POST">
+            <div
+              th:if="${error}"
+              class="alert alert-danger"
+              style="
+                background-color: #fee2e2;
+                color: #ef4444;
+                padding: 1rem;
+                border-radius: 10px;
+                margin-bottom: 1.5rem;
+                border: 1px solid #fca5a5;
+                font-size: 0.9rem;
+              "
+            >
+              <h5 style="margin: 0; font-weight: 700; font-size: 0.95rem">
+                ❌ Lỗi:
+              </h5>
+              <p style="margin: 0.5rem 0 0 0" th:text="${error}"></p>
+            </div>
+
             <!-- Validation Errors Summary -->
-            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" style="background-color: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid #fca5a5; font-size: 0.9rem;">
-              <h5 style="margin: 0; font-weight: 700; font-size: 0.95rem;">❌ Có lỗi nhập liệu xảy ra:</h5>
-              <ul style="margin: 0; padding-left: 1.2rem; margin-top: 0.5rem;">
-                <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Lỗi</li>
+            <div
+              th:if="${#fields.hasErrors('*')}"
+              class="alert alert-danger"
+              style="
+                background-color: #fee2e2;
+                color: #ef4444;
+                padding: 1rem;
+                border-radius: 10px;
+                margin-bottom: 1.5rem;
+                border: 1px solid #fca5a5;
+                font-size: 0.9rem;
+              "
+            >
+              <h5 style="margin: 0; font-weight: 700; font-size: 0.95rem">
+                ❌ Có lỗi nhập liệu xảy ra:
+              </h5>
+              <ul style="margin: 0; padding-left: 1.2rem; margin-top: 0.5rem">
+                <li th:each="err : ${#fields.errors('*')}" th:text="${err}">
+                  Lỗi
+                </li>
               </ul>
             </div>
+
             <div class="form-grid">
               <!-- Log Date -->
               <div class="form-group form-group-full">
                 <label class="form-label" for="logDate"
                   >Ngày Ghi Nhật Ký *</label
                 >
-                <input
-                  type="date"
-                  id="logDate"
-                  th:field="*{logDate}"
-                  class="form-input"
-                  required
-                />
+                <div th:if="${action.contains('edit')}">
+                  <div class="form-input" style="background:#fff;border:1px solid #e2e8f0;padding:0.75rem;border-radius:10px;">
+                    <span th:text="${#temporals.format(log.logDate,'dd/MM/yyyy')}">01/06/2026</span>
+                  </div>
+                  <input type="hidden" th:field="*{logDate}" />
+                </div>
+                <div th:unless="${action.contains('edit')}">
+                  <input
+                    type="date"
+                    id="logDate"
+                    th:field="*{logDate}"
+                    class="form-input"
+                    required
+                  />
+                </div>
               </div>
 
               <!-- Blood Sugar -->
@@ -365,13 +409,16 @@
                     step="0.01"
                     id="bloodSugar"
                     th:field="*{bloodSugar}"
+                    th:disabled="${source == 'doctor-view'}"
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 5.60"
                     min="0"
                     max="50"
+                    required
                   />
                   <span class="input-unit">mmol/L</span>
                 </div>
+                <div th:if="${#fields.hasErrors('bloodSugar')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{bloodSugar}"></div>
               </div>
 
               <!-- Sleep Hours -->
@@ -385,13 +432,16 @@
                     step="0.01"
                     id="sleepHours"
                     th:field="*{sleepHours}"
+                    th:disabled="${source == 'doctor-view'}"
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 7.50"
                     min="0"
                     max="24"
+                    required
                   />
                   <span class="input-unit">giờ</span>
                 </div>
+                <div th:if="${#fields.hasErrors('sleepHours')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{sleepHours}"></div>
               </div>
 
               <!-- Blood Pressure Sys -->
@@ -404,13 +454,16 @@
                     type="number"
                     id="systolic"
                     th:field="*{systolic}"
+                    th:disabled="${source == 'doctor-view'}"
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 120"
-                    min="50"
-                    max="250"
+                    min="30"
+                    max="300"
+                    required
                   />
                   <span class="input-unit">mmHg</span>
                 </div>
+                <div th:if="${#fields.hasErrors('systolic')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{systolic}"></div>
               </div>
 
               <!-- Blood Pressure Dia -->
@@ -423,13 +476,16 @@
                     type="number"
                     id="diastolic"
                     th:field="*{diastolic}"
+                    th:disabled="${source == 'doctor-view'}"
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 80"
-                    min="30"
-                    max="150"
+                    min="20"
+                    max="200"
+                    required
                   />
                   <span class="input-unit">mmHg</span>
                 </div>
+                <div th:if="${#fields.hasErrors('diastolic')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{diastolic}"></div>
               </div>
 
               <!-- Water consumed -->
@@ -442,13 +498,16 @@
                     type="number"
                     id="waterMl"
                     th:field="*{waterMl}"
+                    th:disabled="${source == 'doctor-view'}"
                     class="form-input form-input-unit"
                     placeholder="Ví dụ: 2000"
                     min="0"
-                    max="20000"
+                    max="10000"
+                    required
                   />
                   <span class="input-unit">ml</span>
                 </div>
+                <div th:if="${#fields.hasErrors('waterMl')}" style="color:#ef4444; font-size:0.85rem; margin-top:6px;" th:errors="*{waterMl}"></div>
               </div>
 
               <!-- Sugar Consumption Level -->
@@ -460,6 +519,7 @@
                   id="sugarConsumptionLevel"
                   th:field="*{sugarConsumptionLevel}"
                   class="form-input"
+                  th:disabled="${source == 'doctor-view'}"
                 >
                   <option value="low">Thấp (Low)</option>
                   <option value="medium">Vừa (Medium)</option>
@@ -477,17 +537,19 @@
                   th:field="*{symptoms}"
                   class="form-input"
                   placeholder="Ví dụ: Đau đầu, mệt mỏi, thèm ngọt, chóng mặt,..."
+                  th:disabled="${source == 'doctor-view'}"
                 ></textarea>
               </div>
 
               <!-- Note -->
               <div class="form-group form-group-full">
-                <label class="form-label" for="note">Ghi Chú Nhắc Nhở</label>
+                <label class="form-label" for="note">Ghi Chú</label>
                 <textarea
                   id="note"
                   th:field="*{note}"
                   class="form-input"
                   placeholder="Ví dụ: Thực đơn hôm nay có nhiều rau xanh, tập thể dục nhẹ nhàng..."
+                  th:disabled="${source == 'doctor-view'}"
                 ></textarea>
               </div>
             </div>
@@ -501,7 +563,7 @@
                 class="btn btn-cancel"
                 >Hủy Bỏ</a
               >
-              <button type="submit" class="btn btn-submit">
+              <button type="submit" class="btn btn-submit" th:if="${source != 'doctor-view'}">
                 💾 Lưu Chỉ Số Sức Khỏe
               </button>
             </div>
