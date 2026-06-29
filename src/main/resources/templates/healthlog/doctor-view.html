@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<<<<<<< HEAD
+=======
+
+>>>>>>> 72a055d864f426d14121f99c0549505acd39a43b
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlucoTrackAlert - Theo Dõi Sức Khỏe Bệnh Nhân</title>
-    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -32,7 +35,6 @@
             min-height: 100vh;
         }
 
-        /* Navbar Layout */
         .navbar {
             background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
             padding: 1rem 2rem;
@@ -99,7 +101,6 @@
             box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
         }
 
-        /* Main Container */
         .main-container {
             max-width: 1250px;
             margin: 2rem auto;
@@ -108,18 +109,10 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Page Title */
         .page-title {
             font-size: 1.8rem;
             font-weight: 700;
@@ -128,7 +121,6 @@
             margin-top: 0;
         }
 
-        /* Upper Action Bar */
         .action-bar {
             display: flex;
             justify-content: space-between;
@@ -183,7 +175,6 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
         }
 
-        /* Patient Info Card */
         .patient-info-card {
             background: var(--card-bg);
             border-radius: 16px;
@@ -214,6 +205,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .patient-info-details {
@@ -243,7 +235,6 @@
             color: var(--text-primary);
         }
 
-        /* Patient Type Badges */
         .patient-type-badge {
             display: inline-flex;
             align-items: center;
@@ -255,27 +246,11 @@
             vertical-align: middle;
         }
 
-        .badge-adult {
-            background-color: #e0e7ff;
-            color: #4338ca;
-        }
+        .badge-adult    { background-color: #e0e7ff; color: #4338ca; }
+        .badge-elderly  { background-color: #fef3c7; color: #b45309; }
+        .badge-pregnant { background-color: #fce7f3; color: #be185d; }
+        .badge-child    { background-color: #d1fae5; color: #065f46; }
 
-        .badge-elderly {
-            background-color: #fef3c7;
-            color: #b45309;
-        }
-
-        .badge-pregnant {
-            background-color: #fce7f3;
-            color: #be185d;
-        }
-
-        .badge-child {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-
-        /* Health Stats Card Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -310,30 +285,12 @@
             font-size: 1.5rem;
         }
 
-        .stat-icon-blood {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
+        .stat-icon-blood    { background-color: #fee2e2; color: #ef4444; }
+        .stat-icon-pressure { background-color: #e0e7ff; color: #6366f1; }
+        .stat-icon-sleep    { background-color: #fef3c7; color: #f59e0b; }
+        .stat-icon-water    { background-color: #e0f2fe; color: #0284c7; }
 
-        .stat-icon-pressure {
-            background-color: #e0e7ff;
-            color: #6366f1;
-        }
-
-        .stat-icon-sleep {
-            background-color: #fef3c7;
-            color: #f59e0b;
-        }
-
-        .stat-icon-water {
-            background-color: #e0f2fe;
-            color: #0284c7;
-        }
-
-        .stat-info {
-            display: flex;
-            flex-direction: column;
-        }
+        .stat-info { display: flex; flex-direction: column; }
 
         .stat-label {
             font-size: 0.8rem;
@@ -350,7 +307,6 @@
             margin-top: 0.25rem;
         }
 
-        /* Table Card */
         .table-card {
             background: var(--card-bg);
             border-radius: 16px;
@@ -375,15 +331,9 @@
             color: var(--text-primary);
         }
 
-        .table-responsive {
-            overflow-x: auto;
-        }
+        .table-responsive { overflow-x: auto; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
 
         th {
             background-color: #f8fafc;
@@ -404,24 +354,12 @@
             transition: var(--transition);
         }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f8fafc; }
 
-        tr:hover td {
-            background-color: #f8fafc;
-        }
+        .row-alert-danger { background-color: #fef2f2; }
+        .row-alert-danger:hover td { background-color: #fee2e2; }
 
-        /* Alert row styles */
-        .row-alert-danger {
-            background-color: #fef2f2;
-        }
-
-        .row-alert-danger:hover td {
-            background-color: #fee2e2;
-        }
-
-        /* Value Badges */
         .value-badge {
             display: inline-flex;
             align-items: center;
@@ -432,32 +370,12 @@
             border-radius: 8px;
         }
 
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
+        .badge-danger  { background-color: #fee2e2; color: #ef4444; }
+        .badge-success { background-color: #d1fae5; color: #10b981; }
+        .badge-warning { background-color: #fef3c7; color: #d97706; }
+        .badge-neutral { background-color: #f1f5f9; color: #475569; }
 
-        .badge-success {
-            background-color: #d1fae5;
-            color: #10b981;
-        }
-
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #d97706;
-        }
-
-        .badge-neutral {
-            background-color: #f1f5f9;
-            color: #475569;
-        }
-
-        /* Actions styling */
-        .action-links {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
+        .action-links { display: flex; gap: 0.5rem; align-items: center; }
 
         .btn-action {
             width: 32px;
@@ -472,17 +390,9 @@
             cursor: pointer;
         }
 
-        .btn-view {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
+        .btn-view { background-color: #fee2e2; color: #ef4444; }
+        .btn-view:hover { background-color: #fca5a5; transform: scale(1.1); }
 
-        .btn-view:hover {
-            background-color: #fca5a5;
-            transform: scale(1.1);
-        }
-
-        /* Pagination container */
         .pagination-container {
             padding: 1.25rem 1.5rem;
             display: flex;
@@ -492,15 +402,8 @@
             border-top: 1px solid var(--border);
         }
 
-        .pagination-info {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        .pagination-buttons {
-            display: flex;
-            gap: 0.35rem;
-        }
+        .pagination-info { font-size: 0.875rem; color: var(--text-secondary); }
+        .pagination-buttons { display: flex; gap: 0.35rem; }
 
         .pagination-btn {
             padding: 0.5rem 0.9rem;
@@ -520,42 +423,14 @@
             border-color: #cbd5e1;
         }
 
-        .pagination-btn.active {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
+        .pagination-btn.active { background-color: var(--primary); color: white; border-color: var(--primary); }
+        .pagination-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
-        .pagination-btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
+        .empty-state { padding: 4rem 2rem; text-align: center; color: var(--text-secondary); }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
 
-        .empty-state {
-            padding: 4rem 2rem;
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        /* Page size selector */
-        .page-size-selector {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .page-size-selector label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
+        .page-size-selector { display: flex; align-items: center; gap: 0.5rem; }
+        .page-size-selector label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
 
         .page-size-select {
             padding: 0.35rem 0.6rem;
@@ -599,7 +474,10 @@
         <nav class="navbar-menu">
             <a href="/health-logs/doctor-view" class="navbar-link active">Xem Nhật Ký Bệnh Nhân</a>
             <a th:href="@{/health-logs/doctor-chart(userId=${selectedUserId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-            <a th:if="${selectedUserId != null}" th:href="@{/health-logs/ai-report(userId=${selectedUserId})}" class="navbar-link">🤖 Báo Cáo AI</a>
+                <a th:if="${selectedUserId != null}"
+                    th:href="@{/health-logs/ai-report(patientId=${selectedUserId})}"
+                    class="navbar-link">🤖 Báo Cáo AI</a>
+            <a th:href="@{/doctor/home}" class="navbar-link">🏠 Trang Chủ</a>
         </nav>
     </header>
 
@@ -615,22 +493,22 @@
                 <div>
                     <label class="user-selector-label" for="patientTypeSelect">Lọc theo loại:</label>
                     <select id="patientTypeSelect" class="user-select" onchange="filterByPatientType()">
-                        <option value="" th:selected="${patientType == null or patientType == ''}">Tất cả bệnh nhân
-                        </option>
-                        <option value="adult" th:selected="${patientType == 'adult'}">🧑 Người trưởng thành</option>
-                        <option value="elderly" th:selected="${patientType == 'elderly'}">👴 Người cao tuổi</option>
+                        <option value="" th:selected="${patientType == null or patientType == ''}">Tất cả bệnh nhân</option>
+                        <option value="adult"    th:selected="${patientType == 'adult'}">🧑 Người trưởng thành</option>
+                        <option value="elderly"  th:selected="${patientType == 'elderly'}">👴 Người cao tuổi</option>
                         <option value="pregnant" th:selected="${patientType == 'pregnant'}">🤰 Phụ nữ có thai</option>
-                        <option value="child" th:selected="${patientType == 'child'}">👶 Trẻ em</option>
+                        <option value="child"    th:selected="${patientType == 'child'}">👶 Trẻ em</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="user-selector-label" for="patientSelect">Bệnh Nhân Đang Xem:</label>
                     <select id="patientSelect" class="user-select" onchange="selectPatient()">
-                        <option th:each="patient : ${patients}" th:value="${patient.id}"
-                            th:selected="${patient.id == selectedUserId}"
-                            th:text="${patient.fullName + (patient.patientType == 'adult' ? ' 🧑' : (patient.patientType == 'elderly' ? ' 👴' : (patient.patientType == 'pregnant' ? ' 🤰' : (patient.patientType == 'child' ? ' 👶' : ''))))}">
-                            Patient Name</option>
+                        <option th:each="patient : ${patients}"
+                                th:value="${patient.id}"
+                                th:selected="${patient.id == selectedUserId}"
+                                th:text="${patient.fullName + (patient.patientType == 'adult' ? ' 🧑' : (patient.patientType == 'elderly' ? ' 👴' : (patient.patientType == 'pregnant' ? ' 🤰' : (patient.patientType == 'child' ? ' 👶' : ''))))}">
+                            Patient Name
+                        </option>
                     </select>
                 </div>
             </div>
@@ -646,7 +524,7 @@
                            class="btn-threshold"
                            style="margin-left:12px;">⚙️ Cài ngưỡng riêng</a>
                         <span th:class="${'patient-type-badge badge-' + selectedPatient.patientType}"
-                            th:text="${selectedPatient.patientType == 'adult' ? '🧑 Người trưởng thành' : (selectedPatient.patientType == 'elderly' ? '👴 Người cao tuổi' : (selectedPatient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (selectedPatient.patientType == 'child' ? '👶 Trẻ em' : '')))}">
+                              th:text="${selectedPatient.patientType == 'adult' ? '🧑 Người trưởng thành' : (selectedPatient.patientType == 'elderly' ? '👴 Người cao tuổi' : (selectedPatient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (selectedPatient.patientType == 'child' ? '👶 Trẻ em' : '')))}">
                             Adult
                         </span>
                     </h2>
@@ -654,12 +532,12 @@
                         <div class="patient-info-item">
                             <span class="patient-info-label">Tuổi</span>
                             <span class="patient-info-value"
-                                th:text="${selectedPatient.age != null ? selectedPatient.age : '--'}">25</span>
+                                  th:text="${selectedPatient.age != null ? selectedPatient.age : '--'}">25</span>
                         </div>
                         <div class="patient-info-item">
                             <span class="patient-info-label">Giới tính</span>
                             <span class="patient-info-value"
-                                th:text="${selectedPatient.gender != null ? (selectedPatient.gender.equalsIgnoreCase('male') ? '👨 Nam' : '👩 Nữ') : '--'}">Nam</span>
+                                  th:text="${selectedPatient.gender != null ? (selectedPatient.gender.equalsIgnoreCase('male') ? '👨 Nam' : '👩 Nữ') : '--'}">Nam</span>
                         </div>
 
                     </div>
@@ -667,28 +545,39 @@
             </div>
 
             <!-- AI Complication Warning Highlight -->
-            <div th:if="${latestRisk != null}" class="ai-warning-highlight" style="margin-top: 1.5rem; background-color: #f5f3ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.05);">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; border-bottom: 1px dashed #c7d2fe; padding-bottom: 0.75rem; width: 100%;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.5rem;">🤖</span>
+            <div th:if="${latestRisk != null}"
+                 style="margin-top:1.5rem; background-color:#f5f3ff; border:1px solid #c7d2fe; border-radius:12px;
+                        padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;
+                        box-shadow:0 4px 6px -1px rgba(79,70,229,0.05);">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+                            gap:0.75rem; border-bottom:1px dashed #c7d2fe; padding-bottom:0.75rem; width:100%;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span style="font-size:1.5rem;">🤖</span>
                         <div>
-                            <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #1e1b4b; display: flex; align-items: center; gap: 0.5rem;">
-                                <span>Cảnh báo biến chứng AI (Đột quỵ)</span>
+                            <h3 style="margin:0; font-size:1rem; font-weight:700; color:#1e1b4b;">
+                                Cảnh báo biến chứng AI (Đột quỵ)
                             </h3>
-                            <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">Đánh giá lúc: <span th:text="${latestRisk.assessedAtStr}">--</span></p>
+                            <p style="margin:0; font-size:0.75rem; color:var(--text-secondary);">
+                                Đánh giá lúc: <span th:text="${latestRisk.assessedAtStr}">--</span>
+                            </p>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span th:class="${latestRisk.riskLevel == 'Low' ? 'value-badge badge-success' : (latestRisk.riskLevel == 'Medium' ? 'value-badge badge-warning' : (latestRisk.riskLevel == 'High' ? 'value-badge badge-danger' : 'value-badge badge-danger'))}" 
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span th:class="${latestRisk.riskLevel == 'Low' ? 'value-badge badge-success' : (latestRisk.riskLevel == 'Medium' ? 'value-badge badge-warning' : 'value-badge badge-danger')}"
                               th:text="${latestRisk.riskLevel + ' (' + latestRisk.riskPercentage + '%)'}"
-                              style="font-size: 0.85rem; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 9999px;">
+                              style="font-size:0.85rem; font-weight:700; padding:0.3rem 0.75rem; border-radius:9999px;">
                             Medium (45%)
                         </span>
-                        <a th:href="@{/health-logs/ai-report(userId=${selectedUserId})}" class="btn-threshold" style="background-color: var(--primary); font-size: 0.8rem; padding: 0.35rem 0.85rem;">Chi tiết báo cáo</a>
+                                <a th:href="@{/health-logs/ai-report(patientId=${selectedUserId})}"
+                                    class="btn-threshold"
+                                    style="background-color:var(--primary); font-size:0.8rem; padding:0.35rem 0.85rem;">
+                            Chi tiết báo cáo
+                        </a>
                     </div>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
-                    <strong style="color: var(--text-primary);">Tóm tắt AI:</strong> <span th:text="${latestRisk.aiSummary}">--</span>
+                <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5; margin:0;">
+                    <strong style="color:var(--text-primary);">Tóm tắt AI:</strong>
+                    <span th:text="${latestRisk.aiSummary}">--</span>
                 </div>
             </div>
         </section>
@@ -707,7 +596,7 @@
                 <div class="stat-info">
                     <span class="stat-label">Huyết Áp Gần Nhất</span>
                     <span class="stat-value"
-                        th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
+                          th:text="${logs[0].systolic != null && logs[0].diastolic != null ? logs[0].systolic + '/' + logs[0].diastolic : '--'}">120/80</span>
                 </div>
             </div>
             <div class="stat-card">
@@ -715,15 +604,15 @@
                 <div class="stat-info">
                     <span class="stat-label">Giờ Ngủ Gần Nhất</span>
                     <span class="stat-value"
-                        th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
+                          th:text="${logs[0].sleepHours != null ? logs[0].sleepHours + ' giờ' : '--'}">8 giờ</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon stat-icon-water">🥛</div>
                 <div class="stat-info">
                     <span class="stat-label">Nước Uống Gần Nhất</span>
-                    <span class="stat-value" th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500
-                        ml</span>
+                    <span class="stat-value"
+                          th:text="${logs[0].waterMl != null ? logs[0].waterMl + ' ml' : '--'}">1500 ml</span>
                 </div>
             </div>
         </section>
@@ -746,65 +635,81 @@
                             <th>Mức Đường Tiêu Thụ</th>
                             <th>Triệu Chứng</th>
                             <th>Ghi Chú</th>
-                            <th style="width: 100px;">Hành Động</th>
+                            <th style="width:100px;">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="log : ${logs}"
-                            th:class="${log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'} ? 'row-alert-danger' : ''">
+                            th:class="${(log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER'
+                                        or (log.systolicStatus != null and (log.systolicStatus == 'LOW_DANGER' or log.systolicStatus == 'HIGH_DANGER'))
+                                        or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_DANGER' or log.diastolicStatus == 'HIGH_DANGER')))
+                                       ? 'row-alert-danger' : ''}">
 
-                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
-                                30/05/2026</td>
+                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight:600;">
+                                30/05/2026
+                            </td>
 
-                            <!-- Blood Sugar status badge coloring (use patient-specific thresholds) -->
+                            <!-- Blood Sugar -->
                             <td>
                                 <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
                                 <span th:if="${log.bloodSugar != null}"
-                                    th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
-                                    th:text="${log.bloodSugar}"
-                                    th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }">
+                                      th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success'
+                                                 : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning'
+                                                 : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger'
+                                                 : 'value-badge badge-neutral'))}"
+                                      th:text="${log.bloodSugar}"
+                                      th:title="${log.patientType == 'adult'    ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger'
+                                                 : (log.patientType == 'elderly'  ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger'
+                                                 : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger'
+                                                 : (log.patientType == 'child'    ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger'
+                                                 : 'Ngưỡng không xác định')))}">
                                 </span>
                             </td>
 
-                            <!-- Blood Pressure display -->
+                            <!-- Blood Pressure -->
                             <td>
                                 <span th:if="${log.systolic != null && log.diastolic != null}"
-                                    th:class="${log.systolic > 130 || log.diastolic > 85} ? 'value-badge badge-warning' : 'value-badge badge-neutral'"
-                                    th:text="${log.systolic + '/' + log.diastolic}">
+                                      th:class="${((log.systolicStatus != null and log.systolicStatus.contains('DANGER')) or (log.diastolicStatus != null and log.diastolicStatus.contains('DANGER'))) ? 'value-badge badge-danger'
+                                                  : (((log.systolicStatus != null and log.systolicStatus.contains('WARNING')) or (log.diastolicStatus != null and log.diastolicStatus.contains('WARNING'))) ? 'value-badge badge-warning'
+                                                  : ((log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success'
+                                                  : 'value-badge badge-neutral'))}"
+                                      th:text="${log.systolic + '/' + log.diastolic}">
                                     120/80
                                 </span>
                                 <span th:if="${log.systolic == null || log.diastolic == null}"
-                                    class="value-badge badge-neutral">--</span>
+                                      class="value-badge badge-neutral">--</span>
                             </td>
 
                             <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">8.0</td>
                             <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
 
+                            <!-- Sugar Consumption -->
                             <td>
-                                <span th:if="${log.sugarConsumptionLevel == null}"
-                                    class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.sugarConsumptionLevel == null}" class="value-badge badge-neutral">--</span>
                                 <span th:if="${log.sugarConsumptionLevel != null}"
-                                    th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
-                                    th:text="${log.sugarConsumptionLevel}">
+                                      th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger'
+                                                 : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning'
+                                                 : 'value-badge badge-success')}"
+                                      th:text="${log.sugarConsumptionLevel}">
                                     low
                                 </span>
                             </td>
 
                             <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
-                                style="color: var(--text-secondary); font-size: 0.85rem;">
+                                style="color:var(--text-secondary); font-size:0.85rem;">
                                 Triệu chứng...
                             </td>
 
                             <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
-                                style="color: var(--text-secondary); font-size: 0.85rem;">
+                                style="color:var(--text-secondary); font-size:0.85rem;">
                                 Ghi chú...
                             </td>
 
                             <td>
                                 <div class="action-links">
-                                    <!-- View Detail only -->
-                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${selectedUserId}, source='doctor-view')}" class="btn-action btn-view"
-                                        title="Xem Chi Tiết">🔴</a>
+                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${selectedUserId}, source='doctor-view')}"
+                                       class="btn-action btn-view"
+                                       title="Xem Chi Tiết">🔴</a>
                                 </div>
                             </td>
                         </tr>
@@ -833,18 +738,17 @@
 
                 <div class="pagination-buttons" th:if="${totalPages > 1}">
                     <a th:href="@{/health-logs/doctor-view(page=${currentPage - 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
-                        th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
+                       th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
                         &laquo; Trước
                     </a>
-
                     <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                        th:href="@{/health-logs/doctor-view(page=${i}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
-                        th:text="${i + 1}" th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
+                       th:href="@{/health-logs/doctor-view(page=${i}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
+                       th:text="${i + 1}"
+                       th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">
                         1
                     </a>
-
                     <a th:href="@{/health-logs/doctor-view(page=${currentPage + 1}, size=${pageSize}, userId=${selectedUserId}, patientType=${patientType})}"
-                        th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
+                       th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
                         Sau &raquo;
                     </a>
                 </div>
@@ -852,23 +756,88 @@
                 <div class="page-size-selector">
                     <label for="pageSizeSelect">Hiển thị:</label>
                     <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
-                        <option value="5" th:selected="${pageSize == 5}">5</option>
+                        <option value="5"  th:selected="${pageSize == 5}">5</option>
                         <option value="10" th:selected="${pageSize == 10}">10</option>
                         <option value="20" th:selected="${pageSize == 20}">20</option>
                         <option value="50" th:selected="${pageSize == 50}">50</option>
                     </select>
-                    <span style="font-size: 0.85rem; color: var(--text-secondary);">/ trang</span>
+                    <span style="font-size:0.85rem; color:var(--text-secondary);">/ trang</span>
                 </div>
             </div>
         </section>
+
+        <!-- AI Analysis Panel -->
+        <section class="table-card" style="margin-top:2rem;" th:if="${selectedUserId != null}">
+            <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 class="table-title">🤖 Phân Tích AI (Ensemble Model)</h2>
+                <button id="btnAnalyze" onclick="analyzeWithAI()"
+                        style="background:linear-gradient(135deg,#4f46e5,#7c3aed); color:white; border:none;
+                               padding:0.6rem 1.4rem; border-radius:10px; font-size:0.95rem; font-weight:600;
+                               cursor:pointer; display:flex; align-items:center; gap:0.5rem; transition:all 0.2s;">
+                    ✨ Phân Tích Ngay
+                </button>
+            </div>
+            <div style="padding: 0 1.5rem 1.5rem;">
+                <div id="aiLoading" style="display:none; margin-top:1rem; text-align:center; color:#6366f1; font-weight:500;">
+                    ⏳ Đang phân tích dữ liệu bệnh nhân...
+                </div>
+                <div id="aiResultBox" style="display:none; margin-top:1rem; padding:1.25rem;
+                     background:#f8f7ff; border:1px solid #e0e7ff; border-radius:12px;
+                     font-size:0.93rem; line-height:2; color:#1e1b4b; white-space:pre-wrap;
+                     font-family:'Inter',monospace; max-height:600px; overflow-y:auto;">
+                </div>
+                <p style="margin-top:0.75rem; font-size:0.82rem; color:#94a3b8;">
+                    * Kết quả chỉ mang tính tham khảo, không thay thế chẩn đoán lâm sàng của bác sĩ.
+                </p>
+            </div>
+        </section>
+
+        <!-- Recommendation Panel -->
+        <section class="table-card" style="margin-top:2rem;" th:if="${selectedUserId != null}">
+            <div class="table-header">
+                <h2 class="table-title">📝 Khuyến Nghị Của Bác Sĩ</h2>
+            </div>
+            <div style="padding:1.25rem 1.5rem;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+                    <h3 style="font-size:0.95rem; font-weight:600; color:#1e293b; margin-bottom:1rem;">✏️ Tạo Khuyến Nghị Mới</h3>
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <input id="recTitle" type="text" placeholder="Tiêu đề khuyến nghị..."
+                               style="padding:0.65rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; outline:none;"/>
+                        <textarea id="recContent" rows="4" placeholder="Nội dung khuyến nghị..."
+                                  style="padding:0.65rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; resize:vertical; outline:none;"></textarea>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button onclick="saveRecommendation()"
+                                    style="background:linear-gradient(135deg,#0ea5e9,#0284c7); color:white; border:none;
+                                           padding:0.6rem 1.4rem; border-radius:10px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+                                💾 Lưu Khuyến Nghị
+                            </button>
+                        </div>
+                    </div>
+                    <div id="recMsg" style="display:none; margin-top:0.75rem; font-size:0.88rem;"></div>
+                </div>
+
+                <div style="margin-top:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h3 style="font-size:0.95rem; font-weight:600; color:#1e293b; margin:0;">📋 Danh Sách Khuyến Nghị</h3>
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#64748b; cursor:pointer;">
+                            <input type="checkbox" id="showInactive" onchange="loadRecommendations()" style="cursor:pointer;"/>
+                            Hiển thị đã xóa
+                        </label>
+                    </div>
+                    <div id="recItems" style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
         function filterByPatientType() {
             var patientType = document.getElementById('patientTypeSelect').value;
-            var url = '/health-logs/doctor-view?patientType=' + encodeURIComponent(patientType);
-            location.href = url;
+            location.href = '/health-logs/doctor-view?patientType=' + encodeURIComponent(patientType);
         }
 
         function selectPatient() {
@@ -876,9 +845,7 @@
             var patientType = /*[[${patientType}]]*/ '';
             var pageSize = /*[[${pageSize}]]*/ 10;
             var url = '/health-logs/doctor-view?userId=' + userId + '&size=' + pageSize;
-            if (patientType) {
-                url += '&patientType=' + encodeURIComponent(patientType);
-            }
+            if (patientType) url += '&patientType=' + encodeURIComponent(patientType);
             location.href = url;
         }
 
@@ -887,17 +854,117 @@
             var userId = /*[[${selectedUserId}]]*/ '';
             var patientType = /*[[${patientType}]]*/ '';
             var url = '/health-logs/doctor-view?page=0&size=' + size;
-            if (userId) {
-                url += '&userId=' + userId;
-            }
-            if (patientType) {
-                url += '&patientType=' + encodeURIComponent(patientType);
-            }
+            if (userId) url += '&userId=' + userId;
+            if (patientType) url += '&patientType=' + encodeURIComponent(patientType);
             location.href = url;
         }
+
+        async function analyzeWithAI() {
+            const patientId = /*[[${selectedUserId}]]*/ null;
+            if (!patientId) return;
+
+            const btn = document.getElementById('btnAnalyze');
+            const resultBox = document.getElementById('aiResultBox');
+            const loading = document.getElementById('aiLoading');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang phân tích...';
+            resultBox.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch(`/ai/analyze?patientId=${patientId}`, { method: 'POST' });
+                const data = await response.json();
+                resultBox.textContent = data.result || data.error || 'Không có kết quả.';
+                resultBox.style.display = 'block';
+            } catch (e) {
+                resultBox.textContent = '❌ Lỗi kết nối đến AI. Vui lòng thử lại.';
+                resultBox.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
+                btn.textContent = '✨ Phân Tích Lại';
+            }
+        }
+
+        const patientIdForRec = /*[[${selectedUserId}]]*/ null;
+
+        async function loadRecommendations() {
+            if (!patientIdForRec) return;
+            const showInactive = document.getElementById('showInactive')?.checked;
+            const url = showInactive
+                ? `/api/recommendations/doctor/patient/${patientIdForRec}/all`
+                : `/api/recommendations/doctor/patient/${patientIdForRec}`;
+            const res = await fetch(url);
+            const list = await res.json();
+            const container = document.getElementById('recItems');
+            if (!list.length) {
+                container.innerHTML = "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>";
+                return;
+            }
+            container.innerHTML = list.map(r => {
+                const isInactive = r.status === 'inactive';
+                const cardStyle = isInactive
+                    ? 'background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:1rem 1.25rem; opacity:0.65;'
+                    : 'background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:1rem 1.25rem;';
+                const titleStyle = isInactive
+                    ? 'font-size:0.95rem; color:#94a3b8; text-decoration:line-through;'
+                    : 'font-size:0.95rem; color:#1e293b;';
+                const contentStyle = isInactive
+                    ? 'margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;'
+                    : 'margin-top:0.5rem; font-size:0.88rem; color:#475569;';
+                const actionBtn = isInactive
+                    ? `<span style="font-size:0.78rem; background:#f1f5f9; color:#94a3b8; padding:0.25rem 0.7rem; border-radius:6px;">Đã xóa</span>`
+                    : `<button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer;">🗑 Xóa</button>`;
+                return `<div style="${cardStyle}">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="${titleStyle}">${r.title}</strong>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">${actionBtn}</div>
+                    </div>
+                    <p style="${contentStyle}">${r.recommendation}</p>
+                    <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function saveRecommendation() {
+            const title = document.getElementById('recTitle').value.trim();
+            const content = document.getElementById('recContent').value.trim();
+            const msg = document.getElementById('recMsg');
+            if (!title || !content) {
+                msg.style.display = 'block';
+                msg.style.color = '#dc2626';
+                msg.textContent = 'Vui lòng điền đầy đủ tiêu đề và nội dung!';
+                return;
+            }
+            const res = await fetch('/api/recommendations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, recommendation: content, patientId: patientIdForRec })
+            });
+            if (res.ok) {
+                msg.style.display = 'block';
+                msg.style.color = '#16a34a';
+                msg.textContent = '✅ Lưu thành công!';
+                document.getElementById('recTitle').value = '';
+                document.getElementById('recContent').value = '';
+                loadRecommendations();
+            } else {
+                msg.style.display = 'block';
+                msg.style.color = '#dc2626';
+                msg.textContent = '❌ Lưu thất bại, vui lòng thử lại.';
+            }
+        }
+
+        async function deleteRecommendation(id) {
+            if (!confirm('Bạn có chắc muốn xóa khuyến nghị này?')) return;
+            const res = await fetch(`/api/recommendations/${id}`, { method: 'DELETE' });
+            if (res.ok) loadRecommendations();
+        }
+
+        window.onload = () => loadRecommendations();
         /*]]>*/
     </script>
 
 </body>
-
 </html>

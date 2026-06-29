@@ -344,7 +344,7 @@
           >Biểu Đồ Xu Hướng</a
         >
         <a
-          th:href="${source == 'doctor-view' ? '/health-logs/ai-report?userId=' + log.patientId : '/health-logs/ai-report?userId=' + log.userId}"
+          th:href="${'/health-logs/ai-report?patientId=' + log.patientId}"
           class="navbar-link"
           style="background-color: rgba(99, 102, 241, 0.2); border: 1px solid #818cf8; color: #fff;"
           >🤖 Báo Cáo AI</a
@@ -544,7 +544,7 @@
 
           <!-- Notes Section -->
           <div class="notes-section">
-            <h3 class="notes-title">📝 Ghi Chú & Lời Khuyên</h3>
+            <h3 class="notes-title">📝 Ghi Chú </h3>
             <p
               class="notes-content"
               th:text="${log.note != null && !log.note.isEmpty() ? log.note : 'Không có ghi chú thêm.'}"
@@ -573,7 +573,7 @@
 
           <!-- Actions Footer -->
           <div class="detail-actions">
-            <a
+            <a th:if="${source != 'doctor-view'}"
               th:href="${source == 'doctor-view' ? '/health-logs/' + log.id + '/edit?userId=' + log.patientId + '&source=doctor-view' : '/health-logs/' + log.id + '/edit?userId=' + log.userId + '&source=my-logs'}"
               class="btn btn-edit"
               >✏️ Chỉnh Sửa Chỉ Số</a
@@ -587,10 +587,7 @@
                   'Bạn có chắc chắn muốn xóa nhật ký sức khỏe này?',
                 );
               "
-            >
-              <button type="submit" class="btn btn-delete">
-                🗑️ Xóa Nhật Ký
-              </button>
+              
             </form>
           </div>
         </div>
