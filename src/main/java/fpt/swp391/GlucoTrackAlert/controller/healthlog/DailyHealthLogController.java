@@ -776,8 +776,8 @@ public String createLog(@RequestParam Long userId,
     }
 
     @GetMapping("/ai-report")
-    public String getAiReport(@RequestParam(required = false) Long patientId,
-                              @RequestParam(required = false) Long assessmentId,
+    public String getAiReport(@RequestParam(required = false) Long userId,
+                              @RequestParam(required = false) Long patientId,
                               @RequestParam(required = false) String chartMonth,
                               Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
@@ -786,6 +786,17 @@ public String createLog(@RequestParam Long userId,
         }
 
         boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
+
+        if (patientId == null) {
+            if (userId != null) {
+                Optional<Patient> pOpt = patientRepository.findByUserId(userId);
+                if (pOpt.isPresent()) {
+                    patientId = pOpt.get().getId();
+                } else if (patientRepository.existsById(userId)) {
+                    patientId = userId;
+                }
+            }
+        }
 
         if (patientId == null) {
             if (isDoctorOrAdminCaller) {
@@ -822,6 +833,7 @@ public String createLog(@RequestParam Long userId,
             }
         }
 
+        // 1. Monthly health logs stats & chart data
         YearMonth selectedMonth = YearMonth.now();
         if (chartMonth != null && !chartMonth.isBlank()) {
             try {
@@ -899,176 +911,6 @@ public String createLog(@RequestParam Long userId,
             monthOptions.add(option);
         }
 
-        // Trigger weekly AI prediction calculation (On-Demand)
-        dailyHealthLogService.assessWeeklyRisk(patientId);
-
-        // Get all weekly assessments for this patient
-        List<Map<String, Object>> allAssessmentsRaw = jdbcTemplate.queryForList(
-                "SELECT ra.id, ra.assessed_at, dhl.log_date FROM risk_assessments ra " +
-                        "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
-                        "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
-                        "ORDER BY ra.assessed_at DESC",
-                patientId
-        );
-
-        List<Map<String, Object>> allAssessments = new java.util.ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        for (Map<String, Object> raw : allAssessmentsRaw) {
-            Long idVal = ((Number) raw.get("id")).longValue();
-            Object assessedAtObj = raw.get("assessed_at");
-            LocalDateTime ldt = null;
-            if (assessedAtObj instanceof LocalDateTime) {
-                ldt = (LocalDateTime) assessedAtObj;
-            } else if (assessedAtObj instanceof java.sql.Timestamp) {
-                ldt = ((java.sql.Timestamp) assessedAtObj).toLocalDateTime();
-            }
-
-            Object logDateObj = raw.get("log_date");
-            LocalDate logDate = null;
-            if (logDateObj instanceof LocalDate) {
-                logDate = (LocalDate) logDateObj;
-            } else if (logDateObj instanceof java.sql.Date) {
-                logDate = ((java.sql.Date) logDateObj).toLocalDate();
-            } else if (logDateObj instanceof java.util.Date) {
-                logDate = new java.sql.Date(((java.util.Date) logDateObj).getTime()).toLocalDate();
-            }
-
-            String label = "Không rõ ngày";
-            if (logDate != null) {
-                LocalDate start = logDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                LocalDate end = logDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-
-                LocalDate assessDate = LocalDate.now();
-                if (ldt != null) {
-                    assessDate = ldt.toLocalDate();
-                }
-                label = String.format("Tuần %s - %s (Đánh giá: %s)", start.format(formatter), end.format(formatter), assessDate.format(formatter));
-            }
-            Map<String, Object> option = new HashMap<>();
-            option.put("id", idVal);
-            option.put("label", label);
-            allAssessments.add(option);
-        }
-
-        // Determine which assessment to display
-        Long selectedId = assessmentId;
-        if (selectedId == null && !allAssessments.isEmpty()) {
-            selectedId = (Long) allAssessments.get(0).get("id");
-        }
-
-        // Get the specific weekly AI risk assessment
-        List<Map<String, Object>> list = Collections.emptyList();
-        if (selectedId != null) {
-            list = jdbcTemplate.queryForList(
-                    "SELECT ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at, dhl.blood_sugar, dhl.systolic, dhl.diastolic, dhl.log_date, " +
-                            "       whr.average_blood_sugar, whr.average_systolic, whr.average_diastolic, whr.average_sleep_hours, whr.average_water_ml, " +
-                            "       whr.high_sugar_days, whr.warning_count, whr.blood_sugar_change, whr.blood_sugar_change_percent, " +
-                            "       whr.systolic_change, whr.diastolic_change, whr.sleep_hours_change, whr.trend_status, whr.health_status, whr.week_start " +
-                            "FROM risk_assessments ra " +
-                            "LEFT JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
-                            "LEFT JOIN weekly_health_reports whr ON whr.patient_id = ra.patient_id AND dhl.log_date >= whr.week_start AND dhl.log_date <= whr.week_end " +
-                            "WHERE ra.id = ? AND ra.patient_id = ?",
-                    selectedId, patientId
-            );
-        }
-
-        Map<String, Object> latestRisk = null;
-        if (!list.isEmpty()) {
-            Map<String, Object> raw = list.get(0);
-            latestRisk = new HashMap<>();
-
-            // Safe decimal conversion
-            Object pct = raw.get("risk_percentage");
-            if (pct instanceof java.math.BigDecimal) {
-                latestRisk.put("riskPercentage", String.format("%.2f", ((java.math.BigDecimal) pct).doubleValue()));
-            } else if (pct instanceof Number) {
-                latestRisk.put("riskPercentage", String.format("%.2f", ((Number) pct).doubleValue()));
-            } else {
-                latestRisk.put("riskPercentage", pct != null ? pct.toString() : "0.00");
-            }
-
-            latestRisk.put("riskLevel", raw.get("risk_level"));
-            latestRisk.put("aiSummary", raw.get("ai_summary"));
-            latestRisk.put("recommendation", raw.get("recommendation"));
-
-            // Safe date formatting in Java
-            Object assessedAtObj = raw.get("assessed_at");
-            if (assessedAtObj != null) {
-                if (assessedAtObj instanceof java.time.LocalDateTime) {
-                    java.time.LocalDateTime ldt = (java.time.LocalDateTime) assessedAtObj;
-                    latestRisk.put("assessedAtStr", ldt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-                } else if (assessedAtObj instanceof java.util.Date) {
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
-                    latestRisk.put("assessedAtStr", sdf.format((java.util.Date) assessedAtObj));
-                } else {
-                    latestRisk.put("assessedAtStr", assessedAtObj.toString());
-                }
-            }
-
-            Object logDateObj = raw.get("log_date");
-            if (logDateObj != null) {
-                if (logDateObj instanceof java.time.LocalDate) {
-                    java.time.LocalDate ld = (java.time.LocalDate) logDateObj;
-                    latestRisk.put("logDateStr", ld.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                } else if (logDateObj instanceof java.sql.Date) {
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                    latestRisk.put("logDateStr", sdf.format((java.sql.Date) logDateObj));
-                } else if (logDateObj instanceof java.util.Date) {
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                    latestRisk.put("logDateStr", sdf.format((java.util.Date) logDateObj));
-                } else {
-                    latestRisk.put("logDateStr", logDateObj.toString());
-                }
-            }
-
-            // Weekly health reports mapping
-            latestRisk.put("avgSugar", formatDecimal(raw.get("average_blood_sugar")));
-            latestRisk.put("avgSystolic", formatDecimal(raw.get("average_systolic")));
-            latestRisk.put("avgDiastolic", formatDecimal(raw.get("average_diastolic")));
-            latestRisk.put("avgSleep", formatDecimal(raw.get("average_sleep_hours")));
-            latestRisk.put("avgWater", formatDecimal(raw.get("average_water_ml")));
-
-            latestRisk.put("highSugarDays", raw.get("high_sugar_days"));
-            latestRisk.put("warningCount", raw.get("warning_count"));
-
-            latestRisk.put("sugarChange", formatDecimal(raw.get("blood_sugar_change")));
-            latestRisk.put("sugarChangePercent", formatDecimal(raw.get("blood_sugar_change_percent")));
-            latestRisk.put("systolicChange", formatDecimal(raw.get("systolic_change")));
-            latestRisk.put("diastolicChange", formatDecimal(raw.get("diastolic_change")));
-            latestRisk.put("sleepChange", formatDecimal(raw.get("sleep_hours_change")));
-
-            latestRisk.put("trendStatus", raw.get("trend_status"));
-            latestRisk.put("healthStatus", raw.get("health_status"));
-            latestRisk.put("waterChange", null); // Initialize default to prevent SpelEvaluationException
-
-            // Calculate water change on the fly since there's no water_change column
-            Object weekStartObj = raw.get("week_start");
-            LocalDate weekStart = null;
-            if (weekStartObj instanceof LocalDate) {
-                weekStart = (LocalDate) weekStartObj;
-            } else if (weekStartObj instanceof java.sql.Date) {
-                weekStart = ((java.sql.Date) weekStartObj).toLocalDate();
-            } else if (weekStartObj instanceof java.util.Date) {
-                weekStart = new java.sql.Date(((java.util.Date) weekStartObj).getTime()).toLocalDate();
-            }
-
-            if (weekStart != null) {
-                LocalDate prevStart = weekStart.minusWeeks(1);
-                List<Map<String, Object>> prevList = jdbcTemplate.queryForList(
-                        "SELECT average_water_ml FROM weekly_health_reports WHERE patient_id = ? AND week_start = ?",
-                        patientId, prevStart
-                );
-                if (!prevList.isEmpty() && raw.get("average_water_ml") != null) {
-                    java.math.BigDecimal currentWater = getBigDecimalSafe(raw.get("average_water_ml"));
-                    java.math.BigDecimal prevWater = getBigDecimalSafe(prevList.get(0).get("average_water_ml"));
-                    if (prevWater != null) {
-                        java.math.BigDecimal waterChangeVal = currentWater.subtract(prevWater);
-                        latestRisk.put("waterChange", formatDecimal(waterChangeVal));
-                    }
-                }
-            }
-        }
-
         boolean isDocOrAdmin = hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN");
         model.addAttribute("isDoctorOrAdmin", isDocOrAdmin);
 
@@ -1076,10 +918,8 @@ public String createLog(@RequestParam Long userId,
         Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;
         model.addAttribute("userId", targetUserId);
         model.addAttribute("patientId", patientId);
-        model.addAttribute("latestRisk", latestRisk);
-        model.addAttribute("hasRiskData", latestRisk != null);
-        model.addAttribute("allAssessments", allAssessments);
-        model.addAttribute("selectedAssessmentId", selectedId);
+
+        // Put the monthly models
         model.addAttribute("chartMonth", selectedMonth.toString());
         model.addAttribute("chartMonthLabel", String.format(Locale.US, "Tháng %d/%d", selectedMonth.getMonthValue(), selectedMonth.getYear()));
         model.addAttribute("chartDays", chartDays);
@@ -1100,6 +940,102 @@ public String createLog(@RequestParam Long userId,
         model.addAttribute("monthlyLogCount", monthLogs.size());
 
         return "healthlog/ai-report";
+    }
+
+    @GetMapping("/stroke-risk")
+    public String getStrokeRisk(@RequestParam(required = false) Long userId,
+                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                                @RequestParam(required = false) Long patientId,
+                                Model model, RedirectAttributes redirectAttributes) {
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null) {
+            return "redirect:/login";
+        }
+
+        boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
+
+        if (patientId == null) {
+            if (userId != null) {
+                Optional<Patient> pOpt = patientRepository.findByUserId(userId);
+                if (pOpt.isPresent()) {
+                    patientId = pOpt.get().getId();
+                } else if (patientRepository.existsById(userId)) {
+                    patientId = userId;
+                }
+            }
+        }
+
+        if (patientId == null) {
+            if (isDoctorOrAdminCaller) {
+                redirectAttributes.addFlashAttribute("error", "Thiếu thông tin bệnh nhân cần xem.");
+                return "redirect:/health-logs/doctor-view";
+            } else {
+                patientId = resolvePatientId(curUserId);
+            }
+        }
+
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
+        }
+
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
+        }
+
+        if (!isDoctorOrAdminCaller) {
+            Long ownPatientId = resolvePatientId(curUserId);
+            if (ownPatientId == null || !ownPatientId.equals(patientId)) {
+                return "redirect:/login";
+            }
+        } else {
+            if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem báo cáo của bệnh nhân này.");
+                return "redirect:/health-logs/doctor-view";
+            }
+        }
+
+        // Dynamic AI prediction calculation
+        LocalDate toDate = to;
+        LocalDate fromDate = from;
+        if (toDate == null || fromDate == null) {
+            Page<DailyHealthLogResponse> latestLogs = dailyHealthLogService.getLogs(patientId, PageRequest.of(0, 1));
+            if (latestLogs != null && latestLogs.hasContent()) {
+                toDate = latestLogs.getContent().get(0).getLogDate();
+            } else {
+                toDate = LocalDate.now();
+            }
+            fromDate = toDate.minusDays(6);
+        }
+
+        if (fromDate.isAfter(toDate)) {
+            LocalDate temp = fromDate;
+            fromDate = toDate;
+            toDate = temp;
+        }
+
+        Map<String, Object> latestRisk = dailyHealthLogService.calculateDynamicRisk(patientId, fromDate, toDate);
+
+        // Fetch detailed logs in the range to display on the explanation table
+        List<DailyHealthLog> rangeLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, fromDate, toDate);
+        rangeLogs.sort(java.util.Comparator.comparing(DailyHealthLog::getLogDate).reversed());
+
+        boolean isDocOrAdmin = hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN");
+        model.addAttribute("isDoctorOrAdmin", isDocOrAdmin);
+        model.addAttribute("patient", patient);
+        Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;
+        model.addAttribute("userId", targetUserId != null ? targetUserId : curUserId);
+        model.addAttribute("patientId", patientId);
+        model.addAttribute("latestRisk", latestRisk);
+        model.addAttribute("hasRiskData", latestRisk != null);
+        model.addAttribute("from", fromDate);
+        model.addAttribute("to", toDate);
+        model.addAttribute("rangeLogs", rangeLogs);
+
+        return "healthlog/stroke-risk";
     }
 
     private String formatDecimal(Object obj) {
