@@ -190,6 +190,10 @@ CREATE TABLE weekly_health_reports (
   health_status VARCHAR(30),
   ai_summary TEXT,
   recommendation TEXT,
+  -- UPDATE V2.1: Thêm cột liên kết đánh giá rủi ro, tỉ lệ nguy cơ, và độ tin cậy thấp
+  risk_assessment_id INT NULL COMMENT 'Liên kết đánh giá nguy cơ (Cập nhật V2.1)',
+  risk_percentage DECIMAL(5,2) NULL COMMENT 'Tỷ lệ nguy cơ (Cập nhật V2.1)',
+  low_confidence BOOLEAN NULL COMMENT 'Độ tin cậy thấp (Cập nhật V2.1)',
   created_at DATETIME,
   UNIQUE KEY idx_patient_week (patient_id, week_start, week_end)
 ) COMMENT = 'Lưu báo cáo sức khỏe theo tuần. Hệ thống tổng hợp daily_health_logs, so sánh với tuần trước hoặc baseline, rồi lưu xu hướng Improved/Stable/Worse.';
@@ -225,6 +229,8 @@ CREATE TABLE risk_assessments (
   risk_percentage DECIMAL(5,2),
   ai_summary TEXT,
   recommendation TEXT,
+  -- UPDATE V2.1: Thêm cột độ tin cậy thấp
+  low_confidence BOOLEAN NULL COMMENT 'Độ tin cậy thấp (Cập nhật V2.1)',
   assessed_at DATETIME
 ) COMMENT = 'Lưu kết quả đánh giá nguy cơ sau khi AI hoặc hệ thống phân tích dữ liệu. Không lưu dữ liệu gốc bệnh nhân nhập, mà lưu kết quả như Low/Medium/High/Critical, phần chậm nguy cơ, tóm tắt AI và khuyến nghị.';
 
@@ -291,6 +297,8 @@ CREATE TABLE health_reminders (
   google_calendar_event_id VARCHAR(255),
   google_sync_status VARCHAR(30),
   last_sync_at DATETIME,
+  -- UPDATE V2.1: Thêm cột ngày kết thúc nhắc nhở
+  end_date DATETIME NULL COMMENT 'Ngày kết thúc nhắc nhở (Cập nhật V2.1)',
   created_at DATETIME,
   updated_at DATETIME
 ) COMMENT = 'Lưu nhắc nhở sức khỏe cho bệnh nhân như nhập chỉ số, kiểm tra đường huyết, uống nước, xem báo cáo tuần. Nếu kết nối Google Calendar, bảng này lưu thêm event_id và trạng thái đồng bộ.';
@@ -607,7 +615,11 @@ ALTER TABLE weekly_health_reports
 
 -- Ref: weekly_health_reports.previous_report_id > weekly_health_reports.id
 ALTER TABLE weekly_health_reports
-  ADD CONSTRAINT fk_weekly_health_reports_prev_id FOREIGN KEY (previous_report_id) REFERENCES weekly_health_reports(id);
+  ADD CONSTRAINT fk_weekly_reports_prev_id FOREIGN KEY (previous_report_id) REFERENCES weekly_health_reports(id);
+
+-- Ref: weekly_health_reports.risk_assessment_id > risk_assessments.id (Cập nhật V2.1)
+ALTER TABLE weekly_health_reports
+  ADD CONSTRAINT fk_weekly_reports_risk_assessment FOREIGN KEY (risk_assessment_id) REFERENCES risk_assessments(id);
 
 -- Ref: health_reminders.patient_id > patients.id
 ALTER TABLE health_reminders
