@@ -30,4 +30,10 @@ public class DoctorPatientAssignment {
     private String status;
 
     private String note;
+
+    // Lý do Admin từ chối đề xuất (status = rejected)
+    private String rejectReason;
+
+    // Lý do hủy phân công đang active (vd: bệnh nhân đổi sang bác sĩ khác, status = inactive)
+    private String cancelReason;
 }

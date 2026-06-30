@@ -240,4 +240,115 @@ public class DoctorPatientAssignmentService {
         }
         assignmentRepository.delete(assignment);
     }
+
+    // =====================================================================
+    // NGHIỆP VỤ: Bệnh nhân đề xuất bác sĩ đồng hành -> Admin xét duyệt
+    // =====================================================================
+
+    /**
+     * Bệnh nhân tạo đề xuất bác sĩ đồng hành (status = pending).
+     * - Không chặn nếu bác sĩ đã full chỗ (chỉ chặn lúc Admin duyệt).
+     * - Không chặn nếu bệnh nhân đang có bác sĩ active khác (cho phép đổi bác sĩ,
+     *   bác sĩ cũ sẽ bị hủy kèm lý do khi đề xuất mới được duyệt).
+     * - Chặn nếu bệnh nhân đang có 1 đề xuất pending khác chưa xử lý.
+     */
+    public DoctorPatientAssignment proposeAssignment(Long patientId, Long doctorId, String note) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bệnh nhân"));
+
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ ID " + doctorId));
+        if (!"active".equals(doctor.getStatus())) {
+            throw new RuntimeException("Bác sĩ này hiện chưa thể nhận đề xuất.");
+        }
+
+        boolean hasPending = assignmentRepository
+                .findFirstByPatientIdAndStatus(patientId, "pending")
+                .isPresent();
+        if (hasPending) {
+            throw new RuntimeException("Bạn đang có một đề xuất chờ duyệt. Vui lòng hủy đề xuất đó trước khi tạo đề xuất mới.");
+        }
+
+        DoctorPatientAssignment assignment = new DoctorPatientAssignment();
+        assignment.setPatient(patient);
+        assignment.setDoctor(doctor);
+        assignment.setNote(note);
+        assignment.setStatus("pending");
+        assignment.setAssignedAt(LocalDateTime.now());
+        return assignmentRepository.save(assignment);
+    }
+
+    /**
+     * Bệnh nhân tự hủy đề xuất đang pending của chính mình (chưa được Admin xử lý).
+     */
+    public void cancelPendingAssignment(Long patientId, Long assignmentId) {
+        DoctorPatientAssignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đề xuất"));
+
+        if (assignment.getPatient() == null || !assignment.getPatient().getId().equals(patientId)) {
+            throw new RuntimeException("Bạn không có quyền hủy đề xuất này.");
+        }
+        if (!"pending".equals(assignment.getStatus())) {
+            throw new RuntimeException("Chỉ có thể hủy đề xuất đang chờ duyệt.");
+        }
+        assignment.setStatus("cancelled");
+        assignmentRepository.save(assignment);
+    }
+
+    public List<DoctorPatientAssignment> getPendingAssignments() {
+        return assignmentRepository.findByStatus("pending");
+    }
+
+    /**
+     * Admin duyệt đề xuất: kiểm tra lại giới hạn 5 bệnh nhân/bác sĩ ngay tại thời điểm
+     * duyệt (vì có thể đã đầy kể từ lúc bệnh nhân đề xuất). Nếu bệnh nhân đang có
+     * một phân công active khác, tự động hủy phân công cũ kèm lý do.
+     */
+    public DoctorPatientAssignment approveAssignment(Long assignmentId) {
+        DoctorPatientAssignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đề xuất"));
+        if (!"pending".equals(assignment.getStatus())) {
+            throw new RuntimeException("Đề xuất này đã được xử lý trước đó.");
+        }
+
+        Long doctorId = assignment.getDoctor().getId();
+        long activeCount = assignmentRepository.countByDoctorIdAndStatus(doctorId, "active");
+        if (activeCount >= MAX_PATIENTS_PER_DOCTOR) {
+            throw new RuntimeException(
+                    "Bác sĩ đã đạt giới hạn " + MAX_PATIENTS_PER_DOCTOR
+                    + " bệnh nhân tại thời điểm duyệt. Không thể duyệt đề xuất này.");
+        }
+
+        // Nếu bệnh nhân đang có bác sĩ active khác -> hủy phân công cũ
+        assignmentRepository.findFirstByPatientIdAndStatus(assignment.getPatient().getId(), "active")
+                .ifPresent(old -> {
+                    old.setStatus("inactive");
+                    old.setCancelReason("Bệnh nhân đã được duyệt chuyển sang bác sĩ khác");
+                    assignmentRepository.save(old);
+                });
+
+        assignment.setStatus("active");
+        assignment.setAssignedAt(LocalDateTime.now());
+        DoctorPatientAssignment saved = assignmentRepository.save(assignment);
+        sendAssignmentNotification(saved);
+        return saved;
+    }
+
+    /**
+     * Admin từ chối đề xuất, bắt buộc có lý do để bệnh nhân biết vì sao bị từ chối.
+     * Bệnh nhân vẫn được phép đề xuất lại sau đó (tạo bản ghi pending mới).
+     */
+    public DoctorPatientAssignment rejectAssignment(Long assignmentId, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new RuntimeException("Vui lòng nhập lý do từ chối.");
+        }
+        DoctorPatientAssignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đề xuất"));
+        if (!"pending".equals(assignment.getStatus())) {
+            throw new RuntimeException("Đề xuất này đã được xử lý trước đó.");
+        }
+        assignment.setStatus("rejected");
+        assignment.setRejectReason(reason);
+        return assignmentRepository.save(assignment);
+    }
 }

@@ -120,6 +120,11 @@ public class PageController {
         return "health-reminders";
     }
 
+    @GetMapping("/patient/choose-doctor")
+    public String chooseDoctorPage() {
+        return "patient/choose-doctor";
+    }
+
     @GetMapping("/patient/medications")
     public String medicationsPage(Model model) {
         try {

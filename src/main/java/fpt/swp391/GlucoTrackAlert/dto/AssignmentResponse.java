@@ -21,6 +21,8 @@ public class AssignmentResponse {
     private LocalDateTime assignedAt;
     private String status;
     private String note;
+    private String rejectReason;
+    private String cancelReason;
 
     public static AssignmentResponse from(DoctorPatientAssignment a) {
         AssignmentResponse r = new AssignmentResponse();
@@ -36,6 +38,8 @@ public class AssignmentResponse {
         r.setAssignedAt(a.getAssignedAt());
         r.setStatus(a.getStatus());
         r.setNote(a.getNote());
+        r.setRejectReason(a.getRejectReason());
+        r.setCancelReason(a.getCancelReason());
         return r;
     }
 }

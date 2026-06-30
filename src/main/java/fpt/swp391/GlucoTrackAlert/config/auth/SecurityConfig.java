@@ -20,7 +20,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                            "/", "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
+                            "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
                             "/css/**", "/js/**", "/images/**"
                         ).permitAll()
 
@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
+                        .requestMatchers("/api/patient/assignments/**").hasRole("PATIENT")
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
                         // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
                         .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR")
