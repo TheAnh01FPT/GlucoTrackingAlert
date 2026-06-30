@@ -1,6 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.service;
 
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
+import fpt.swp391.GlucoTrackAlert.model.Duy_Meal_Logs;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -19,11 +20,11 @@ public class MlAnalysisService {
     private final RestTemplate restTemplate;
     private static final String ML_SERVICE_URL = "http://localhost:5000/predict";
 
-    public String analyzePatient(Patient patient, List<DailyHealthLogResponse> logs) {
-        // Lấy log gần nhất để predict
+    public String analyzePatient(Patient patient,
+                                 List<DailyHealthLogResponse> logs,
+                                 Map<LocalDate, List<Duy_Meal_Logs>> mealsByDate) {
         DailyHealthLogResponse latest = logs.get(0);
 
-        // Tính trung bình đường huyết 14 ngày
         OptionalDouble avgBloodSugar = logs.stream()
                 .filter(l -> l.getBloodSugar() != null)
                 .mapToDouble(l -> l.getBloodSugar().doubleValue())
@@ -33,8 +34,6 @@ public class MlAnalysisService {
                 latest.getBloodSugar() != null ? latest.getBloodSugar().doubleValue() : 5.5
         );
 
-        // Kiểm tra các field BẮT BUỘC phải có dữ liệu thật, không cho phép AI tự bịa số
-        // (trước đây hardcode mặc định 120/80/22.0/40/MALE khi null -> sai lệch kết quả phân tích)
         List<String> missingFields = new ArrayList<>();
         if (patient.getBmi() == null) missingFields.add("BMI");
         if (patient.getAge() == null) missingFields.add("tuổi");
@@ -47,7 +46,6 @@ public class MlAnalysisService {
                     + "Vui lòng cập nhật hồ sơ bệnh nhân hoặc bổ sung nhật ký sức khỏe đầy đủ trước khi phân tích.";
         }
 
-        // Build payload gửi sang Flask
         Map<String, Object> payload = new HashMap<>();
         payload.put("bloodSugar", bloodSugar);
         payload.put("systolic", latest.getSystolic());
@@ -56,8 +54,6 @@ public class MlAnalysisService {
         payload.put("age", patient.getAge());
         payload.put("gender", patient.getGender());
         payload.put("isPregnant", patient.getIsPregnant() != null && patient.getIsPregnant());
-        // smokingStatus: dùng đúng dữ liệu thật của patient (DB đã có cột này),
-        // không còn để Python tự gán giá trị trung tính giả định
         payload.put("smokingStatus", patient.getSmokingStatus());
 
         HttpHeaders headers = new HttpHeaders();
@@ -71,7 +67,8 @@ public class MlAnalysisService {
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                return buildAnalysisText(patient, logs, bloodSugar, response.getBody());
+                // ✅ truyền mealsByDate vào đây
+                return buildAnalysisText(patient, logs, bloodSugar, response.getBody(), mealsByDate);
             }
 
         } catch (Exception e) {
@@ -86,24 +83,22 @@ public class MlAnalysisService {
     private String buildAnalysisText(Patient patient,
                                      List<DailyHealthLogResponse> logs,
                                      double avgBloodSugar,
-                                     Map<String, Object> mlResult) {
+                                     Map<String, Object> mlResult,
+                                     Map<LocalDate, List<Duy_Meal_Logs>> mealsByDate) {
 
-        String riskLabel  = (String) mlResult.get("riskLabel");
-        String riskColor  = (String) mlResult.get("riskColor");
+        String riskLabel    = (String) mlResult.get("riskLabel");
+        String riskColor    = (String) mlResult.get("riskColor");
         Boolean ruleApplied = (Boolean) mlResult.getOrDefault("ruleApplied", false);
         List<String> advice = (List<String>) mlResult.getOrDefault("advice", List.of());
 
-        // Emoji theo mức nguy cơ
         String riskEmoji = switch (riskColor != null ? riskColor : "GREEN") {
             case "RED"    -> "🔴";
             case "YELLOW" -> "🟡";
             default       -> "🟢";
         };
 
-        // Lấy log gần nhất
         DailyHealthLogResponse latest = logs.get(0);
 
-        // Tính avg huyết áp
         OptionalDouble avgSystolic = logs.stream()
                 .filter(l -> l.getSystolic() != null)
                 .mapToDouble(DailyHealthLogResponse::getSystolic)
@@ -144,6 +139,35 @@ public class MlAnalysisService {
         sb.append(buildTrendLine(logs));
         sb.append("\n");
 
+        // ✅ Section bữa ăn — chỉ hiện những ngày đường huyết > 7.8
+        sb.append("🍽️ BỮA ĂN CÁC NGÀY BẤT THƯỜNG (đường huyết > 7.8)\n");
+        sb.append("─────────────────────────────────────\n");
+        List<DailyHealthLogResponse> abnormalDays = logs.stream()
+                .filter(l -> l.getBloodSugar() != null && l.getBloodSugar().doubleValue() > 7.8)
+                .toList();
+
+        if (abnormalDays.isEmpty()) {
+            sb.append("   ✅ Không có ngày nào đường huyết vượt ngưỡng.\n");
+        } else {
+            for (DailyHealthLogResponse l : abnormalDays) {
+                sb.append("📅 ").append(l.getLogDate())
+                  .append(" — Đường huyết: ").append(l.getBloodSugar()).append(" mmol/L\n");
+                List<Duy_Meal_Logs> dayMeals = mealsByDate.getOrDefault(l.getLogDate(), List.of());
+                if (dayMeals.isEmpty()) {
+                    sb.append("   (Không có dữ liệu bữa ăn ngày này)\n");
+                } else {
+                    for (Duy_Meal_Logs m : dayMeals) {
+                        sb.append("   • ");
+                        if (m.getMealType() != null) sb.append(m.getMealType()).append(": ");
+                        sb.append(m.getFoodName());
+                        if (m.getSugarEstimation() != null) sb.append(" — đường: ").append(m.getSugarEstimation());
+                        sb.append("\n");
+                    }
+                }
+            }
+        }
+        sb.append("\n");
+
         // Khuyến nghị
         sb.append("⚕️ KHUYẾN NGHỊ CHO BÁC SĨ\n");
         sb.append("─────────────────────────────────────\n");
@@ -158,22 +182,13 @@ public class MlAnalysisService {
         sb.append("   Quyết định lâm sàng thuộc về bác sĩ điều trị.\n");
         sb.append("═══════════════════════════════════════");
 
-        return sb.toString();
+        return sb.toString(); // ✅ chỉ có 1 return duy nhất ở cuối
     }
 
-    /**
-     * So sánh đường huyết trung bình của nửa kỳ GẦN ĐÂY vs nửa kỳ TRƯỚC ĐÓ
-     * (logs đã được sort DESC theo logDate - index 0 là mới nhất).
-     * Không cần thêm cột DB mới, chỉ dùng lại dữ liệu logDate + bloodSugar đã có.
-     * Cần tối thiểu 4 log để chia 2 nửa có ý nghĩa, tránh trend bị nhiễu vì quá ít data.
-     */
     private String buildTrendLine(List<DailyHealthLogResponse> logs) {
-        if (logs.size() < 4) {
-            return "";
-        }
+        if (logs.size() < 4) return "";
 
         int mid = logs.size() / 2;
-        // logs[0..mid-1] = nửa gần đây (mới hơn), logs[mid..end] = nửa trước đó (cũ hơn)
         OptionalDouble recentAvg = logs.subList(0, mid).stream()
                 .filter(l -> l.getBloodSugar() != null)
                 .mapToDouble(l -> l.getBloodSugar().doubleValue())
@@ -184,25 +199,14 @@ public class MlAnalysisService {
                 .average();
 
         if (recentAvg.isEmpty() || olderAvg.isEmpty()) {
-            // Một trong hai nửa không có đủ dữ liệu đường huyết -> không tính trend
-            // Thông báo rõ để bác sĩ biết lý do, thay vì âm thầm bỏ qua
             return "   Xu hướng:       ⚠️ Không đủ dữ liệu đường huyết để tính xu hướng\n";
         }
 
         double diff = recentAvg.getAsDouble() - olderAvg.getAsDouble();
-        // Ngưỡng 0.3 mmol/L để tránh báo "tăng/giảm" với sai số đo nhỏ không đáng kể
-        String arrow;
-        String desc;
-        if (diff > 0.3) {
-            arrow = "📈";
-            desc = "tăng";
-        } else if (diff < -0.3) {
-            arrow = "📉";
-            desc = "giảm";
-        } else {
-            arrow = "➡️";
-            desc = "ổn định";
-        }
+        String arrow, desc;
+        if (diff > 0.3)       { arrow = "📈"; desc = "tăng"; }
+        else if (diff < -0.3) { arrow = "📉"; desc = "giảm"; }
+        else                  { arrow = "➡️"; desc = "ổn định"; }
 
         return String.format("   Xu hướng:       %s Đường huyết %s %.1f mmol/L so với kỳ trước (%.1f → %.1f)\n",
                 arrow, desc, Math.abs(diff), olderAvg.getAsDouble(), recentAvg.getAsDouble());
