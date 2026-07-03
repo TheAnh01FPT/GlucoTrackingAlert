@@ -137,6 +137,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     .bloodSugarStatus(status)
                     .riskPercentage(riskPercentageVal)
                     .riskLevel(riskLevelVal)
+                    .physicalActivity(log.getPhysicalActivity())
                     .build();
         }).collect(Collectors.toList());
 
@@ -215,6 +216,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     @Override
     @Transactional
     public DailyHealthLogResponse updateLog(Long id, DailyHealthLogRequest request) {
+        System.out.println("======> CHECKBOX GỬI LÊN LÀ: " + request.getPhysicalActivity());
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         // Prevent duplicate date for the same patient (excluding this id)
@@ -249,6 +251,12 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         Long patientId = log.getPatient() != null ? log.getPatient().getId() : null;
         java.time.LocalDate weekStart = log.getLogDate() != null ? log.getLogDate().with(java.time.DayOfWeek.MONDAY) : null;
         try {
+            jdbcTemplate.update("DELETE FROM ai_analysis_logs WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("DELETE FROM risk_warnings WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("DELETE FROM risk_assessments WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("DELETE FROM meal_logs WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("UPDATE health_baselines SET source_health_log_id = NULL WHERE source_health_log_id = ?", id);
+
             dailyHealthLogRepository.delete(log);
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
             // Rethrow the original DataIntegrityViolationException so the
@@ -326,6 +334,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     .updatedAt(log.getUpdatedAt())
                     .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
                     .bloodSugarStatus(status)
+                    .physicalActivity(log.getPhysicalActivity())
                     .build();
         }).collect(Collectors.toList());
     }
@@ -406,6 +415,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .riskPercentage(riskPercentage)
                 .riskLevel(riskLevel)
                 .aiSummary(aiSummary)
+                .physicalActivity(log.getPhysicalActivity())
                 .build();
     }
 
@@ -531,6 +541,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .sugarConsumptionLevel(request.getSugarConsumptionLevel())
                 .symptoms(request.getSymptoms())
                 .note(request.getNote())
+                .physicalActivity(request.getPhysicalActivity() != null ? request.getPhysicalActivity() : 0)
                 .build();
     }
 
@@ -547,6 +558,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         entity.setSugarConsumptionLevel(request.getSugarConsumptionLevel());
         entity.setSymptoms(request.getSymptoms());
         entity.setNote(request.getNote());
+        entity.setPhysicalActivity(request.getPhysicalActivity() != null ? request.getPhysicalActivity() : 0);
+
     }
 
     @Scheduled(cron = "0 50 23 * * SUN")

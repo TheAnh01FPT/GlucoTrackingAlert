@@ -528,6 +528,7 @@ public class DailyHealthLogController {
             request.setSugarConsumptionLevel(response.getSugarConsumptionLevel());
             request.setSymptoms(response.getSymptoms());
             request.setNote(response.getNote());
+            request.setPhysicalActivity(response.getPhysicalActivity());
             model.addAttribute("log", request);
         }
         model.addAttribute("userId", userId != null ? userId : response.getUserId());

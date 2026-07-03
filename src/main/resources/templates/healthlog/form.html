@@ -526,7 +526,24 @@
                   <option value="high">Cao (High)</option>
                 </select>
               </div>
-
+                <div class="form-group" style="justify-content: center;">
+                        <label class="form-label" style="font-weight: 600; color: var(--text-secondary); margin-bottom: 0.2rem;">Hoạt động thể chất hôm nay</label>
+                        <div style="display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1rem; border: 1px solid var(--border); border-radius: 10px; background-color: #f8fafc; min-height: 44px; box-sizing: border-box;">
+                            <input
+                                    type="checkbox"
+                                    id="physicalActivity"
+                                    name="physicalActivity"
+                                    value="1"
+                                    th:checked="${log.physicalActivity != null && log.physicalActivity == 1}"
+                                    th:disabled="${source == 'doctor-view'}"
+                                    style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);"
+                            />
+                            <label for="physicalActivity" style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; user-select: none;">
+                                Tôi đã vận động/thể dục thể thao ít nhất 30 phút.
+                            </label>
+                        </div>
+                    </div>
+                </div>
               <!-- Symptoms -->
               <div class="form-group form-group-full">
                 <label class="form-label" for="symptoms"

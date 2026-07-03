@@ -68,8 +68,7 @@ public class PatientServiceImpl implements PatientService {
             isPregnantVal = request.getIsPregnant();
         }
 
-        // --- AUTOMATIC MAPPING FOR SMOKING STATUS (SOLUTION 1) ---
-        // --- ĐOẠN MỚI CẬP NHẬT CHUẨN: ---
+        // --- AUTOMATIC MAPPING FOR SMOKING STATUS ---
         String smokeStatus = request.getSmokingStatus();
         int autoSmokeBit = ("smokes".equalsIgnoreCase(smokeStatus) || "formerly smoked".equalsIgnoreCase(smokeStatus)) ? 1 : 0;
 
@@ -93,7 +92,7 @@ public class PatientServiceImpl implements PatientService {
                 .residenceType(request.getResidenceType())
                 .smokingStatus(request.getSmokingStatus() != null ? request.getSmokingStatus() : "Unknown")
                 .cholesterol(request.getCholesterol() != null ? request.getCholesterol() : 1)
-                .smoke(autoSmokeBit) // Tự động lưu trạng thái số
+                .smoke(autoSmokeBit)
                 .alco(request.getAlco() != null ? request.getAlco() : 0)
                 .active(request.getActive() != null ? request.getActive() : 1)
                 .build();
@@ -216,6 +215,9 @@ public class PatientServiceImpl implements PatientService {
         Double rawAvgSystolic = null;
         Double rawAvgDiastolic = null;
 
+        // Giá trị mặc định cho vận động động (Lấy tạm trường tĩnh từ profile phòng khi tuần đó trống Log)
+        int finalActiveDynamic = (patient.getActive() != null) ? patient.getActive() : 1;
+
         try {
             if (patient.getDateOfBirth() != null && patient.getHeightCm() != null && patient.getWeightKg() != null) {
                 LocalDate today = LocalDate.now();
@@ -235,6 +237,9 @@ public class PatientServiceImpl implements PatientService {
                     double sumSystolic = 0; int systolicCount = 0;
                     double sumDiastolic = 0; int diastolicCount = 0;
 
+                    // Thêm biến tính toán động cho trường Vận động (Physical Activity)
+                    double sumActive = 0; int activeCount = 0;
+
                     for (DailyHealthLog log : weeklyLogs) {
                         if (log.getBloodSugar() != null) {
                             sumSugar += log.getBloodSugar().doubleValue();
@@ -248,11 +253,22 @@ public class PatientServiceImpl implements PatientService {
                             sumDiastolic += log.getDiastolic().doubleValue();
                             diastolicCount++;
                         }
+                        // Đọc chỉ số vận động của từng ngày (Lưu ý: Entity DailyHealthLog cần có hàm getPhysicalActivity)
+                        if (log.getPhysicalActivity() != null) {
+                            sumActive += log.getPhysicalActivity().doubleValue();
+                            activeCount++;
+                        }
                     }
 
                     if (sugarCount > 0) rawAvgBloodSugar = sumSugar / sugarCount;
                     if (systolicCount > 0) rawAvgSystolic = sumSystolic / systolicCount;
                     if (diastolicCount > 0) rawAvgDiastolic = sumDiastolic / diastolicCount;
+
+                    // Logic tính toán: Nếu trung bình số ngày vận động trong tuần lớn hơn hoặc bằng 50% thì coi như Có Vận Động (1), ngược lại là Không (0)
+                    if (activeCount > 0) {
+                        double avgActive = sumActive / activeCount;
+                        finalActiveDynamic = (avgActive >= 0.5) ? 1 : 0;
+                    }
                 }
 
                 if (rawAvgBloodSugar == null || rawAvgSystolic == null || rawAvgDiacholicIsNull(rawAvgDiastolic)) {
@@ -273,18 +289,15 @@ public class PatientServiceImpl implements PatientService {
                 try {
                     Map<String, Object> cardioRequest = new HashMap<>();
 
-                    // Tính số ngày tuổi (age * 365) thay cho trường tĩnh tĩnh cũ
                     long ageInDays = (patient.getAge() != null ? patient.getAge() : 30) * 365L;
                     cardioRequest.put("age_days", ageInDays);
 
-                    // Map giới tính: Nam -> 1, Nữ/Khác -> 2 theo chuẩn Dataset Cardio gốc
                     int genderCardioCode = "Male".equalsIgnoreCase(patient.getGender()) || "Nam".equalsIgnoreCase(patient.getGender()) ? 1 : 2;
                     cardioRequest.put("gender", genderCardioCode);
 
                     cardioRequest.put("height", patient.getHeightCm() != null ? patient.getHeightCm().doubleValue() : 165.0);
                     cardioRequest.put("weight", patient.getWeightKg() != null ? patient.getWeightKg().doubleValue() : 60.0);
 
-                    // Gửi dữ liệu động lấy từ Nhật ký tuần (khớp hoàn toàn với Key mới bên Flask nhận diện)
                     cardioRequest.put("systolic", finalSystolic);
                     cardioRequest.put("diastolic", finalDiastolic);
                     cardioRequest.put("blood_sugar", avgGlucoseMgDl);
@@ -292,7 +305,9 @@ public class PatientServiceImpl implements PatientService {
                     cardioRequest.put("cholesterol", patient.getCholesterol() != null ? patient.getCholesterol() : 1);
                     cardioRequest.put("smoke", patient.getSmoke() != null ? patient.getSmoke() : 0);
                     cardioRequest.put("alco", patient.getAlco() != null ? patient.getAlco() : 0);
-                    cardioRequest.put("active", patient.getActive() != null ? patient.getActive() : 1);
+
+                    // ĐÃ ĐỔI: Sử dụng kết quả vận động động tính toán từ các bản ghi Daily Logs trong tuần thay vì lấy từ Profile tĩnh
+                    cardioRequest.put("active", finalActiveDynamic);
 
                     String cardioApiUrl = "http://127.0.0.1:5000/predict-cardio";
                     Map<String, Object> cardioResponse = restTemplate.postForObject(cardioApiUrl, cardioRequest, Map.class);
@@ -411,7 +426,10 @@ public class PatientServiceImpl implements PatientService {
                 .cholesterol(patient.getCholesterol())
                 .smoke(patient.getSmoke())
                 .alco(patient.getAlco())
-                .active(patient.getActive())
+
+                // Trả về giá trị Active động để Front-end hiển thị đồng bộ nếu cần
+                .active(finalActiveDynamic)
+
                 // Kết quả AI kết nối View động
                 .strokeRiskPercentage(strokeRiskPercent)
                 .strokeRiskLevel(strokeRiskLevel)

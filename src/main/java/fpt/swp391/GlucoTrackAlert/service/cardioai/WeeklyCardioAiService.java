@@ -37,37 +37,31 @@ public class WeeklyCardioAiService {
         }
 
         // 2. Tính toán trung bình cộng (Huyết áp tâm thu, huyết áp tâm trương, đường huyết)
+        // Đã lọc thêm điều kiện > 0 để loại bỏ dữ liệu trống/lỗi tránh làm tụt chỉ số TB gửi sang AI
         OptionalDouble avgSystolic = logs.stream()
-                .filter(l -> l.getSystolic() != null)
+                .filter(l -> l.getSystolic() != null && l.getSystolic() > 0)
                 .mapToDouble(DailyHealthLog::getSystolic)
                 .average();
 
         OptionalDouble avgDiastolic = logs.stream()
-                .filter(l -> l.getDiastolic() != null)
+                .filter(l -> l.getDiastolic() != null && l.getDiastolic() > 0)
                 .mapToDouble(DailyHealthLog::getDiastolic)
                 .average();
 
         OptionalDouble avgBloodSugar = logs.stream()
-                .filter(l -> l.getBloodSugar() != null)
+                .filter(l -> l.getBloodSugar() != null && l.getBloodSugar().doubleValue() > 0)
                 .mapToDouble(l -> l.getBloodSugar().doubleValue())
                 .average();
-
-        // Giữ nguyên mmol/L vì trong code Python của bạn không thấy có bước chia đổi đơn vị,
-        // hoặc nếu model huấn luyện bằng mmol/L thì giữ nguyên.
-        // Nếu cần mg/dL thì bạn dùng biến avgBloodSugar.getAsDouble() * 18.0
-        double finalGluc = avgBloodSugar.isPresent() ? avgBloodSugar.getAsDouble() : 5.5;
 
         // 3. Chuẩn bị Payload gửi đi (BẮT BUỘC KHỚP TÊN BIẾN VỚI PYTHON)
         Map<String, Object> payload = new HashMap<>();
 
-        // Lấy giá trị Huyết áp trung bình cộng, ép kiểu double để khớp hoàn toàn với API cũ
         double finalSystolic = avgSystolic.isPresent() ? avgSystolic.getAsDouble() : 120.0;
         double finalDiastolic = avgDiastolic.isPresent() ? avgDiastolic.getAsDouble() : 80.0;
 
-        // [QUAN TRỌNG] Quy đổi ngầm đường huyết sang mg/dL phục vụ riêng cho Dataset của AI
+        // Quy đổi ngầm đường huyết từ mmol/L sang mg/dL phục vụ riêng cho Dataset của AI
         double finalGlucMgDl = avgBloodSugar.isPresent() ? (avgBloodSugar.getAsDouble() * 18.0) : 100.0;
 
-        // ĐỔI LẠI TÊN KEY: Khớp 100% với cấu hình Flask AI đang đòi hỏi
         payload.put("systolic", finalSystolic);
         payload.put("diastolic", finalDiastolic);
         payload.put("blood_sugar", finalGlucMgDl);
@@ -84,10 +78,21 @@ public class WeeklyCardioAiService {
         payload.put("weight", patient.getWeightKg() != null ? patient.getWeightKg().doubleValue() : 70.0);
         payload.put("cholesterol", patient.getCholesterol() != null ? patient.getCholesterol() : 1);
 
-        // Thói quen sinh hoạt
+        // Thói quen sinh hoạt tĩnh
         payload.put("smoke", patient.getSmoke() != null ? patient.getSmoke() : 0);
         payload.put("alco", patient.getAlco() != null ? patient.getAlco() : 0);
-        payload.put("active", patient.getActive() != null ? patient.getActive() : 1);
+
+        // --- ĐOẠN SỬA ĐỔI: TÍNH TOÁN VẬN ĐỘNG THEO CHỈ SỐ LOG TUẦN THỰC TẾ ---
+        // Đếm số ngày bệnh nhân tích chọn vận động (physical_activity == 1) trong tuần
+        long activeDaysCount = logs.stream()
+                .filter(l -> l.getPhysicalActivity() != null && l.getPhysicalActivity() == 1)
+                .count();
+
+        // Logic: Nếu trong tuần có ít nhất 1 ngày tích chọn vận động thể chất,
+        // hệ thống sẽ gửi trạng thái active = 1 sang Flask AI, ngược lại là 0.
+        int calculatedActive = (activeDaysCount >= 1) ? 1 : 0;
+        payload.put("active", calculatedActive);
+        // --- KẾT THÚC ĐOẠN SỬA ĐỔI ---
 
         // 4. Gửi Request sang Python AI Service
         HttpHeaders headers = new HttpHeaders();

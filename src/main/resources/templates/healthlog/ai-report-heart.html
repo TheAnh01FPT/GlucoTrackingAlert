@@ -440,6 +440,11 @@
                     <span class="info-label">Cholesterol</span>
                     <span class="info-value" th:text="${patient.cholesterol != null ? 'Mức ' + patient.cholesterol : '--'}">Mức 1</span>
                 </div>
+                <div class="info-item">
+                    <span class="info-label">Vận động tuần này</span>
+                    <span th:class="${patient.active == 1 ? 'badge-status badge-no' : 'badge-status badge-yes'}"
+                          th:text="${patient.active == 1 ? 'Tốt (≥50%)' : 'Ít vận động'}">Tốt</span>
+                </div>
             </div>
         </section>
 
@@ -511,6 +516,7 @@
                                 <th>Ngày đo</th>
                                 <th>Đường huyết (mmol/L)</th>
                                 <th>Huyết áp (mmHg)</th>
+                                <th>Vận động</th>
                                 <th>Giấc ngủ (giờ)</th>
                                 <th>Nước uống (ml)</th>
                             </tr>
@@ -520,6 +526,10 @@
                                 <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">20/06/2026</td>
                                 <td th:text="${log.bloodSugar != null ? log.bloodSugar : '--'}">6.2</td>
                                 <td th:text="${log.systolic != null && log.diastolic != null ? log.systolic + '/' + log.diastolic : '--'}">120/80</td>
+                                <td>
+                                    <span th:if="${log.physicalActivity == 1}" class="badge-status badge-no" style="font-size: 0.8rem;">🏋️‍♂️ Có</span>
+                                    <span th:if="${log.physicalActivity == 0 || log.physicalActivity == null}" class="badge-status badge-yes" style="font-size: 0.8rem;">❌ Không</span>
+                                </td>
                                 <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">7.5</td>
                                 <td th:text="${log.waterMl != null ? log.waterMl : '--'}">2000</td>
                             </tr>
