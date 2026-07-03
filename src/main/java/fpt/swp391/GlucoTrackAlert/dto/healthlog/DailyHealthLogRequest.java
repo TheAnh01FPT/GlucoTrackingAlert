@@ -45,4 +45,5 @@ public class DailyHealthLogRequest {
 
     private String symptoms;
     private String note;
+    private Integer physicalActivity;
 }

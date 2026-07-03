@@ -59,6 +59,9 @@ public class DailyHealthLog {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "physical_activity")
+    private Integer physicalActivity = 0; // Định nghĩa thuộc tính để Lombok tự sinh code Getter/Setter
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();

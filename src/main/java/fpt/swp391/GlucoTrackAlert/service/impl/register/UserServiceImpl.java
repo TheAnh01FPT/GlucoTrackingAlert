@@ -184,9 +184,15 @@ public class UserServiceImpl implements UserService {
 
         Long doctorId = null;
         if ("DOCTOR".equals(roleName)) {
-            doctorId = doctorRepository.findByUserId(user.getId())
-                    .map(Doctor::getId)
-                    .orElse(null);
+            Doctor doctor = doctorRepository.findByUserId(user.getId()).orElse(null);
+            if (doctor == null) {
+                doctor = new Doctor();
+                doctor.setUser(user);
+                doctor.setFullName(user.getFullName() != null ? user.getFullName() : user.getEmail());
+                doctor.setStatus("active");
+                doctor = doctorRepository.save(doctor);
+            }
+            doctorId = doctor.getId();
         }
 
         return LoginResponse.builder()

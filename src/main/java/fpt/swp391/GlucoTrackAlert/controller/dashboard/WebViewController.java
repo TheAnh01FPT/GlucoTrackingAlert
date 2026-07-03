@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin")
@@ -59,7 +60,8 @@ public class WebViewController {
                            @RequestParam(required = false) String password,
                            @RequestParam String status,
                            @RequestParam(required = false) Boolean emailVerified,
-                           @RequestParam String roleName) {
+                           @RequestParam String roleName,
+                           RedirectAttributes redirectAttributes) {
         try {
             UserAdminRequest request = UserAdminRequest.builder()
                     .email(email.trim())
@@ -71,11 +73,14 @@ public class WebViewController {
 
             if (id != null) {
                 userAdminService.updateUserByAdmin(id, request);
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật tài khoản thành công!");
             } else {
                 userAdminService.createUserByAdmin(request);
+                redirectAttributes.addFlashAttribute("successMessage", "Tạo tài khoản thành công!");
             }
         } catch (Exception e) {
             e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/admin/dashboard";
     }
