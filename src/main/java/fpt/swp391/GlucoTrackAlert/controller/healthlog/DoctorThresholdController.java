@@ -25,12 +25,48 @@ public class DoctorThresholdController {
 
     @Autowired
     private PatientRepository patientRepository;
+    @Autowired
+    private fpt.swp391.GlucoTrackAlert.repository.user.UserRepository userRepository;
+    @Autowired
+    private fpt.swp391.GlucoTrackAlert.repository.DoctorRepository doctorRepository;
+    @Autowired
+    private fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository assignmentRepository;
+
+    private Long getCurrentUserId() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return null;
+        String email = auth.getName();
+        fpt.swp391.GlucoTrackAlert.model.user.User user = userRepository.findByEmail(email).orElse(null);
+        return user != null ? user.getId() : null;
+    }
+
+    private boolean hasRole(String role) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+    }
+
+    private boolean isDoctorAssignedToPatient(Long patientId) {
+        if (hasRole("ROLE_ADMIN")) return true;
+        if (!hasRole("ROLE_DOCTOR")) return false;
+        Long currentUserId = getCurrentUserId();
+        fpt.swp391.GlucoTrackAlert.model.Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+        if (doctor == null) return false;
+        return assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId).isPresent();
+    }
 
     // Xem ngưỡng của 1 bệnh nhân
     @GetMapping
-    public String viewThresholds(@RequestParam Long patientId, Model model) {
+    public String viewThresholds(@RequestParam Long patientId, Model model, RedirectAttributes redirectAttributes) {
         Patient patient = patientRepository.findById(patientId).orElse(null);
         if (patient == null) return "redirect:/health-logs/doctor-view";
+
+        if (!hasRole("ROLE_ADMIN")) {
+            if (!isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này");
+                return "redirect:/health-logs/doctor-view";
+            }
+        }
 
         List<HealthThreshold> patientThresholds = healthThresholdService.findByPatientId(patientId);
         List<HealthThreshold> allDefaults = healthThresholdService.findDefaults();
@@ -71,6 +107,12 @@ public class DoctorThresholdController {
             @RequestParam(required = false) String description,
             RedirectAttributes redirectAttributes) {
         try {
+            if (!hasRole("ROLE_ADMIN")) {
+                if (!isDoctorAssignedToPatient(patientId)) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Bạn không được phân công cho bệnh nhân này");
+                    return "redirect:/health-logs/doctor-view/thresholds?patientId=" + patientId;
+                }
+            }
             Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân"));
 
@@ -98,6 +140,12 @@ public class DoctorThresholdController {
         if (mt == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "metricType không hợp lệ: " + metricType);
             return "redirect:/health-logs/doctor-view/thresholds?patientId=" + patientId;
+        }
+        if (!hasRole("ROLE_ADMIN")) {
+            if (!isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không được phân công cho bệnh nhân này");
+                return "redirect:/health-logs/doctor-view/thresholds?patientId=" + patientId;
+            }
         }
         healthThresholdService.deletePatientThreshold(patientId, mt);
         redirectAttributes.addFlashAttribute("successMessage",

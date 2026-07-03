@@ -71,8 +71,15 @@ public class UserAdminServiceImpl implements UserAdminService {
     @Override
     @Transactional
     public User createUserByAdmin(UserAdminRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Tài khoản email '" + request.getEmail() + "' đã tồn tại trên hệ thống.");
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new Exception("Email không được để trống");
+        }
+        String email = request.getEmail().trim();
+        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new Exception("Định dạng Email không hợp lệ");
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw new Exception("Tài khoản email '" + email + "' đã tồn tại trên hệ thống.");
         }
 
         String inputRole = request.getRoleName().toUpperCase().trim();
@@ -84,12 +91,19 @@ public class UserAdminServiceImpl implements UserAdminService {
                 .orElseThrow(() -> new Exception("Không tìm thấy cấu hình vai trò: " + inputRole));
 
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            throw new Exception("Mật khẩu khởi tạo không được phép bỏ trống.");
+            throw new Exception("Mật khẩu không được để trống");
+        }
+        String password = request.getPassword().trim();
+        if (password.length() < 6 || password.length() > 32) {
+            throw new Exception("Mật khẩu phải từ 6 đến 32 ký tự");
+        }
+        if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$")) {
+            throw new Exception("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
         }
 
         User user = User.builder()
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword().trim()))
+                .email(email)
+                .passwordHash(passwordEncoder.encode(password))
                 .status(request.getStatus())
                 .emailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : true)
                 .role(role)
@@ -97,7 +111,19 @@ public class UserAdminServiceImpl implements UserAdminService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        if (inputRole.equals("DOCTOR")) {
+            if (!doctorRepository.existsByUserEmail(savedUser.getEmail())) {
+                Doctor doctor = new Doctor();
+                doctor.setUser(savedUser);
+                doctor.setFullName(savedUser.getFullName() != null ? savedUser.getFullName() : savedUser.getEmail());
+                doctor.setStatus("active");
+                doctorRepository.save(doctor);
+            }
+        }
+
+        return savedUser;
     }
 
     @Override
@@ -106,9 +132,17 @@ public class UserAdminServiceImpl implements UserAdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("Không tìm thấy dữ liệu người dùng cần cập nhật."));
 
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail()) &&
-                userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email mới '" + request.getEmail() + "' đã được sử dụng bởi một tài khoản khác.");
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new Exception("Email không được để trống");
+        }
+        String email = request.getEmail().trim();
+        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new Exception("Định dạng Email không hợp lệ");
+        }
+
+        if (!user.getEmail().equalsIgnoreCase(email) &&
+                userRepository.existsByEmail(email)) {
+            throw new Exception("Email mới '" + email + "' đã được sử dụng bởi một tài khoản khác.");
         }
 
         String inputRole = request.getRoleName().toUpperCase().trim();
@@ -121,14 +155,21 @@ public class UserAdminServiceImpl implements UserAdminService {
 
         String oldRole = user.getRole() != null ? user.getRole().getName() : "";
 
-        user.setEmail(request.getEmail());
+        user.setEmail(email);
         user.setStatus(request.getStatus());
         user.setEmailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : false);
         user.setRole(role);
         user.setUpdatedAt(LocalDateTime.now());
 
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
-            user.setPasswordHash(passwordEncoder.encode(request.getPassword().trim()));
+            String password = request.getPassword().trim();
+            if (password.length() < 6 || password.length() > 32) {
+                throw new Exception("Mật khẩu phải từ 6 đến 32 ký tự");
+            }
+            if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$")) {
+                throw new Exception("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
+            }
+            user.setPasswordHash(passwordEncoder.encode(password));
         }
 
         User savedUser = userRepository.save(user);

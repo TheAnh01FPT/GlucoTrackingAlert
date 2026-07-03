@@ -5,6 +5,8 @@ import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
+import fpt.swp391.GlucoTrackAlert.model.patient.ProfileChangeRequest;
+import fpt.swp391.GlucoTrackAlert.service.patient.ProfileChangeRequestService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,10 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import fpt.swp391.GlucoTrackAlert.model.patient.ProfileChangeRequest;
-import fpt.swp391.GlucoTrackAlert.service.patient.ProfileChangeRequestService;
 import org.springframework.data.domain.Page;
-import java.util.List;
 
 @Controller
 @RequestMapping("/patient")
@@ -47,7 +46,6 @@ public class PatientWebController {
             model.addAttribute("profile", profile);
             model.addAttribute("userId", userId);
 
-            // Check only active pending requests for locks on profile view
             boolean pendingHypertension = requestService.hasPendingRequest(profile.getId(), "hypertension");
             boolean pendingHeartDisease = requestService.hasPendingRequest(profile.getId(), "heartDisease");
             model.addAttribute("pendingHypertension", pendingHypertension);
@@ -68,7 +66,6 @@ public class PatientWebController {
         Long userId = loggedInUser.getId();
         try {
             PatientProfileResponse profile = patientService.getProfileByUserId(userId);
-
             Page<ProfileChangeRequest> requestsPage = requestService.getRequestsByPatientPaged(profile.getId(), page, size);
 
             model.addAttribute("requestsPage", requestsPage);
@@ -107,11 +104,9 @@ public class PatientWebController {
                     .workType(profile.getWorkType())
                     .residenceType(profile.getResidenceType())
                     .smokingStatus(profile.getSmokingStatus())
-                    // Map đồng bộ các chỉ số Cleveland chuẩn mới vào Form sửa
-                    .apHi(profile.getApHi())
-                    .apLo(profile.getApLo())
+                    // GIỮ LẠI CHOLESTEROL ở Profile DTO
                     .cholesterol(profile.getCholesterol())
-                    .gluc(profile.getGluc())
+                    // Các trường lối sống sinh hoạt
                     .smoke(profile.getSmoke())
                     .alco(profile.getAlco())
                     .active(profile.getActive())
@@ -136,9 +131,22 @@ public class PatientWebController {
                               Model model) {
         User loggedInUser = getLoggedInUser();
         request.setUserId(loggedInUser.getId());
+
         if (request.getSmoke() == null) request.setSmoke(0);
         if (request.getAlco() == null) request.setAlco(0);
         if (request.getActive() == null) request.setActive(0);
+
+        if (!isNew) {
+            try {
+                PatientProfileResponse currentProfile = patientService.getProfileByUserId(loggedInUser.getId());
+                if (Boolean.TRUE.equals(currentProfile.getHypertension())) {
+                    request.setHypertension(true);
+                }
+                if (Boolean.TRUE.equals(currentProfile.getHeartDisease())) {
+                    request.setHeartDisease(true);
+                }
+            } catch (Exception ignored) {}
+        }
 
         if (result.hasErrors()) {
             model.addAttribute("isNew", isNew);

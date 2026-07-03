@@ -36,15 +36,24 @@ public class PatientProfileResponse {
     private String smokingStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Double cardioRiskPercentage; // Tỷ lệ nguy cơ tim mạch (%)
-    private String cardioRiskLevel;
 
+    // Các thông số sinh hoạt nền
+    private Integer cholesterol;
+    private Integer smoke;
+    private Integer alco;
+    private Integer active;
+
+    // Kết quả phân tích động trả về từ các API AI trạm Python
+    private Double strokeRiskPercentage;
+    private String strokeRiskLevel;
+    private String strokeAlertMessage;
+
+    private Double cardioRiskPercentage;
+    private String cardioRiskLevel;
     private String cardioAlertMessage;
-    private Integer apHi;        // Huyết áp tâm thu (Ví dụ: 120)
-    private Integer apLo;        // Huyết áp tâm trương (Ví dụ: 80)
-    private Integer cholesterol; // 1: Bình thường, 2: Trên chuẩn, 3: Cao
-    private Double gluc;         // Chỉ số đường huyết (mg/dL)
-    private Integer smoke;       // 1: Có hút thuốc, 0: Không
-    private Integer alco;        // 1: Có uống rượu, 0: Không
-    private Integer active;      // 1: Có thể thao/vận động, 0: Khô// Tin nhắn khuyên dùng từ cấu hình Admin
+
+    // Các chỉ số trung bình tuần tính từ logs để hiển thị lên UI nếu cần
+    private Double computedAvgSystolic;
+    private Double computedAvgDiastolic;
+    private Double computedAvgGlucMmol;
 }

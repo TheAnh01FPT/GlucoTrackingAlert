@@ -65,15 +65,9 @@ public class PatientProfileRequest {
     @Size(max = 50, message = "Tình trạng hút thuốc không được vượt quá 50 ký tự")
     private String smokingStatus;
 
-    // --- 🔀 ĐỒNG BỘ ĐẦU VÀO PHÂN LỒNG AI ---
-    private Integer apHi;        // Huyết áp tâm thu (Ví dụ: 120)
-    private Integer apLo;        // Huyết áp tâm trương (Ví dụ: 80)
-    private Integer cholesterol; // 1: Bình thường, 2: Trên chuẩn, 3: Cao
-    private Double gluc;         // Chỉ số đường huyết (mg/dL)
-    private Integer smoke;       // 1: Có hút thuốc, 0: Không
-    private Integer alco;        // 1: Có uống rượu, 0: Không
-    private Integer active;      // 1: Có thể thao/vận động, 0: Khô
+    // Chỉ giữ lại các trường thói quen sinh hoạt nền nhận từ Form
+    private Integer cholesterol;
+    private Integer smoke;
+    private Integer alco;
+    private Integer active;// 1: Có thể thao/vận động, 0: Không
 }
-
-
-

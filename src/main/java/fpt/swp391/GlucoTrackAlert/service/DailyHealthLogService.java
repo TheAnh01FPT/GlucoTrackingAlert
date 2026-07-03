@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public interface DailyHealthLogService {
     Page<DailyHealthLogResponse> getLogs(Long patientId, Pageable pageable);
@@ -16,4 +17,6 @@ public interface DailyHealthLogService {
     void deleteLog(Long id);
     List<DailyHealthLogResponse> getChartData(Long patientId, LocalDate from, LocalDate to);
     void assessWeeklyRisk(Long patientId);
+    Map<String, Object> calculateDynamicRisk(Long patientId, LocalDate from, LocalDate to);
+    Map<String, Object> calculateDynamicHeartRisk(Long patientId, LocalDate from, LocalDate to);
 }

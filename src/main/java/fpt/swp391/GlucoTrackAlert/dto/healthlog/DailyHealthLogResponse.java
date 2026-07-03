@@ -25,6 +25,12 @@ public class DailyHealthLogResponse {
     private String symptoms;
     private String note;
     private String bloodSugarStatus;
+    private String systolicStatus;
+    private String diastolicStatus;
+    private java.math.BigDecimal bloodSugarNormalMin;
+    private java.math.BigDecimal bloodSugarNormalMax;
+    private java.math.BigDecimal bloodSugarWarningMin;
+    private java.math.BigDecimal bloodSugarWarningMax;
     private String patientType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
