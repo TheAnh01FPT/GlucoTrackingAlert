@@ -33,14 +33,14 @@ public class MlAnalysisService {
                 latest.getBloodSugar() != null ? latest.getBloodSugar().doubleValue() : 5.5
         );
 
-        // Build payload gửi sang Flask
-        Map<String, Object> payload = new HashMap<>();
+        // Build payload gửi sang Flask - dùng ObjectMapper để serialize chuẩn JSON
+        Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("bloodSugar", bloodSugar);
-        payload.put("systolic", latest.getSystolic() != null ? latest.getSystolic() : 120);
-        payload.put("diastolic", latest.getDiastolic() != null ? latest.getDiastolic() : 80);
+        payload.put("systolic", latest.getSystolic() != null ? latest.getSystolic().intValue() : 120);
+        payload.put("diastolic", latest.getDiastolic() != null ? latest.getDiastolic().intValue() : 80);
         payload.put("bmi", patient.getBmi() != null ? patient.getBmi().doubleValue() : 22.0);
-        payload.put("age", patient.getAge() != null ? patient.getAge() : 40);
-        payload.put("gender", patient.getGender() != null ? patient.getGender() : "MALE");
+        payload.put("age", patient.getAge() != null ? patient.getAge().intValue() : 40);
+        payload.put("gender", patient.getGender() != null ? patient.getGender().toString() : "MALE");
         payload.put("isPregnant", patient.getIsPregnant() != null && patient.getIsPregnant());
         payload.put("physActivity", true);
         payload.put("smoker", false);
@@ -48,6 +48,7 @@ public class MlAnalysisService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(java.util.Collections.singletonList(MediaType.APPLICATION_JSON));
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(

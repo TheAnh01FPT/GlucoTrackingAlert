@@ -79,8 +79,8 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
 
     @Override
     public List<Duy_Meal_Logs> getDangerSugarMeals() {
-        // Nguong nguy hiem: >= 11.0 mmol/L
-        return repo.findBySugarEstimationGreaterThan(11.0);
+        // Nguong nguy hiem: >= 11.0 mmol/L (dung GreaterThanEqual de bao gom chinh xac 11.0)
+        return repo.findBySugarEstimationGreaterThanEqual(11.0);
     }
 
     @Override

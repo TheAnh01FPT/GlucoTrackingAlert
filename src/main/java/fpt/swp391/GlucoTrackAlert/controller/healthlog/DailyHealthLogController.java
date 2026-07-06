@@ -40,12 +40,10 @@ import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
-<<<<<<< HEAD
-=======
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
->>>>>>> 080af4fd837f65b1537407eff83950a6b5a496a9
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -118,10 +116,10 @@ public class DailyHealthLogController {
 
     @GetMapping
     public String getLogs(@RequestParam(required = false) Long userId,
-                          @RequestParam(required = false) String patientType,
-                          @RequestParam(defaultValue = "0") int page,
-                          @RequestParam(defaultValue = "10") int size,
-                          Model model) {
+            @RequestParam(required = false) String patientType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
         // Redirect về đúng trang theo role, tránh để /health-logs là trang chung
         if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
             return "redirect:/health-logs/doctor-view" + (userId != null ? "?userId=" + userId : "");
@@ -183,7 +181,7 @@ public class DailyHealthLogController {
     }
 
     @GetMapping("/doctor-view")
-        public String getDoctorView(@RequestParam(required = false) Long userId,
+    public String getDoctorView(@RequestParam(required = false) Long userId,
             @RequestParam(required = false) String patientType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -219,8 +217,8 @@ public class DailyHealthLogController {
                 model.addAttribute("pageSize", size);
                 return "healthlog/doctor-view";
             }
-            List<DoctorPatientAssignment> assignments =
-                    assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
+            List<DoctorPatientAssignment> assignments
+                    = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
             patients = assignments.stream()
                     .map(DoctorPatientAssignment::getPatient)
                     .filter(p -> "active".equals(p.getStatus()))
@@ -274,10 +272,10 @@ public class DailyHealthLogController {
 
             // Get the latest weekly AI prediction for this patient
             List<Map<String, Object>> riskList = jdbcTemplate.queryForList(
-                    "SELECT ra.id, ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at " +
-                            "FROM risk_assessments ra " +
-                            "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
-                            "ORDER BY ra.assessed_at DESC LIMIT 1",
+                    "SELECT ra.id, ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at "
+                    + "FROM risk_assessments ra "
+                    + "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' "
+                    + "ORDER BY ra.assessed_at DESC LIMIT 1",
                     selectedPatientId
             );
 
@@ -342,9 +340,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/my-logs")
     public String getMyLogs(@RequestParam Long userId,
-                            @RequestParam(defaultValue = "0") int page,
-                            @RequestParam(defaultValue = "10") int size,
-                            Model model) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
         // If caller is not admin/doctor and the requested userId is not their own,
         // redirect to login to prevent tampering with the `userId` query parameter.
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
@@ -373,10 +371,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/detail")
     public String getLogById(@RequestParam Long logId,
-                             @RequestParam(required = false) Long userId,
-                             @RequestParam(required = false) String source,
-                             Model model,
-                             RedirectAttributes redirectAttributes) {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String source,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse log = dailyHealthLogService.getLogById(logId);
         if (log == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
@@ -425,9 +423,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/create")
     public String createLogForm(@RequestParam Long userId,
-                                @RequestParam(required = false) String source,
-                                Model model,
-                                RedirectAttributes redirectAttributes) {
+            @RequestParam(required = false) String source,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (!hasRole("ROLE_ADMIN")) {
             if (hasRole("ROLE_DOCTOR")) {
                 Long patientId = resolvePatientId(userId);
@@ -456,66 +454,77 @@ public class DailyHealthLogController {
     }
 
     @PostMapping("/create")
-public String createLog(@RequestParam Long userId,
-        @RequestParam(required = false) String source,
-        @Valid @ModelAttribute("log") DailyHealthLogRequest request,
-        BindingResult bindingResult,
-        RedirectAttributes redirectAttributes) {
-    if (!hasRole("ROLE_ADMIN")) {
-        if (hasRole("ROLE_DOCTOR")) {
-            Long patientId = resolvePatientId(userId);
-            if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
-                redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
-                return "redirect:/health-logs/doctor-view";
-            }
-        } else {
-            Long curUserId = getCurrentUserId();
-            if (curUserId == null || !curUserId.equals(userId)) {
-                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
-                return "redirect:/login";
+    public String createLog(@RequestParam Long userId,
+            @RequestParam(required = false) String source,
+            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes) {
+        if (!hasRole("ROLE_ADMIN")) {
+            if (hasRole("ROLE_DOCTOR")) {
+                Long patientId = resolvePatientId(userId);
+                if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
+                    return "redirect:/health-logs/doctor-view";
+                }
+            } else {
+                Long curUserId = getCurrentUserId();
+                if (curUserId == null || !curUserId.equals(userId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
+                    return "redirect:/login";
+                }
             }
         }
-    }
 
-    if (bindingResult.hasErrors()) {
-        redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
-        redirectAttributes.addFlashAttribute("log", request);
-        String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
-        if ("my-logs".equals(source)) redirectUrl += "&source=my-logs";
-        else if ("doctor-view".equals(source)) redirectUrl += "&source=doctor-view";
-        return redirectUrl;
-    }
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
+            redirectAttributes.addFlashAttribute("log", request);
+            String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
+            if ("my-logs".equals(source)) {
+                redirectUrl += "&source=my-logs";
+            } else if ("doctor-view".equals(source)) {
+                redirectUrl += "&source=doctor-view";
+            }
+            return redirectUrl;
+        }
 
-    Long patientId = resolvePatientId(userId);
-    if (patientId == null) {
-        redirectAttributes.addFlashAttribute("error",
-                "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
-        if ("my-logs".equals(source)) return "redirect:/health-logs/my-logs?userId=" + userId;
+        Long patientId = resolvePatientId(userId);
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
+            if ("my-logs".equals(source)) {
+                return "redirect:/health-logs/my-logs?userId=" + userId;
+            }
+            return "redirect:/health-logs?userId=" + userId;
+        }
+
+        try {
+            dailyHealthLogService.createLog(patientId, request);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("log", request);
+            String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
+            if ("my-logs".equals(source)) {
+                redirectUrl += "&source=my-logs";
+            } else if ("doctor-view".equals(source)) {
+                redirectUrl += "&source=doctor-view";
+            }
+            return redirectUrl;
+        }
+
+        if ("my-logs".equals(source)) {
+            return "redirect:/health-logs/my-logs?userId=" + userId;
+        } else if ("doctor-view".equals(source)) {
+            return "redirect:/health-logs/doctor-view?userId=" + userId;
+        }
         return "redirect:/health-logs?userId=" + userId;
     }
 
-    try {
-        dailyHealthLogService.createLog(patientId, request);
-    } catch (Exception e) {
-        redirectAttributes.addFlashAttribute("error", e.getMessage());
-        redirectAttributes.addFlashAttribute("log", request);
-        String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
-        if ("my-logs".equals(source)) redirectUrl += "&source=my-logs";
-        else if ("doctor-view".equals(source)) redirectUrl += "&source=doctor-view";
-        return redirectUrl;
-    }
-
-    if ("my-logs".equals(source)) return "redirect:/health-logs/my-logs?userId=" + userId;
-    else if ("doctor-view".equals(source)) return "redirect:/health-logs/doctor-view?userId=" + userId;
-    return "redirect:/health-logs?userId=" + userId;
-}
-
     @GetMapping("/{id}/edit")
     public String editLogForm(@PathVariable Long id,
-                              @RequestParam(required = false) Long userId,
-                              @RequestParam(required = false) String source,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String source,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
 
         if (response == null) {
@@ -556,11 +565,11 @@ public String createLog(@RequestParam Long userId,
 
     @PostMapping("/{id}/edit")
     public String updateLog(@PathVariable Long id,
-                            @RequestParam Long userId,
-                            @RequestParam(required = false) String source,
-                            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
-                            BindingResult bindingResult,
-                            RedirectAttributes redirectAttributes) {
+            @RequestParam Long userId,
+            @RequestParam(required = false) String source,
+            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
             redirectAttributes.addFlashAttribute("log", request);
@@ -610,9 +619,9 @@ public String createLog(@RequestParam Long userId,
 
     @PostMapping("/{id}/delete")
     public String deleteLog(@PathVariable Long id,
-                            @RequestParam Long userId,
-                            @RequestParam(required = false) String source,
-                            RedirectAttributes redirectAttributes) {
+            @RequestParam Long userId,
+            @RequestParam(required = false) String source,
+            RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
         if (response == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
@@ -657,9 +666,9 @@ public String createLog(@RequestParam Long userId,
 
     @GetMapping("/chart")
     public String getChart(@RequestParam(required = false) Long userId,
-                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-                           Model model) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Model model) {
         List<Patient> patients = patientRepository.findAllByStatus("active");
         if (patients.isEmpty()) {
             patients = patientRepository.findAll();
@@ -701,9 +710,9 @@ public String createLog(@RequestParam Long userId,
 
     @GetMapping("/my-chart")
     public String getMyChart(@RequestParam Long userId,
-                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-                             Model model) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Model model) {
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             patientId = userId;
@@ -741,7 +750,9 @@ public String createLog(@RequestParam Long userId,
             patients = assignments.stream().map(DoctorPatientAssignment::getPatient).collect(Collectors.toList());
         } else {
             patients = patientRepository.findAllByStatus("active");
-            if (patients.isEmpty()) patients = patientRepository.findAll();
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAll();
+            }
         }
         model.addAttribute("patients", patients);
 
@@ -776,9 +787,9 @@ public String createLog(@RequestParam Long userId,
 
     @GetMapping("/ai-report")
     public String getAiReport(@RequestParam(required = false) Long userId,
-                              @RequestParam(required = false) Long patientId,
-                              @RequestParam(required = false) String chartMonth,
-                              Model model, RedirectAttributes redirectAttributes) {
+            @RequestParam(required = false) Long patientId,
+            @RequestParam(required = false) String chartMonth,
+            Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
         if (curUserId == null) {
             return "redirect:/login";
@@ -943,10 +954,10 @@ public String createLog(@RequestParam Long userId,
 
     @GetMapping("/stroke-risk")
     public String getStrokeRisk(@RequestParam(required = false) Long userId,
-                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-                                @RequestParam(required = false) Long patientId,
-                                Model model, RedirectAttributes redirectAttributes) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long patientId,
+            Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
         if (curUserId == null) {
             return "redirect:/login";
@@ -1038,7 +1049,9 @@ public String createLog(@RequestParam Long userId,
     }
 
     private String formatDecimal(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) {
+            return null;
+        }
         if (obj instanceof java.math.BigDecimal) {
             return String.format("%.2f", ((java.math.BigDecimal) obj).doubleValue());
         } else if (obj instanceof Number) {
@@ -1074,9 +1087,15 @@ public String createLog(@RequestParam Long userId,
     }
 
     private java.math.BigDecimal getBigDecimalSafe(Object obj) {
-        if (obj == null) return null;
-        if (obj instanceof java.math.BigDecimal) return (java.math.BigDecimal) obj;
-        if (obj instanceof Number) return java.math.BigDecimal.valueOf(((Number) obj).doubleValue());
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof java.math.BigDecimal) {
+            return (java.math.BigDecimal) obj;
+        }
+        if (obj instanceof Number) {
+            return java.math.BigDecimal.valueOf(((Number) obj).doubleValue());
+        }
         return new java.math.BigDecimal(obj.toString());
     }
 }

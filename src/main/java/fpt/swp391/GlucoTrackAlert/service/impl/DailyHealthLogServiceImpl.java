@@ -42,6 +42,8 @@ import java.time.temporal.TemporalAdjusters;
 @Slf4j
 public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DailyHealthLogServiceImpl.class);
+
     private final DailyHealthLogRepository dailyHealthLogRepository;
     private final PatientRepository patientRepository;
     private final HealthThresholdService healthThresholdService;
@@ -49,6 +51,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     private final WeeklyReportService weeklyReportService;
     private final WeeklyHealthReportRepository weeklyHealthReportRepository;
     private final JdbcTemplate jdbcTemplate;
+    // Nhiệm vụ 1+2 (Duy): cảnh báo người thân khi chỉ số nguy hiểm
+    private final fpt.swp391.GlucoTrackAlert.service.Duy_DangerAlertService duyDangerAlertService;
 
     @Override
     @Transactional(readOnly = true)
@@ -63,11 +67,17 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             Long pId = log.getPatient() != null ? log.getPatient().getId() : null;
             String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
             String keyBs = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.BLOOD_SUGAR.name();
-            if (!resolved.containsKey(keyBs)) resolved.put(keyBs, healthThresholdService.resolveThreshold(pId, pType, MetricType.BLOOD_SUGAR));
+            if (!resolved.containsKey(keyBs)) {
+                resolved.put(keyBs, healthThresholdService.resolveThreshold(pId, pType, MetricType.BLOOD_SUGAR));
+            }
             String keySys = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.SYSTOLIC.name();
-            if (!resolved.containsKey(keySys)) resolved.put(keySys, healthThresholdService.resolveThreshold(pId, pType, MetricType.SYSTOLIC));
+            if (!resolved.containsKey(keySys)) {
+                resolved.put(keySys, healthThresholdService.resolveThreshold(pId, pType, MetricType.SYSTOLIC));
+            }
             String keyDia = (pId == null ? "null" : pId.toString()) + "|" + (pType == null ? "" : pType) + "|" + MetricType.DIASTOLIC.name();
-            if (!resolved.containsKey(keyDia)) resolved.put(keyDia, healthThresholdService.resolveThreshold(pId, pType, MetricType.DIASTOLIC));
+            if (!resolved.containsKey(keyDia)) {
+                resolved.put(keyDia, healthThresholdService.resolveThreshold(pId, pType, MetricType.DIASTOLIC));
+            }
         }
 
         List<DailyHealthLogResponse> mapped = page.getContent().stream().map(log -> {
@@ -91,9 +101,13 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     double normalMax = t.getNormalMax().doubleValue();
                     double warningMin = t.getWarningMin().doubleValue();
                     double warningMax = t.getWarningMax().doubleValue();
-                    if (v >= normalMin && v <= normalMax) status = "NORMAL";
-                    else if (v < normalMin) status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
-                    else status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                    if (v >= normalMin && v <= normalMax) {
+                        status = "NORMAL";
+                    } else if (v < normalMin) {
+                        status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
+                    } else {
+                        status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
+                    }
                 } else {
                     status = "unknown";
                 }
@@ -102,8 +116,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             String riskLevelVal = null;
             try {
                 List<Map<String, Object>> list = jdbcTemplate.queryForList(
-                    "SELECT risk_percentage, risk_level FROM risk_assessments WHERE daily_health_log_id = ? ORDER BY id DESC LIMIT 1",
-                    log.getId()
+                        "SELECT risk_percentage, risk_level FROM risk_assessments WHERE daily_health_log_id = ? ORDER BY id DESC LIMIT 1",
+                        log.getId()
                 );
                 if (!list.isEmpty()) {
                     Map<String, Object> map = list.get(0);
@@ -153,7 +167,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
     private String evaluateStatus(java.math.BigDecimal value, Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> opt) {
         String status = "unknown";
-        if (value == null) return status;
+        if (value == null) {
+            return status;
+        }
         if (opt.isPresent()) {
             fpt.swp391.GlucoTrackAlert.model.HealthThreshold t = opt.get();
             double v = value.doubleValue();
@@ -185,6 +201,14 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         DailyHealthLog log = toEntity(request);
         log.setPatient(patient);
         DailyHealthLog savedLog = dailyHealthLogRepository.save(log);
+
+        // Nhiệm vụ 1 (Duy): kiểm tra và gửi cảnh báo người thân nếu chỉ số nguy hiểm
+        try {
+            duyDangerAlertService.checkAndAlertRelatives(savedLog);
+        } catch (Exception e) {
+            logger.warn("[DangerAlert] Không thể kiểm tra cảnh báo cho log id={}: {}", savedLog.getId(), e.getMessage());
+        }
+
         java.time.LocalDate logDate = savedLog.getLogDate();
         java.time.LocalDate weekStart = logDate.with(java.time.DayOfWeek.MONDAY);
         java.time.LocalDate weekEnd = weekStart.plusDays(6);
@@ -224,6 +248,14 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         }
         updateEntity(log, request);
         DailyHealthLog updatedLog = dailyHealthLogRepository.save(log);
+
+        // Nhiệm vụ 1 (Duy): kiểm tra lại cảnh báo sau khi cập nhật
+        try {
+            duyDangerAlertService.checkAndAlertRelatives(updatedLog);
+        } catch (Exception e) {
+            logger.warn("[DangerAlert] Không thể kiểm tra cảnh báo cho log id={}: {}", updatedLog.getId(), e.getMessage());
+        }
+
         try {
             Long pid = updatedLog.getPatient() != null ? updatedLog.getPatient().getId() : null;
             if (pid != null) {
@@ -297,10 +329,10 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     double warningMin = t.getWarningMin().doubleValue();
                     double warningMax = t.getWarningMax().doubleValue();
                     if (v >= normalMin && v <= normalMax) {
-                        status = "NORMAL"; 
-                    }else if (v < normalMin) {
-                        status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER"; 
-                    }else {
+                        status = "NORMAL";
+                    } else if (v < normalMin) {
+                        status = (v >= warningMin) ? "LOW_WARNING" : "LOW_DANGER";
+                    } else {
                         status = (v <= warningMax) ? "HIGH_WARNING" : "HIGH_DANGER";
                     }
                 } else {
@@ -340,8 +372,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         String aiSummary = null;
         try {
             List<Map<String, Object>> list = jdbcTemplate.queryForList(
-                "SELECT risk_percentage, risk_level, ai_summary FROM risk_assessments WHERE daily_health_log_id = ? ORDER BY id DESC LIMIT 1",
-                log.getId()
+                    "SELECT risk_percentage, risk_level, ai_summary FROM risk_assessments WHERE daily_health_log_id = ? ORDER BY id DESC LIMIT 1",
+                    log.getId()
             );
             if (!list.isEmpty()) {
                 Map<String, Object> map = list.get(0);
@@ -372,37 +404,37 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .updatedAt(log.getUpdatedAt())
                 .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
                 .bloodSugarStatus(healthThresholdService.evaluate(
-                    log.getBloodSugar(),
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.BLOOD_SUGAR))
+                        log.getBloodSugar(),
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.BLOOD_SUGAR))
                 .systolicStatus(healthThresholdService.evaluate(
-                    log.getSystolic() != null ? java.math.BigDecimal.valueOf(log.getSystolic()) : null,
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.SYSTOLIC))
+                        log.getSystolic() != null ? java.math.BigDecimal.valueOf(log.getSystolic()) : null,
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.SYSTOLIC))
                 .diastolicStatus(healthThresholdService.evaluate(
-                    log.getDiastolic() != null ? java.math.BigDecimal.valueOf(log.getDiastolic()) : null,
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.DIASTOLIC))
+                        log.getDiastolic() != null ? java.math.BigDecimal.valueOf(log.getDiastolic()) : null,
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.DIASTOLIC))
                 // expose numeric thresholds for blood sugar tooltip
                 .bloodSugarNormalMin(healthThresholdService.resolveThreshold(
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.BLOOD_SUGAR).map(t -> t.getNormalMin()).orElse(null))
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.BLOOD_SUGAR).map(t -> t.getNormalMin()).orElse(null))
                 .bloodSugarNormalMax(healthThresholdService.resolveThreshold(
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.BLOOD_SUGAR).map(t -> t.getNormalMax()).orElse(null))
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.BLOOD_SUGAR).map(t -> t.getNormalMax()).orElse(null))
                 .bloodSugarWarningMin(healthThresholdService.resolveThreshold(
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.BLOOD_SUGAR).map(t -> t.getWarningMin()).orElse(null))
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.BLOOD_SUGAR).map(t -> t.getWarningMin()).orElse(null))
                 .bloodSugarWarningMax(healthThresholdService.resolveThreshold(
-                    log.getPatient() != null ? log.getPatient().getId() : null,
-                    log.getPatient() != null ? log.getPatient().getPatientType() : null,
-                    MetricType.BLOOD_SUGAR).map(t -> t.getWarningMax()).orElse(null))
+                        log.getPatient() != null ? log.getPatient().getId() : null,
+                        log.getPatient() != null ? log.getPatient().getPatientType() : null,
+                        MetricType.BLOOD_SUGAR).map(t -> t.getWarningMax()).orElse(null))
                 .riskPercentage(riskPercentage)
                 .riskLevel(riskLevel)
                 .aiSummary(aiSummary)
@@ -419,7 +451,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 String genderStr = "MALE"; // Default
                 if (patient.getGender() != null) {
                     String g = patient.getGender().toLowerCase();
-                    if (g.contains("fem") || g.contains("nữ")) genderStr = "FEMALE";
+                    if (g.contains("fem") || g.contains("nữ")) {
+                        genderStr = "FEMALE";
+                    }
                 }
 
                 int ageVal = patient.getAge() != null ? patient.getAge() : 0;
@@ -432,20 +466,20 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
                 // Construct JSON payload khớp với schema của ensemble_predict() trong ml_service.py
                 String jsonPayload = String.format(
-                    "{\"bloodSugar\":%.2f,\"systolic\":%.0f,\"diastolic\":%.0f,\"bmi\":%.2f,\"age\":%d,\"gender\":\"%s\",\"isPregnant\":%b}",
-                    bloodSugarVal, systolicVal, diastolicVal, bmiVal, ageVal, genderStr, isPregnantVal
+                        "{\"bloodSugar\":%.2f,\"systolic\":%.0f,\"diastolic\":%.0f,\"bmi\":%.2f,\"age\":%d,\"gender\":\"%s\",\"isPregnant\":%b}",
+                        bloodSugarVal, systolicVal, diastolicVal, bmiVal, ageVal, genderStr, isPregnantVal
                 );
 
                 HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(2))
-                    .build();
+                        .connectTimeout(Duration.ofSeconds(2))
+                        .build();
 
                 HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://127.0.0.1:5000/predict"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                    .timeout(Duration.ofSeconds(3))
-                    .build();
+                        .uri(URI.create("http://127.0.0.1:5000/predict"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                        .timeout(Duration.ofSeconds(3))
+                        .build();
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -459,7 +493,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                         int idx = responseBody.indexOf("\"riskLevel\"");
                         int start = responseBody.indexOf(":", idx) + 1;
                         int end = responseBody.indexOf(",", start);
-                        if (end == -1) end = responseBody.indexOf("}", start);
+                        if (end == -1) {
+                            end = responseBody.indexOf("}", start);
+                        }
                         int riskLevelNum = Integer.parseInt(responseBody.substring(start, end).trim());
                         riskLevel = riskLevelNum == 2 ? "High" : (riskLevelNum == 1 ? "Medium" : "Low");
                     }
@@ -468,7 +504,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                         int idx = responseBody.indexOf("\"ensembleScore\"");
                         int start = responseBody.indexOf(":", idx) + 1;
                         int end = responseBody.indexOf(",", start);
-                        if (end == -1) end = responseBody.indexOf("}", start);
+                        if (end == -1) {
+                            end = responseBody.indexOf("}", start);
+                        }
                         double ensembleScore = Double.parseDouble(responseBody.substring(start, end).trim());
                         riskPercentage = ensembleScore * 100.0;
                     }
@@ -485,23 +523,23 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
                     // Insert new prediction
                     String aiSummary = (aiSummaryFromMl != null ? aiSummaryFromMl + ". " : "")
-                        + "Nguy cơ tổng hợp dựa trên chỉ số hôm nay: " + String.format("%.2f", riskPercentage) + "% (Mức độ: " + riskLevel + ").";
+                            + "Nguy cơ tổng hợp dựa trên chỉ số hôm nay: " + String.format("%.2f", riskPercentage) + "% (Mức độ: " + riskLevel + ").";
                     String recommendation = "Hãy tiếp tục duy trì chế độ sinh hoạt lành mạnh và kiểm soát lượng đường huyết.";
 
                     jdbcTemplate.update(
-                        "INSERT INTO risk_assessments (patient_id, daily_health_log_id, assessment_type, risk_level, risk_percentage, ai_summary, recommendation, assessed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                        patient.getId(),
-                        dailyLog.getId(),
-                        "DAILY_AI_PREDICTION",
-                        riskLevel,
-                        new java.math.BigDecimal(riskPercentage),
-                        aiSummary,
-                        recommendation,
-                        java.time.LocalDateTime.now()
+                            "INSERT INTO risk_assessments (patient_id, daily_health_log_id, assessment_type, risk_level, risk_percentage, ai_summary, recommendation, assessed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                            patient.getId(),
+                            dailyLog.getId(),
+                            "DAILY_AI_PREDICTION",
+                            riskLevel,
+                            new java.math.BigDecimal(riskPercentage),
+                            aiSummary,
+                            recommendation,
+                            java.time.LocalDateTime.now()
                     );
                 } else {
                     log.error("ML service returned status {} for daily log id={}: {}",
-                        response.statusCode(), dailyLog.getId(), response.body()); // FIXED
+                            response.statusCode(), dailyLog.getId(), response.body()); // FIXED
                 }
             } catch (Exception e) {
                 log.error("Error calling AI prediction API for daily log id={}", dailyLog.getId(), e);
@@ -550,7 +588,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         for (Patient patient : patientRepository.findAll()) {
             Long pid = patient.getId();
             List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(pid, weekStart, weekEnd);
-            if (logs == null || logs.isEmpty()) continue;
+            if (logs == null || logs.isEmpty()) {
+                continue;
+            }
             if (!weeklyHealthReportRepository.existsByPatientIdAndWeekStart(pid, weekStart)) {
                 try {
                     weeklyReportService.generateWeeklyReport(pid, weekStart);
@@ -561,11 +601,16 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         }
     }
 
-
     private BigDecimal getBigDecimalSafe(Object obj) {
-        if (obj == null) return null;
-        if (obj instanceof BigDecimal) return (BigDecimal) obj;
-        if (obj instanceof Number) return BigDecimal.valueOf(((Number) obj).doubleValue());
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof BigDecimal) {
+            return (BigDecimal) obj;
+        }
+        if (obj instanceof Number) {
+            return BigDecimal.valueOf(((Number) obj).doubleValue());
+        }
         return new BigDecimal(obj.toString());
     }
 
@@ -678,23 +723,23 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
         // Check if a weekly assessment already exists
         List<Map<String, Object>> existing = jdbcTemplate.queryForList(
-            "SELECT ra.id, ra.assessed_at FROM risk_assessments ra " +
-            "JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id " +
-            "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
-            "AND dhl.log_date >= ? AND dhl.log_date <= ? ORDER BY ra.id DESC",
-            patientId,
-            startOfWeek,
-            endOfWeek
+                "SELECT ra.id, ra.assessed_at FROM risk_assessments ra "
+                + "JOIN daily_health_logs dhl ON ra.daily_health_log_id = dhl.id "
+                + "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' "
+                + "AND dhl.log_date >= ? AND dhl.log_date <= ? ORDER BY ra.id DESC",
+                patientId,
+                startOfWeek,
+                endOfWeek
         );
 
         boolean needUpdate = true;
 
         // Force update if the weekly report record doesn't exist yet
         List<Map<String, Object>> existingReport = jdbcTemplate.queryForList(
-            "SELECT id FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
-            patientId,
-            startOfWeek,
-            endOfWeek
+                "SELECT id FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
+                patientId,
+                startOfWeek,
+                endOfWeek
         );
 
         if (!existing.isEmpty() && !existingReport.isEmpty()) {
@@ -719,7 +764,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 String genderStr = "MALE"; // Default
                 if (patient.getGender() != null) {
                     String g = patient.getGender().toLowerCase();
-                    if (g.contains("fem") || g.contains("nữ")) genderStr = "FEMALE";
+                    if (g.contains("fem") || g.contains("nữ")) {
+                        genderStr = "FEMALE";
+                    }
                 }
 
                 int ageVal = patient.getAge() != null ? patient.getAge() : 0;
@@ -731,20 +778,20 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
                 // Construct JSON payload khớp với schema của ensemble_predict() trong ml_service.py
                 String jsonPayload = String.format(
-                    "{\"bloodSugar\":%.2f,\"systolic\":%.0f,\"diastolic\":%.0f,\"bmi\":%.2f,\"age\":%d,\"gender\":\"%s\",\"isPregnant\":%b}",
-                    avgSugarMmol, avgSystolicForApi, avgDiastolicForApi, bmiVal, ageVal, genderStr, isPregnantVal
+                        "{\"bloodSugar\":%.2f,\"systolic\":%.0f,\"diastolic\":%.0f,\"bmi\":%.2f,\"age\":%d,\"gender\":\"%s\",\"isPregnant\":%b}",
+                        avgSugarMmol, avgSystolicForApi, avgDiastolicForApi, bmiVal, ageVal, genderStr, isPregnantVal
                 );
 
                 HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(2))
-                    .build();
+                        .connectTimeout(Duration.ofSeconds(2))
+                        .build();
 
                 HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://127.0.0.1:5000/predict"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                    .timeout(Duration.ofSeconds(3))
-                    .build();
+                        .uri(URI.create("http://127.0.0.1:5000/predict"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                        .timeout(Duration.ofSeconds(3))
+                        .build();
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -759,7 +806,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                         int idx = responseBody.indexOf("\"riskLevel\"");
                         int start = responseBody.indexOf(":", idx) + 1;
                         int end = responseBody.indexOf(",", start);
-                        if (end == -1) end = responseBody.indexOf("}", start);
+                        if (end == -1) {
+                            end = responseBody.indexOf("}", start);
+                        }
                         int riskLevelNum = Integer.parseInt(responseBody.substring(start, end).trim());
                         riskLevel = riskLevelNum == 2 ? "High" : (riskLevelNum == 1 ? "Medium" : "Low");
                     }
@@ -769,7 +818,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                         int idx = responseBody.indexOf("\"ensembleScore\"");
                         int start = responseBody.indexOf(":", idx) + 1;
                         int end = responseBody.indexOf(",", start);
-                        if (end == -1) end = responseBody.indexOf("}", start);
+                        if (end == -1) {
+                            end = responseBody.indexOf("}", start);
+                        }
                         double ensembleScore = Double.parseDouble(responseBody.substring(start, end).trim());
                         riskPercentage = ensembleScore * 100.0;
                     }
@@ -789,28 +840,28 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
                     // Insert new prediction linked to the latest log of the week
                     String aiSummary = (aiSummaryFromMl != null ? aiSummaryFromMl + ". " : "")
-                        + "Nguy cơ tổng hợp dựa trên chỉ số trung bình tuần này: " + String.format("%.2f", riskPercentage) + "% (Mức độ: " + riskLevel + ").";
+                            + "Nguy cơ tổng hợp dựa trên chỉ số trung bình tuần này: " + String.format("%.2f", riskPercentage) + "% (Mức độ: " + riskLevel + ").";
                     String recommendation = "Hãy tiếp tục duy trì chế độ sinh hoạt lành mạnh và kiểm soát lượng đường huyết trung bình ở mức an toàn.";
 
                     jdbcTemplate.update(
-                        "INSERT INTO risk_assessments (patient_id, daily_health_log_id, assessment_type, risk_level, risk_percentage, ai_summary, recommendation, assessed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                        patient.getId(),
-                        latestLogWithSugar.getId(),
-                        "WEEKLY_AI_PREDICTION",
-                        riskLevel,
-                        new java.math.BigDecimal(riskPercentage),
-                        aiSummary,
-                        recommendation,
-                        java.time.LocalDateTime.now()
+                            "INSERT INTO risk_assessments (patient_id, daily_health_log_id, assessment_type, risk_level, risk_percentage, ai_summary, recommendation, assessed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                            patient.getId(),
+                            latestLogWithSugar.getId(),
+                            "WEEKLY_AI_PREDICTION",
+                            riskLevel,
+                            new java.math.BigDecimal(riskPercentage),
+                            aiSummary,
+                            recommendation,
+                            java.time.LocalDateTime.now()
                     );
 
                     // --- GENERATE & SAVE WEEKLY REPORT ---
                     LocalDate prevStartOfWeek = startOfWeek.minusWeeks(1);
                     LocalDate prevEndOfWeek = endOfWeek.minusWeeks(1);
                     List<Map<String, Object>> prevReports = jdbcTemplate.queryForList(
-                        "SELECT id, average_blood_sugar, average_systolic, average_diastolic, average_sleep_hours, average_water_ml " +
-                        "FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
-                        patientId, prevStartOfWeek, prevEndOfWeek
+                            "SELECT id, average_blood_sugar, average_systolic, average_diastolic, average_sleep_hours, average_water_ml "
+                            + "FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
+                            patientId, prevStartOfWeek, prevEndOfWeek
                     );
 
                     BigDecimal prevSugar = null;
@@ -884,54 +935,51 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
                     // Delete existing report
                     jdbcTemplate.update(
-                        "DELETE FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
-                        patientId, startOfWeek, endOfWeek
+                            "DELETE FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
+                            patientId, startOfWeek, endOfWeek
                     );
 
                     // Insert new report
                     jdbcTemplate.update(
-                        "INSERT INTO weekly_health_reports (" +
-                        "patient_id, baseline_id, previous_report_id, week_start, week_end, " +
-                        "average_blood_sugar, average_systolic, average_diastolic, average_sleep_hours, average_water_ml, " +
-                        "high_sugar_days, warning_count, blood_sugar_change, blood_sugar_change_percent, " +
-                        "systolic_change, diastolic_change, sleep_hours_change, trend_status, health_status, " +
-                        "ai_summary, recommendation, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        patientId,
-                        null,
-                        prevReportId,
-                        startOfWeek,
-                        endOfWeek,
-                        avgSugarVal,
-                        avgSystolicVal,
-                        avgDiastolicVal,
-                        avgSleepVal,
-                        avgWaterVal,
-                        highSugarDays,
-                        warningCount,
-                        sugarChange,
-                        sugarChangePercent,
-                        systolicChange,
-                        diastolicChange,
-                        sleepChange,
-                        trendStatus,
-                        healthStatus,
-                        aiSummary,
-                        recommendation,
-                        java.time.LocalDateTime.now()
+                            "INSERT INTO weekly_health_reports ("
+                            + "patient_id, baseline_id, previous_report_id, week_start, week_end, "
+                            + "average_blood_sugar, average_systolic, average_diastolic, average_sleep_hours, average_water_ml, "
+                            + "high_sugar_days, warning_count, blood_sugar_change, blood_sugar_change_percent, "
+                            + "systolic_change, diastolic_change, sleep_hours_change, trend_status, health_status, "
+                            + "ai_summary, recommendation, created_at) "
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            patientId,
+                            null,
+                            prevReportId,
+                            startOfWeek,
+                            endOfWeek,
+                            avgSugarVal,
+                            avgSystolicVal,
+                            avgDiastolicVal,
+                            avgSleepVal,
+                            avgWaterVal,
+                            highSugarDays,
+                            warningCount,
+                            sugarChange,
+                            sugarChangePercent,
+                            systolicChange,
+                            diastolicChange,
+                            sleepChange,
+                            trendStatus,
+                            healthStatus,
+                            aiSummary,
+                            recommendation,
+                            java.time.LocalDateTime.now()
                     );
                 } else {
                     log.error("ML service returned status {} for patientId={}: {}",
-                        response.statusCode(), patientId, response.body());
+                            response.statusCode(), patientId, response.body());
                 }
             } catch (Exception e) {
                 log.error("Error calculating weekly AI prediction and report for patientId={}", patientId, e);
             }
         }
     }
-<<<<<<< HEAD
-}
-=======
 
     @Override
     @Transactional(readOnly = true)
@@ -1032,8 +1080,11 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             int genderVal = 0; // Default Male
             if (patient.getGender() != null) {
                 String g = patient.getGender().toLowerCase();
-                if (g.contains("fem") || g.contains("nữ")) genderVal = 1;
-                else if (g.contains("oth") || g.contains("khác")) genderVal = -1;
+                if (g.contains("fem") || g.contains("nữ")) {
+                    genderVal = 1;
+                } else if (g.contains("oth") || g.contains("khác")) {
+                    genderVal = -1;
+                }
             }
 
             double ageVal = patient.getAge() != null ? patient.getAge() : 0.0;
@@ -1043,10 +1094,15 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             int workVal = 0; // Default Private
             if (patient.getWorkType() != null) {
                 String w = patient.getWorkType();
-                if (w.equalsIgnoreCase("Self-employed")) workVal = 1;
-                else if (w.equalsIgnoreCase("Govt_job")) workVal = 2;
-                else if (w.equalsIgnoreCase("children")) workVal = -1;
-                else if (w.equalsIgnoreCase("Never_worked")) workVal = -2;
+                if (w.equalsIgnoreCase("Self-employed")) {
+                    workVal = 1;
+                } else if (w.equalsIgnoreCase("Govt_job")) {
+                    workVal = 2;
+                } else if (w.equalsIgnoreCase("children")) {
+                    workVal = -1;
+                } else if (w.equalsIgnoreCase("Never_worked")) {
+                    workVal = -2;
+                }
             }
 
             int resVal = 1; // Default Urban
@@ -1059,44 +1115,47 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             int smokeVal = -1; // Default Unknown
             if (patient.getSmokingStatus() != null) {
                 String s = patient.getSmokingStatus();
-                if (s.equalsIgnoreCase("never smoked")) smokeVal = 0;
-                else if (s.equalsIgnoreCase("formerly smoked")) smokeVal = 1;
-                else if (s.equalsIgnoreCase("smokes")) smokeVal = 2;
+                if (s.equalsIgnoreCase("never smoked")) {
+                    smokeVal = 0;
+                } else if (s.equalsIgnoreCase("formerly smoked")) {
+                    smokeVal = 1;
+                } else if (s.equalsIgnoreCase("smokes")) {
+                    smokeVal = 2;
+                }
             }
 
             // Construct JSON payload using calculated average glucose
             String jsonPayload = String.format(
-                "{\"gender\":%d,\"age\":%.1f,\"hypertension\":%d,\"heart_disease\":%d,\"work_type\":%d,\"Residence_type\":%d,\"avg_glucose_level\":%.2f,\"bmi\":%.2f,\"smoking_status\":%d}",
-                genderVal, ageVal, hyperVal, heartVal, workVal, resVal, avgGlucoseMgDl, bmiVal, smokeVal
+                    "{\"gender\":%d,\"age\":%.1f,\"hypertension\":%d,\"heart_disease\":%d,\"work_type\":%d,\"Residence_type\":%d,\"avg_glucose_level\":%.2f,\"bmi\":%.2f,\"smoking_status\":%d}",
+                    genderVal, ageVal, hyperVal, heartVal, workVal, resVal, avgGlucoseMgDl, bmiVal, smokeVal
             );
 
             HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(2))
-                .build();
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
 
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://127.0.0.1:8000/predict"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                .timeout(Duration.ofSeconds(3))
-                .build();
+                    .uri(URI.create("http://127.0.0.1:8000/predict"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .timeout(Duration.ofSeconds(10))
+                    .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
                 String responseBody = response.body();
-                if (responseBody.contains("risk_percentage")) {
-                    int idx = responseBody.indexOf("risk_percentage");
-                    int start = responseBody.indexOf(":", idx) + 1;
-                    int end = responseBody.indexOf(",", start);
-                    if (end == -1) end = responseBody.indexOf("}", start);
-                    riskPercentage = Double.parseDouble(responseBody.substring(start, end).trim());
-                }
-                if (responseBody.contains("risk_level")) {
-                    int idx = responseBody.indexOf("risk_level");
-                    int start = responseBody.indexOf("\"", responseBody.indexOf(":", idx)) + 1;
-                    int end = responseBody.indexOf("\"", start);
-                    riskLevel = responseBody.substring(start, end).trim();
+                try {
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(responseBody);
+                    if (node.has("risk_percentage")) {
+                        riskPercentage = node.get("risk_percentage").asDouble();
+                    }
+                    if (node.has("risk_level")) {
+                        riskLevel = node.get("risk_level").asText();
+                    }
+                } catch (Exception parseEx) {
+                    System.err.println("Error parsing Stroke AI response: " + parseEx.getMessage());
                 }
             }
         } catch (Exception e) {
@@ -1208,7 +1267,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         result.put("riskLevel", riskLevel);
         result.put("assessedAtStr", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         result.put("logDateStr", from.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " - " + to.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        
+
         result.put("avgSugar", avgSugarVal != null ? String.format("%.2f", avgSugarVal.doubleValue()) : null);
         result.put("avgSystolic", avgSystolicVal != null ? String.format("%.2f", avgSystolicVal.doubleValue()) : null);
         result.put("avgDiastolic", avgDiastolicVal != null ? String.format("%.2f", avgDiastolicVal.doubleValue()) : null);
@@ -1231,4 +1290,3 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         return result;
     }
 }
->>>>>>> 080af4fd837f65b1537407eff83950a6b5a496a9

@@ -75,13 +75,13 @@ def generate_advice(risk_level, blood_sugar, systolic, bmi):
 # Ensemble 3 models
 # ============================================
 def ensemble_predict(data: dict) -> dict:
-    blood_sugar = float(data.get('bloodSugar', 5.5))
-    systolic    = int(data.get('systolic', 120))
-    diastolic   = int(data.get('diastolic', 80))
-    bmi         = float(data.get('bmi', 22.0))
-    age         = int(data.get('age', 40))
-    gender      = data.get('gender', 'MALE')
-    is_pregnant = bool(data.get('isPregnant', False))
+    blood_sugar = float(data.get('bloodSugar') or 5.5)
+    systolic    = int(data.get('systolic') or 120)
+    diastolic   = int(data.get('diastolic') or 80)
+    bmi         = float(data.get('bmi') or 22.0)
+    age         = int(data.get('age') or 40)
+    gender      = data.get('gender') or 'MALE'
+    is_pregnant = bool(data.get('isPregnant') or False)
     # smoker/physActivity/genHealth không còn dùng (V3 đã bỏ) -- xem ghi chú trong ensemble_predict()
     hypertension = 1 if systolic >= 140 else 0
 
@@ -172,11 +172,16 @@ def health():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True, silent=True)
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        return jsonify(ensemble_predict(data))
+        print(f"[DEBUG] Request data: {data}")
+        result = ensemble_predict(data)
+        print(f"[DEBUG] Result: {result}")
+        return jsonify(result)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 

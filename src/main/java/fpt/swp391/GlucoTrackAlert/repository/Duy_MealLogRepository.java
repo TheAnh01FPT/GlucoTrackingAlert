@@ -13,6 +13,8 @@ public interface Duy_MealLogRepository extends JpaRepository<Duy_Meal_Logs, Long
 
     List<Duy_Meal_Logs> findBySugarEstimationGreaterThan(Double value);
 
+    List<Duy_Meal_Logs> findBySugarEstimationGreaterThanEqual(Double value);
+
     List<Duy_Meal_Logs> findByMealType(String mealType);
 
     List<Duy_Meal_Logs> findByFoodNameContainingIgnoreCase(String foodName);

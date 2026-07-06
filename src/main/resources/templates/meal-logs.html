@@ -686,16 +686,18 @@ function calcSugar() {
   advice.className = 'advice-box show';
 }
 
-function getSugarLabel(v) {
+function getSugarLabel(v, condition) {
   if (!v || v <= 0) return '—';
-  if (v >= 11) return '🚨 Rất cao (' + v + ')';
-  if (v >= 7.8) return '⚡ Hơi cao (' + v + ')';
+  const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
+  if (v >= thr.danger) return '🚨 Rất cao (' + v + ')';
+  if (v >= thr.warn)   return '⚡ Hơi cao (' + v + ')';
   return '✅ Ổn định (' + v + ')';
 }
-function getSugarBadgeCls(v) {
+function getSugarBadgeCls(v, condition) {
   if (!v || v <= 0) return 'sugar-na';
-  if (v >= 11) return 'sugar-danger';
-  if (v >= 7.8) return 'sugar-warn';
+  const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
+  if (v >= thr.danger) return 'sugar-danger';
+  if (v >= thr.warn)   return 'sugar-warn';
   return 'sugar-ok';
 }
 
@@ -757,12 +759,13 @@ function updateDailySummary(data){
   const sugars=td.map(x=>Number(x.sugarEstimation||0)).filter(v=>v>0);
   const maxSugar=sugars.length?Math.max(...sugars):0;
   document.getElementById('sumMeals').textContent=td.length;
-  document.getElementById('sumSugar').textContent=getSugarLabel(maxSugar);
-  const s=document.getElementById('sumStatus');
-  const {gender, ageGroup} = getProfile();
+  const {gender, ageGroup, condition} = getProfile();
   const p = getPronoun(gender, ageGroup);
-  if(maxSugar>=11){s.textContent='🚨 Đường ước tính rất cao — ' + p.toLowerCase() + ' cần chú ý!';s.className='ds-status ds-danger';}
-  else if(maxSugar>=7.8){s.textContent='⚡ Cần chú ý — đường hơi cao, theo dõi thêm nhé';s.className='ds-status ds-warn';}
+  document.getElementById('sumSugar').textContent=getSugarLabel(maxSugar, condition);
+  const s=document.getElementById('sumStatus');
+  const thr=SUGAR_THRESHOLDS[condition]||SUGAR_THRESHOLDS['none'];
+  if(maxSugar>=thr.danger){s.textContent='🚨 Đường ước tính rất cao — ' + p.toLowerCase() + ' cần chú ý!';s.className='ds-status ds-danger';}
+  else if(maxSugar>=thr.warn){s.textContent='⚡ Cần chú ý — đường hơi cao, theo dõi thêm nhé';s.className='ds-status ds-warn';}
   else{s.textContent='✅ Sức khỏe ổn định — ' + p.toLowerCase() + ' đang làm rất tốt!';s.className='ds-status ds-safe';}
 }
 
@@ -845,14 +848,16 @@ function renderPage(){
   document.getElementById('countBadge').textContent=data.length+' bản ghi';
   const todayStr=today();
   const todayRows=allData.filter(x=>(x.mealDate||x.logDate||'')===todayStr);
+  const {condition: cond} = getProfile();
+  const thrStat = SUGAR_THRESHOLDS[cond]||SUGAR_THRESHOLDS['none'];
   let danger=0,sugarMax=0;
   todayRows.forEach(x=>{
     const s=Number(x.sugarEstimation||0);
-    if(s>=11) danger++;
+    if(s>=thrStat.danger) danger++;
     if(s>sugarMax) sugarMax=s;
   });
   document.getElementById('statTotal').textContent=todayRows.length;
-  document.getElementById('statSugar').textContent=getSugarLabel(sugarMax);
+  document.getElementById('statSugar').textContent=getSugarLabel(sugarMax, cond);
   document.getElementById('statDanger').textContent=danger;
 
   const totalPages=Math.ceil(data.length/PAGE_SIZE);
@@ -866,10 +871,11 @@ function renderPage(){
     const icon=FOOD_EMOJIS[(start+i)%FOOD_EMOJIS.length];
     const food=x.foodName||'';
     const qty=x.quantityText||x.weightGram||'—';
-    const sCls=getSugarBadgeCls(sugar);
-    const sLabel=getSugarLabel(sugar);
+    const sCls=getSugarBadgeCls(sugar, cond);
+    const sLabel=getSugarLabel(sugar, cond);
+    const thr=SUGAR_THRESHOLDS[cond]||SUGAR_THRESHOLDS['none'];
     const dateStr=x.mealDate||x.logDate||'—';
-    const rowCls=sugar>=11?'row-danger':'';
+    const rowCls=sugar>=thr.danger?'row-danger':'';
     rows+=`<tr class="${rowCls}">
       <td><b>#${start+i+1}</b></td>
       <td><div class="food-cell"><div class="food-icon">${icon}</div><div>
