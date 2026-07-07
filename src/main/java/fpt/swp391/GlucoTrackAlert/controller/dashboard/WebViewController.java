@@ -40,12 +40,17 @@ public class WebViewController {
 
     @GetMapping("/doctors")
     public String showDoctorsPage(Model model) {
-        return "doctors";
+        return "admin/doctors";
+    }
+
+    @GetMapping("/doctor-introductions")
+    public String doctorIntroductionsPage() {
+        return "admin/doctor-introductions";
     }
 
     @GetMapping("/assignments")
     public String showAssignmentsPage(Model model) {
-        return "assignments";
+        return "admin/assignments";
     }
 
     @GetMapping("/patients")

@@ -2,7 +2,9 @@ package fpt.swp391.GlucoTrackAlert.controller.page;
 
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.dto.relative.RelativeResponse;
+import fpt.swp391.GlucoTrackAlert.model.DoctorIntroduction;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorIntroductionRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
 import fpt.swp391.GlucoTrackAlert.service.relative.RelativeService;
@@ -23,18 +25,28 @@ public class PageController {
     private final PatientService patientService;
     private final UserRepository userRepository;
     private final RelativeService relativeService;
+    private final DoctorIntroductionRepository doctorIntroductionRepository;
 
     @Autowired
     public PageController(PatientService patientService,
                           UserRepository userRepository,
-                          RelativeService relativeService) {
+                          RelativeService relativeService,
+                          DoctorIntroductionRepository doctorIntroductionRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;
+        this.doctorIntroductionRepository = doctorIntroductionRepository;
     }
 
     @GetMapping("/")
-    public String indexPage() {
+    public String indexPage(Model model) {
+        try {
+            List<DoctorIntroduction> doctors = doctorIntroductionRepository
+                    .findByStatusOrderByDisplayOrderAsc("active");
+            model.addAttribute("doctors", doctors);
+        } catch (Exception e) {
+            model.addAttribute("doctors", List.of());
+        }
         return "index";
     }
 

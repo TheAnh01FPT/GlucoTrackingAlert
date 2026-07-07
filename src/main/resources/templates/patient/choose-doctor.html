@@ -245,11 +245,19 @@
     function getPendingAssignment() {
         return myAssignments.find(a => a.status === 'pending');
     }
+    // Bản ghi bị từ chối/hủy gần nhất (để hiển thị lý do cho bệnh nhân biết)
+    function getLatestClosedAssignment() {
+        return myAssignments
+            .filter(a => a.status === 'rejected' || a.status === 'inactive' || a.status === 'cancelled')
+            .filter(a => a.rejectReason || a.cancelReason)
+            .sort((a, b) => new Date(b.assignedAt) - new Date(a.assignedAt))[0];
+    }
 
     function renderBanner() {
         const banner = document.getElementById('currentBanner');
         const active = getActiveAssignment();
         const pending = getPendingAssignment();
+        const closed = getLatestClosedAssignment();
 
         if (active) {
             banner.style.display = 'flex';
@@ -272,6 +280,19 @@
                 <button class="btn btn-outline-danger btn-sm" onclick="openCancel(${pending.id})">
                     <i class="bi bi-x-circle me-1"></i>Hủy đề xuất
                 </button>`;
+        } else if (closed) {
+            const isRejected = closed.status === 'rejected';
+            const reason = isRejected ? closed.rejectReason : closed.cancelReason;
+            banner.style.display = 'flex';
+            banner.className = 'current-banner';
+            banner.innerHTML = `
+                <div class="icn" style="background:#f8d7da;color:#721c24"><i class="bi bi-x-circle-fill"></i></div>
+                <div class="flex-grow-1">
+                    <div style="font-weight:700;color:#1a1a2e">
+                        ${isRejected ? 'Đề xuất tới ' + (closed.doctorName || '—') + ' đã bị từ chối' : 'Bác sĩ đồng hành ' + (closed.doctorName || '—') + ' đã bị hủy'}
+                    </div>
+                    <div style="font-size:.82rem;color:#6c757d">Lý do: ${escapeHtml(reason || 'Không có ghi chú')}</div>
+                </div>`;
         } else {
             banner.style.display = 'none';
         }

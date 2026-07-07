@@ -10,6 +10,7 @@ import java.util.HashMap;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
+import fpt.swp391.GlucoTrackAlert.service.NotificationService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import jakarta.annotation.PreDestroy;
 
@@ -31,6 +32,7 @@ public class DoctorPatientAssignmentService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     private static final LocalTime WORK_START = WorkShift.START;
     private static final LocalTime WORK_END = WorkShift.END;
@@ -134,6 +136,18 @@ public class DoctorPatientAssignmentService {
         }
     }
 
+    // Gửi thông báo in-app cho bệnh nhân khi phân công của họ bị hủy/từ chối
+    private void notifyPatientCancelled(DoctorPatientAssignment a, String title, String reason) {
+        if (a.getPatient() == null || a.getPatient().getUser() == null) {
+            return;
+        }
+        Long userId = a.getPatient().getUser().getId();
+        String doctorName = a.getDoctor() != null ? a.getDoctor().getFullName() : "bác sĩ";
+        String message = "Đề xuất/phân công với " + doctorName
+                + (reason != null && !reason.isBlank() ? " đã bị hủy. Lý do: " + reason : " đã bị hủy.");
+        notificationService.createNotification(userId, title, message, "ASSIGNMENT_CANCELLED");
+    }
+
     public List<DoctorPatientAssignment> getAllAssignments() {
         return assignmentRepository.findAll();
     }
@@ -209,6 +223,7 @@ public class DoctorPatientAssignmentService {
                         .orElseThrow(() -> new RuntimeException("Assignment not found"));
         assignment.setStatus("inactive");
         assignmentRepository.save(assignment);
+        notifyPatientCancelled(assignment, "Phân công bác sĩ đồng hành đã bị hủy", assignment.getCancelReason());
     }
 
     public List<Map<String, Object>> getPatientsByDoctor(Long doctorId) {
@@ -269,6 +284,24 @@ public class DoctorPatientAssignmentService {
             throw new RuntimeException("Bạn đang có một đề xuất chờ duyệt. Vui lòng hủy đề xuất đó trước khi tạo đề xuất mới.");
         }
 
+        // Unique key (doctor_id, patient_id) trong DB chỉ cho phép 1 dòng / cặp bác sĩ-bệnh nhân.
+        // Nếu bệnh nhân từng đề xuất (hoặc từng active) với đúng bác sĩ này rồi (VD: đã bị rejected/inactive),
+        // phải cập nhật lại dòng cũ thay vì insert dòng mới để tránh Duplicate entry.
+        java.util.Optional<DoctorPatientAssignment> existing
+                = assignmentRepository.findByDoctorIdAndPatientId(doctorId, patientId);
+        if (existing.isPresent()) {
+            DoctorPatientAssignment old = existing.get();
+            if ("active".equals(old.getStatus()) || "pending".equals(old.getStatus())) {
+                throw new RuntimeException("Bạn đã có đề xuất/phân công với bác sĩ này rồi.");
+            }
+            old.setNote(note);
+            old.setStatus("pending");
+            old.setRejectReason(null);
+            old.setCancelReason(null);
+            old.setAssignedAt(LocalDateTime.now());
+            return assignmentRepository.save(old);
+        }
+
         DoctorPatientAssignment assignment = new DoctorPatientAssignment();
         assignment.setPatient(patient);
         assignment.setDoctor(doctor);
@@ -325,6 +358,7 @@ public class DoctorPatientAssignmentService {
                     old.setStatus("inactive");
                     old.setCancelReason("Bệnh nhân đã được duyệt chuyển sang bác sĩ khác");
                     assignmentRepository.save(old);
+                    notifyPatientCancelled(old, "Bác sĩ đồng hành đã được chuyển", old.getCancelReason());
                 });
 
         assignment.setStatus("active");
@@ -349,6 +383,8 @@ public class DoctorPatientAssignmentService {
         }
         assignment.setStatus("rejected");
         assignment.setRejectReason(reason);
-        return assignmentRepository.save(assignment);
+        DoctorPatientAssignment saved = assignmentRepository.save(assignment);
+        notifyPatientCancelled(saved, "Đề xuất bác sĩ đồng hành bị từ chối", reason);
+        return saved;
     }
 }

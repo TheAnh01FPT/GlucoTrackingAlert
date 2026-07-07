@@ -521,7 +521,10 @@
             }
 
             /** Chỉ hiển thị thông tin đọc – không có form chỉnh sửa */
+            let CURRENT_DOC = null;
+
             function fillDisplay(doc) {
+                CURRENT_DOC = doc;
                 document.getElementById('infoName').textContent = doc.fullName || '–';
                 document.getElementById('infoSpec').textContent = doc.specialization || '–';
                 document.getElementById('infoDegree').textContent = doc.degree || '–';
@@ -566,6 +569,13 @@
                 // Hiển thị ảnh đã upload nếu có
                 if (doc.nationalIdImageUrl) showExistingImage('previewCCCD', doc.nationalIdImageUrl);
                 if (doc.practiceLicenseImageUrl) showExistingImage('previewCC', doc.practiceLicenseImageUrl);
+                if (doc.avatarUrl) showExistingImage('previewAvatar', doc.avatarUrl);
+
+                // Điền lại số CCCD / số chứng chỉ đã lưu (nếu có) để không bị mất khi chỉ muốn cập nhật avatar
+                const inputNationalId = document.getElementById('inputNationalId');
+                const inputPracticeLicense = document.getElementById('inputPracticeLicense');
+                if (doc.nationalId && !inputNationalId.value) inputNationalId.value = doc.nationalId;
+                if (doc.practiceLicense && !inputPracticeLicense.value) inputPracticeLicense.value = doc.practiceLicense;
             }
 
             function showExistingImage(previewId, url) {
@@ -593,17 +603,32 @@
                 const nationalId = document.getElementById('inputNationalId').value.trim();
                 const practiceLicense = document.getElementById('inputPracticeLicense').value.trim();
 
-                if (!nationalId) { showToast('Vui lòng nhập số CCCD', 'danger'); return; }
-                if (!practiceLicense) { showToast('Vui lòng nhập số chứng chỉ hành nghề', 'danger'); return; }
-                if (!cccdFile) { showToast('Vui lòng chọn ảnh CCCD', 'danger'); return; }
-                if (!ccFile) { showToast('Vui lòng chọn ảnh chứng chỉ hành nghề', 'danger'); return; }
+                // Đã có CCCD/chứng chỉ lưu sẵn trong hồ sơ (đã từng xác minh) thì không bắt nhập/upload lại,
+                // trừ khi người dùng tự xoá ô số hoặc chủ động chọn ảnh mới.
+                const hasSavedCCCD = !!(CURRENT_DOC && CURRENT_DOC.nationalIdImageUrl);
+                const hasSavedLicense = !!(CURRENT_DOC && CURRENT_DOC.practiceLicenseImageUrl);
+
+                // Nếu chỉ đổi avatar (không đổi ảnh CCCD/chứng chỉ, số liệu vẫn còn) → cho phép submit chỉ với avatar
+                const onlyUpdatingAvatar = avatarFile && !cccdFile && !ccFile && hasSavedCCCD && hasSavedLicense;
+
+                if (!onlyUpdatingAvatar) {
+                    if (!nationalId) { showToast('Vui lòng nhập số CCCD', 'danger'); return; }
+                    if (!practiceLicense) { showToast('Vui lòng nhập số chứng chỉ hành nghề', 'danger'); return; }
+                    if (!cccdFile && !hasSavedCCCD) { showToast('Vui lòng chọn ảnh CCCD', 'danger'); return; }
+                    if (!ccFile && !hasSavedLicense) { showToast('Vui lòng chọn ảnh chứng chỉ hành nghề', 'danger'); return; }
+                }
+
+                if (!avatarFile && !cccdFile && !ccFile) {
+                    showToast('Bạn chưa chọn ảnh nào để cập nhật', 'danger');
+                    return;
+                }
 
                 const formData = new FormData();
-                formData.append('nationalIdImage', cccdFile);
-                formData.append('practiceLicenseImage', ccFile);
+                if (cccdFile) formData.append('nationalIdImage', cccdFile);
+                if (ccFile) formData.append('practiceLicenseImage', ccFile);
                 if (avatarFile) formData.append('avatar', avatarFile);
-                formData.append('nationalId', nationalId);
-                formData.append('practiceLicense', practiceLicense);
+                if (nationalId) formData.append('nationalId', nationalId);
+                if (practiceLicense) formData.append('practiceLicense', practiceLicense);
 
                 const btn = document.getElementById('btnUpload');
                 btn.disabled = true;
