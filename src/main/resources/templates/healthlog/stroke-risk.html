@@ -615,50 +615,50 @@
         </div>
       </div>
     </main>
-<!--    <script>-->
-<!--      document.addEventListener("DOMContentLoaded", function() {-->
-<!--        const fromInput = document.getElementById("from");-->
-<!--        const toInput = document.getElementById("to");-->
-<!--        const filterForm = document.getElementById("dateFilterForm");-->
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const fromInput = document.getElementById("from");
+        const toInput = document.getElementById("to");
+        const filterForm = document.getElementById("dateFilterForm");
 
-<!--        // Limit both inputs to prevent future dates selection-->
-<!--        const todayStr = new Date().toISOString().split("T")[0];-->
-<!--        fromInput.setAttribute("max", todayStr);-->
-<!--        toInput.setAttribute("max", todayStr);-->
+        // Limit both inputs to prevent future dates selection
+        const todayStr = new Date().toISOString().split("T")[0];
+        fromInput.setAttribute("max", todayStr);
+        toInput.setAttribute("max", todayStr);
 
-<!--        // Function to adjust available dates dynamically-->
-<!--        function updateDateConstraints() {-->
-<!--          if (fromInput.value) {-->
-<!--            toInput.setAttribute("min", fromInput.value);-->
-<!--          }-->
-<!--          if (toInput.value) {-->
-<!--            fromInput.setAttribute("max", toInput.value);-->
-<!--          } else {-->
-<!--            fromInput.setAttribute("max", todayStr);-->
-<!--          }-->
-<!--        }-->
+        // Function to adjust available dates dynamically
+        function updateDateConstraints() {
+          if (fromInput.value) {
+            toInput.setAttribute("min", fromInput.value);
+          }
+          if (toInput.value) {
+            fromInput.setAttribute("max", toInput.value);
+          } else {
+            fromInput.setAttribute("max", todayStr);
+          }
+        }
 
-<!--        fromInput.addEventListener("change", updateDateConstraints);-->
-<!--        toInput.addEventListener("change", updateDateConstraints);-->
+        fromInput.addEventListener("change", updateDateConstraints);
+        toInput.addEventListener("change", updateDateConstraints);
 
-<!--        // Run initial constraints setting-->
-<!--        updateDateConstraints();-->
+        // Run initial constraints setting
+        updateDateConstraints();
 
-<!--        // Double check on form submission to block invalid dates-->
-<!--        filterForm.addEventListener("submit", function(event) {-->
-<!--          const fromDate = new Date(fromInput.value);-->
-<!--          const toDate = new Date(toInput.value);-->
-<!--          const today = new Date(todayStr);-->
+        // Double check on form submission to block invalid dates
+        filterForm.addEventListener("submit", function(event) {
+          const fromDate = new Date(fromInput.value);
+          const toDate = new Date(toInput.value);
+          const today = new Date(todayStr);
 
-<!--          if (fromDate > toDate) {-->
-<!--            event.preventDefault();-->
-<!--            alert("⚠️ Ngày bắt đầu (Từ ngày) không thể sau Ngày kết thúc (Đến ngày)!");-->
-<!--          } else if (fromDate > today || toDate > today) {-->
-<!--            event.preventDefault();-->
-<!--            alert("⚠️ Không được chọn ngày trong tương lai!");-->
-<!--          }-->
-<!--        });-->
-<!--      });-->
-<!--    </script>-->
+          if (fromDate > toDate) {
+            event.preventDefault();
+            alert("⚠️ Ngày bắt đầu (Từ ngày) không thể sau Ngày kết thúc (Đến ngày)!");
+          } else if (fromDate > today || toDate > today) {
+            event.preventDefault();
+            alert("⚠️ Không được chọn ngày trong tương lai!");
+          }
+        });
+      });
+    </script>
   </body>
 </html>
