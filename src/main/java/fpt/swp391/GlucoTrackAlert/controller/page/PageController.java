@@ -2,9 +2,9 @@ package fpt.swp391.GlucoTrackAlert.controller.page;
 
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.dto.relative.RelativeResponse;
-import fpt.swp391.GlucoTrackAlert.model.DoctorIntroduction;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorIntroduction;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorIntroductionRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorIntroductionRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
 import fpt.swp391.GlucoTrackAlert.service.relative.RelativeService;
@@ -38,11 +38,16 @@ public class PageController {
         this.doctorIntroductionRepository = doctorIntroductionRepository;
     }
 
+    private static final int MAX_FEATURED_DOCTORS = 4; // đúng 1 hàng với layout col-lg-3
+
     @GetMapping("/")
     public String indexPage(Model model) {
         try {
             List<DoctorIntroduction> doctors = doctorIntroductionRepository
                     .findByStatusOrderByDisplayOrderAsc("active");
+            if (doctors.size() > MAX_FEATURED_DOCTORS) {
+                doctors = doctors.subList(0, MAX_FEATURED_DOCTORS);
+            }
             model.addAttribute("doctors", doctors);
         } catch (Exception e) {
             model.addAttribute("doctors", List.of());
@@ -97,12 +102,12 @@ public class PageController {
 
     @GetMapping({"/doctor/homepage", "/doctor/home"})
     public String doctorDashboard() {
-        return "doctor-home";
+        return "doctor/doctor-home";
     }
 
     @GetMapping("/doctor/my-patients")
     public String doctorMyPatients() {
-        return "my-patients";
+        return "doctor/my-patients";
     }
 
     @GetMapping("/doctor/settings")

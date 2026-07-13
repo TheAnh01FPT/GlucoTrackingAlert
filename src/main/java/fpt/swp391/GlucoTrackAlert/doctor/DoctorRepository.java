@@ -1,6 +1,6 @@
-package fpt.swp391.GlucoTrackAlert.repository;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

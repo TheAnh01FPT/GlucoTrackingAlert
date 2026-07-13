@@ -229,10 +229,13 @@
     }
 
     // ── Load danh sách ───────────────────────────────────────────────────────
+    let currentDoctorCount = 0;
+
     async function loadList() {
         try {
             const res = await fetch(API, { headers });
             const list = await res.json();
+            currentDoctorCount = list.length;
             renderTable(list);
         } catch (e) {
             showToast('Không tải được danh sách', 'danger');
@@ -338,6 +341,7 @@
         document.getElementById('fAvatarIcon').style.display    = 'block';
         document.getElementById('fAvatarNone').style.display    = 'inline';
         document.getElementById('fOrder').value = 0;
+        document.getElementById('fOrder').max = currentDoctorCount + 1;
         document.getElementById('fActive').checked = true;
         loadDoctorOptions();
         modalForm.show();
@@ -354,6 +358,7 @@
         document.getElementById('fIntro').value = d.introduction || '';
         document.getElementById('fAvatar').value = d.avatarUrl || '';
         document.getElementById('fOrder').value = d.displayOrder ?? 0;
+        document.getElementById('fOrder').max = currentDoctorCount;
         document.getElementById('fActive').checked = d.status === 'active';
 
         const preview = document.getElementById('fAvatarPreview');
@@ -383,8 +388,12 @@
 
         const orderRaw = document.getElementById('fOrder').value;
         const displayOrder = parseInt(orderRaw);
+        const orderMax = parseInt(document.getElementById('fOrder').max) || currentDoctorCount;
         if (isNaN(displayOrder) || displayOrder < 0) {
             showToast('Thứ tự hiển thị phải là số nguyên >= 0', 'danger'); return;
+        }
+        if (displayOrder > orderMax) {
+            showToast(`Thứ tự hiển thị không được vượt quá ${orderMax}`, 'danger'); return;
         }
 
         const avatarUrl = document.getElementById('fAvatar').value.trim() || null;

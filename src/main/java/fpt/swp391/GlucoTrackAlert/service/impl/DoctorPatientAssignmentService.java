@@ -2,13 +2,13 @@ package fpt.swp391.GlucoTrackAlert.service.impl;
 
 import fpt.swp391.GlucoTrackAlert.dto.AssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import java.util.Map;
 import java.util.HashMap;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.NotificationService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
@@ -125,14 +125,25 @@ public class DoctorPatientAssignmentService {
         LocalTime now = LocalTime.now();
         boolean inWorkHours = !now.isBefore(WORK_START) && now.isBefore(WORK_END);
 
-        if (inWorkHours) {
-            emailService.sendSimpleMessage(toEmail, subject, body);
-        } else {
-            LocalDateTime next8am = LocalDate.now().plusDays(1).atTime(WORK_START);
-            long delaySec = java.time.Duration.between(LocalDateTime.now(), next8am).getSeconds();
-            final String dest = toEmail;
-            scheduler.schedule(() -> emailService.sendSimpleMessage(dest, subject, body),
-                    delaySec, TimeUnit.SECONDS);
+        try {
+            if (inWorkHours) {
+                emailService.sendSimpleMessage(toEmail, subject, body);
+            } else {
+                LocalDateTime next8am = LocalDate.now().plusDays(1).atTime(WORK_START);
+                long delaySec = java.time.Duration.between(LocalDateTime.now(), next8am).getSeconds();
+                final String dest = toEmail;
+                scheduler.schedule(() -> {
+                    try {
+                        emailService.sendSimpleMessage(dest, subject, body);
+                    } catch (Exception ex) {
+                        System.err.println("Gửi email thông báo phân công (hẹn giờ) thất bại: " + ex.getMessage());
+                    }
+                }, delaySec, TimeUnit.SECONDS);
+            }
+        } catch (Exception ex) {
+            // Không để lỗi gửi email (vd. sai/hết hạn SMTP app-password) làm fail
+            // toàn bộ request thêm phân công — phân công đã lưu DB thành công rồi.
+            System.err.println("Gửi email thông báo phân công thất bại: " + ex.getMessage());
         }
     }
 

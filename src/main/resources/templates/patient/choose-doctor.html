@@ -196,6 +196,8 @@
     let proposeModal, cancelModal, toastEl;
     let proposeTargetId = null;
     let cancelTargetId = null;
+    const PAGE_SIZE = 9;       // hiện 9 bác sĩ/lần (3 hàng), bấm "Xem thêm" để tải tiếp
+    let visibleCount = PAGE_SIZE;
 
     document.addEventListener('DOMContentLoaded', function () {
         proposeModal = new bootstrap.Modal(document.getElementById('proposeModal'));
@@ -203,8 +205,8 @@
         toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
         loadAll();
 
-        document.getElementById('searchInput').addEventListener('input', renderGrid);
-        document.getElementById('filterSpec').addEventListener('change', renderGrid);
+        document.getElementById('searchInput').addEventListener('input', () => { visibleCount = PAGE_SIZE; renderGrid(); });
+        document.getElementById('filterSpec').addEventListener('change', () => { visibleCount = PAGE_SIZE; renderGrid(); });
     });
 
     function authHeader() {
@@ -298,11 +300,92 @@
         }
     }
 
+    let showAllDoctors = false;
+
+    function cardHtml(d, active, pending) {
+        const isCurrent = active && active.doctorId === d.id;
+        const isPendingThis = pending && pending.doctorId === d.id;
+        let actionHtml;
+        if (isCurrent) {
+            actionHtml = `<button class="btn-choose" disabled><i class="bi bi-check-circle me-1"></i>Đang đồng hành</button>`;
+        } else if (isPendingThis) {
+            actionHtml = `<button class="btn-choose" disabled style="background:#f3c969"><i class="bi bi-hourglass-split me-1"></i>Chờ duyệt</button>`;
+        } else if (pending || active) {
+            actionHtml = `<button class="btn-choose" disabled title="Bạn đang có đề xuất/bác sĩ đồng hành, hãy hủy trước khi chọn bác sĩ khác"><i class="bi bi-lock me-1"></i>Chọn bác sĩ này</button>`;
+        } else {
+            actionHtml = `<button class="btn-choose" onclick="openPropose(${d.id})"><i class="bi bi-person-check me-1"></i>Chọn bác sĩ này</button>`;
+        }
+
+        return `
+        <div class="doctor-card">
+            <div class="doctor-top">
+                <div class="doctor-avatar">
+                    ${d.avatarUrl ? `<img src="${d.avatarUrl}" alt="">` : getInitials(d.fullName)}
+                </div>
+                <div>
+                    <p class="doctor-name">${d.degree ? d.degree + '. ' : ''}${d.fullName || '—'}</p>
+                    <div class="doctor-spec">${d.specialization || '—'}</div>
+                </div>
+                ${isCurrent ? '<span class="badge-current ms-auto">Đồng hành</span>' : (isPendingThis ? '<span class="badge-pending-sm ms-auto">Chờ duyệt</span>' : '')}
+            </div>
+            <div class="doctor-meta">
+                <span><i class="bi bi-briefcase me-1"></i>${d.experienceYears != null ? d.experienceYears + ' năm kinh nghiệm' : 'Chưa cập nhật kinh nghiệm'}</span>
+                <span><i class="bi bi-hospital me-1"></i>${d.workplace || 'Chưa cập nhật nơi công tác'}</span>
+                <span><i class="bi bi-clock me-1"></i>${d.workingFullLabel || (d.workingHours + ' | ' + d.workingDays)}</span>
+            </div>
+            <div class="doctor-intro">${d.introduction ? escapeHtml(d.introduction) : 'Bác sĩ chưa cập nhật giới thiệu.'}</div>
+            <div class="doctor-actions">${actionHtml}</div>
+        </div>`;
+    }
+
+    function toggleShowAll() {
+        showAllDoctors = !showAllDoctors;
+        visibleCount = PAGE_SIZE;
+        renderGrid();
+    }
+
     function renderGrid() {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        const spec = document.getElementById('filterSpec').value;
         const active = getActiveAssignment();
         const pending = getPendingAssignment();
+        const locked = active || pending;
+        const toolbar = document.querySelector('.toolbar');
+        const grid = document.getElementById('doctorGrid');
+
+        // Đã có bác sĩ đồng hành/đang chờ duyệt → chỉ hiện đúng bác sĩ đó,
+        // ẩn ô tìm kiếm + danh sách bác sĩ khác cho gọn (đã thấy tên ở banner phía trên rồi).
+        if (locked && !showAllDoctors) {
+            toolbar.style.display = 'none';
+            const d = allDoctors.find(x => x.id === locked.doctorId);
+            grid.innerHTML = `
+                <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:24px;">
+                    <div style="flex:1 1 420px;">
+                        ${d ? cardHtml(d, active, pending) : ''}
+                        <div style="text-align:center;margin-top:12px;">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="toggleShowAll()">
+                                <i class="bi bi-list-ul me-1"></i>Xem danh sách bác sĩ khác
+                            </button>
+                        </div>
+                    </div>
+                    <div style="flex:1 1 320px;max-width:380px;background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                        <p class="fw-semibold mb-3"><i class="bi bi-lightning-charge-fill text-success me-1"></i>Lối tắt cho bạn</p>
+                        <a href="/meal-logs" class="d-flex align-items-center gap-2 text-decoration-none text-dark py-2 border-bottom">
+                            <i class="bi bi-egg-fried text-success"></i> Nhật ký ăn uống
+                        </a>
+                        <a href="/health-reminders" class="d-flex align-items-center gap-2 text-decoration-none text-dark py-2 border-bottom">
+                            <i class="bi bi-bell text-success"></i> Nhắc nhở sức khỏe
+                        </a>
+                        <a href="/patient/medications" class="d-flex align-items-center gap-2 text-decoration-none text-dark py-2">
+                            <i class="bi bi-capsule text-success"></i> Đơn thuốc của tôi
+                        </a>
+                    </div>
+                </div>`;
+            return;
+        }
+
+        toolbar.style.display = 'flex';
+
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const spec = document.getElementById('filterSpec').value;
 
         const filtered = allDoctors.filter(d => {
             const matchQ = !q
@@ -313,47 +396,33 @@
             return matchQ && matchSpec;
         });
 
-        const grid = document.getElementById('doctorGrid');
         if (!filtered.length) {
             grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-inbox"></i>Không tìm thấy bác sĩ phù hợp</div>';
             return;
         }
 
-        grid.innerHTML = filtered.map(d => {
-            const isCurrent = active && active.doctorId === d.id;
-            const isPendingThis = pending && pending.doctorId === d.id;
-            let actionHtml;
-            if (isCurrent) {
-                actionHtml = `<button class="btn-choose" disabled><i class="bi bi-check-circle me-1"></i>Đang đồng hành</button>`;
-            } else if (isPendingThis) {
-                actionHtml = `<button class="btn-choose" disabled style="background:#f3c969"><i class="bi bi-hourglass-split me-1"></i>Chờ duyệt</button>`;
-            } else if (pending || active) {
-                actionHtml = `<button class="btn-choose" disabled title="Bạn đang có đề xuất/bác sĩ đồng hành, hãy hủy trước khi chọn bác sĩ khác"><i class="bi bi-lock me-1"></i>Chọn bác sĩ này</button>`;
-            } else {
-                actionHtml = `<button class="btn-choose" onclick="openPropose(${d.id})"><i class="bi bi-person-check me-1"></i>Chọn bác sĩ này</button>`;
-            }
+        const visible = filtered.slice(0, visibleCount);
 
-            return `
-            <div class="doctor-card">
-                <div class="doctor-top">
-                    <div class="doctor-avatar">
-                        ${d.avatarUrl ? `<img src="${d.avatarUrl}" alt="">` : getInitials(d.fullName)}
-                    </div>
-                    <div>
-                        <p class="doctor-name">${d.degree ? d.degree + '. ' : ''}${d.fullName || '—'}</p>
-                        <div class="doctor-spec">${d.specialization || '—'}</div>
-                    </div>
-                    ${isCurrent ? '<span class="badge-current ms-auto">Đồng hành</span>' : (isPendingThis ? '<span class="badge-pending-sm ms-auto">Chờ duyệt</span>' : '')}
-                </div>
-                <div class="doctor-meta">
-                    <span><i class="bi bi-briefcase me-1"></i>${d.experienceYears != null ? d.experienceYears + ' năm kinh nghiệm' : 'Chưa cập nhật kinh nghiệm'}</span>
-                    <span><i class="bi bi-hospital me-1"></i>${d.workplace || 'Chưa cập nhật nơi công tác'}</span>
-                    <span><i class="bi bi-clock me-1"></i>${d.workingFullLabel || (d.workingHours + ' | ' + d.workingDays)}</span>
-                </div>
-                <div class="doctor-intro">${d.introduction ? escapeHtml(d.introduction) : 'Bác sĩ chưa cập nhật giới thiệu.'}</div>
-                <div class="doctor-actions">${actionHtml}</div>
-            </div>`;
-        }).join('');
+        grid.innerHTML = visible.map(d => cardHtml(d, active, pending)).join('')
+            + (filtered.length > visibleCount
+                ? `<div style="grid-column:1/-1;text-align:center;margin-top:8px;">
+                     <button class="btn btn-outline-success" onclick="loadMore()">
+                       Xem thêm (còn ${filtered.length - visibleCount})
+                     </button>
+                   </div>`
+                : '')
+            + (locked
+                ? `<div style="grid-column:1/-1;text-align:center;margin-top:8px;">
+                     <button class="btn btn-outline-secondary btn-sm" onclick="toggleShowAll()">
+                       <i class="bi bi-chevron-up me-1"></i>Thu gọn
+                     </button>
+                   </div>`
+                : '');
+    }
+
+    function loadMore() {
+        visibleCount += PAGE_SIZE;
+        renderGrid();
     }
 
     // ── Propose ──────────────────────────────────────────
@@ -386,6 +455,7 @@
             }
             proposeModal.hide();
             showToast('✅ Đã gửi đề xuất! Vui lòng chờ admin duyệt.', 'success');
+            showAllDoctors = false;
             await loadAll();
         } catch {
             showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
@@ -410,6 +480,7 @@
             }
             cancelModal.hide();
             showToast('Đã hủy đề xuất.', 'success');
+            showAllDoctors = false;
             await loadAll();
         } catch {
             showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');

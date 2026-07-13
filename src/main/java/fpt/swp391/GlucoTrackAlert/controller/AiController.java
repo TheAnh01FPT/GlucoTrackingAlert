@@ -1,10 +1,10 @@
 package fpt.swp391.GlucoTrackAlert.controller;
 
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.Duy_Meal_Logs;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.Duy_MealLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;

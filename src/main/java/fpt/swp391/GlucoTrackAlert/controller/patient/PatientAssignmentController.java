@@ -1,12 +1,12 @@
 package fpt.swp391.GlucoTrackAlert.controller.patient;
 
 import fpt.swp391.GlucoTrackAlert.dto.AssignmentResponse;
-import fpt.swp391.GlucoTrackAlert.dto.DoctorResponse;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorResponse;
 import fpt.swp391.GlucoTrackAlert.dto.ProposeAssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;

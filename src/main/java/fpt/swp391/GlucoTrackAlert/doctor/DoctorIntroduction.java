@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.model;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -23,6 +23,9 @@ public class DoctorIntroduction {
 
     @Column(name = "title", length = 150)
     private String title;          // Học vị: BS.CKII, ThS.BS, ...
+
+    @Column(name = "specialization", length = 255)
+    private String specialization; // Chuyên khoa: Nội tiết, Tim mạch, ...
 
     @Column(name = "introduction", columnDefinition = "TEXT")
     private String introduction;

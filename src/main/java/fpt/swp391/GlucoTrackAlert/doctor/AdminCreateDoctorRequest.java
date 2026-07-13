@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.dto;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;

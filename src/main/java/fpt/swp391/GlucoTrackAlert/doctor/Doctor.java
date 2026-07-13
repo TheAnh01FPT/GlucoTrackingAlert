@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.model;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
