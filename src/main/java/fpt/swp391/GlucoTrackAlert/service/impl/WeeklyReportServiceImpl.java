@@ -18,18 +18,21 @@ import fpt.swp391.GlucoTrackAlert.service.RiskModelService;
 import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
 import fpt.swp391.GlucoTrackAlert.dto.CustomRangeResult;
 import fpt.swp391.GlucoTrackAlert.service.impl.ComplicationRiskServiceImpl;
+import fpt.swp391.GlucoTrackAlert.service.cardioai.WeeklyCardioAiService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WeeklyReportServiceImpl implements WeeklyReportService {
@@ -43,8 +46,10 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     private final RiskWarningRepository riskWarningRepository;
     private final AiAnalysisLogRepository aiAnalysisLogRepository;
 
-    // Holds the computed metrics for a patient/week so the calculation logic can be
-    // shared between "create new report" and "update existing report" paths.
+    // Đã tiêm thêm Service tim mạch tuần vào đây để giải quyết lỗi "Cannot resolve symbol"
+    private final WeeklyCardioAiService weeklyCardioAiService;
+
+    // Tạm thời giữ nguyên record Snapshot cho đồng bộ cấu trúc cũ của bạn
     private record WeeklySnapshot(
             BigDecimal avgBloodSugar,
             BigDecimal avgSystolic,
@@ -127,15 +132,16 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         report.setAverageDiastolic(s.avgDiastolic());
         report.setHealthStatus(s.level().name());
         report.setRecommendation(ComplicationRiskServiceImpl.getRecommendation(s.level()));
+<<<<<<< HEAD
         report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar() != null ? s.avgBloodSugar() : "null") + " mmol/L, huyết áp TB: " + (s.avgSystolic() != null ? s.avgSystolic() : "null") + "/" + (s.avgDiastolic() != null ? s.avgDiastolic() : "null"));
         // set risk percentage and lowConfidence based on snapshot
+=======
+        report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar()!=null?s.avgBloodSugar():"null") + " mmol/L, huyết áp TB: " + (s.avgSystolic()!=null?s.avgSystolic():"null") + "/" + (s.avgDiastolic()!=null?s.avgDiastolic():"null"));
+>>>>>>> 9b77fa3f0381d28b44f6d5e51413e35da69d4d89
         report.setRiskPercentage(s.riskPercentage());
         report.setLowConfidence(s.logCount() < 7);
     }
 
-    // Creates the RiskAssessment / RiskWarning / AiAnalysisLog audit trail rows that go
-    // along with a (re)computed report. Always called with `report` already persisted
-    // (has a non-null id).
     private void recordAssessment(Patient patient, Long patientId, WeeklyHealthReport report, WeeklySnapshot s) {
         RiskAssessment assessment = RiskAssessment.builder()
                 .patient(patient)
@@ -203,10 +209,16 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         applySnapshot(report, snapshot);
         report = weeklyHealthReportRepository.save(report);
 
+        // 1. Thực hiện ghi nhận đánh giá cũ (bệnh thận...)
         recordAssessment(patient, patientId, report, snapshot);
+
+        // 2. Tự động kích hoạt luồng đánh giá AI Tim Mạch cuối tuần mới
+        processWeeklyEvaluation(patient, weekStart, weekEnd, report);
+
         return report;
     }
 
+<<<<<<< HEAD
     /**
      * Recomputes an already-existing weekly report IN PLACE (same row/id)
      * instead of inserting a new one and deleting the old one.
@@ -226,6 +238,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
      * in place removes both the duplicate-row race and the need for a nested
      * transaction/self-invocation altogether.
      */
+=======
+>>>>>>> 9b77fa3f0381d28b44f6d5e51413e35da69d4d89
     @Override
     @Transactional
     public void recalculateIfExists(Long patientId, LocalDate weekStart) {
@@ -239,13 +253,19 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 WeeklySnapshot snapshot = computeSnapshot(patient, patientId, weekStart, weekEnd);
                 applySnapshot(existing, snapshot);
                 WeeklyHealthReport saved = weeklyHealthReportRepository.save(existing);
+
+                // Cập nhật lại đánh giá cũ
                 recordAssessment(patient, patientId, saved, snapshot);
+
+                // Tái đánh giá lại AI tim mạch cho tuần này khi chỉ số nhật ký thay đổi
+                processWeeklyEvaluation(patient, weekStart, weekEnd, saved);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Lỗi khi tính toán lại báo cáo tuần: ", e);
             }
         });
     }
 
+<<<<<<< HEAD
     @Override
     public CustomRangeResult computeCustomRange(Long patientId, LocalDate from, LocalDate to) {
         Patient patient = patientRepository.findById(patientId).orElse(null);
@@ -269,3 +289,65 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         );
     }
 }
+=======
+    /**
+     * Hàm xử lý tự động tính toán trung bình cộng chỉ số tuần, kết hợp Profile tĩnh
+     * và đồng bộ kết quả AI Tim mạch vào Database hệ thống.
+     */
+    @Transactional
+    public void processWeeklyEvaluation(Patient patient, LocalDate weekStart, LocalDate weekEnd, WeeklyHealthReport report) {
+        try {
+            // Gọi sang file WeeklyCardioAiService để tính toán trung bình nhật ký tuần và giao tiếp Flask AI
+            Map<String, Object> aiHeartResult = weeklyCardioAiService.calculateWeeklyHeartRisk(patient, weekStart, weekEnd);
+
+            if (aiHeartResult != null && !aiHeartResult.isEmpty()) {
+                Double riskPercentage = (Double) aiHeartResult.get("cardio_risk_percentage");
+                String riskLevel = (String) aiHeartResult.get("risk_level");
+                String summary = (String) aiHeartResult.get("summary");
+
+                @SuppressWarnings("unchecked")
+                List<String> adviceList = (List<String>) aiHeartResult.get("advice");
+                String adviceText = (adviceList != null) ? String.join("\n• ", adviceList) : "";
+
+                // Bước 1: Lưu kết quả phân tích AI tim mạch chi tiết vào bảng risk_assessments
+                RiskAssessment assessment = RiskAssessment.builder()
+                        .patient(patient)
+                        .weeklyReportId(report.getId()) // Liên kết trực tiếp chặt chẽ với báo cáo tuần hiện tại
+                        .assessmentType("WEEKLY_CARDIO_RISK")
+                        .riskLevel(riskLevel)
+                        .riskPercentage(BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP))
+                        .aiSummary(summary)
+                        .recommendation(adviceText)
+                        .assessedAt(LocalDateTime.now())
+                        .build();
+                riskAssessmentRepository.save(assessment);
+
+                // Bước 2: Tạo cảnh báo đẩy về bảng risk_warnings nếu mức độ nguy cơ vượt ngưỡng an toàn (Khác LOW)
+                if (!"LOW".equalsIgnoreCase(riskLevel)) {
+                    RiskWarning warning = RiskWarning.builder()
+                            .patient(patient)
+                            .riskAssessmentId(assessment.getId())
+                            .riskType("WEEKLY_CARDIO_RISK")
+                            .riskLevel(riskLevel)
+                            .riskPercentage(assessment.getRiskPercentage())
+                            .message("Cảnh báo nguy cơ tim mạch tuần: " + summary + "\nKhuyến nghị:\n• " + adviceText)
+                            .status("new")
+                            .notified(false)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    riskWarningRepository.save(warning);
+                }
+
+                // Bước 3: Đồng bộ cập nhật thêm tóm tắt tim mạch này vào thông tin chung của WeeklyHealthReport
+                String combinedSummary = report.getAiSummary() + " | [AI Tim Mạch]: " + summary;
+                report.setAiSummary(combinedSummary);
+                weeklyHealthReportRepository.save(report);
+
+                log.info("Đã đồng bộ đánh giá AI tim mạch tuần hoàn tất cho bệnh nhân id: {}", patient.getId());
+            }
+        } catch (Exception e) {
+            log.error("Gặp lỗi trong tiến trình xử lý và đồng bộ kết quả AI tim mạch tuần: ", e);
+        }
+    }
+}
+>>>>>>> 9b77fa3f0381d28b44f6d5e51413e35da69d4d89

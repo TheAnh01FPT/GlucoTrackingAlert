@@ -529,6 +529,18 @@
                 >
               </div>
             </div>
+              <div class="metric-item">
+                  <div class="metric-icon">🏋️‍♂️</div>
+                  <div class="metric-details">
+                      <span class="metric-name">Vận Động (>30p)</span>
+                      <span class="metric-value" th:if="${log.physicalActivity == 1}" style="color: var(--success);">
+      Có Vận Động
+    </span>
+                      <span class="metric-value" th:unless="${log.physicalActivity == 1}" style="color: var(--text-secondary);">
+      Không
+    </span>
+                  </div>
+              </div>
           </div>
 
           <!-- Symptoms -->

@@ -40,7 +40,7 @@ public class HealthArticle {
     @Column(length = 100)
     private String category;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ArticleStatusConverter.class)
     @Column(name = "status", length = 30, nullable = false)
     @Builder.Default
     private ArticleStatus status = ArticleStatus.DRAFT;

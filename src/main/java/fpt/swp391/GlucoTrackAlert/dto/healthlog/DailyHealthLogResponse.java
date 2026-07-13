@@ -37,4 +37,5 @@ public class DailyHealthLogResponse {
     private BigDecimal riskPercentage;
     private String riskLevel;
     private String aiSummary;
+    private Integer physicalActivity;
 }

@@ -29,8 +29,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # ============================================
 model_v4 = joblib.load(os.path.join(BASE_DIR, 'gluco_model_v4.pkl'))      # Pima
 model_v5 = joblib.load(os.path.join(BASE_DIR, 'gluco_model_v5.pkl'))      # Diabetes Prediction
+model_heart = joblib.load(os.path.join(BASE_DIR, 'gluco_model_final.pkl')) # Heart Disease
 
-print("✅ Models loaded: V4 (Pima) + V5 (Diabetes Prediction)")
+print("✅ Models loaded: V4 (Pima) + V5 (Diabetes Prediction) + Heart Model")
 print("   (V3/CDC đã bỏ vì cần dữ liệu lifestyle chưa thu thập được - tránh bịa dữ liệu)")
 
 # ============================================
@@ -69,6 +70,119 @@ def generate_advice(risk_level, blood_sugar, systolic, bmi):
         advice.append("✅ Tiếp tục duy trì lối sống lành mạnh và kiểm tra định kỳ 6 tháng/lần.")
 
     return advice
+
+def generate_heart_advice(risk_percentage, ap_hi, ap_lo, cholesterol, smoke, alco, active):
+    """Tạo khuyến nghị tim mạch dựa trên chỉ số và mức nguy cơ."""
+    advice = []
+
+    if ap_hi >= 140 or ap_lo >= 90:
+        advice.append("Huyết áp trung bình cao (≥140/90 mmHg). Cần kiểm soát ngay - xem xét điều chỉnh thuốc hạ áp và giảm muối trong khẩu phần ăn.")
+    elif ap_hi >= 130 or ap_lo >= 85:
+        advice.append("Huyết áp trung bình tăng nhẹ. Hạn chế muối, tránh căng thẳng và tăng cường vận động nhẹ nhàng.")
+
+    if cholesterol == 3:
+        advice.append("Mức mỡ máu rất cao (nguy hiểm). Cần xét nghiệm lipid máu và điều trị với bác sĩ chuyên khoa tim mạch.")
+    elif cholesterol == 2:
+        advice.append("Mức mỡ máu trên chuẩn. Điều chỉnh chế độ ăn: giảm chất béo bão hòa, tăng rau xanh và cá.")
+
+    if smoke == 1:
+        advice.append("🚭 Hút thuốc lá làm tăng đáng kể nguy cơ bệnh tim. Cai thuốc là biện pháp hiệu quả nhất để bảo vệ tim mạch.")
+
+    if alco == 1:
+        advice.append("🍺 Hạn chế rượu bia. Uống nhiều rượu gây tăng huyết áp và suy yếu cơ tim theo thời gian.")
+
+    if active == 0:
+        advice.append("🏃 Thiếu vận động thể chất. Đặt mục tiêu tối thiểu 150 phút/tuần vận động mức độ vừa phải (đi bộ nhanh, đạp xe).")
+
+    if risk_percentage > 50:
+        advice.append("⚕️ Nguy cơ bệnh tim cao. Cần tham khảo bác sĩ tim mạch để đánh giá toàn diện và xây dựng kế hoạch điều trị phù hợp.")
+    elif risk_percentage > 30:
+        advice.append("⚕️ Nguy cơ bệnh tim trung bình. Theo dõi sát huyết áp hàng tuần và tái khám 3 tháng/lần.")
+    else:
+        advice.append("✅ Nguy cơ bệnh tim ở mức thấp. Duy trì lối sống lành mạnh và kiểm tra định kỳ 6 tháng/lần.")
+
+    return advice
+
+
+# ============================================
+# Cardio/Heart Disease prediction
+# ============================================
+def cardio_predict(data: dict) -> dict:
+    """
+    Dự đoán nguy cơ bệnh tim từ chỉ số lâm sàng.
+    Input: age_days, gender, height, weight, ap_hi, ap_lo, cholesterol, gluc, smoke, alco, active
+    """
+    age_days    = int(data.get('age_days', 18250))   # ~50 tuổi
+    gender      = int(data.get('gender', 2))          # 2=Nam, 1=Nữ
+    height      = float(data.get('height', 170.0))
+    weight      = float(data.get('weight', 70.0))
+    ap_hi       = int(data.get('ap_hi', 120))
+    ap_lo       = int(data.get('ap_lo', 80))
+    cholesterol = int(data.get('cholesterol', 1))
+    gluc        = float(data.get('gluc', 100.0))
+    smoke       = int(data.get('smoke', 0))
+    alco        = int(data.get('alco', 0))
+    active      = int(data.get('active', 1))
+
+    # Feature vector theo thứ tự training của gluco_model_final.pkl (cardio dataset)
+    x = np.array([[age_days, gender, height, weight, ap_hi, ap_lo,
+                   cholesterol, gluc, smoke, alco, active]])
+
+    try:
+        proba = float(model_heart.predict_proba(x)[0][1])
+    except Exception:
+        pred = int(model_heart.predict(x)[0])
+        proba = float(pred)
+
+    risk_percentage = round(proba * 100, 2)
+
+    if risk_percentage > 70:
+        risk_level = "Critical"
+    elif risk_percentage > 50:
+        risk_level = "High"
+    elif risk_percentage > 30:
+        risk_level = "Medium"
+    else:
+        risk_level = "Low"
+
+    advice = generate_heart_advice(risk_percentage, ap_hi, ap_lo, cholesterol, smoke, alco, active)
+
+    return {
+        'cardio_risk_percentage': risk_percentage,
+        'risk_percentage': risk_percentage,
+        'risk_level': risk_level,
+        'advice': advice,
+        'summary': f"AI Bệnh Tim: {risk_percentage}% nguy cơ ({risk_level})"
+    }
+
+
+def heart_weekly_predict(data: dict) -> dict:
+    """
+    Dự đoán nguy cơ bệnh tim theo tuần, kết hợp avg logs + profile tĩnh.
+    - avg_ap_hi, avg_ap_lo: trung bình huyết áp từ daily logs trong tuần
+    - avg_gluc: trung bình đường huyết mg/dL từ daily logs trong tuần
+    - Các trường còn lại từ profile bệnh nhân
+    """
+    ap_hi  = int(data.get('avg_ap_hi', data.get('ap_hi', 120)))
+    ap_lo  = int(data.get('avg_ap_lo', data.get('ap_lo', 80)))
+    gluc   = float(data.get('avg_gluc', data.get('gluc', 100.0)))  # mg/dL
+
+    forwarded = {
+        'age_days':   data.get('age_days', 18250),
+        'gender':     data.get('gender', 2),
+        'height':     data.get('height', 170.0),
+        'weight':     data.get('weight', 70.0),
+        'ap_hi':      ap_hi,
+        'ap_lo':      ap_lo,
+        'cholesterol': data.get('cholesterol', 1),
+        'gluc':       gluc,
+        'smoke':      data.get('smoke', 0),
+        'alco':       data.get('alco', 0),
+        'active':     data.get('active', 1),
+    }
+    result = cardio_predict(forwarded)
+    result['source'] = 'weekly_avg'
+    return result
 
 
 # ============================================
@@ -163,7 +277,7 @@ def ensemble_predict(data: dict) -> dict:
 def health():
     return jsonify({
         'status': 'ok',
-        'models': ['V4_Pima', 'V5_DiabetesPrediction'],
+        'models': ['V4_Pima', 'V5_DiabetesPrediction', 'Heart_Final'],
         'version': '2.1',
         'ensemble_weights': {'v4': 0.4375, 'v5': 0.5625}
     })
@@ -196,10 +310,39 @@ def predict_batch():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/predict-cardio', methods=['POST'])
+def predict_cardio():
+    """Dự đoán bệnh tim từ dữ liệu profile tĩnh (PatientServiceImpl gọi endpoint này)."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        return jsonify(cardio_predict(data))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/predict/heart', methods=['POST'])
+def predict_heart():
+    """
+    Dự đoán nguy cơ bệnh tim theo tuần (luồng mới).
+    Nhận avg_ap_hi, avg_ap_lo, avg_gluc (từ daily logs) + profile tĩnh.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        return jsonify(heart_weekly_predict(data))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
-    print("🚀 GlucoTracking ML Service v2.0")
+    print("🚀 GlucoTracking ML Service v3.0")
     print("📍 http://localhost:5000")
     print("   GET  /health")
-    print("   POST /predict")
-    print("   POST /predict/batch")
+    print("   POST /predict              (Diabetes ensemble)")
+    print("   POST /predict/batch        (Diabetes batch)")
+    print("   POST /predict-cardio       (Heart Disease - profile data)")
+    print("   POST /predict/heart        (Heart Disease - weekly avg + profile)")
     app.run(host='0.0.0.0', port=5000, debug=False)
