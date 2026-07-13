@@ -300,6 +300,55 @@
       </h1>
       <p class="patient-name" th:if="${patientName}" th:text="'Bệnh nhân: ' + ${patientName}"></p>
 
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon card-icon-blue">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M7 7v12"/><path d="M17 7v12"/><path d="M5 19h14"/></svg>
+          </div>
+          <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
+        </div>
+
+        <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;">
+          <div>
+            <label for="fromDate" class="meta-label">Từ ngày</label><br />
+            <input id="fromDate" name="fromDate" type="date" required style="padding:.75rem 1rem;border:1px solid var(--border);border-radius:12px;width:180px;" />
+          </div>
+          <div>
+            <label for="toDate" class="meta-label">Đến ngày</label><br />
+            <input id="toDate" name="toDate" type="date" required style="padding:.75rem 1rem;border:1px solid var(--border);border-radius:12px;width:180px;" />
+          </div>
+          <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
+          <button type="submit" style="background:var(--primary);color:#fff;border:none;border-radius:12px;padding:.85rem 1.5rem;font-weight:700;cursor:pointer;">Tính</button>
+        </form>
+
+        <div th:if="${customRangeError}" style="margin-top:1rem;color:#b91c1c;font-weight:700;">
+          <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
+        </div>
+
+        <div th:if="${customRangeResult != null}" style="margin-top:1.5rem;">
+          <div class="meta-row">
+            <span class="meta-label">Kết quả từ</span>
+            <span th:text="${customRangeResult.fromDate}">2026-06-01</span>
+            <span class="meta-label">đến</span>
+            <span th:text="${customRangeResult.toDate}">2026-06-14</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
+                 th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
+                 th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
+          </div>
+          <div class="meta-row" style="gap:1.5rem;flex-wrap:wrap;">
+            <span class="meta-label">Mức độ:</span>
+            <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel}">MEDIUM</span>
+            <span class="meta-label">Số log:</span>
+            <span th:text="${customRangeResult.logCount}">5</span>
+            <span class="meta-label">Độ tin cậy:</span>
+            <span th:text="${customRangeResult.lowConfidence} ? 'Dữ liệu chưa đủ' : 'Đủ dữ liệu'">Đủ dữ liệu</span>
+          </div>
+          <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
+        </div>
+      </section>
+
       <!-- Latest assessment card -->
       <section class="card">
         <div class="card-header">

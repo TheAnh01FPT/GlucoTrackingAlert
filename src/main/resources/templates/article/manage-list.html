@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Bài viết - GlucoTrackAlert</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1a6b5a;
+            --primary-light: #e8f5f1;
+            --primary-dark: #134d40;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+            --gray-200: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, rgba(26, 107, 90, 0.95) 0%, rgba(19, 77, 64, 0.95) 100%);
+            box-shadow: 0 2px 8px rgba(26, 107, 90, 0.15);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white !important;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Header section */
+        .manage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .manage-header h1 {
+            color: var(--primary);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .btn-new {
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-new:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        /* Filter section */
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .filter-section .row {
+            gap: 1rem;
+        }
+
+        .filter-section input,
+        .filter-section select {
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .filter-section input:focus,
+        .filter-section select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 107, 90, 0.1);
+            outline: none;
+        }
+
+        .btn-search {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-search:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table thead {
+            background: var(--primary-light);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .table thead th {
+            color: var(--primary);
+            font-weight: 700;
+            padding: 1.25rem;
+            border: none;
+        }
+
+        .table tbody td {
+            padding: 1.25rem;
+            vertical-align: middle;
+            border-color: var(--gray-200);
+        }
+
+        .table tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Badges */
+        .badge-draft {
+            background: #6c757d;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-published {
+            background: var(--success);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .btn-view {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .btn-view:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-edit {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .btn-edit:hover {
+            background: #1976d2;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ffebee;
+            color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Title column */
+        .article-title-cell {
+            font-weight: 600;
+            color: var(--primary);
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .article-category-cell {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        /* Pagination */
+        .pagination-section {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            padding: 2rem 0;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .page-link {
+            color: var(--primary);
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            padding: 0.5rem 0.8rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .page-link:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .page-link.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .page-link.disabled {
+            color: #adb5bd;
+            pointer-events: none;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            color: var(--gray-200);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .manage-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .table {
+                font-size: 0.9rem;
+            }
+
+            .table thead th,
+            .table tbody td {
+                padding: 0.75rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-icon {
+                width: 100%;
+            }
+
+            .article-title-cell {
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-heart-pulse"></i> GlucoTrackAlert
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/">Trang chủ</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Header -->
+        <div class="manage-header">
+            <h1><i class="bi bi-newspaper"></i> Quản lý Bài viết</h1>
+            <a href="/articles/manage/new" class="btn-new">
+                <i class="bi bi-plus-circle"></i> Bài viết mới
+            </a>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="get" action="/articles/manage" class="row align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label fw-600">Tìm kiếm</label>
+                    <input type="text" name="keyword" class="form-control" 
+                           placeholder="Tiêu đề hoặc nội dung..." th:value="${keyword}">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label fw-600">Trạng thái</label>
+                    <select name="status" class="form-select">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option value="draft" th:selected="${status == 'draft'}">Nháp</option>
+                        <option value="published" th:selected="${status == 'published'}">Đã đăng</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <button type="submit" class="btn btn-search w-100">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Articles Table -->
+        <div th:if="${articles.hasContent()}" class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Danh mục</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày cập nhật</th>
+                        <th style="text-align: center;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="article : ${articles.content}">
+                        <td>
+                            <span class="article-title-cell" th:title="${article.title}" th:text="${article.title}"></span>
+                        </td>
+                        <td>
+                            <span class="article-category-cell" th:text="${article.category ?: 'Tin tức'}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${article.status != null and article.status.value == 'draft'}" class="badge-draft">Nháp</span>
+                            <span th:if="${article.status != null and article.status.value == 'published'}" class="badge-published">Đã đăng</span>
+                        </td>
+                        <td>
+                            <span th:text="${#temporals.format(article.updatedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                        </td>
+                        <td>
+                            <div class="action-buttons" style="justify-content: center;">
+                                <a th:href="'/articles/' + ${article.slug}" class="btn-icon btn-view" title="Xem bài viết">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a th:href="'/articles/manage/' + ${article.id} + '/edit'" class="btn-icon btn-edit" title="Sửa bài viết">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" th:action="'/articles/manage/' + ${article.id} + '/delete'" 
+                                      style="display: inline; margin: 0;" 
+                                      onsubmit="return confirm('Bạn chắc chắn muốn xóa bài viết này?');">
+                                    <button type="submit" class="btn-icon btn-delete" title="Xóa bài viết">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div th:if="${articles.totalPages > 1}" class="pagination-section">
+                <a class="page-link" th:classappend="${articles.first} ? 'disabled' : ''"
+                   th:href="'/articles/manage?page=0&status=' + (${status ?: ''}) + '&keyword=' + ${keyword}">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+                <a class="page-link" th:classappend="${articles.first} ? 'disabled' : ''"
+                   th:href="'/articles/manage?page=' + (${currentPage} - 1) + '&status=' + (${status ?: ''}) + '&keyword=' + ${keyword}">
+                    <i class="bi bi-chevron-left"></i> Trước
+                </a>
+
+                <a th:each="pageNum : ${#numbers.sequence(0, articles.totalPages - 1)}" 
+                   th:classappend="${pageNum} == ${currentPage} ? 'active' : ''"
+                   class="page-link" th:text="${pageNum + 1}"
+                   th:href="'/articles/manage?page=' + ${pageNum} + '&status=' + (${status ?: ''}) + '&keyword=' + ${keyword}"></a>
+
+                <a class="page-link" th:classappend="${articles.last} ? 'disabled' : ''"
+                   th:href="'/articles/manage?page=' + (${currentPage} + 1) + '&status=' + (${status ?: ''}) + '&keyword=' + ${keyword}">
+                    Sau <i class="bi bi-chevron-right"></i>
+                </a>
+                <a class="page-link" th:classappend="${articles.last} ? 'disabled' : ''"
+                   th:href="'/articles/manage?page=' + (${articles.totalPages} - 1) + '&status=' + (${status ?: ''}) + '&keyword=' + ${keyword}">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="!${articles.hasContent()}" class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-inbox"></i>
+            </div>
+            <p class="empty-state-text">Không có bài viết nào.</p>
+            <a href="/articles/manage/new" class="empty-state-link">
+                Tạo bài viết mới <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

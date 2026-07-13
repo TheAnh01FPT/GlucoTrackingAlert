@@ -175,17 +175,50 @@
                     <li class="nav-item"><a class="nav-link active" href="#">Trang chủ</a></li>
                     <li class="nav-item"><a class="nav-link" href="#features">Dịch vụ</a></li>
                     <li class="nav-item"><a class="nav-link" href="#doctors">Đội ngũ bác sĩ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/blog">Tin tức</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/articles}">Tin tức</a></li>
                     <li class="nav-item"><a class="nav-link" href="#testimonials">Đánh giá</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contact">Liên hệ</a></li>
                 </ul>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2" id="authArea">
                     <a href="/login" class="btn btn-outline-custom">Đăng nhập</a>
                     <a href="/register" class="btn btn-primary-custom">Đăng ký</a>
                 </div>
             </div>
         </div>
     </nav>
+    <script>
+        (function () {
+            const authArea = document.getElementById('authArea');
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            const email = localStorage.getItem('email');
+
+            if (!token || !role) {
+                return; // Chưa đăng nhập, giữ nguyên nút Đăng nhập/Đăng ký
+            }
+
+            const homeByRole = {
+                ADMIN: '/admin/dashboard',
+                DOCTOR: '/doctor/home',
+                PATIENT: '/patient/homepage'
+            };
+            const homeUrl = homeByRole[role] || '/';
+
+            authArea.innerHTML = `
+                <a href="${homeUrl}" class="btn btn-outline-custom">${email || 'Tài khoản'}</a>
+                <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
+            `;
+
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                localStorage.removeItem('token');
+                localStorage.removeItem('email');
+                localStorage.removeItem('role');
+                localStorage.removeItem('doctorId');
+                document.cookie = 'jwt=; path=/; max-age=0';
+                window.location.href = '/';
+            });
+        })();
+    </script>
 
     <!-- Banner Slider (Thymeleaf Fragment Placeholder cho Trần Bình Minh) -->
     <div id="hero-slider-section">

@@ -3,6 +3,7 @@ package fpt.swp391.GlucoTrackAlert.config.auth;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,6 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -31,6 +33,13 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/ai/**").hasAnyRole("DOCTOR", "ADMIN")
                         .requestMatchers("/ai/**").hasAnyRole("ADMIN", "DOCTOR")
+
+                        // Article management - Bác sĩ/Admin quản lý bài viết
+                        // PHẢI đặt rule cụ thể trước rule wildcard (Spring Security match theo thứ tự khai báo)
+                        .requestMatchers("/articles/manage", "/articles/manage/**").hasAnyRole("DOCTOR", "ADMIN")
+                        // Article công khai - Khách vãng lai/Bệnh nhân xem
+                        .requestMatchers(HttpMethod.GET, "/articles/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/articles").permitAll()
 
                         .requestMatchers("/patient/medications").hasAnyRole("PATIENT", "ADMIN")
                         // Phải đặt rule cụ thể trước rule wildcard để Spring Security match đúng

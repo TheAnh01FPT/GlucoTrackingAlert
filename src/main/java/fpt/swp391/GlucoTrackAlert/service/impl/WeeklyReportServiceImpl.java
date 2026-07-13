@@ -16,6 +16,7 @@ import fpt.swp391.GlucoTrackAlert.repository.risk.AiAnalysisLogRepository;
 import fpt.swp391.GlucoTrackAlert.service.HealthThresholdService;
 import fpt.swp391.GlucoTrackAlert.service.RiskModelService;
 import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
+import fpt.swp391.GlucoTrackAlert.dto.CustomRangeResult;
 import fpt.swp391.GlucoTrackAlert.service.impl.ComplicationRiskServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -56,7 +57,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             double avgDiaForModel,
             double avgBsForModel,
             boolean htn
-    ) {}
+            ) {
+
+    }
 
     private WeeklySnapshot computeSnapshot(Patient patient, Long patientId, LocalDate weekStart, LocalDate weekEnd) {
         List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, weekStart, weekEnd);
@@ -65,15 +68,35 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         BigDecimal avgSystolic = null;
         BigDecimal avgDiastolic = null;
 
-        double sumBs = 0; int cntBs = 0; double sumSys = 0; int cntSys = 0; double sumDia = 0; int cntDia = 0;
+        double sumBs = 0;
+        int cntBs = 0;
+        double sumSys = 0;
+        int cntSys = 0;
+        double sumDia = 0;
+        int cntDia = 0;
         for (DailyHealthLog l : logs) {
-            if (l.getBloodSugar() != null) { sumBs += l.getBloodSugar().doubleValue(); cntBs++; }
-            if (l.getSystolic() != null) { sumSys += l.getSystolic().doubleValue(); cntSys++; }
-            if (l.getDiastolic() != null) { sumDia += l.getDiastolic().doubleValue(); cntDia++; }
+            if (l.getBloodSugar() != null) {
+                sumBs += l.getBloodSugar().doubleValue();
+                cntBs++;
+            }
+            if (l.getSystolic() != null) {
+                sumSys += l.getSystolic().doubleValue();
+                cntSys++;
+            }
+            if (l.getDiastolic() != null) {
+                sumDia += l.getDiastolic().doubleValue();
+                cntDia++;
+            }
         }
-        if (cntBs>0) avgBloodSugar = BigDecimal.valueOf(sumBs / cntBs).setScale(2, RoundingMode.HALF_UP);
-        if (cntSys>0) avgSystolic = BigDecimal.valueOf(sumSys / cntSys).setScale(2, RoundingMode.HALF_UP);
-        if (cntDia>0) avgDiastolic = BigDecimal.valueOf(sumDia / cntDia).setScale(2, RoundingMode.HALF_UP);
+        if (cntBs > 0) {
+            avgBloodSugar = BigDecimal.valueOf(sumBs / cntBs).setScale(2, RoundingMode.HALF_UP);
+        }
+        if (cntSys > 0) {
+            avgSystolic = BigDecimal.valueOf(sumSys / cntSys).setScale(2, RoundingMode.HALF_UP);
+        }
+        if (cntDia > 0) {
+            avgDiastolic = BigDecimal.valueOf(sumDia / cntDia).setScale(2, RoundingMode.HALF_UP);
+        }
 
         Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> systolicThreshold = healthThresholdService.resolveThreshold(patientId, patient.getPatientType(), fpt.swp391.GlucoTrackAlert.enums.MetricType.SYSTOLIC);
         Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> diastolicThreshold = healthThresholdService.resolveThreshold(patientId, patient.getPatientType(), fpt.swp391.GlucoTrackAlert.enums.MetricType.DIASTOLIC);
@@ -84,7 +107,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             return sysHigh || diaHigh;
         }).count();
 
-        boolean htn = Boolean.TRUE.equals(patient.getHypertension()) || highBpDays >= 3;
+        boolean htnFromLogs = !logs.isEmpty() && (double) highBpDays / logs.size() >= 0.4;
+        boolean htn = Boolean.TRUE.equals(patient.getHypertension()) || htnFromLogs;
 
         double age = patient.getAge() != null ? patient.getAge().doubleValue() : 50.0;
         double avgDiaForModel = avgDiastolic != null ? avgDiastolic.doubleValue() : 80.0;
@@ -103,7 +127,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         report.setAverageDiastolic(s.avgDiastolic());
         report.setHealthStatus(s.level().name());
         report.setRecommendation(ComplicationRiskServiceImpl.getRecommendation(s.level()));
-        report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar()!=null?s.avgBloodSugar():"null") + " mmol/L, huyết áp TB: " + (s.avgSystolic()!=null?s.avgSystolic():"null") + "/" + (s.avgDiastolic()!=null?s.avgDiastolic():"null"));
+        report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar() != null ? s.avgBloodSugar() : "null") + " mmol/L, huyết áp TB: " + (s.avgSystolic() != null ? s.avgSystolic() : "null") + "/" + (s.avgDiastolic() != null ? s.avgDiastolic() : "null"));
         // set risk percentage and lowConfidence based on snapshot
         report.setRiskPercentage(s.riskPercentage());
         report.setLowConfidence(s.logCount() < 7);
@@ -120,7 +144,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 .assessmentType("NEPHROPATHY_WEEKLY")
                 .riskLevel(s.level().name())
                 .riskPercentage(s.riskPercentage())
-            .lowConfidence(s.logCount() < 7)
+                .lowConfidence(s.logCount() < 7)
                 .recommendation(report.getRecommendation())
                 .assessedAt(LocalDateTime.now())
                 .build();
@@ -150,8 +174,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 .dailyHealthLogId(null)
                 .weeklyReportId(report.getId())
                 .analysisType("CKD_WEEKLY_LOGISTIC_V1")
-                .inputData("{\"age\":"+s.age()+",\"avg_diastolic\":"+s.avgDiaForModel()+",\"avg_blood_sugar\":"+s.avgBsForModel()+",\"htn\":"+s.htn()+"}")
-                .outputResult("{\"riskPercentage\":"+s.riskPct()+",\"riskLevel\":\""+s.level().name()+"\"}")
+                .inputData("{\"age\":" + s.age() + ",\"avg_diastolic\":" + s.avgDiaForModel() + ",\"avg_blood_sugar\":" + s.avgBsForModel() + ",\"htn\":" + s.htn() + "}")
+                .outputResult("{\"riskPercentage\":" + s.riskPct() + ",\"riskLevel\":\"" + s.level().name() + "\"}")
                 .riskLevel(s.level().name())
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -162,7 +186,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     @Transactional
     public WeeklyHealthReport generateWeeklyReport(Long patientId, LocalDate weekStart) {
         Patient patient = patientRepository.findById(patientId).orElse(null);
-        if (patient == null) return null;
+        if (patient == null) {
+            return null;
+        }
 
         LocalDate weekEnd = weekStart.plusDays(6);
         WeeklySnapshot snapshot = computeSnapshot(patient, patientId, weekStart, weekEnd);
@@ -182,23 +208,23 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     }
 
     /**
-     * Recomputes an already-existing weekly report IN PLACE (same row/id) instead of
-     * inserting a new one and deleting the old one.
+     * Recomputes an already-existing weekly report IN PLACE (same row/id)
+     * instead of inserting a new one and deleting the old one.
      *
-     * Root cause of the bug being fixed here: the previous implementation called
-     * generateWeeklyReport() - annotated @Transactional(propagation = REQUIRES_NEW) -
-     * via a plain `this` call from inside the same class (recalculateIfExists ->
-     * generateWeeklyReport). Spring's @Transactional only intercepts calls that go
-     * through the proxy, so that self-invocation silently ignored REQUIRES_NEW and ran
-     * in the SAME transaction/Hibernate Session as the caller (createLog/updateLog).
-     * When the insert of the "new" report then failed (duplicate patient+week, since
-     * the old row hadn't been deleted yet), the exception was swallowed by the catch
-     * block, but the Session was already corrupted - the very next flush (e.g. while
-     * building the response) threw:
-     *   "null id in ... WeeklyHealthReport entry (don't flush the Session after an
-     *   exception occurs)"
-     * Updating the existing row in place removes both the duplicate-row race and the
-     * need for a nested transaction/self-invocation altogether.
+     * Root cause of the bug being fixed here: the previous implementation
+     * called generateWeeklyReport() - annotated @Transactional(propagation =
+     * REQUIRES_NEW) - via a plain `this` call from inside the same class
+     * (recalculateIfExists -> generateWeeklyReport). Spring's @Transactional
+     * only intercepts calls that go through the proxy, so that self-invocation
+     * silently ignored REQUIRES_NEW and ran in the SAME transaction/Hibernate
+     * Session as the caller (createLog/updateLog). When the insert of the "new"
+     * report then failed (duplicate patient+week, since the old row hadn't been
+     * deleted yet), the exception was swallowed by the catch block, but the
+     * Session was already corrupted - the very next flush (e.g. while building
+     * the response) threw: "null id in ... WeeklyHealthReport entry (don't
+     * flush the Session after an exception occurs)" Updating the existing row
+     * in place removes both the duplicate-row race and the need for a nested
+     * transaction/self-invocation altogether.
      */
     @Override
     @Transactional
@@ -206,7 +232,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         weeklyHealthReportRepository.findByPatientIdAndWeekStart(patientId, weekStart).ifPresent(existing -> {
             try {
                 Patient patient = patientRepository.findById(patientId).orElse(null);
-                if (patient == null) return;
+                if (patient == null) {
+                    return;
+                }
                 LocalDate weekEnd = weekStart.plusDays(6);
                 WeeklySnapshot snapshot = computeSnapshot(patient, patientId, weekStart, weekEnd);
                 applySnapshot(existing, snapshot);
@@ -216,5 +244,28 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 e.printStackTrace();
             }
         });
+    }
+
+    @Override
+    public CustomRangeResult computeCustomRange(Long patientId, LocalDate from, LocalDate to) {
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            return null;
+        }
+
+        WeeklySnapshot s = computeSnapshot(patient, patientId, from, to);
+
+        return new CustomRangeResult(
+                from,
+                to,
+                s.logCount(),
+                s.avgBloodSugar(),
+                s.avgSystolic(),
+                s.avgDiastolic(),
+                s.riskPercentage(),
+                s.level().name(),
+                ComplicationRiskServiceImpl.getRecommendation(s.level()),
+                s.logCount() < 3
+        );
     }
 }
