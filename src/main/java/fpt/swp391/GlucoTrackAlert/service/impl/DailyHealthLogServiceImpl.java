@@ -12,6 +12,7 @@ import fpt.swp391.GlucoTrackAlert.service.HealthThresholdService;
 import fpt.swp391.GlucoTrackAlert.service.ComplicationRiskService;
 import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
 import fpt.swp391.GlucoTrackAlert.repository.risk.WeeklyHealthReportRepository;
+import fpt.swp391.GlucoTrackAlert.service.cardioai.WeeklyCardioAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -53,6 +54,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     private final JdbcTemplate jdbcTemplate;
     // Nhiệm vụ 1+2 (Duy): cảnh báo người thân khi chỉ số nguy hiểm
     private final fpt.swp391.GlucoTrackAlert.service.Duy_DangerAlertService duyDangerAlertService;
+    private final WeeklyCardioAiService weeklyCardioAiService;
 
     @Override
     @Transactional(readOnly = true)
@@ -151,6 +153,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     .bloodSugarStatus(status)
                     .riskPercentage(riskPercentageVal)
                     .riskLevel(riskLevelVal)
+                    .physicalActivity(log.getPhysicalActivity())
                     .build();
         }).collect(Collectors.toList());
 
@@ -239,6 +242,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     @Override
     @Transactional
     public DailyHealthLogResponse updateLog(Long id, DailyHealthLogRequest request) {
+        System.out.println("======> CHECKBOX GỬI LÊN LÀ: " + request.getPhysicalActivity());
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         // Prevent duplicate date for the same patient (excluding this id)
@@ -281,6 +285,12 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         Long patientId = log.getPatient() != null ? log.getPatient().getId() : null;
         java.time.LocalDate weekStart = log.getLogDate() != null ? log.getLogDate().with(java.time.DayOfWeek.MONDAY) : null;
         try {
+            jdbcTemplate.update("DELETE FROM ai_analysis_logs WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("DELETE FROM risk_warnings WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("DELETE FROM risk_assessments WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("DELETE FROM meal_logs WHERE daily_health_log_id = ?", id);
+            jdbcTemplate.update("UPDATE health_baselines SET source_health_log_id = NULL WHERE source_health_log_id = ?", id);
+
             dailyHealthLogRepository.delete(log);
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
             // Rethrow the original DataIntegrityViolationException so the
@@ -358,6 +368,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     .updatedAt(log.getUpdatedAt())
                     .patientType(log.getPatient() != null ? log.getPatient().getPatientType() : null)
                     .bloodSugarStatus(status)
+                    .physicalActivity(log.getPhysicalActivity())
                     .build();
         }).collect(Collectors.toList());
     }
@@ -438,6 +449,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .riskPercentage(riskPercentage)
                 .riskLevel(riskLevel)
                 .aiSummary(aiSummary)
+                .physicalActivity(log.getPhysicalActivity())
                 .build();
     }
 
@@ -561,6 +573,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 .sugarConsumptionLevel(request.getSugarConsumptionLevel())
                 .symptoms(request.getSymptoms())
                 .note(request.getNote())
+                .physicalActivity(request.getPhysicalActivity() != null ? request.getPhysicalActivity() : 0)
                 .build();
     }
 
@@ -577,6 +590,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         entity.setSugarConsumptionLevel(request.getSugarConsumptionLevel());
         entity.setSymptoms(request.getSymptoms());
         entity.setNote(request.getNote());
+        entity.setPhysicalActivity(request.getPhysicalActivity() != null ? request.getPhysicalActivity() : 0);
+
     }
 
     @Scheduled(cron = "0 50 23 * * SUN")
@@ -1286,6 +1301,38 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
         result.put("trendStatus", trendStatus);
         result.put("healthStatus", healthStatus);
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> calculateDynamicHeartRisk(Long patientId, LocalDate from, LocalDate to) {
+        // Khởi tạo map kết quả rỗng phòng trường hợp lỗi hoặc không có dữ liệu
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            // 1. Tìm thông tin bệnh nhân
+            fpt.swp391.GlucoTrackAlert.model.patient.Patient patient = patientRepository.findById(patientId).orElse(null);
+            if (patient == null) {
+                result.put("error", "Không tìm thấy bệnh nhân");
+                return result;
+            }
+
+            // 2. Lấy danh sách nhật ký sức khỏe trong khoảng ngày yêu cầu
+            // Hàm này đã có sẵn trong DailyHealthLogRepository của bạn
+            List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, from, to);
+            if (logs.isEmpty()) {
+                result.put("message", "Bệnh nhân không có dữ liệu nhật ký trong khoảng thời gian này.");
+                return result;
+            }
+
+            // 3. Gọi sang service AI tim mạch để tính toán và trả kết quả độc lập nhanh
+            // Lưu ý: Đảm bảo lớp DailyHealthLogServiceImpl này đã @Autowired hoặc khai báo 'weeklyCardioAiService' trên đầu class nhé
+            result = weeklyCardioAiService.calculateWeeklyHeartRisk(patient, from, to);
+
+        } catch (Exception e) {
+            result.put("error", "Lỗi khi tính toán nguy cơ tim mạch: " + e.getMessage());
+        }
 
         return result;
     }

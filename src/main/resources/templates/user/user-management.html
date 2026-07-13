@@ -58,7 +58,16 @@
 <div class="container">
     <h2 style="color: #3b82f6;">👤 Quản Lý Tài Khoản (Bệnh Nhân & Bác Sĩ)</h2>
 
-    <form th:action="@{/admin/users/save}" method="POST">
+    <!-- Alert Banners -->
+    <div id="successAlert" th:if="${successMessage}" style="background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-bottom: 20px;">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div id="errorAlert" th:if="${errorMessage}" style="background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-bottom: 20px;">
+        <span th:text="${errorMessage}"></span>
+    </div>
+    <div id="clientMessageBox" style="display: none; background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-bottom: 20px;"></div>
+
+    <form id="userForm" th:action="@{/admin/users/save}" method="POST">
         <input type="hidden" id="userFormId" name="id">
 
         <div class="form-grid">
@@ -166,6 +175,7 @@
 <script>
     // Điều khiển điền dữ liệu ngược lại Form để sửa thông tin
     function fillUserToForm(id, email, status, roleName, emailVerified) {
+        hideClientError();
         document.getElementById('userFormId').value = id;
         document.getElementById('userEmail').value = email;
         document.getElementById('userStatus').value = status;
@@ -182,6 +192,7 @@
 
     // Reset form về trạng thái Thêm mới mặc định
     function resetUserForm() {
+        hideClientError();
         document.getElementById('userFormId').value = "";
         document.getElementById('userEmail').value = "";
         document.getElementById('userPassword').value = "";
@@ -194,6 +205,100 @@
         document.getElementById('btnSubmitUser').innerText = "💾 Lưu Thông Tin";
         document.getElementById('cancelUserEdit').style.display = "none";
     }
+
+    // Client-side validation matching register.html
+    document.getElementById('userForm').addEventListener('submit', function(e) {
+        hideClientError();
+
+        const emailInput = document.getElementById('userEmail');
+        const passwordInput = document.getElementById('userPassword');
+        const userIdInput = document.getElementById('userFormId');
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const isEdit = userIdInput && userIdInput.value !== "";
+
+        // 1. Email validation
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            showClientError("Địa chỉ Email không đúng định dạng!");
+            e.preventDefault();
+            return;
+        }
+
+        // 2. Password validation
+        if (!isEdit) {
+            // Creation mode: password is required
+            if (!password || password.trim() === "") {
+                showClientError("Mật khẩu không được để trống");
+                e.preventDefault();
+                return;
+            }
+            const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
+            if (!passRegex.test(password)) {
+                showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
+                e.preventDefault();
+                return;
+            }
+        } else {
+            // Update mode: password is optional, but if entered, must be valid
+            if (password && password.trim() !== "") {
+                const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
+                if (!passRegex.test(password)) {
+                    showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
+                    e.preventDefault();
+                    return;
+                }
+            }
+        }
+    });
+
+    let clientMessageTimeout;
+
+    function showClientError(msg) {
+        const msgBox = document.getElementById('clientMessageBox');
+        msgBox.innerText = msg;
+        msgBox.style.opacity = '1';
+        msgBox.style.display = 'block';
+        window.scrollTo({top: 0, behavior: 'smooth'});
+
+        if (clientMessageTimeout) {
+            clearTimeout(clientMessageTimeout);
+        }
+
+        clientMessageTimeout = setTimeout(() => {
+            msgBox.style.transition = 'opacity 0.5s ease';
+            msgBox.style.opacity = '0';
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+            }, 500);
+        }, 4000);
+    }
+
+    function hideClientError() {
+        const msgBox = document.getElementById('clientMessageBox');
+        msgBox.style.display = 'none';
+        msgBox.style.opacity = '1';
+        if (clientMessageTimeout) {
+            clearTimeout(clientMessageTimeout);
+        }
+    }
+
+    // Auto-hide backend alert banners after 4 seconds
+    setTimeout(() => {
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        if (successAlert) {
+            successAlert.style.transition = 'opacity 0.5s ease';
+            successAlert.style.opacity = '0';
+            setTimeout(() => successAlert.style.display = 'none', 500);
+        }
+        if (errorAlert) {
+            errorAlert.style.transition = 'opacity 0.5s ease';
+            errorAlert.style.opacity = '0';
+            setTimeout(() => errorAlert.style.display = 'none', 500);
+        }
+    }, 4000);
 </script>
 
 </body>

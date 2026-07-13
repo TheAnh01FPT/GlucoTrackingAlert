@@ -33,6 +33,11 @@ public class PageController {
         this.relativeService = relativeService;
     }
 
+    @GetMapping("/")
+    public String indexPage() {
+        return "index";
+    }
+
     @GetMapping("/login")
     public String loginPage() { return "login/login"; }
 

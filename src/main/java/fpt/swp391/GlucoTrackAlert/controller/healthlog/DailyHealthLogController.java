@@ -29,13 +29,11 @@ import org.springframework.validation.BindingResult;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.Map;
 import java.util.HashMap;
 
 import java.time.LocalDate;
-import java.time.DayOfWeek;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.time.format.DateTimeFormatter;
@@ -43,7 +41,6 @@ import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -548,6 +545,7 @@ public class DailyHealthLogController {
             request.setSugarConsumptionLevel(response.getSugarConsumptionLevel());
             request.setSymptoms(response.getSymptoms());
             request.setNote(response.getNote());
+            request.setPhysicalActivity(response.getPhysicalActivity());
             model.addAttribute("log", request);
         }
         model.addAttribute("userId", userId != null ? userId : response.getUserId());
@@ -1048,6 +1046,109 @@ public class DailyHealthLogController {
         return "healthlog/stroke-risk";
     }
 
+    @GetMapping("/heart-risk")
+    public String getHeartRisk(@RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long patientId,
+            Model model, RedirectAttributes redirectAttributes) {
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null) {
+            return "redirect:/login";
+        }
+
+        boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
+
+        // 1. Phân giải PatientId từ userId hoặc ngược lại
+        if (patientId == null && userId != null) {
+            Optional<Patient> pOpt = patientRepository.findByUserId(userId);
+            if (pOpt.isPresent()) {
+                patientId = pOpt.get().getId();
+            } else if (patientRepository.existsById(userId)) {
+                patientId = userId;
+            }
+        }
+        if (patientId == null) {
+            patientId = isDoctorOrAdminCaller ? null : resolvePatientId(curUserId);
+        }
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return isDoctorOrAdminCaller ? "redirect:/health-logs/doctor-view" : "redirect:/";
+        }
+
+        // 2. Kiểm tra quyền truy cập (Access Control)
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
+        }
+        if (!isDoctorOrAdminCaller) {
+            Long ownPatientId = resolvePatientId(curUserId);
+            if (ownPatientId == null || !ownPatientId.equals(patientId)) {
+                return "redirect:/login";
+            }
+        } else {
+            if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem báo cáo của bệnh nhân này.");
+                return "redirect:/health-logs/doctor-view";
+            }
+        }
+
+        // 3. Xử lý khoảng ngày đo dữ liệu (Mặc định 14 ngày gần nhất để phân tích tim mạch tốt hơn)
+        LocalDate toDate = to;
+        LocalDate fromDate = from;
+        if (toDate == null || fromDate == null) {
+            toDate = LocalDate.now();
+            fromDate = toDate.minusDays(14); // Thu thập dữ liệu trong 14 ngày
+        }
+        if (fromDate.isAfter(toDate)) {
+            LocalDate temp = fromDate;
+            fromDate = toDate;
+            toDate = temp;
+        }
+
+        // 4. Gọi Python AI thông qua Service xử lý động
+        Map<String, Object> heartRiskData = dailyHealthLogService.calculateDynamicHeartRisk(patientId, fromDate, toDate);
+
+        // 5. Bổ sung dữ liệu hiển thị thời gian phân tích 'assessedAtStr' cho phù hợp cấu trúc giao diện ai-report-heart.html
+        if (heartRiskData != null && !heartRiskData.containsKey("error") && !heartRiskData.containsKey("message")) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            heartRiskData.put("assessedAtStr", now.format(formatter));
+
+            // Ép key từ gạch dưới của Flask thành CamelCase để khớp với `ai-report-heart.html` cũ
+            if (heartRiskData.containsKey("risk_percentage")) {
+                heartRiskData.put("riskPercentage", formatDecimal(heartRiskData.get("risk_percentage")));
+            }
+            if (heartRiskData.containsKey("risk_level")) {
+                heartRiskData.put("riskLevel", heartRiskData.get("risk_level"));
+            }
+
+            model.addAttribute("latestRisk", heartRiskData);
+            model.addAttribute("hasRiskData", true);
+        } else {
+            model.addAttribute("hasRiskData", false);
+            if (heartRiskData != null && heartRiskData.containsKey("message")) {
+                model.addAttribute("aiMessage", heartRiskData.get("message"));
+            }
+        }
+
+        // 6. Đổ danh sách log trong khoảng ngày ra bảng giải trình dữ liệu
+        List<DailyHealthLog> rangeLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, fromDate, toDate);
+        rangeLogs.sort(java.util.Comparator.comparing(DailyHealthLog::getLogDate).reversed());
+
+        model.addAttribute("isDoctorOrAdmin", isDoctorOrAdminCaller);
+        model.addAttribute("patient", patient);
+        Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;
+        model.addAttribute("userId", targetUserId != null ? targetUserId : curUserId);
+        model.addAttribute("patientId", patientId);
+        model.addAttribute("from", fromDate);
+        model.addAttribute("to", toDate);
+        model.addAttribute("rangeLogs", rangeLogs);
+
+        return "healthlog/ai-report-heart"; // Render file HTML tim mạch của bạn
+    }
+
     private String formatDecimal(Object obj) {
         if (obj == null) {
             return null;
@@ -1098,4 +1199,5 @@ public class DailyHealthLogController {
         }
         return new java.math.BigDecimal(obj.toString());
     }
+
 }
