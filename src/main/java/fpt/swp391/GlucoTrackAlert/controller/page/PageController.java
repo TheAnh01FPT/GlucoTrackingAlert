@@ -23,23 +23,46 @@ public class PageController {
     private final PatientService patientService;
     private final UserRepository userRepository;
     private final RelativeService relativeService;
+    private final fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository;
 
     @Autowired
     public PageController(PatientService patientService,
                           UserRepository userRepository,
-                          RelativeService relativeService) {
+                          RelativeService relativeService,
+                          fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;
+        this.bannerRepository = bannerRepository;
     }
 
     @GetMapping("/")
-    public String indexPage() {
+    public String indexPage(Model model) {
+        model.addAttribute("banners", bannerRepository.findByStatusOrderByDisplayOrderAsc(true));
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        if (isAuthenticated) {
+            String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("");
+            model.addAttribute("userRole", role);
+        }
+        
         return "index";
     }
 
     @GetMapping("/login")
     public String loginPage() { return "login/login"; }
+
+    @GetMapping("/oauth2/success")
+    public String oauth2Success(Model model, @RequestParam("token") String token, 
+                                @RequestParam("email") String email, 
+                                @RequestParam("role") String role) {
+        model.addAttribute("token", token);
+        model.addAttribute("email", email);
+        model.addAttribute("role", role);
+        return "login/oauth2-success";
+    }
 
     @GetMapping("/register")
     public String registerPage() { return "register/register"; }
