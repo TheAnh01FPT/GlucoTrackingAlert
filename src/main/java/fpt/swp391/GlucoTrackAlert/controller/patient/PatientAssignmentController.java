@@ -42,12 +42,17 @@ public class PatientAssignmentController {
 
     /**
      * [PATIENT] Lấy danh sách bác sĩ đang hoạt động để bệnh nhân chọn đề xuất ghép.
+     * Bác sĩ đã đủ số lượng bệnh nhân tối đa (MAX_PATIENTS_PER_DOCTOR) sẽ bị lọc bỏ
+     * ngay tại đây, không hiển thị cho bệnh nhân chọn nữa — tránh việc bệnh nhân
+     * tạo đề xuất cho một bác sĩ chắc chắn sẽ bị admin từ chối vì hết chỗ.
      */
     @GetMapping("/doctors")
     public ResponseEntity<List<DoctorResponse>> getActiveDoctors() {
         return ResponseEntity.ok(
                 doctorRepository.findByStatus("active")
                         .stream()
+                        .filter(d -> assignmentRepository.countByDoctorIdAndStatus(
+                                d.getId(), "active") < DoctorPatientAssignmentService.MAX_PATIENTS_PER_DOCTOR)
                         .map(DoctorResponse::from)
                         .toList()
         );

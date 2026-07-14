@@ -44,11 +44,6 @@ public class WebViewController {
         return "admin/doctors";
     }
 
-    @GetMapping("/doctor-introductions")
-    public String doctorIntroductionsPage() {
-        return "admin/doctor-introductions";
-    }
-
     @GetMapping("/assignments")
     public String showAssignmentsPage(Model model) {
         return "admin/assignments";

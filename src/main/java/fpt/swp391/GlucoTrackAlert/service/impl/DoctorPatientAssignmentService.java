@@ -39,7 +39,7 @@ public class DoctorPatientAssignmentService {
     private static final ScheduledExecutorService scheduler
       = Executors.newSingleThreadScheduledExecutor();
 
-    private static final int MAX_PATIENTS_PER_DOCTOR = 5;
+    public static final int MAX_PATIENTS_PER_DOCTOR = 5;
 
     @PreDestroy
     public void shutdownScheduler() {
@@ -81,6 +81,15 @@ public class DoctorPatientAssignmentService {
                 && assignmentRepository.existsByPatientIdAndStatus(
                         assignment.getPatient().getId(), "active")) {
             throw new RuntimeException("Trùng bệnh nhân: Bệnh nhân ID " + assignment.getPatient().getId() + " đã được phân công cho một bác sĩ khác đang hoạt động. Vui lòng hủy phân công cũ trước.");
+        }
+
+        // Bệnh nhân đã tự đề xuất trước (pending) -> admin không được "vượt mặt"
+        // tạo phân công trực tiếp khác. Phải xử lý xong (duyệt/từ chối) đề xuất đó trước.
+        if (assignment.getPatient() != null
+                && assignmentRepository.existsByPatientIdAndStatus(
+                        assignment.getPatient().getId(), "pending")) {
+            throw new RuntimeException("Bệnh nhân ID " + assignment.getPatient().getId()
+                    + " đang có một đề xuất chờ duyệt. Vui lòng duyệt hoặc từ chối đề xuất đó trước khi phân công trực tiếp.");
         }
 
         if (assignment.getDoctor() != null && assignment.getPatient() != null) {
@@ -273,7 +282,9 @@ public class DoctorPatientAssignmentService {
 
     /**
      * Bệnh nhân tạo đề xuất bác sĩ đồng hành (status = pending).
-     * - Không chặn nếu bác sĩ đã full chỗ (chỉ chặn lúc Admin duyệt).
+     * - Chặn ngay nếu bác sĩ đã full chỗ (danh sách chọn ở FE cũng đã lọc trước,
+     *   đây là lớp chặn thứ 2 phòng trường hợp gọi thẳng API / dữ liệu FE cũ).
+     *   Vẫn kiểm tra lại lần nữa lúc Admin duyệt vì có thể đã đầy thêm trong lúc chờ.
      * - Không chặn nếu bệnh nhân đang có bác sĩ active khác (cho phép đổi bác sĩ,
      *   bác sĩ cũ sẽ bị hủy kèm lý do khi đề xuất mới được duyệt).
      * - Chặn nếu bệnh nhân đang có 1 đề xuất pending khác chưa xử lý.
@@ -286,6 +297,11 @@ public class DoctorPatientAssignmentService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ ID " + doctorId));
         if (!"active".equals(doctor.getStatus())) {
             throw new RuntimeException("Bác sĩ này hiện chưa thể nhận đề xuất.");
+        }
+
+        long activeCountAtPropose = assignmentRepository.countByDoctorIdAndStatus(doctorId, "active");
+        if (activeCountAtPropose >= MAX_PATIENTS_PER_DOCTOR) {
+            throw new RuntimeException("Bác sĩ này đã đủ số lượng bệnh nhân tối đa, vui lòng chọn bác sĩ khác.");
         }
 
         boolean hasPending = assignmentRepository

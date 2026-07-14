@@ -17,10 +17,58 @@
             --danger: #e74c3c;
             --warning: #f39c12;
             --font: 'Be Vietnam Pro', sans-serif;
+            --sidebar-w: 250px;
         }
         * { font-family: var(--font); }
-        body { background: #f4f7f6; }
-        .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+        body { background: #f4f7f6; margin: 0; }
+
+        .app-shell { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: var(--sidebar-w); flex-shrink: 0; background: #fff;
+            border-right: 1px solid #eef1ee; padding: 22px 16px;
+            position: sticky; top: 0; height: 100vh; overflow-y: auto;
+            display: flex; flex-direction: column;
+        }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 10px; padding: 0 8px 20px;
+            margin-bottom: 12px; border-bottom: 1px solid #f0f2f1;
+        }
+        .sidebar-brand .logo-icn {
+            width: 38px; height: 38px; border-radius: 10px; background: var(--primary);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+        }
+        .sidebar-brand .logo-text { font-weight: 700; color: #1a1a2e; font-size: .98rem; line-height: 1.2; }
+        .sidebar-brand .logo-text small { display: block; font-weight: 400; color: #9aa0a6; font-size: .7rem; }
+
+        .nav-section-label {
+            font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+            color: #adb5bd; padding: 14px 10px 6px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 9px;
+            color: #495057; text-decoration: none; font-size: .875rem; font-weight: 500; margin-bottom: 2px;
+            transition: background .15s, color .15s;
+        }
+        .nav-item i { font-size: 1.02rem; width: 20px; text-align: center; color: #9aa0a6; }
+        .nav-item:hover { background: #f4f7f6; color: #1a1a2e; }
+        .nav-item.active { background: var(--primary-light); color: var(--primary); }
+        .nav-item.active i { color: var(--primary); }
+
+        .sidebar-footer {
+            margin-top: auto; padding-top: 14px; border-top: 1px solid #f0f2f1;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar-footer .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light);
+            color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+        }
+        .sidebar-footer .u-name { font-size: .82rem; font-weight: 600; color: #1a1a2e; }
+        .sidebar-footer .u-role { font-size: .72rem; color: #9aa0a6; }
+
+        .main-content { flex: 1; min-width: 0; }
+
+        .wrap { max-width: 1400px; margin: 0; padding: 28px 40px 60px 32px; }
         .page-head h4 { font-weight: 700; color: #1a1a2e; margin: 0; }
         .page-head p { color: #6c757d; font-size: .9rem; margin: 4px 0 0; }
 
@@ -50,7 +98,7 @@
         }
         .form-select { border-radius: 8px; border-color: #dde; font-size: .875rem; height: 38px; width: 190px; }
 
-        .doctor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
+        .doctor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
         .doctor-card {
             background: #fff; border-radius: 14px; padding: 20px;
             box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #eef1ee;
@@ -92,6 +140,36 @@
         .empty-state { text-align: center; padding: 60px 20px; color: #9aa; }
         .empty-state i { font-size: 2.6rem; display: block; margin-bottom: 10px; }
 
+        .locked-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 20px;
+            width: 100%;
+        }
+        .locked-row .doctor-panel { flex: 1.4 1 380px; }
+        .locked-row .side-panel {
+            flex: 1 1 280px;
+            background: #fff; border-radius: 14px; padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #eef1ee;
+            display: flex; flex-direction: column; gap: 0;
+        }
+        .side-panel .panel-title { font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .side-panel a {
+            display: flex; align-items: center; gap: 10px; padding: 10px 2px;
+            border-bottom: 1px solid #f0f2f1; color: #1a1a2e; text-decoration: none; font-size: .88rem;
+        }
+        .side-panel a:last-child { border-bottom: none; }
+        .side-panel a:hover { color: var(--primary); }
+        .status-track { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+        .status-step { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: #6c757d; }
+        .status-step.done { color: var(--primary); font-weight: 600; }
+        .status-step .dot {
+            width: 10px; height: 10px; border-radius: 50%; background: #dfe3e1; flex-shrink: 0;
+        }
+        .status-step.done .dot { background: var(--primary); }
+        .status-step.current .dot { background: var(--warning); box-shadow: 0 0 0 4px rgba(243,156,18,.18); }
+
         .modal-header { border-bottom: 1px solid #e9ecef; }
         .modal-title { font-weight: 700; color: #1a1a2e; }
         .form-label { font-size: .825rem; font-weight: 600; color: #495057; margin-bottom: 4px; }
@@ -104,86 +182,118 @@
         .btn-primary-custom:hover { background: var(--primary-dark); color: #fff; }
 
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+
+        @media (max-width: 860px) {
+            .sidebar { display: none; }
+        }
     </style>
 </head>
 <body>
 
-<div class="wrap">
-    <div class="page-head d-flex align-items-center justify-content-between">
-        <div>
-            <h4><i class="bi bi-person-heart me-2" style="color:var(--primary)"></i>Chọn bác sĩ đồng hành</h4>
-            <p>Đề xuất một bác sĩ theo dõi tình trạng sức khỏe của bạn. Admin sẽ duyệt đề xuất trước khi bác sĩ chính thức đồng hành.</p>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-icn"><i class="bi bi-activity"></i></div>
+            <div class="logo-text">GlucoTrackAlert<small>Đồng hành sức khỏe</small></div>
         </div>
-        <a href="/patient/home" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Quay lại</a>
-    </div>
 
-    <!-- Trạng thái hiện tại -->
-    <div id="currentBanner" style="display:none"></div>
+        <div class="nav-section-label">Tổng quan</div>
+        <a href="/patient/home" class="nav-item"><i class="bi bi-house"></i>Trang chủ</a>
+        <a href="/patient/dashboard" class="nav-item"><i class="bi bi-graph-up"></i>Chỉ số đường huyết</a>
 
-    <!-- Toolbar -->
-    <div class="toolbar">
-        <div class="search-wrap">
-            <i class="bi bi-search"></i>
-            <input type="text" id="searchInput" placeholder="Tìm theo tên bác sĩ, chuyên khoa, nơi công tác..."/>
-        </div>
-        <select class="form-select" id="filterSpec">
-            <option value="">Tất cả chuyên khoa</option>
-        </select>
-    </div>
+        <div class="nav-section-label">Chăm sóc</div>
+        <a href="/patient/assignments" class="nav-item active"><i class="bi bi-person-heart"></i>Bác sĩ đồng hành</a>
+        <a href="/meal-logs" class="nav-item"><i class="bi bi-egg-fried"></i>Nhật ký ăn uống</a>
+        <a href="/health-reminders" class="nav-item"><i class="bi bi-bell"></i>Nhắc nhở sức khỏe</a>
+        <a href="/patient/medications" class="nav-item"><i class="bi bi-capsule"></i>Đơn thuốc của tôi</a>
 
-    <div id="doctorGrid" class="doctor-grid">
-        <div class="empty-state" style="grid-column:1/-1">
-            <i class="bi bi-arrow-clockwise"></i>Đang tải danh sách bác sĩ...
-        </div>
-    </div>
+        <div class="nav-section-label">Khác</div>
+        <a href="/patient/profile" class="nav-item"><i class="bi bi-person-gear"></i>Hồ sơ cá nhân</a>
+        <a href="/settings" class="nav-item"><i class="bi bi-gear"></i>Cài đặt</a>
 
-    <!-- Toast -->
-    <div class="toast-container">
-        <div id="toast" class="toast align-items-center border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body fw-600" id="toastMsg"></div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        <div class="sidebar-footer">
+            <div class="avatar" id="sbAvatar">?</div>
+            <div>
+                <div class="u-name" id="sbName">Đang tải...</div>
+                <div class="u-role">Bệnh nhân</div>
             </div>
         </div>
-    </div>
+    </aside>
 
-    <!-- Modal đề xuất -->
-    <div class="modal fade" id="proposeModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-send-check me-2" style="color:var(--primary)"></i>Gửi đề xuất bác sĩ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <main class="main-content">
+        <div class="wrap">
+            <div class="page-head d-flex align-items-center justify-content-between">
+                <div>
+                    <h4><i class="bi bi-person-heart me-2" style="color:var(--primary)"></i>Chọn bác sĩ đồng hành</h4>
+                    <p>Đề xuất một bác sĩ theo dõi tình trạng sức khỏe của bạn. Admin sẽ duyệt đề xuất trước khi bác sĩ chính thức đồng hành.</p>
                 </div>
-                <div class="modal-body">
-                    <div class="d-flex align-items-center gap-3 mb-3" id="proposeDoctorPreview"></div>
-                    <label class="form-label">Ghi chú gửi bác sĩ / admin (tuỳ chọn)</label>
-                    <textarea class="form-control modal-control" id="proposeNote" rows="3"
-                              placeholder="VD: Tôi bị tiểu đường type 2, muốn được theo dõi định kỳ..."></textarea>
+                <a href="/patient/home" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Quay lại</a>
+            </div>
+
+            <div id="currentBanner" style="display:none"></div>
+
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm theo tên bác sĩ, chuyên khoa, nơi công tác..."/>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn-primary-custom btn" onclick="confirmPropose()">
-                        <i class="bi bi-check-lg me-1"></i>Gửi đề xuất
-                    </button>
+                <select class="form-select" id="filterSpec">
+                    <option value="">Tất cả chuyên khoa</option>
+                </select>
+            </div>
+
+            <div id="doctorGrid" class="doctor-grid">
+                <div class="empty-state" style="grid-column:1/-1">
+                    <i class="bi bi-arrow-clockwise"></i>Đang tải danh sách bác sĩ...
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- Modal hủy đề xuất -->
-    <div class="modal fade" id="cancelModal" tabindex="-1">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-body text-center py-4">
-                    <div style="font-size:2.5rem; color:var(--warning)"><i class="bi bi-exclamation-circle"></i></div>
-                    <h6 class="fw-700 mt-2">Hủy đề xuất đang chờ duyệt?</h6>
-                    <p class="text-muted small mb-0">Bạn có thể gửi đề xuất khác với bác sĩ khác sau khi hủy.</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center gap-2">
-                    <button class="btn btn-light" data-bs-dismiss="modal">Không</button>
-                    <button class="btn btn-warning" onclick="confirmCancel()">Hủy đề xuất</button>
-                </div>
+<div class="toast-container">
+    <div id="toast" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-600" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="proposeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-send-check me-2" style="color:var(--primary)"></i>Gửi đề xuất bác sĩ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center gap-3 mb-3" id="proposeDoctorPreview"></div>
+                <label class="form-label">Ghi chú gửi bác sĩ / admin (tuỳ chọn)</label>
+                <textarea class="form-control modal-control" id="proposeNote" rows="3"
+                          placeholder="VD: Tôi bị tiểu đường type 2, muốn được theo dõi định kỳ..."></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn-primary-custom btn" onclick="confirmPropose()">
+                    <i class="bi bi-check-lg me-1"></i>Gửi đề xuất
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center py-4">
+                <div style="font-size:2.5rem; color:var(--warning)"><i class="bi bi-exclamation-circle"></i></div>
+                <h6 class="fw-700 mt-2">Hủy đề xuất đang chờ duyệt?</h6>
+                <p class="text-muted small mb-0">Bạn có thể gửi đề xuất khác với bác sĩ khác sau khi hủy.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-2">
+                <button class="btn btn-light" data-bs-dismiss="modal">Không</button>
+                <button class="btn btn-warning" onclick="confirmCancel()">Hủy đề xuất</button>
             </div>
         </div>
     </div>
@@ -192,11 +302,11 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let allDoctors = [];
-    let myAssignments = [];   // tất cả assignment của bệnh nhân (mọi trạng thái)
+    let myAssignments = [];
     let proposeModal, cancelModal, toastEl;
     let proposeTargetId = null;
     let cancelTargetId = null;
-    const PAGE_SIZE = 9;       // hiện 9 bác sĩ/lần (3 hàng), bấm "Xem thêm" để tải tiếp
+    const PAGE_SIZE = 9;
     let visibleCount = PAGE_SIZE;
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -204,6 +314,7 @@
         cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
         toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
         loadAll();
+        loadSidebarUser();
 
         document.getElementById('searchInput').addEventListener('input', () => { visibleCount = PAGE_SIZE; renderGrid(); });
         document.getElementById('filterSpec').addEventListener('change', () => { visibleCount = PAGE_SIZE; renderGrid(); });
@@ -211,6 +322,12 @@
 
     function authHeader() {
         return {'Authorization': `Bearer ${localStorage.getItem('token')}`};
+    }
+
+    function loadSidebarUser() {
+        const name = localStorage.getItem('fullName') || localStorage.getItem('username') || 'Bệnh nhân';
+        document.getElementById('sbName').textContent = name;
+        document.getElementById('sbAvatar').textContent = name.trim().split(' ').pop()[0].toUpperCase();
     }
 
     async function loadAll() {
@@ -240,14 +357,12 @@
             specs.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
-    // assignment hiện hành (active) hoặc đang chờ (pending) của bệnh nhân
     function getActiveAssignment() {
         return myAssignments.find(a => a.status === 'active');
     }
     function getPendingAssignment() {
         return myAssignments.find(a => a.status === 'pending');
     }
-    // Bản ghi bị từ chối/hủy gần nhất (để hiển thị lý do cho bệnh nhân biết)
     function getLatestClosedAssignment() {
         return myAssignments
             .filter(a => a.status === 'rejected' || a.status === 'inactive' || a.status === 'cancelled')
@@ -351,14 +466,14 @@
         const toolbar = document.querySelector('.toolbar');
         const grid = document.getElementById('doctorGrid');
 
-        // Đã có bác sĩ đồng hành/đang chờ duyệt → chỉ hiện đúng bác sĩ đó,
-        // ẩn ô tìm kiếm + danh sách bác sĩ khác cho gọn (đã thấy tên ở banner phía trên rồi).
         if (locked && !showAllDoctors) {
             toolbar.style.display = 'none';
             const d = allDoctors.find(x => x.id === locked.doctorId);
+            const isPendingState = !!pending;
+
             grid.innerHTML = `
-                <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:24px;">
-                    <div style="flex:1 1 420px;">
+                <div class="locked-row" style="grid-column:1/-1;">
+                    <div class="doctor-panel">
                         ${d ? cardHtml(d, active, pending) : ''}
                         <div style="text-align:center;margin-top:12px;">
                             <button class="btn btn-outline-secondary btn-sm" onclick="toggleShowAll()">
@@ -366,17 +481,30 @@
                             </button>
                         </div>
                     </div>
-                    <div style="flex:1 1 320px;max-width:380px;background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-                        <p class="fw-semibold mb-3"><i class="bi bi-lightning-charge-fill text-success me-1"></i>Lối tắt cho bạn</p>
-                        <a href="/meal-logs" class="d-flex align-items-center gap-2 text-decoration-none text-dark py-2 border-bottom">
-                            <i class="bi bi-egg-fried text-success"></i> Nhật ký ăn uống
-                        </a>
-                        <a href="/health-reminders" class="d-flex align-items-center gap-2 text-decoration-none text-dark py-2 border-bottom">
-                            <i class="bi bi-bell text-success"></i> Nhắc nhở sức khỏe
-                        </a>
-                        <a href="/patient/medications" class="d-flex align-items-center gap-2 text-decoration-none text-dark py-2">
-                            <i class="bi bi-capsule text-success"></i> Đơn thuốc của tôi
-                        </a>
+
+                    <div class="side-panel">
+                        <p class="panel-title"><i class="bi bi-signpost-split text-success"></i>Tiến trình</p>
+                        <div class="status-track">
+                            <div class="status-step done">
+                                <span class="dot"></span>Đã gửi đề xuất
+                            </div>
+                            <div class="status-step ${isPendingState ? 'current' : 'done'}">
+                                <span class="dot"></span>${isPendingState ? 'Đang chờ admin duyệt' : 'Admin đã duyệt'}
+                            </div>
+                            <div class="status-step ${isPendingState ? '' : 'done'}">
+                                <span class="dot"></span>Bác sĩ chính thức đồng hành
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="side-panel">
+                        <p class="panel-title"><i class="bi bi-chat-square-text text-success"></i>Ghi chú bạn đã gửi</p>
+                        <div style="font-size:.85rem;color:#495057;line-height:1.6;">
+                            ${locked.note ? escapeHtml(locked.note) : '<span style="color:#adb5bd;font-style:italic">Bạn chưa gửi ghi chú nào kèm đề xuất này.</span>'}
+                        </div>
+                        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0f2f1;font-size:.78rem;color:#9aa0a6;">
+                            <i class="bi bi-clock-history me-1"></i>Gửi lúc ${fmtDate(locked.assignedAt)}
+                        </div>
                     </div>
                 </div>`;
             return;
@@ -425,7 +553,6 @@
         renderGrid();
     }
 
-    // ── Propose ──────────────────────────────────────────
     function openPropose(doctorId) {
         proposeTargetId = doctorId;
         const d = allDoctors.find(x => x.id === doctorId);
@@ -462,7 +589,6 @@
         }
     }
 
-    // ── Cancel pending ───────────────────────────────────
     function openCancel(assignmentId) {
         cancelTargetId = assignmentId;
         cancelModal.show();
@@ -487,7 +613,6 @@
         }
     }
 
-    // ── Helpers ──────────────────────────────────────────
     function getInitials(name) {
         if (!name) return '?';
         const parts = name.trim().split(' ');

@@ -2,9 +2,10 @@ package fpt.swp391.GlucoTrackAlert.controller.page;
 
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.dto.relative.RelativeResponse;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.doctor.DoctorIntroduction;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
-import fpt.swp391.GlucoTrackAlert.doctor.DoctorIntroductionRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
 import fpt.swp391.GlucoTrackAlert.service.relative.RelativeService;
@@ -25,34 +26,52 @@ public class PageController {
     private final PatientService patientService;
     private final UserRepository userRepository;
     private final RelativeService relativeService;
-    private final DoctorIntroductionRepository doctorIntroductionRepository;
+    private final DoctorRepository doctorRepository;
 
     @Autowired
     public PageController(PatientService patientService,
                           UserRepository userRepository,
                           RelativeService relativeService,
-                          DoctorIntroductionRepository doctorIntroductionRepository) {
+                          DoctorRepository doctorRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;
-        this.doctorIntroductionRepository = doctorIntroductionRepository;
+        this.doctorRepository = doctorRepository;
     }
 
     private static final int MAX_FEATURED_DOCTORS = 4; // đúng 1 hàng với layout col-lg-3
 
+    /**
+     * Trang chủ hiển thị "giới thiệu đội ngũ bác sĩ" tự động lấy từ hồ sơ bác sĩ
+     * (Doctor) đang active — không cần admin nhập tay lại lần 2. Ưu tiên bác sĩ
+     * nhiều năm kinh nghiệm nhất lên đầu.
+     */
     @GetMapping("/")
     public String indexPage(Model model) {
         try {
-            List<DoctorIntroduction> doctors = doctorIntroductionRepository
-                    .findByStatusOrderByDisplayOrderAsc("active");
-            if (doctors.size() > MAX_FEATURED_DOCTORS) {
-                doctors = doctors.subList(0, MAX_FEATURED_DOCTORS);
-            }
+            List<DoctorIntroduction> doctors = doctorRepository.findByStatus("active").stream()
+                    .sorted((a, b) -> Integer.compare(
+                            b.getExperienceYears() == null ? 0 : b.getExperienceYears(),
+                            a.getExperienceYears() == null ? 0 : a.getExperienceYears()))
+                    .limit(MAX_FEATURED_DOCTORS)
+                    .map(this::toShowcaseCard)
+                    .toList();
             model.addAttribute("doctors", doctors);
         } catch (Exception e) {
             model.addAttribute("doctors", List.of());
         }
         return "index";
+    }
+
+    private DoctorIntroduction toShowcaseCard(Doctor d) {
+        DoctorIntroduction card = new DoctorIntroduction();
+        card.setDoctorId(d.getId());
+        card.setDisplayName(d.getFullName());
+        card.setTitle(d.getDegree());
+        card.setSpecialization(d.getSpecialization());
+        card.setIntroduction(d.getIntroduction());
+        card.setAvatarUrl(d.getAvatarUrl());
+        return card;
     }
 
     @GetMapping("/login")
