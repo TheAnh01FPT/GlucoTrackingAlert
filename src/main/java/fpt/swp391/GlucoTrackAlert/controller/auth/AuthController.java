@@ -12,6 +12,7 @@ import java.security.Principal;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -96,11 +97,20 @@ public class AuthController {
             String email = principal.getName();
             String oldPassword = body.get("oldPassword");
             String newPassword = body.get("newPassword");
-            if (oldPassword == null || newPassword == null) {
-                return ResponseEntity.badRequest().body("Thiếu thông tin mật khẩu");
-            }
-            userService.changePassword(email, oldPassword, newPassword);
-            return ResponseEntity.ok("Đổi mật khẩu thành công");
+        if (oldPassword == null || newPassword == null) {
+            return ResponseEntity.badRequest().body("Thiếu thông tin mật khẩu");
+        }
+        // Validate new password length
+        if (newPassword.length() < 6 || newPassword.length() > 32) {
+            return ResponseEntity.badRequest().body("Mật khẩu phải từ 6 đến 32 ký tự");
+        }
+        // Validate pattern: at least one lower, one upper, one digit
+        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
+        if (!Pattern.matches(pattern, newPassword)) {
+            return ResponseEntity.badRequest().body("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
+        }
+        userService.changePassword(email, oldPassword, newPassword);
+        return ResponseEntity.ok("Đổi mật khẩu thành công");
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
