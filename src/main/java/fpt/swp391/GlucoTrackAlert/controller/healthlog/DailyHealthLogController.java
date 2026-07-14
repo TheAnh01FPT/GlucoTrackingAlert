@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import fpt.swp391.GlucoTrackAlert.service.export.ExportService;
 
 @Controller
 @RequestMapping("/health-logs")
@@ -58,6 +59,7 @@ public class DailyHealthLogController {
     private final DoctorPatientAssignmentRepository assignmentRepository;
     private final DailyHealthLogRepository dailyHealthLogRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final ExportService exportService;
 
     private Long resolvePatientId(Long userId) {
         if (userId == null) {
@@ -1073,6 +1075,70 @@ public String createLog(@RequestParam Long userId,
         if (obj instanceof java.math.BigDecimal) return (java.math.BigDecimal) obj;
         if (obj instanceof Number) return java.math.BigDecimal.valueOf(((Number) obj).doubleValue());
         return new java.math.BigDecimal(obj.toString());
+    }
+
+    @GetMapping("/export")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.InputStreamResource> exportExcel(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long patientId
+    ) {
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+
+        boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
+
+        if (patientId == null) {
+            if (userId != null) {
+                Optional<Patient> pOpt = patientRepository.findByUserId(userId);
+                if (pOpt.isPresent()) {
+                    patientId = pOpt.get().getId();
+                } else if (patientRepository.existsById(userId)) {
+                    patientId = userId;
+                }
+            }
+        }
+
+        if (patientId == null) {
+            if (!isDoctorOrAdminCaller) {
+                patientId = resolvePatientId(curUserId);
+            }
+        }
+
+        if (patientId == null) {
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+
+        // Quyền truy cập kiểm tra tương tự như khi xem
+        if (!isDoctorOrAdminCaller) {
+            Long ownPatientId = resolvePatientId(curUserId);
+            if (ownPatientId == null || !ownPatientId.equals(patientId)) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+        } else {
+            if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+        }
+
+        // Ngày mặc định nếu rỗng (lấy toàn bộ lịch sử từ năm 2000)
+        LocalDate toDate = to != null ? to : LocalDate.now();
+        LocalDate fromDate = from != null ? from : LocalDate.of(2000, 1, 1);
+
+        java.io.ByteArrayInputStream in = exportService.exportDailyLogsToExcel(patientId, fromDate, toDate);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=nhat_ky_suc_khoe_" + patientId + ".xlsx");
+
+        return org.springframework.http.ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new org.springframework.core.io.InputStreamResource(in));
     }
 }
 
