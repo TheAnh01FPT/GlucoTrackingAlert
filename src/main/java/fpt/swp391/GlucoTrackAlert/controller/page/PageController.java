@@ -27,6 +27,7 @@ public class PageController {
     private final UserRepository userRepository;
     private final RelativeService relativeService;
     private final DoctorRepository doctorRepository;
+    private final fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository;
 
     @Autowired
     public PageController(PatientService patientService,
@@ -37,6 +38,11 @@ public class PageController {
         this.userRepository = userRepository;
         this.relativeService = relativeService;
         this.doctorRepository = doctorRepository;
+                          fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
+        this.patientService = patientService;
+        this.userRepository = userRepository;
+        this.relativeService = relativeService;
+        this.bannerRepository = bannerRepository;
     }
 
     private static final int MAX_FEATURED_DOCTORS = 4; // đúng 1 hàng với layout col-lg-3
@@ -60,6 +66,16 @@ public class PageController {
         } catch (Exception e) {
             model.addAttribute("doctors", List.of());
         }
+        model.addAttribute("banners", bannerRepository.findByStatusOrderByDisplayOrderAsc(true));
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        if (isAuthenticated) {
+            String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("");
+            model.addAttribute("userRole", role);
+        }
+       
         return "index";
     }
 
@@ -76,6 +92,16 @@ public class PageController {
 
     @GetMapping("/login")
     public String loginPage() { return "login/login"; }
+
+    @GetMapping("/oauth2/success")
+    public String oauth2Success(Model model, @RequestParam("token") String token, 
+                                @RequestParam("email") String email, 
+                                @RequestParam("role") String role) {
+        model.addAttribute("token", token);
+        model.addAttribute("email", email);
+        model.addAttribute("role", role);
+        return "login/oauth2-success";
+    }
 
     @GetMapping("/register")
     public String registerPage() { return "register/register"; }
