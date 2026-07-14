@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                             "/", "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
-                            "/css/**", "/js/**", "/images/**"
+                            "/css/**", "/js/**", "/images/**", "/oauth2/**"
                         ).permitAll()
 
                         .requestMatchers("/meal-logs").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")

@@ -11,7 +11,8 @@
     <div class="home-container">
 
       <!-- Top Area: Greeting top right -->
-      <div class="home-navbar" style="justify-content: flex-end; border-bottom: none; margin-bottom: 10px; padding-bottom: 0;">
+      <div class="home-navbar" style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 10px; padding-bottom: 0;">
+        <a href="/" style="color: #27ae60; text-decoration: none; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 5px;">&larr; Quay lại trang chủ</a>
         <div class="user-greeting">
           <span class="active-dot"></span>
           <span>Hello, </span>
@@ -80,6 +81,14 @@
           <div class="card-icon">📈</div>
           <h3 class="card-title">Báo cáo tháng & AI Phân tích</h3>
           <p class="card-desc">AI tự động so sánh, tính toán trung bình chỉ số, đánh giá tiến triển sức khỏe (Cải thiện / Ổn định / Tệ đi) theo tuần.</p>
+          <div class="arrow-icon">Truy cập ngay ➔</div>
+        </a>
+
+        <!-- Đánh giá bác sĩ (ACTIVE) -->
+        <a th:href="@{/patient/feedbacks}" class="feature-card">
+          <div class="card-icon">💬</div>
+          <h3 class="card-title">Đánh giá / Phản hồi</h3>
+          <p class="card-desc">Gửi đánh giá và ý kiến phản hồi về chất lượng tư vấn sau khi nhận lời khuyên từ bác sĩ chuyên khoa.</p>
           <div class="arrow-icon">Truy cập ngay ➔</div>
         </a>
 
