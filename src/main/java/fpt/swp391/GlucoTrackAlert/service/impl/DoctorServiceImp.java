@@ -39,8 +39,9 @@ public class DoctorServiceImp implements DoctorService {
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new Exception("Email bác sĩ không được để trống");
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email \"" + request.getEmail() + "\" đã tồn tại trong hệ thống");
+        String email = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new Exception("Email \"" + email + "\" đã tồn tại trong hệ thống");
         }
         // 1. Tạo mật khẩu tạm thời (admin đặt hoặc auto-generate)
         String plainPassword = (request.getTemporaryPassword() != null
@@ -53,7 +54,7 @@ public class DoctorServiceImp implements DoctorService {
                 .orElseThrow(() -> new Exception("Role DOCTOR chưa được khởi tạo trong DB"));
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(email)
                 .passwordHash(passwordEncoder.encode(plainPassword))
                 .role(doctorRole)
                 .status("active") // admin tạo hộ → active ngay, không cần verify email
@@ -175,7 +176,7 @@ public class DoctorServiceImp implements DoctorService {
         doctor.setStatus("active");
         doctor.getUser().setStatus("active");
         userRepository.save(doctor.getUser());
-        emailService.sendSimpleMessage(
+        emailService.sendSimpleMessageAsync(
                 doctor.getUser().getEmail(),
                 "[GlucoTrackAlert] Hồ sơ của bạn đã được duyệt",
                 "Xin chào Bác sĩ " + doctor.getFullName() + ",\n\n"
@@ -192,7 +193,7 @@ public class DoctorServiceImp implements DoctorService {
         Doctor doctor = findOrThrow(id);
         doctor.setStatus("rejected");
         String reasonText = (reason != null && !reason.isBlank()) ? reason : "Không đủ điều kiện";
-        emailService.sendSimpleMessage(
+        emailService.sendSimpleMessageAsync(
                 doctor.getUser().getEmail(),
                 "[GlucoTrackAlert] Hồ sơ của bạn chưa được duyệt",
                 "Xin chào Bác sĩ " + doctor.getFullName() + ",\n\n"
@@ -339,6 +340,6 @@ public class DoctorServiceImp implements DoctorService {
                 + "trước khi có thể sử dụng hệ thống.\n\n"
                 + "Lưu ý: Không chia sẻ mật khẩu với bất kỳ ai.\n\n"
                 + "Trân trọng,\nGlucoTrackAlert";
-        emailService.sendSimpleMessage(email, subject, body);
+        emailService.sendSimpleMessageAsync(email, subject, body);
     }
 }

@@ -67,11 +67,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User register(RegisterRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail().trim())) {
+        String email = request.getEmail().trim().toLowerCase();
+        String phone = request.getPhone().trim();
+
+        if (userRepository.existsByEmail(email)) {
             throw new Exception("Email này đã được sử dụng trong hệ thống.");
         }
 
-        if (userRepository.existsByPhone(request.getPhone().trim())) {
+        if (userRepository.existsByPhone(phone)) {
             throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
         }
 
@@ -79,10 +82,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
 
         User user = User.builder()
-                .email(request.getEmail().trim())
+                .email(email)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName().trim())
-                .phone(request.getPhone().trim())
+                .phone(phone)
                 .role(role)
                 .status("pending_verification")
                 .emailVerified(false)
@@ -101,7 +104,7 @@ public class UserServiceImpl implements UserService {
                 .build();
         tokenRepository.save(verificationToken);
 
-        sendOtpEmail(request.getEmail().trim(), request.getFullName().trim(), otp);
+        sendOtpEmail(email, request.getFullName().trim(), otp);
 
         return user;
     }
@@ -140,7 +143,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void resendOtp(String email) throws Exception {
-        User user = userRepository.findByEmail(email)
+        String cleanEmail = email.trim().toLowerCase();
+        User user = userRepository.findByEmail(cleanEmail)
                 .orElseThrow(() -> new Exception("Không tìm thấy tài khoản với email này."));
 
         if (Boolean.TRUE.equals(user.getEmailVerified())) {
@@ -159,12 +163,13 @@ public class UserServiceImpl implements UserService {
                 .build();
         tokenRepository.save(verificationToken);
 
-        sendOtpEmail(email, user.getFullName(), otp);
+        sendOtpEmail(cleanEmail, user.getFullName(), otp);
     }
 
     @Override
     public LoginResponse login(LoginRequest request) throws Exception {
-        User user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Email hoặc mật khẩu không đúng."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
@@ -201,7 +206,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) throws Exception {
-        User user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
 
         if (!"active".equalsIgnoreCase(user.getStatus())) {
@@ -220,7 +226,7 @@ public class UserServiceImpl implements UserService {
 
         // Gửi email
         String body = buildPasswordResetOtpEmail(user.getFullName() != null ? user.getFullName() : "Bạn", otp);
-        emailService.sendHtmlMessage(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
+        emailService.sendHtmlMessageAsync(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
     }
 
     @Override
@@ -238,7 +244,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = token.getUser();
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail().trim())) {
             throw new Exception("Email không khớp với mã OTP");
         }
 
@@ -254,7 +260,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
-        User user = userRepository.findByEmail(email)
+        String cleanEmail = email.trim().toLowerCase();
+        User user = userRepository.findByEmail(cleanEmail)
                 .orElseThrow(() -> new Exception("Không tìm thấy tài khoản"));
 
         oldPassword = oldPassword.trim();
@@ -280,7 +287,7 @@ public class UserServiceImpl implements UserService {
     private void sendOtpEmail(String toEmail, String fullName, String otp) {
         String subject = "Mã xác nhận đăng ký tài khoản GlucoTrackAlert";
         String htmlContent = buildOtpEmail(fullName, otp);
-        emailService.sendHtmlMessage(toEmail, subject, htmlContent);
+        emailService.sendHtmlMessageAsync(toEmail, subject, htmlContent);
     }
 
     private String buildOtpEmail(String fullName, String otp) {

@@ -71,8 +71,9 @@ public class UserAdminServiceImpl implements UserAdminService {
     @Override
     @Transactional
     public User createUserByAdmin(UserAdminRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Tài khoản email '" + request.getEmail() + "' đã tồn tại trên hệ thống.");
+        String email = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new Exception("Tài khoản email '" + email + "' đã tồn tại trên hệ thống.");
         }
 
         String inputRole = request.getRoleName().toUpperCase().trim();
@@ -88,7 +89,7 @@ public class UserAdminServiceImpl implements UserAdminService {
         }
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(email)
                 .passwordHash(passwordEncoder.encode(request.getPassword().trim()))
                 .status(request.getStatus())
                 .emailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : true)
@@ -106,9 +107,10 @@ public class UserAdminServiceImpl implements UserAdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("Không tìm thấy dữ liệu người dùng cần cập nhật."));
 
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail()) &&
-                userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email mới '" + request.getEmail() + "' đã được sử dụng bởi một tài khoản khác.");
+        String email = request.getEmail().trim().toLowerCase();
+        if (!user.getEmail().equalsIgnoreCase(email) &&
+                userRepository.existsByEmail(email)) {
+            throw new Exception("Email mới '" + email + "' đã được sử dụng bởi một tài khoản khác.");
         }
 
         String inputRole = request.getRoleName().toUpperCase().trim();
@@ -121,7 +123,7 @@ public class UserAdminServiceImpl implements UserAdminService {
 
         String oldRole = user.getRole() != null ? user.getRole().getName() : "";
 
-        user.setEmail(request.getEmail());
+        user.setEmail(email);
         user.setStatus(request.getStatus());
         user.setEmailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : false);
         user.setRole(role);
