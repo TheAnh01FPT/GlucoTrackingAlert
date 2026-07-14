@@ -189,34 +189,47 @@
     <script>
         (function () {
             const authArea = document.getElementById('authArea');
+            if (!authArea) {
+                return;
+            }
+
             const token = localStorage.getItem('token');
-            const role = localStorage.getItem('role');
+            const role = (localStorage.getItem('role') || '').toUpperCase();
             const email = localStorage.getItem('email');
 
             if (!token || !role) {
                 return; // Chưa đăng nhập, giữ nguyên nút Đăng nhập/Đăng ký
             }
 
-            const homeByRole = {
-                ADMIN: '/admin/dashboard',
-                DOCTOR: '/doctor/home',
-                PATIENT: '/patient/homepage'
-            };
-            const homeUrl = homeByRole[role] || '/';
-
-            authArea.innerHTML = `
-                <a href="${homeUrl}" class="btn btn-outline-custom">${email || 'Tài khoản'}</a>
-                <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
-            `;
-
-            document.getElementById('logoutBtn').addEventListener('click', function () {
+            const logout = () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('email');
                 localStorage.removeItem('role');
                 localStorage.removeItem('doctorId');
                 document.cookie = 'jwt=; path=/; max-age=0';
                 window.location.href = '/';
-            });
+            };
+
+            if (role === 'DOCTOR') {
+                authArea.innerHTML = `
+                    <a href="/doctor/home" class="btn btn-outline-custom">Trang bác sĩ</a>
+                    <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
+                `;
+            } else if (role === 'PATIENT') {
+                authArea.innerHTML = `
+                    <a href="/patient/home" class="btn btn-outline-custom">Trang bệnh nhân</a>
+                    <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
+                `;
+            } else if (role === 'ADMIN') {
+                authArea.innerHTML = `
+                    <a href="/admin/dashboard" class="btn btn-outline-custom">${email || 'Tài khoản'}</a>
+                    <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
+                `;
+            } else {
+                return;
+            }
+
+            document.getElementById('logoutBtn').addEventListener('click', logout);
         })();
     </script>
 

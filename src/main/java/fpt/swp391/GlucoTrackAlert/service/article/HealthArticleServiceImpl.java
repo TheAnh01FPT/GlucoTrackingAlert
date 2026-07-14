@@ -7,6 +7,8 @@ import fpt.swp391.GlucoTrackAlert.model.article.HealthArticle;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.repository.article.HealthArticleRepository;
 import lombok.RequiredArgsConstructor;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,14 @@ public class HealthArticleServiceImpl implements HealthArticleService {
 
     private final HealthArticleRepository articleRepository;
     private final UserRepository userRepository;
+
+    private static final PolicyFactory CONTENT_POLICY = new HtmlPolicyBuilder()
+            .allowElements("p", "br", "strong", "b", "em", "i", "u", "s", "h2", "h3", "h4", "ul", "ol", "li", "blockquote", "a", "img")
+            .allowAttributes("href").onElements("a")
+            .requireRelNofollowOnLinks()
+            .allowAttributes("src", "alt").onElements("img")
+            .allowUrlProtocols("https")
+            .toFactory();
 
     @Override
     public Page<HealthArticle> getPublishedArticles(String keyword, String category, Pageable pageable) {
@@ -77,6 +87,8 @@ public class HealthArticleServiceImpl implements HealthArticleService {
         // Sinh slug duy nhất
         String slug = generateSlug(request.getTitle());
 
+        String safeContent = CONTENT_POLICY.sanitize(request.getContent());
+
         // Validate trạng thái
         ArticleStatus status = validateAndGetStatus(request.getStatus());
 
@@ -95,7 +107,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
             }
 
             try {
-                Path uploadDir = Paths.get("uploads");
+                Path uploadDir = Paths.get("uploads", "articles");
                 if (!Files.exists(uploadDir)) {
                     Files.createDirectories(uploadDir);
                 }
@@ -109,7 +121,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
                 Path filePath = uploadDir.resolve(fileName);
 
                 Files.copy(thumbFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                savedThumbnailUrl = "/uploads/" + fileName;
+                savedThumbnailUrl = "/uploads/articles/" + fileName;
             } catch (IOException e) {
                 throw new Exception("Lỗi khi lưu ảnh đại diện: " + e.getMessage(), e);
             }
@@ -120,7 +132,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
                 .title(request.getTitle())
                 .slug(slug)
                 .summary(request.getSummary())
-                .content(request.getContent())
+                .content(safeContent)
                 .thumbnailUrl(savedThumbnailUrl)
                 .category(request.getCategory())
                 .status(status)
@@ -156,7 +168,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
 
         article.setTitle(request.getTitle());
         article.setSummary(request.getSummary());
-        article.setContent(request.getContent());
+        article.setContent(CONTENT_POLICY.sanitize(request.getContent()));
         // Xử lý file thumbnail nếu có (nếu không có file mới, giữ nguyên URL cũ)
         MultipartFile thumbFile2 = request.getThumbnailFile();
         if (thumbFile2 != null && !thumbFile2.isEmpty()) {
@@ -171,7 +183,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
             }
 
             try {
-                Path uploadDir = Paths.get("uploads");
+                Path uploadDir = Paths.get("uploads", "articles");
                 if (!Files.exists(uploadDir)) {
                     Files.createDirectories(uploadDir);
                 }
@@ -185,7 +197,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
                 Path filePath = uploadDir.resolve(fileName);
 
                 Files.copy(thumbFile2.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                article.setThumbnailUrl("/uploads/" + fileName);
+                article.setThumbnailUrl("/uploads/articles/" + fileName);
             } catch (IOException e) {
                 throw new Exception("Lỗi khi lưu ảnh đại diện: " + e.getMessage(), e);
             }

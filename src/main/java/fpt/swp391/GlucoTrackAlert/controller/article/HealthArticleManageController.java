@@ -5,6 +5,7 @@ import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.model.article.HealthArticle;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.article.HealthArticleService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -18,8 +19,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Controller quản lý bài viết cho Bác sĩ/Admin
@@ -35,6 +39,7 @@ public class HealthArticleManageController {
     private final HealthArticleService articleService;
     private final UserRepository userRepository;
     private static final int PAGE_SIZE = 10;
+    private static final Pattern UNSUPPORTED_EMBED_PATTERN = Pattern.compile("(?i)<\\s*(iframe|video|embed)\\b[^>]*>");
 
     /**
      * Lấy user đăng nhập hiện tại (tương tự PatientWebController.getLoggedInUser())
@@ -44,6 +49,42 @@ public class HealthArticleManageController {
             .getAuthentication().getPrincipal();
         return userRepository.findByEmail(email)
             .orElseThrow(() -> new Exception("User không tồn tại"));
+    }
+
+    private boolean containsUnsupportedEmbeddedContent(String content) {
+        return content != null && UNSUPPORTED_EMBED_PATTERN.matcher(content).find();
+    }
+
+    private void populateArticleFormModel(Model model, HealthArticleRequest request, Long id, boolean isEdit) {
+        model.addAttribute("article", request);
+        model.addAttribute("categories", new String[]{"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"});
+        if (id != null) {
+            model.addAttribute("id", id);
+        }
+        model.addAttribute("isEdit", isEdit);
+    }
+
+    @ExceptionHandler({MaxUploadSizeExceededException.class, MultipartException.class})
+    public String handleUploadException(Exception ex, HttpServletRequest request, Model model) {
+        String errorMessage = "Ảnh đại diện vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn 5MB.";
+        model.addAttribute("error", errorMessage);
+        model.addAttribute("article", new HealthArticleRequest());
+        model.addAttribute("categories", new String[]{"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"});
+
+        String uri = request.getRequestURI();
+        boolean isEdit = uri != null && uri.endsWith("/edit");
+        model.addAttribute("isEdit", isEdit);
+        if (isEdit) {
+            String[] segments = uri.split("/");
+            if (segments.length > 0) {
+                String idSegment = segments[segments.length - 2];
+                if (idSegment.chars().allMatch(Character::isDigit)) {
+                    model.addAttribute("id", Long.parseLong(idSegment));
+                }
+            }
+        }
+
+        return "article/form";
     }
 
     /**
@@ -89,28 +130,29 @@ public class HealthArticleManageController {
      */
     @PostMapping("/new")
     public String createArticle(
-            @Valid @ModelAttribute HealthArticleRequest request,
+            @Valid @ModelAttribute("article") HealthArticleRequest request,
             BindingResult bindingResult,
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("article", request);
-            String[] categories = {"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"};
-            model.addAttribute("categories", categories);
+            populateArticleFormModel(model, request, null, false);
             return "article/form";
         }
 
         try {
+            boolean hasUnsupportedEmbeddedContent = containsUnsupportedEmbeddedContent(request.getContent());
             User createdBy = getLoggedInUser();
-            articleService.createArticle(request, createdBy.getId());
-            return "redirect:/articles/manage";
+            HealthArticle savedArticle = articleService.createArticle(request, createdBy.getId());
+            request.setContent(savedArticle.getContent());
+            request.setThumbnailUrl(savedArticle.getThumbnailUrl());
+            if (hasUnsupportedEmbeddedContent) {
+                model.addAttribute("warning", "Video/nhúng không được hỗ trợ, đã bị loại bỏ khỏi nội dung");
+            }
+            populateArticleFormModel(model, request, null, false);
+            return "article/form";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("article", request);
-            
-            String[] categories = {"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"};
-            model.addAttribute("categories", categories);
-            
+            populateArticleFormModel(model, request, null, false);
             return "article/form";
         }
     }
@@ -156,31 +198,28 @@ public class HealthArticleManageController {
     @PostMapping("/{id}/edit")
     public String updateArticle(
             @PathVariable Long id,
-            @Valid @ModelAttribute HealthArticleRequest request,
+            @Valid @ModelAttribute("article") HealthArticleRequest request,
             BindingResult bindingResult,
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("article", request);
-            model.addAttribute("id", id);
-            model.addAttribute("isEdit", true);
-            String[] categories = {"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"};
-            model.addAttribute("categories", categories);
+            populateArticleFormModel(model, request, id, true);
             return "article/form";
         }
 
         try {
-            articleService.updateArticle(id, request);
-            return "redirect:/articles/manage";
+            boolean hasUnsupportedEmbeddedContent = containsUnsupportedEmbeddedContent(request.getContent());
+            HealthArticle savedArticle = articleService.updateArticle(id, request);
+            request.setContent(savedArticle.getContent());
+            request.setThumbnailUrl(savedArticle.getThumbnailUrl());
+            if (hasUnsupportedEmbeddedContent) {
+                model.addAttribute("warning", "Video/nhúng không được hỗ trợ, đã bị loại bỏ khỏi nội dung");
+            }
+            populateArticleFormModel(model, request, id, true);
+            return "article/form";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("article", request);
-            model.addAttribute("id", id);
-            model.addAttribute("isEdit", true);
-            
-            String[] categories = {"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"};
-            model.addAttribute("categories", categories);
-            
+            populateArticleFormModel(model, request, id, true);
             return "article/form";
         }
     }

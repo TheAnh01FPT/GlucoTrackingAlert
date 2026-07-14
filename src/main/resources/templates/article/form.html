@@ -312,6 +312,12 @@
             <span th:text="${error}"></span>
         </div>
 
+        <div id="serverErrors" style="display:none;">
+            <p th:if="${error}" th:text="${error}"></p>
+            <p th:if="${warning}" th:text="${warning}"></p>
+            <p th:each="err : ${#fields.errors('*')}" th:text="${err}"></p>
+        </div>
+
         <!-- Form -->
         <div class="form-container">
             <form th:action="${isEdit} ? '/articles/manage/' + ${id} + '/edit' : '/articles/manage/new'"
@@ -439,19 +445,83 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-            <!-- No client-side URL modal (using file upload now) -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="errorModalLabel">
+                        <i class="bi bi-exclamation-triangle"></i> Vui lòng kiểm tra lại thông tin
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="errorModalList" class="mb-0"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-primary-custom" data-bs-dismiss="modal">Đã hiểu</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function showErrorModal(messages) {
+            const list = document.getElementById('errorModalList');
+            if (!list) {
+                return;
+            }
+
+            list.innerHTML = '';
+            messages.forEach(function (msg) {
+                const li = document.createElement('li');
+                li.textContent = msg;
+                list.appendChild(li);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const errBox = document.getElementById('serverErrors');
+            if (errBox) {
+                const messages = Array.from(errBox.querySelectorAll('p'))
+                    .map(function (p) { return p.textContent.trim(); })
+                    .filter(function (t) { return t.length > 0; });
+
+                if (messages.length > 0) {
+                    showErrorModal(messages);
+                }
+            }
+
+            const articleForm = document.querySelector('form[enctype="multipart/form-data"]');
+            if (articleForm) {
+                articleForm.addEventListener('submit', function (event) {
+                    const thumbnailInput = document.getElementById('thumbnailFile');
+                    if (!thumbnailInput || !thumbnailInput.files || thumbnailInput.files.length === 0) {
+                        return;
+                    }
+
+                    const file = thumbnailInput.files[0];
+                    const maxSize = 5 * 1024 * 1024;
+                    if (file.size > maxSize) {
+                        event.preventDefault();
+                        showErrorModal(['Ảnh đại diện vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn 5MB.']);
+                    }
+                });
+            }
+        });
+
         // Initialize TinyMCE
         tinymce.init({
             selector: '#content-editor',
             apiKey: 'cr1gf2m1i4dtdrxhfcjulh2ohaj6rgagusxl9uln8xwbipw6', 
             height: 500,
-            plugins: 'lists link image code table',
+            plugins: 'lists link image',
             toolbar: 'undo redo | formatselect | bold italic underline strikethrough | ' +
-                     'bullist numlist blockquote | link image table | code',
+                     'bullist numlist blockquote | link image',
             menubar: false,
             branding: false,
             setup: function(editor) {
@@ -484,7 +554,6 @@
             }
         });
 
-        // No client-side URL validation (file upload used instead)
     </script>
 </body>
 </html>

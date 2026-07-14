@@ -132,12 +132,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         report.setAverageDiastolic(s.avgDiastolic());
         report.setHealthStatus(s.level().name());
         report.setRecommendation(ComplicationRiskServiceImpl.getRecommendation(s.level()));
-<<<<<<< HEAD
         report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar() != null ? s.avgBloodSugar() : "null") + " mmol/L, huyết áp TB: " + (s.avgSystolic() != null ? s.avgSystolic() : "null") + "/" + (s.avgDiastolic() != null ? s.avgDiastolic() : "null"));
         // set risk percentage and lowConfidence based on snapshot
-=======
-        report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar()!=null?s.avgBloodSugar():"null") + " mmol/L, huyết áp TB: " + (s.avgSystolic()!=null?s.avgSystolic():"null") + "/" + (s.avgDiastolic()!=null?s.avgDiastolic():"null"));
->>>>>>> 9b77fa3f0381d28b44f6d5e51413e35da69d4d89
         report.setRiskPercentage(s.riskPercentage());
         report.setLowConfidence(s.logCount() < 7);
     }
@@ -218,28 +214,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         return report;
     }
 
-<<<<<<< HEAD
-    /**
-     * Recomputes an already-existing weekly report IN PLACE (same row/id)
-     * instead of inserting a new one and deleting the old one.
-     *
-     * Root cause of the bug being fixed here: the previous implementation
-     * called generateWeeklyReport() - annotated @Transactional(propagation =
-     * REQUIRES_NEW) - via a plain `this` call from inside the same class
-     * (recalculateIfExists -> generateWeeklyReport). Spring's @Transactional
-     * only intercepts calls that go through the proxy, so that self-invocation
-     * silently ignored REQUIRES_NEW and ran in the SAME transaction/Hibernate
-     * Session as the caller (createLog/updateLog). When the insert of the "new"
-     * report then failed (duplicate patient+week, since the old row hadn't been
-     * deleted yet), the exception was swallowed by the catch block, but the
-     * Session was already corrupted - the very next flush (e.g. while building
-     * the response) threw: "null id in ... WeeklyHealthReport entry (don't
-     * flush the Session after an exception occurs)" Updating the existing row
-     * in place removes both the duplicate-row race and the need for a nested
-     * transaction/self-invocation altogether.
-     */
-=======
->>>>>>> 9b77fa3f0381d28b44f6d5e51413e35da69d4d89
     @Override
     @Transactional
     public void recalculateIfExists(Long patientId, LocalDate weekStart) {
@@ -265,7 +239,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         });
     }
 
-<<<<<<< HEAD
     @Override
     public CustomRangeResult computeCustomRange(Long patientId, LocalDate from, LocalDate to) {
         Patient patient = patientRepository.findById(patientId).orElse(null);
@@ -288,8 +261,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 s.logCount() < 3
         );
     }
-}
-=======
+
     /**
      * Hàm xử lý tự động tính toán trung bình cộng chỉ số tuần, kết hợp Profile tĩnh
      * và đồng bộ kết quả AI Tim mạch vào Database hệ thống.
@@ -297,7 +269,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     @Transactional
     public void processWeeklyEvaluation(Patient patient, LocalDate weekStart, LocalDate weekEnd, WeeklyHealthReport report) {
         try {
-            // Gọi sang file WeeklyCardioAiService để tính toán trung bình nhật ký tuần và giao tiếp Flask AI
             Map<String, Object> aiHeartResult = weeklyCardioAiService.calculateWeeklyHeartRisk(patient, weekStart, weekEnd);
 
             if (aiHeartResult != null && !aiHeartResult.isEmpty()) {
@@ -309,10 +280,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 List<String> adviceList = (List<String>) aiHeartResult.get("advice");
                 String adviceText = (adviceList != null) ? String.join("\n• ", adviceList) : "";
 
-                // Bước 1: Lưu kết quả phân tích AI tim mạch chi tiết vào bảng risk_assessments
                 RiskAssessment assessment = RiskAssessment.builder()
                         .patient(patient)
-                        .weeklyReportId(report.getId()) // Liên kết trực tiếp chặt chẽ với báo cáo tuần hiện tại
+                        .weeklyReportId(report.getId())
                         .assessmentType("WEEKLY_CARDIO_RISK")
                         .riskLevel(riskLevel)
                         .riskPercentage(BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP))
@@ -322,7 +292,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                         .build();
                 riskAssessmentRepository.save(assessment);
 
-                // Bước 2: Tạo cảnh báo đẩy về bảng risk_warnings nếu mức độ nguy cơ vượt ngưỡng an toàn (Khác LOW)
                 if (!"LOW".equalsIgnoreCase(riskLevel)) {
                     RiskWarning warning = RiskWarning.builder()
                             .patient(patient)
@@ -338,7 +307,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                     riskWarningRepository.save(warning);
                 }
 
-                // Bước 3: Đồng bộ cập nhật thêm tóm tắt tim mạch này vào thông tin chung của WeeklyHealthReport
                 String combinedSummary = report.getAiSummary() + " | [AI Tim Mạch]: " + summary;
                 report.setAiSummary(combinedSummary);
                 weeklyHealthReportRepository.save(report);
@@ -350,4 +318,3 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         }
     }
 }
->>>>>>> 9b77fa3f0381d28b44f6d5e51413e35da69d4d89

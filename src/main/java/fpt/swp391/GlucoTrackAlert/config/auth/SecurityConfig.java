@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
                         // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
+                        .requestMatchers("/uploads/articles/**").permitAll()
                         .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/patient/**").hasRole("PATIENT")
