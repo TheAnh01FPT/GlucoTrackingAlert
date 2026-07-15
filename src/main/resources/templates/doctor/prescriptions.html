@@ -305,6 +305,51 @@
                 border-radius:10px;
                 letter-spacing:.4px;
             }
+
+            /* Dropdown gợi ý thuốc (gõ để tìm) */
+            .medicine-field {
+                position: relative;
+            }
+            .medicine-suggestions {
+                position: absolute;
+                top: calc(100% + 6px);
+                left: 0;
+                right: 0;
+                z-index: 50;
+                background: #fff;
+                border: 1px solid #e4e8f1;
+                border-radius: 12px;
+                max-height: 240px;
+                overflow-y: auto;
+                box-shadow: 0 12px 28px rgba(20,30,60,.12);
+                padding: 6px;
+            }
+            .medicine-suggestions .suggestion-item {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 9px 12px;
+                margin: 2px 0;
+                border: none;
+                border-radius: 8px;
+                background: none;
+                font-size: .85rem;
+                line-height: 1.3;
+                color: #1a1a2e;
+                cursor: pointer;
+                transition: background .12s ease;
+            }
+            .medicine-suggestions .suggestion-item:hover,
+            .medicine-suggestions .suggestion-item.active {
+                background: var(--primary-light);
+                color: var(--primary);
+            }
+            .medicine-suggestions .suggestion-empty {
+                padding: 10px 12px;
+                font-size: .8rem;
+                color: #9aa3b5;
+                text-align: center;
+            }
         </style>
     </head>
     <body>
@@ -415,9 +460,11 @@
             <div class="item-card">
                 <button type="button" class="remove-item-btn" title="Xoá thuốc này"><i class="bi bi-x-circle-fill"></i></button>
                 <div class="row g-2">
-                    <div class="col-md-6">
+                    <div class="col-md-6 medicine-field">
                         <label class="form-label">Tên thuốc *</label>
-                        <input type="text" class="form-control item-medicineName" placeholder="VD: Metformin 500mg"/>
+                        <input type="text" class="form-control item-medicineName"
+                               placeholder="Gõ để tìm trong danh mục, hoặc nhập tên khác" autocomplete="off"/>
+                        <div class="medicine-suggestions d-none"></div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Liều lượng *</label>
@@ -439,6 +486,7 @@
                         <label class="form-label">Hướng dẫn sử dụng</label>
                         <input type="text" class="form-control item-instructions" placeholder="VD: Uống sau ăn"/>
                     </div>
+                    <div class="col-md-12 item-contraindications d-none" style="background:#fff5f5;border-left:3px solid #e53e3e;padding:6px 10px;margin-top:6px;font-size:.8rem;color:#c53030;border-radius:0 4px 4px 0;"></div>
                 </div>
             </div>
         </template>
@@ -516,6 +564,79 @@
                 }
             }
 
+            // ==================== DANH MỤC THUỐC (dropdown gõ-để-tìm tự viết) ====================
+            let medicineCatalog = [];
+
+            async function loadMedicineCatalog() {
+                try {
+                    medicineCatalog = await fetch('/api/medications/catalog', {headers: authHeaders()})
+                            .then(r => {
+                                if (handleAuthError(r.status))
+                                    return [];
+                                return r.json();
+                            });
+                } catch (e) {
+                    medicineCatalog = [];
+                }
+            }
+
+            function checkContraindication(nameInput, contraBox) {
+                // So khớp đúng tên với danh mục để hiện cảnh báo chống chỉ định;
+                // gõ tên không khớp (thuốc ngoài danh mục) vẫn được chấp nhận bình thường.
+                const med = medicineCatalog.find(m => m.name === nameInput.value);
+                if (med && med.contraindications) {
+                    contraBox.textContent = `🚫 Chống chỉ định: ${med.contraindications}`;
+                    contraBox.classList.remove('d-none');
+                } else {
+                    contraBox.textContent = '';
+                    contraBox.classList.add('d-none');
+                }
+            }
+
+            function renderSuggestions(box, matches, nameInput, contraBox) {
+                if (!matches.length) {
+                    box.innerHTML = '<div class="suggestion-empty">Không có thuốc khớp trong danh mục — cứ gõ tiếp tên bạn muốn</div>';
+                } else {
+                    box.innerHTML = matches.map(m =>
+                            `<button type="button" class="suggestion-item" data-name="${escapeHtml(m.name)}">${escapeHtml(m.name)}</button>`
+                    ).join('');
+                }
+                box.classList.remove('d-none');
+
+                box.querySelectorAll('.suggestion-item').forEach(btn => {
+                    // dùng mousedown thay vì click để chạy TRƯỚC sự kiện blur của input
+                    btn.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        nameInput.value = btn.dataset.name;
+                        box.classList.add('d-none');
+                        checkContraindication(nameInput, contraBox);
+                    });
+                });
+            }
+
+            function wireMedicineSelect(card) {
+                const nameInput = card.querySelector('.item-medicineName');
+                const box = card.querySelector('.medicine-suggestions');
+                const contraBox = card.querySelector('.item-contraindications');
+
+                const showFiltered = () => {
+                    const q = nameInput.value.trim().toLowerCase();
+                    const matches = (q ? medicineCatalog.filter(m => m.name.toLowerCase().includes(q)) : medicineCatalog)
+                            .slice(0, 8);
+                    renderSuggestions(box, matches, nameInput, contraBox);
+                };
+
+                nameInput.addEventListener('focus', showFiltered);
+                nameInput.addEventListener('input', () => {
+                    showFiltered();
+                    checkContraindication(nameInput, contraBox);
+                });
+                nameInput.addEventListener('blur', () => {
+                    // delay nhỏ để mousedown trên gợi ý kịp xử lý trước khi list bị ẩn
+                    setTimeout(() => box.classList.add('d-none'), 150);
+                });
+            }
+
             function addItemRow() {
                 const tpl = document.getElementById('itemTemplate');
                 const clone = tpl.content.cloneNode(true);
@@ -528,6 +649,7 @@
                         showToast('Đơn thuốc phải có ít nhất một loại thuốc', 'warning');
                     }
                 });
+                wireMedicineSelect(card);
                 document.getElementById('itemsContainer').appendChild(clone);
             }
 
@@ -768,9 +890,12 @@
                 }
             }
 
-            document.addEventListener('DOMContentLoaded', function () {
+            // ==================== KẾT THÚC PHẦN CHỈ SỐ / DANH MỤC THUỐC ====================
+
+            document.addEventListener('DOMContentLoaded', async function () {
                 currentDoctorId = getDoctorIdFromUrl();
                 document.getElementById('prescribedDate').value = new Date().toISOString().slice(0, 10);
+                await loadMedicineCatalog();
                 addItemRow();
 
                 if (!currentDoctorId) {

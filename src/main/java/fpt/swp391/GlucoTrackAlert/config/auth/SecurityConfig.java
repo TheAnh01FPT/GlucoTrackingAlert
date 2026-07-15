@@ -15,13 +15,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/", "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
-                        "/css/**", "/js/**", "/images/**"
+                        "/css/**", "/js/**", "/images/**", "/oauth2/**"
                 ).permitAll()
                 .requestMatchers("/meal-logs").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                 .requestMatchers("/api/meal-logs/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
@@ -42,8 +42,11 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
+                .requestMatchers("/api/patient/assignments/**").hasRole("PATIENT")
                 .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
-                // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
+                // Ảnh avatar bác sĩ: public để bệnh nhân xem được
+                .requestMatchers("/uploads/doctors/*/avatar*").permitAll()
+                // Ảnh CCCD/chứng chỉ nhạy cảm: chỉ ADMIN và DOCTOR
                 .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR")
                 .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                 .requestMatchers("/patient/**").hasRole("PATIENT")
@@ -59,6 +62,10 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .formLogin(form -> form.disable())
+                .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")
+                .successHandler(oAuth2LoginSuccessHandler)
+                )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

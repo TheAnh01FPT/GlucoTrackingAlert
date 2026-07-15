@@ -197,6 +197,21 @@ def ensemble_predict(data: dict) -> dict:
     gender      = data.get('gender') or 'MALE'
     is_pregnant = bool(data.get('isPregnant') or False)
     # smoker/physActivity/genHealth không còn dùng (V3 đã bỏ) -- xem ghi chú trong ensemble_predict()
+    # Các field bắt buộc -- Java (MlAnalysisService) đã validate trước khi gửi sang,
+    # nhưng vẫn check lại ở đây để service Python không tự bịa số khi bị gọi trực tiếp
+    # (trước đây dùng data.get(key, default) khiến luôn có giá trị giả khi field thiếu)
+    required = ['bloodSugar', 'systolic', 'diastolic', 'bmi', 'age', 'gender']
+    missing = [k for k in required if data.get(k) is None]
+    if missing:
+        raise ValueError(f"Thiếu dữ liệu bắt buộc: {', '.join(missing)}")
+
+    blood_sugar = float(data['bloodSugar'])
+    systolic    = int(data['systolic'])
+    diastolic   = int(data['diastolic'])
+    bmi         = float(data['bmi'])
+    age         = int(data['age'])
+    gender      = data['gender']
+    is_pregnant = bool(data.get('isPregnant', False))
     hypertension = 1 if systolic >= 140 else 0
 
     # ---- Rule ADA cứng ----
@@ -220,11 +235,18 @@ def ensemble_predict(data: dict) -> dict:
         proba_v4 = float(model_v4.predict_proba(x_v4)[0][1])
 
         # Model V5 — Diabetes Prediction (blood_glucose + hypertension)
-        # Lưu ý: hệ thống chưa thu thập "smoker" thật từ bệnh nhân, nên KHÔNG
-        # bịa khẳng định "không hút" (sẽ làm model lệch lạc quan quá mức).
-        # Dùng giá trị trung tính (1, nằm giữa 0=không hút và 2=có hút) để
-        # model dựa chủ yếu vào các chỉ số có thật khác (glucose, bmi, age...).
-        smoke_enc = 1  # trung tính - chưa có dữ liệu thật, xem TODO ở MlAnalysisService.java
+        # smokingStatus lấy từ Patient.smokingStatus (cột đã có sẵn trong DB),
+        # mapping y hệt logic DailyHealthLogServiceImpl.java đang dùng cho model khác:
+        # "never smoked"=0, "formerly smoked"=1, "smokes"=2, không rõ/khác -> trung tính=1
+        smoking_status = str(data.get('smokingStatus') or '').strip().lower()
+        if smoking_status == 'never smoked':
+            smoke_enc = 0
+        elif smoking_status == 'formerly smoked':
+            smoke_enc = 1
+        elif smoking_status == 'smokes':
+            smoke_enc = 2
+        else:
+            smoke_enc = 1  # chưa rõ thông tin -> dùng giá trị trung tính, không suy diễn "không hút"
         gender_enc = 1 if gender == 'FEMALE' else 0
         x_v5 = np.array([[
             glucose_mgdl, bmi, age,
@@ -293,6 +315,10 @@ def predict():
         result = ensemble_predict(data)
         print(f"[DEBUG] Result: {result}")
         return jsonify(result)
+
+        return jsonify(ensemble_predict(data))
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -346,14 +372,11 @@ if __name__ == '__main__':
     print("🚀 GlucoTracking ML Service v3.0")
     print("📍 http://localhost:5000")
     print("   GET  /health")
-<<<<<<< HEAD
     print("   POST /predict")
     print("   POST /predict/batch")
     app.run(host='0.0.0.0', port=5000, debug=False)
-=======
     print("   POST /predict              (Diabetes ensemble)")
     print("   POST /predict/batch        (Diabetes batch)")
     print("   POST /predict-cardio       (Heart Disease - profile data)")
     print("   POST /predict/heart        (Heart Disease - weekly avg + profile)")
     app.run(host='0.0.0.0', port=5000, debug=False)
->>>>>>> 9b77fa3f0381d28b44f6d5e51413e35da69d4d89

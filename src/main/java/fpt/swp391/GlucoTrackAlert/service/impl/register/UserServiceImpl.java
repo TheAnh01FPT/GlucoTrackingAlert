@@ -10,8 +10,8 @@ import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepo
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.PasswordResetTokenRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.model.user.PasswordResetToken;
@@ -138,6 +138,15 @@ public class UserServiceImpl implements UserService {
         tokenRepository.save(verificationToken);
 
         sendOtpEmail(email, request.getFullName().trim(), otp);
+
+        try {
+            sendOtpEmail(request.getEmail().trim(), request.getFullName().trim(), otp);
+        } catch (Exception ex) {
+            // Không lộ message kỹ thuật (vd. SMTP "Authentication failed") ra ngoài.
+            // @Transactional sẽ rollback user + token vừa tạo do đây là RuntimeException.
+            throw new RuntimeException(
+                    "Không thể gửi email xác nhận lúc này. Vui lòng thử lại sau ít phút.");
+        }
 
         return user;
     }

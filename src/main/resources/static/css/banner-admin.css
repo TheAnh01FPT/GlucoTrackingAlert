@@ -1,0 +1,287 @@
+:root {
+    --primary: #1a6b5a;
+    --primary-light: #e8f5f1;
+    --primary-dark: #134d40;
+    --accent: #27ae60;
+    --danger: #e74c3c;
+    --danger-light: #fde8e8;
+    --font: 'Be Vietnam Pro', sans-serif;
+    --text-color: #1e293b;
+    --bg-color: #f8fafc;
+}
+
+* {
+    font-family: var(--font) !important;
+}
+
+body {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color);
+}
+
+/* --- CỐ ĐỊNH SIDEBAR (Giữ nguyên cấu trúc) --- */
+.sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--primary-dark);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+    padding: 20px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Ép các thẻ link menu luôn nằm dọc, cách đều nhau */
+.sidebar a, .sidebar .nav-link, .sidebar-nav a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 24px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    text-decoration: none !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
+    float: none !important; /* Chống trôi chữ */
+}
+
+/* Hiệu ứng hover menu */
+.sidebar a:hover, .sidebar a.active,
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-left: 4px solid var(--accent) !important;
+    padding-left: 20px !important;
+}
+
+/* Sửa khoảng cách phần Logo phía trên */
+.sidebar-logo, .sidebar h5, .sidebar .brand {
+    padding: 10px 24px 20px !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    margin-bottom: 15px !important;
+    display: block !important;
+}
+
+/* Đẩy phần thông tin Admin xuống dưới cùng nếu cần */
+.sidebar .admin-info, .sidebar div:last-child {
+    margin-top: auto !important;
+    padding: 20px 24px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Khu vực chính - Tạo khoảng cách thở an toàn, không lo bị đè chữ */
+.main {
+    margin-left: 240px;
+    padding: 40px !important;
+}
+
+/* --- SỬA LỖI NÚT THÊM MỚI (Bỏ hoàn toàn việc ép khoảng cách) --- */
+.btn-blue, .btn-add, a[href*="create"] {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(26, 107, 90, 0.15) !important;
+    margin-bottom: 15px !important; /* Tạo khoảng cách an toàn với chữ bên dưới */
+    margin-top: 10px !important;
+}
+
+.btn-blue:hover, .btn-add:hover, a[href*="create"]:hover {
+    background-color: var(--primary-dark) !important;
+    box-shadow: 0 6px 12px rgba(26, 107, 90, 0.25) !important;
+}
+
+/* --- THIẾT KẾ LẠI BẢNG (TABLE) CHUẨN SAAS Y TẾ --- */
+.table {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    margin-top: 20px !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* Tạo màu nền xám nhạt cao cấp cho thanh tiêu đề bảng */
+.table thead th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.5px !important;
+    padding: 16px 20px !important;
+    border-bottom: 2px solid #edf2f7 !important;
+    border-top: none !important;
+}
+
+/* Căn giữa toàn bộ dữ liệu theo chiều dọc (Hết lệch chữ) */
+.table tbody td {
+    padding: 16px 20px !important;
+    vertical-align: middle !important;
+    color: #334155 !important;
+    font-size: 0.925rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.table tbody tr:hover td {
+    background-color: #fdfefe !important;
+}
+
+/* Khung ảnh Banner tinh tế */
+.table img {
+    width: 120px !important;
+    height: auto !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+/* --- BADGES TRẠNG THÁI --- */
+.badge-status, .badge-active, .badge-inactive, .table .badge {
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+}
+
+/* Tự động bắt theo class màu của bạn hoặc Bootstrap */
+.badge-success, [class*="active"], [class*="Hoạt động"] {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+}
+
+/* --- NÚT SỬA / XÓA CHUẨN THEO ẢNH --- */
+.table .btn-sm, .action-btn, a[href*="edit"], a[id*="delete"] {
+    padding: 6px 14px !important;
+    font-size: 0.85rem !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid transparent !important;
+}
+
+/* Nút Sửa */
+.btn-edit, a[href*="edit"], .btn-outline-primary {
+    background-color: var(--primary-light) !important;
+    color: var(--primary) !important;
+    border-color: #bbf7d0 !important;
+}
+
+.btn-edit:hover, a[href*="edit"]:hover {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+}
+
+/* Nút Xóa */
+.btn-delete, [class*="delete"], .btn-outline-danger {
+    background-color: var(--danger-light) !important;
+    color: var(--danger) !important;
+    border-color: #fecaca !important;
+}
+
+.btn-delete:hover, [class*="delete"]:hover {
+    background-color: var(--danger) !important;
+    color: #fff !important;
+}
+
+/* --- TRANG FORM NHẬP LIỆU --- */
+.form-container {
+    background: #fff;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+}
+
+.form-control, .form-select {
+    padding: 12px 16px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(26, 107, 90, 0.12) !important;
+}
+
+/* --- CHỈ SỬA 2 NÚT HỦY BỎ / LƯU BANNER BỊ LỖI THEO HÌNH --- */
+
+/* Khung bọc chân trang form để đẩy nút ra xa nhau */
+.form-container form > div:last-child,
+.form-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 16px !important; /* Tạo khoảng cách giữa 2 nút */
+    margin-top: 30px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid #e2e8f0 !important;
+}
+
+/* Sửa nút Lưu Banner */
+.form-container button[type="submit"],
+.form-container button:has(img),
+.form-container input[type="submit"] {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 10px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 10px rgba(26, 107, 90, 0.15) !important;
+    transition: all 0.2s ease !important;
+}
+
+.form-container button[type="submit"]:hover {
+    background-color: var(--primary-dark) !important;
+    box-shadow: 0 6px 14px rgba(26, 107, 90, 0.25) !important;
+}
+
+/* Sửa nút Hủy Bỏ */
+.form-container a[href*="banner"],
+.form-container a:contains("Hủy"),
+.form-container a.btn-light {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 10px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.form-container a[href*="banner"]:hover {
+    background-color: #e2e8f0 !important;
+    color: #1e293b !important;
+}

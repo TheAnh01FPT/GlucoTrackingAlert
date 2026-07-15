@@ -1,17 +1,13 @@
-package fpt.swp391.GlucoTrackAlert.service.impl;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
-import fpt.swp391.GlucoTrackAlert.dto.AdminCreateDoctorRequest;
-import fpt.swp391.GlucoTrackAlert.dto.DoctorRequest;
-import fpt.swp391.GlucoTrackAlert.dto.DoctorResponse;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
-import fpt.swp391.GlucoTrackAlert.service.DoctorService;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import java.time.LocalDateTime;
 import java.util.List;

@@ -2,10 +2,10 @@ package fpt.swp391.GlucoTrackAlert.service.medication;
 
 import fpt.swp391.GlucoTrackAlert.dto.medication.*;
 import fpt.swp391.GlucoTrackAlert.dto.reminder.Duy_ReminderRequest;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.medication.*;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.medication.*;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.Duy_ReminderService;
@@ -29,6 +29,7 @@ public class MedicationServiceImpl implements MedicationService {
     @Autowired private PatientRepository patientRepo;
     @Autowired private DoctorRepository doctorRepo;
     @Autowired private Duy_ReminderService reminderService;
+    @Autowired private MedicineRepository medicineRepo;
 
     @Override
     @Transactional
@@ -186,6 +187,21 @@ public class MedicationServiceImpl implements MedicationService {
         for (PrescriptionItem item : items) {
             reminderService.cancelByPrescriptionItemId(item.getId());
         }
+    }
+
+    @Override
+    public List<MedicineResponse> getMedicineCatalog() {
+        return medicineRepo.findByActiveTrueOrderByNameAsc().stream()
+                .map(m -> MedicineResponse.builder()
+                        .id(m.getId()).name(m.getName())
+                        .defaultDosage(m.getDefaultDosage())
+                        .defaultFrequency(m.getDefaultFrequency())
+                        .defaultTimeOfDay(m.getDefaultTimeOfDay())
+                        .defaultDurationDays(m.getDefaultDurationDays())
+                        .defaultInstructions(m.getDefaultInstructions())
+                        .contraindications(m.getContraindications())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private PrescriptionResponse toResponse(Prescription p, List<PrescriptionItem> items) {

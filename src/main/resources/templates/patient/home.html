@@ -11,7 +11,8 @@
         <div class="home-container">
 
             <!-- Top Area: Greeting top right -->
-            <div class="home-navbar" style="justify-content: flex-end; border-bottom: none; margin-bottom: 10px; padding-bottom: 0;">
+            <div class="home-navbar" style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 10px; padding-bottom: 0;">
+                <a href="/" style="color: #27ae60; text-decoration: none; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 5px;">&larr; Quay lại trang chủ</a>
                 <div class="user-greeting">
                     <span class="active-dot"></span>
                     <span>Hello, </span>
@@ -51,7 +52,15 @@
                     <div class="arrow-icon">Truy cập ngay ➔</div>
                 </a>
 
-                <!-- 3. Lịch sử cảnh báo đã gửi (ACTIVE) -->
+                <!-- 3. Chọn / Đề xuất bác sĩ (ACTIVE) -->
+                <a id="chooseDoctorLink" th:href="@{/patient/choose-doctor}" class="feature-card">
+                    <div class="card-icon">🩺</div>
+                    <h3 class="card-title">Chọn bác sĩ đồng hành</h3>
+                    <p class="card-desc">Xem danh sách bác sĩ và gửi đề xuất để được theo dõi tình trạng sức khỏe. Admin sẽ duyệt đề xuất trước khi bác sĩ chính thức đồng hành.</p>
+                    <div class="arrow-icon">Truy cập ngay ➔</div>
+                </a>
+
+                <!-- 4. Lịch sử cảnh báo đã gửi (ACTIVE) -->
                 <a id="notificationHistoryLink" th:href="@{/patient/notification-history}" class="feature-card card-alert">
                     <span class="badge-live"><span class="pulse-dot"></span>Tự động</span>
                     <div class="card-icon">🚨</div>
@@ -60,7 +69,7 @@
                     <div class="arrow-icon">Truy cập ngay ➔</div>
                 </a>
 
-                <!-- 4. Nhật ký sức khỏe hàng ngày (ACTIVE) -->
+                <!-- 5. Nhật ký sức khỏe hàng ngày (ACTIVE) -->
                 <a id="healthLogLink" th:href="@{/health-logs/my-logs(userId=${userId})}" class="feature-card">
                     <div class="card-icon">📝</div>
                     <h3 class="card-title">Nhật ký sức khỏe hàng ngày</h3>
@@ -68,7 +77,7 @@
                     <div class="arrow-icon">Truy cập ngay ➔</div>
                 </a>
 
-                <!-- 4. Nhật ký dinh dưỡng (ACTIVE) -->
+                <!-- 6. Nhật ký dinh dưỡng (ACTIVE) -->
                 <a th:href="@{/meal-logs}" class="feature-card">
                     <div class="card-icon">🍎</div>
                     <h3 class="card-title">Nhật ký dinh dưỡng & bữa ăn</h3>
@@ -76,7 +85,7 @@
                     <div class="arrow-icon">Truy cập ngay ➔</div>
                 </a>
 
-                <!-- 5. Nhắc nhở sức khoẻ (ACTIVE) -->
+                <!-- 7. Nhắc nhở sức khoẻ (ACTIVE) -->
                 <a th:href="@{/health-reminders}" class="feature-card">
                     <div class="card-icon">🔔</div>
                     <h3 class="card-title">Nhắc nhở sức khoẻ</h3>
@@ -84,7 +93,7 @@
                     <div class="arrow-icon">Truy cập ngay ➔</div>
                 </a>
 
-                <!-- 6. Báo cáo tuần & AI (ACTIVE) -->
+                <!-- 8. Báo cáo tháng & AI (ACTIVE) -->
                 <a th:href="@{/health-logs/ai-report}" class="feature-card">
                     <div class="card-icon">📈</div>
                     <h3 class="card-title">Báo cáo tháng & AI Phân tích</h3>
@@ -92,7 +101,15 @@
                     <div class="arrow-icon">Truy cập ngay ➔</div>
                 </a>
 
-                <!-- 7. Đánh giá nguy cơ AI (DISABLED) -->
+                <!-- 9. Đánh giá bác sĩ (ACTIVE) -->
+                <a th:href="@{/patient/feedbacks}" class="feature-card">
+                    <div class="card-icon">💬</div>
+                    <h3 class="card-title">Đánh giá / Phản hồi</h3>
+                    <p class="card-desc">Gửi đánh giá và ý kiến phản hồi về chất lượng tư vấn sau khi nhận lời khuyên từ bác sĩ chuyên khoa.</p>
+                    <div class="arrow-icon">Truy cập ngay ➔</div>
+                </a>
+
+                <!-- 10. Đánh giá nguy cơ AI (DISABLED) -->
                 <div class="feature-card card-disabled">
                     <span class="badge-soon">Sắp ra mắt</span>
                     <div class="card-icon">🧠</div>

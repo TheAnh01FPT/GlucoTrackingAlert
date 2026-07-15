@@ -1,5 +1,6 @@
 package fpt.swp391.GlucoTrackAlert.model;
 
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -30,4 +31,10 @@ public class DoctorPatientAssignment {
     private String status;
 
     private String note;
+
+    // Lý do Admin từ chối đề xuất (status = rejected)
+    private String rejectReason;
+
+    // Lý do hủy phân công đang active (vd: bệnh nhân đổi sang bác sĩ khác, status = inactive)
+    private String cancelReason;
 }

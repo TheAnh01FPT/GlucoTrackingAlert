@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Quản lý Giới thiệu Bác sĩ – GlucoTrackAlert</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --primary: #1a6b5a;
+            --primary-light: #e8f5f1;
+            --primary-dark: #134d40;
+            --accent: #f59e0b;
+            --sidebar-w: 240px;
+            --font: 'Be Vietnam Pro', sans-serif;
+        }
+        * { font-family: var(--font); }
+        body { background: #f4f7f6; }
+        .sidebar {
+            width: var(--sidebar-w); min-height: 100vh;
+            background: var(--primary-dark); position: fixed;
+            top: 0; left: 0; display: flex; flex-direction: column; z-index: 100;
+        }
+        .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo span { color: #fff; font-weight: 700; font-size: 1.1rem; }
+        .sidebar-logo small { color: rgba(255,255,255,0.5); font-size: 0.7rem; display: block; }
+        .sidebar-menu { padding: 16px 0; flex: 1; }
+        .nav-item-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px; color: rgba(255,255,255,0.75);
+            text-decoration: none; font-size: 0.88rem; font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-item-link:hover, .nav-item-link.active {
+            background: rgba(255,255,255,0.12); color: #fff;
+        }
+        .nav-item-link i { font-size: 1rem; width: 18px; }
+        .main { margin-left: var(--sidebar-w); padding: 32px; }
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; color: #1a2b23; margin: 0; }
+        .card { border-radius: 14px; border: none; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+        .badge-active { background: #d1fae5; color: #065f46; }
+        .badge-inactive { background: #fee2e2; color: #991b1b; }
+        .action-btn {
+            background: none; border: none; padding: 5px 8px;
+            border-radius: 6px; cursor: pointer; font-size: 1rem;
+        }
+        .action-btn.edit { color: #0077c2; }
+        .action-btn.edit:hover { background: #e0f0ff; }
+        .action-btn.toggle { color: #059669; }
+        .action-btn.toggle:hover { background: #d1fae5; }
+        .action-btn.del { color: #dc2626; }
+        .action-btn.del:hover { background: #fee2e2; }
+        .avatar-preview {
+            width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+            border: 2px solid #e5e7eb;
+        }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <span>🩺 GlucoTrack</span>
+        <small>Admin Panel</small>
+    </div>
+    <div class="sidebar-menu">
+        <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+        <a href="/admin/doctors" class="nav-item-link"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
+        <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
+        <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
+        <a href="/admin/doctor-introductions" class="nav-item-link active"><i class="bi bi-star-half"></i> Giới thiệu Bác sĩ</a>
+        <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
+        <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="page-header d-flex align-items-center justify-content-between">
+        <div>
+            <h1><i class="bi bi-star-half text-success me-2"></i>Giới thiệu Bác sĩ</h1>
+            <p class="text-muted mb-0" style="font-size:0.9rem">Quản lý danh sách bác sĩ tiêu biểu hiển thị trên trang chủ</p>
+        </div>
+        <button class="btn btn-success" onclick="openCreate()">
+            <i class="bi bi-plus-lg me-1"></i> Thêm bác sĩ
+        </button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table mb-0 align-middle">
+                <thead style="background:#f8faf9; border-bottom:2px solid #e5e7eb;">
+                    <tr>
+                        <th class="px-4 py-3" style="width:60px">Ảnh</th>
+                        <th class="px-3 py-3">Tên hiển thị</th>
+                        <th class="px-3 py-3">Học vị</th>
+                        <th class="px-3 py-3">Chuyên khoa</th>
+                        <th class="px-3 py-3" style="width:80px">Thứ tự</th>
+                        <th class="px-3 py-3" style="width:100px">Trạng thái</th>
+                        <th class="px-3 py-3" style="width:120px">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <div class="spinner-border spinner-border-sm text-success me-2"></div> Đang tải...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THÊM / SỬA -->
+<div class="modal fade" id="modalForm" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header" style="background:var(--primary-dark)">
+                <h5 class="modal-title text-white" id="modalTitle">Thêm bác sĩ giới thiệu</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="editId"/>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Chọn bác sĩ <span class="text-danger">*</span></label>
+                        <select class="form-select" id="fDoctorSelect" onchange="onDoctorSelect()">
+                            <option value="">-- Chọn bác sĩ --</option>
+                        </select>
+                        <input type="hidden" id="fDoctorId"/>
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label fw-semibold">Tên hiển thị</label>
+                        <input type="text" class="form-control bg-light" id="fDisplayName" readonly placeholder="Tự điền khi chọn bác sĩ"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Học vị</label>
+                        <input type="text" class="form-control bg-light" id="fTitle" readonly placeholder="Tự điền"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Thứ tự hiển thị</label>
+                        <input type="number" class="form-control" id="fOrder" value="0" min="0"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Chuyên khoa</label>
+                        <input type="text" class="form-control bg-light" id="fSpec" readonly placeholder="Tự điền"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Ảnh đại diện</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <img id="fAvatarPreview" src="" alt="Ảnh đại diện"
+                                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb;display:none;"/>
+                            <i id="fAvatarIcon" class="bi bi-person-workspace text-muted fs-1"></i>
+                            <span id="fAvatarNone" class="text-muted small">Chưa có ảnh</span>
+                        </div>
+                        <input type="hidden" id="fAvatar"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Lời giới thiệu</label>
+                        <textarea class="form-control bg-light" id="fIntro" rows="3" readonly placeholder="Tự điền"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="fActive" checked/>
+                            <label class="form-check-label fw-semibold" for="fActive">Hiển thị trên trang chủ</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-success" onclick="submitForm()">
+                    <i class="bi bi-check-lg me-1"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL XÁC NHẬN XÓA -->
+<div class="modal fade" id="modalDelete" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <i class="bi bi-trash3 text-danger fs-1 mb-3 d-block"></i>
+                <p class="fw-semibold mb-1">Xác nhận xóa?</p>
+                <p class="text-muted small mb-3">Hành động này không thể hoàn tác.</p>
+                <button class="btn btn-danger me-2" onclick="confirmDelete()">Xóa</button>
+                <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container">
+    <div id="toast" class="toast align-items-center border-0 text-white" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API = '/api/admin/doctor-introductions';
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+
+    let deleteTargetId = null;
+    const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modalDelete = new bootstrap.Modal(document.getElementById('modalDelete'));
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+        const el = document.getElementById('toast');
+        el.className = `toast align-items-center border-0 text-white bg-${type}`;
+        document.getElementById('toastMsg').textContent = msg;
+        bootstrap.Toast.getOrCreateInstance(el, { delay: 3000 }).show();
+    }
+
+    // ── Load danh sách ───────────────────────────────────────────────────────
+    let currentDoctorCount = 0;
+
+    async function loadList() {
+        try {
+            const res = await fetch(API, { headers });
+            const list = await res.json();
+            currentDoctorCount = list.length;
+            renderTable(list);
+        } catch (e) {
+            showToast('Không tải được danh sách', 'danger');
+        }
+    }
+
+    function renderTable(list) {
+        const tbody = document.getElementById('tableBody');
+        if (!list.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">Chưa có bác sĩ nào</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = list.map(d => `
+            <tr>
+                <td class="px-4">
+                    ${d.avatarUrl
+                        ? `<img src="${d.avatarUrl}" class="avatar-preview" alt="ảnh"/>`
+                        : `<div class="avatar-preview d-flex align-items-center justify-content-center bg-light text-muted"><i class="bi bi-person fs-4"></i></div>`}
+                </td>
+                <td class="px-3 fw-semibold">${d.displayName || '—'}</td>
+                <td class="px-3 text-muted">${d.title || '—'}</td>
+                <td class="px-3 text-muted">${d.specialization || '—'}</td>
+                <td class="px-3 text-center">${d.displayOrder}</td>
+                <td class="px-3">
+                    <span class="badge rounded-pill px-3 py-2 ${d.status === 'active' ? 'badge-active' : 'badge-inactive'}">
+                        ${d.status === 'active' ? 'Hiển thị' : 'Ẩn'}
+                    </span>
+                </td>
+                <td class="px-3">
+                    <button class="action-btn edit" onclick='openEdit(${JSON.stringify(d)})' title="Sửa"><i class="bi bi-pencil"></i></button>
+                    <button class="action-btn toggle" onclick="toggleActive(${d.id})" title="${d.status === 'active' ? 'Tắt hiển thị' : 'Bật hiển thị'}">
+                        <i class="bi bi-toggle-${d.status === 'active' ? 'on text-success' : 'off text-muted'}"></i>
+                    </button>
+                    <button class="action-btn del" onclick="openDelete(${d.id})" title="Xóa"><i class="bi bi-trash3"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // ── Load dropdown bác sĩ ─────────────────────────────────────────────────
+    async function loadDoctorOptions(selectedDoctorId = null) {
+        try {
+            const res = await fetch('/api/doctors', { headers });
+            const list = await res.json();
+            const sel = document.getElementById('fDoctorSelect');
+            sel.innerHTML = '<option value="">-- Chọn bác sĩ --</option>';
+            list.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.fullName;
+                opt.dataset.doctor = JSON.stringify(d);
+                if (selectedDoctorId && d.id == selectedDoctorId) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            // Nếu đang sửa thì fill lại thông tin bác sĩ đã chọn
+            if (selectedDoctorId) fillDoctorInfo();
+        } catch { /* bỏ qua nếu lỗi */ }
+    }
+
+    function fillDoctorInfo() {
+        const sel = document.getElementById('fDoctorSelect');
+        const opt = sel.options[sel.selectedIndex];
+        if (!sel.value || !opt.dataset.doctor) return;
+        const d = JSON.parse(opt.dataset.doctor);
+        document.getElementById('fDoctorId').value    = d.id;
+        document.getElementById('fDisplayName').value = d.fullName || '';
+        document.getElementById('fTitle').value       = d.degree || '';
+        document.getElementById('fSpec').value        = d.specialization || '';
+        document.getElementById('fIntro').value       = d.introduction || '';
+        document.getElementById('fAvatar').value      = d.avatarUrl || '';
+
+        // Hiện ảnh preview
+        const preview = document.getElementById('fAvatarPreview');
+        const icon    = document.getElementById('fAvatarIcon');
+        const none    = document.getElementById('fAvatarNone');
+        if (d.avatarUrl) {
+            preview.src = d.avatarUrl;
+            preview.style.display = 'block';
+            icon.style.display = 'none';
+            none.style.display = 'none';
+        } else {
+            preview.style.display = 'none';
+            icon.style.display = 'block';
+            none.style.display = 'inline';
+        }
+    }
+
+    function onDoctorSelect() {
+        fillDoctorInfo();
+    }
+
+    // ── Thêm mới ─────────────────────────────────────────────────────────────
+    function openCreate() {
+        document.getElementById('modalTitle').textContent = 'Thêm bác sĩ giới thiệu';
+        document.getElementById('editId').value = '';
+        document.getElementById('fDoctorId').value = '';
+        document.getElementById('fDisplayName').value = '';
+        document.getElementById('fTitle').value = '';
+        document.getElementById('fSpec').value = '';
+        document.getElementById('fIntro').value = '';
+        document.getElementById('fAvatar').value = '';
+        document.getElementById('fAvatarPreview').style.display = 'none';
+        document.getElementById('fAvatarIcon').style.display    = 'block';
+        document.getElementById('fAvatarNone').style.display    = 'inline';
+        document.getElementById('fOrder').value = 0;
+        document.getElementById('fOrder').max = currentDoctorCount + 1;
+        document.getElementById('fActive').checked = true;
+        loadDoctorOptions();
+        modalForm.show();
+    }
+
+    // ── Sửa ──────────────────────────────────────────────────────────────────
+    function openEdit(d) {
+        document.getElementById('modalTitle').textContent = 'Chỉnh sửa bác sĩ giới thiệu';
+        document.getElementById('editId').value = d.id;
+        document.getElementById('fDoctorId').value = d.doctorId || '';
+        document.getElementById('fDisplayName').value = d.displayName || '';
+        document.getElementById('fTitle').value = d.title || '';
+        document.getElementById('fSpec').value = d.specialization || '';
+        document.getElementById('fIntro').value = d.introduction || '';
+        document.getElementById('fAvatar').value = d.avatarUrl || '';
+        document.getElementById('fOrder').value = d.displayOrder ?? 0;
+        document.getElementById('fOrder').max = currentDoctorCount;
+        document.getElementById('fActive').checked = d.status === 'active';
+
+        const preview = document.getElementById('fAvatarPreview');
+        const icon    = document.getElementById('fAvatarIcon');
+        const none    = document.getElementById('fAvatarNone');
+        if (d.avatarUrl) {
+            preview.src = d.avatarUrl;
+            preview.style.display = 'block';
+            icon.style.display = 'none';
+            none.style.display = 'none';
+        } else {
+            preview.style.display = 'none';
+            icon.style.display = 'block';
+            none.style.display = 'inline';
+        }
+
+        loadDoctorOptions(d.doctorId);
+        modalForm.show();
+    }
+
+    // ── Submit form (tạo / cập nhật) ─────────────────────────────────────────
+    async function submitForm() {
+        const fullName = document.getElementById('fDisplayName').value.trim();
+        if (!document.getElementById('fDoctorId').value) {
+            showToast('Vui lòng chọn bác sĩ', 'danger'); return;
+        }
+
+        const orderRaw = document.getElementById('fOrder').value;
+        const displayOrder = parseInt(orderRaw);
+        const orderMax = parseInt(document.getElementById('fOrder').max) || currentDoctorCount;
+        if (isNaN(displayOrder) || displayOrder < 0) {
+            showToast('Thứ tự hiển thị phải là số nguyên >= 0', 'danger'); return;
+        }
+        if (displayOrder > orderMax) {
+            showToast(`Thứ tự hiển thị không được vượt quá ${orderMax}`, 'danger'); return;
+        }
+
+        const avatarUrl = document.getElementById('fAvatar').value.trim() || null;
+
+        const id = document.getElementById('editId').value;
+        const body = {
+            doctorId:       document.getElementById('fDoctorId').value || null,
+            displayName:    fullName,
+            title:          document.getElementById('fTitle').value.trim() || null,
+            specialization: document.getElementById('fSpec').value.trim() || null,
+            introduction:   document.getElementById('fIntro').value.trim() || null,
+            avatarUrl,
+            displayOrder,
+            status:         document.getElementById('fActive').checked ? 'active' : 'inactive',
+        };
+
+        try {
+            const url = id ? `${API}/${id}` : API;
+            const method = id ? 'PUT' : 'POST';
+            const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
+            if (!res.ok) throw new Error();
+            modalForm.hide();
+            showToast(id ? 'Cập nhật thành công' : 'Thêm thành công');
+            loadList();
+        } catch {
+            showToast('Lưu thất bại', 'danger');
+        }
+    }
+
+    // ── Toggle bật/tắt ───────────────────────────────────────────────────────
+    async function toggleActive(id) {
+        try {
+            const res = await fetch(`${API}/${id}/toggle`, { method: 'PATCH', headers });
+            if (!res.ok) throw new Error();
+            loadList();
+        } catch {
+            showToast('Thao tác thất bại', 'danger');
+        }
+    }
+
+    // ── Xóa ──────────────────────────────────────────────────────────────────
+    function openDelete(id) {
+        deleteTargetId = id;
+        modalDelete.show();
+    }
+
+    async function confirmDelete() {
+        try {
+            const res = await fetch(`${API}/${deleteTargetId}`, { method: 'DELETE', headers });
+            if (!res.ok) throw new Error();
+            modalDelete.hide();
+            showToast('Đã xóa');
+            loadList();
+        } catch {
+            showToast('Xóa thất bại', 'danger');
+        }
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadList();
+</script>
+</body>
+</html>
