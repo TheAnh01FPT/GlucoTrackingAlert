@@ -11,7 +11,6 @@ public class Duy_Meal_Logs {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FIX 1: Đổi tên cột từ "user_id" → "patient_id" cho đúng với bảng patients
     @Column(name = "patient_id", nullable = false)
     private Long patientId;
 

@@ -8,6 +8,9 @@
         <goals>
             <goal>spring-boot:run</goal>
         </goals>
+        <properties>
+            <spring-boot.run.profiles>local</spring-boot.run.profiles>
+        </properties>
     </action>
     <action>
         <actionName>debug</actionName>
