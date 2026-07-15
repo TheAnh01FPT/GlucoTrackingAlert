@@ -20,8 +20,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                            "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
-                            "/css/**", "/js/**", "/images/**"
                             "/", "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
                             "/css/**", "/js/**", "/images/**", "/oauth2/**"
                         ).permitAll()
@@ -31,7 +29,6 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/reminders/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
-                        .requestMatchers("/api/ai/**").hasAnyRole("DOCTOR", "ADMIN")
                         .requestMatchers("/ai/**").hasAnyRole("ADMIN", "DOCTOR")
 
                         .requestMatchers("/patient/medications").hasAnyRole("PATIENT", "ADMIN")

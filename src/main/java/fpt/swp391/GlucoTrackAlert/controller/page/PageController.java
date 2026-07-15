@@ -33,15 +33,12 @@ public class PageController {
     public PageController(PatientService patientService,
                           UserRepository userRepository,
                           RelativeService relativeService,
-                          DoctorRepository doctorRepository) {
-        this.patientService = patientService;
-        this.userRepository = userRepository;
-        this.relativeService = relativeService;
-        this.doctorRepository = doctorRepository;
+                          DoctorRepository doctorRepository,
                           fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;
+        this.doctorRepository = doctorRepository;
         this.bannerRepository = bannerRepository;
     }
 
@@ -162,7 +159,7 @@ public class PageController {
 
     @GetMapping("/doctor/prescriptions")
     public String doctorPrescriptions() {
-        return "prescriptions";
+        return "doctor/prescriptions";
     }
 
     @GetMapping("/health-reminders")
@@ -183,7 +180,15 @@ public class PageController {
     }
 
     @GetMapping("/patient/choose-doctor")
-    public String chooseDoctorPage() {
+    public String chooseDoctorPage(Model model) {
+        Long userId = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            String email = (String) auth.getPrincipal();
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) userId = user.getId();
+        }
+        model.addAttribute("userId", userId);
         return "patient/choose-doctor";
     }
 

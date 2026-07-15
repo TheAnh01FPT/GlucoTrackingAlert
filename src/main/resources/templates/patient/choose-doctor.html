@@ -3,331 +3,478 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Chọn bác sĩ đồng hành – GlucoTrackAlert</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <title>Chọn bác sĩ đồng hành | GlucoTrack</title>
     <style>
-        :root {
-            --primary: #1a6b5a;
-            --primary-light: #e8f5f1;
-            --primary-dark: #134d40;
-            --accent: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --font: 'Be Vietnam Pro', sans-serif;
-            --sidebar-w: 250px;
-        }
-        * { font-family: var(--font); }
-        body { background: #f4f7f6; margin: 0; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-        .app-shell { display: flex; min-height: 100vh; }
+:root {
+    --bg-gradient: linear-gradient(135deg, #f0f7f7 0%, #e6f0fa 100%);
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --primary-color: #0d8a8a;
+    --primary-hover: #0a6b6b;
+    --primary-light: #e6f4f4;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --accent-blue: #0284c7;
 
-        .sidebar {
-            width: var(--sidebar-w); flex-shrink: 0; background: #fff;
-            border-right: 1px solid #eef1ee; padding: 22px 16px;
-            position: sticky; top: 0; height: 100vh; overflow-y: auto;
-            display: flex; flex-direction: column;
-        }
-        .sidebar-brand {
-            display: flex; align-items: center; gap: 10px; padding: 0 8px 20px;
-            margin-bottom: 12px; border-bottom: 1px solid #f0f2f1;
-        }
-        .sidebar-brand .logo-icn {
-            width: 38px; height: 38px; border-radius: 10px; background: var(--primary);
-            color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
-        }
-        .sidebar-brand .logo-text { font-weight: 700; color: #1a1a2e; font-size: .98rem; line-height: 1.2; }
-        .sidebar-brand .logo-text small { display: block; font-weight: 400; color: #9aa0a6; font-size: .7rem; }
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --danger: #ef4444;
+    --danger-light: #fef2f2;
+    --success: #10b981;
+    --success-light: #d1fae5;
 
-        .nav-section-label {
-            font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-            color: #adb5bd; padding: 14px 10px 6px;
-        }
-        .nav-item {
-            display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 9px;
-            color: #495057; text-decoration: none; font-size: .875rem; font-weight: 500; margin-bottom: 2px;
-            transition: background .15s, color .15s;
-        }
-        .nav-item i { font-size: 1.02rem; width: 20px; text-align: center; color: #9aa0a6; }
-        .nav-item:hover { background: #f4f7f6; color: #1a1a2e; }
-        .nav-item.active { background: var(--primary-light); color: var(--primary); }
-        .nav-item.active i { color: var(--primary); }
+    --shadow-premium: 0 10px 30px -5px rgba(0, 138, 138, 0.08), 0 8px 20px -6px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 20px 40px -5px rgba(0, 138, 138, 0.15), 0 12px 25px -6px rgba(0, 0, 0, 0.06);
+    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-        .sidebar-footer {
-            margin-top: auto; padding-top: 14px; border-top: 1px solid #f0f2f1;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .sidebar-footer .avatar {
-            width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light);
-            color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
-        }
-        .sidebar-footer .u-name { font-size: .82rem; font-weight: 600; color: #1a1a2e; }
-        .sidebar-footer .u-role { font-size: .72rem; color: #9aa0a6; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-        .main-content { flex: 1; min-width: 0; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    color: var(--text-main);
+    padding: 40px 20px;
+    background-attachment: fixed;
+}
 
-        .wrap { max-width: 1400px; margin: 0; padding: 28px 40px 60px 32px; }
-        .page-head h4 { font-weight: 700; color: #1a1a2e; margin: 0; }
-        .page-head p { color: #6c757d; font-size: .9rem; margin: 4px 0 0; }
+/* Container */
+.page-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--shadow-premium);
+    transition: var(--transition-smooth);
+}
 
-        .current-banner {
-            background: #fff; border: 1px solid #eef1ee; border-radius: 12px;
-            padding: 16px 20px; margin: 20px 0; box-shadow: 0 1px 4px rgba(0,0,0,.06);
-            display: flex; align-items: center; gap: 14px;
-        }
-        .current-banner .icn {
-            width: 42px; height: 42px; border-radius: 10px; display: flex;
-            align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
-        }
+/* Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 20px;
+}
 
-        .toolbar {
-            background: #fff; border-radius: 12px; padding: 14px 18px; display: flex;
-            gap: 12px; align-items: center; margin-bottom: 18px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #eef1ee;
-        }
-        .search-wrap { position: relative; flex: 1; }
-        .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; }
-        .search-wrap input {
-            padding-left: 36px; border-radius: 8px; border: 1px solid #dde;
-            font-size: .875rem; height: 38px; width: 100%;
-        }
-        .search-wrap input:focus {
-            outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,107,90,.12);
-        }
-        .form-select { border-radius: 8px; border-color: #dde; font-size: .875rem; height: 38px; width: 190px; }
+.brand-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0d8a8a 0%, #0284c7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-        .doctor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
-        .doctor-card {
-            background: #fff; border-radius: 14px; padding: 20px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #eef1ee;
-            display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s, transform .15s;
-        }
-        .doctor-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.08); transform: translateY(-2px); }
-        .doctor-top { display: flex; align-items: center; gap: 12px; }
-        .doctor-avatar {
-            width: 56px; height: 56px; border-radius: 50%; background: var(--primary-light);
-            color: var(--primary); display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 1.3rem; flex-shrink: 0; overflow: hidden;
-        }
-        .doctor-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .doctor-name { font-weight: 700; color: #1a1a2e; font-size: 1rem; margin: 0; }
-        .doctor-spec { color: var(--primary); font-size: .82rem; font-weight: 600; }
-        .doctor-meta { font-size: .82rem; color: #6c757d; display: flex; flex-direction: column; gap: 4px; }
-        .doctor-meta span i { width: 16px; color: #9aa; }
-        .doctor-intro {
-            font-size: .82rem; color: #495057; background: #f8faf9; border-radius: 8px;
-            padding: 8px 10px; min-height: 38px; display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden;
-        }
-        .doctor-actions { display: flex; gap: 8px; margin-top: auto; }
-        .btn-choose {
-            flex: 1; background: var(--primary); border: none; color: #fff; border-radius: 8px;
-            font-weight: 600; font-size: .85rem; padding: 9px 14px; transition: background .2s;
-        }
-        .btn-choose:hover { background: var(--primary-dark); color: #fff; }
-        .btn-choose:disabled { background: #cfd8d5; cursor: not-allowed; }
-        .badge-current {
-            background: var(--primary-light); color: var(--primary); font-size: .72rem;
-            font-weight: 700; padding: 4px 10px; border-radius: 20px;
-        }
-        .badge-pending-sm {
-            background: #fff3cd; color: #856404; font-size: .72rem; font-weight: 700;
-            padding: 4px 10px; border-radius: 20px;
-        }
+.brand-icon { font-size: 32px; }
 
-        .empty-state { text-align: center; padding: 60px 20px; color: #9aa; }
-        .empty-state i { font-size: 2.6rem; display: block; margin-bottom: 10px; }
+.actions-nav { display: flex; gap: 12px; flex-wrap: wrap; }
 
-        .locked-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start;
-            gap: 20px;
-            width: 100%;
-        }
-        .locked-row .doctor-panel { flex: 1.4 1 380px; }
-        .locked-row .side-panel {
-            flex: 1 1 280px;
-            background: #fff; border-radius: 14px; padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #eef1ee;
-            display: flex; flex-direction: column; gap: 0;
-        }
-        .side-panel .panel-title { font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-        .side-panel a {
-            display: flex; align-items: center; gap: 10px; padding: 10px 2px;
-            border-bottom: 1px solid #f0f2f1; color: #1a1a2e; text-decoration: none; font-size: .88rem;
-        }
-        .side-panel a:last-child { border-bottom: none; }
-        .side-panel a:hover { color: var(--primary); }
-        .status-track { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
-        .status-step { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: #6c757d; }
-        .status-step.done { color: var(--primary); font-weight: 600; }
-        .status-step .dot {
-            width: 10px; height: 10px; border-radius: 50%; background: #dfe3e1; flex-shrink: 0;
-        }
-        .status-step.done .dot { background: var(--primary); }
-        .status-step.current .dot { background: var(--warning); box-shadow: 0 0 0 4px rgba(243,156,18,.18); }
+.action-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    padding: 12px 22px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border: none;
+}
 
-        .modal-header { border-bottom: 1px solid #e9ecef; }
-        .modal-title { font-weight: 700; color: #1a1a2e; }
-        .form-label { font-size: .825rem; font-weight: 600; color: #495057; margin-bottom: 4px; }
-        .modal-control { border-radius: 8px; border-color: #dde; font-size: .875rem; }
-        .modal-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,107,90,.12); outline: none; }
-        .btn-primary-custom {
-            background: var(--primary); border: none; color: #fff; border-radius: 8px;
-            font-weight: 600; padding: 8px 20px;
-        }
-        .btn-primary-custom:hover { background: var(--primary-dark); color: #fff; }
+.btn-primary {
+    background: linear-gradient(135deg, #0d8a8a 0%, #0a7c7c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(13, 138, 138, 0.25);
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0a7c7c 0%, #086363 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(13, 138, 138, 0.35);
+}
+.btn-primary:disabled {
+    background: #cbd5e1; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none;
+}
 
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+.btn-secondary {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-main);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.btn-secondary:hover { background: rgba(0, 0, 0, 0.08); transform: translateY(-1px); }
 
-        @media (max-width: 860px) {
-            .sidebar { display: none; }
-        }
+.btn-danger-ghost {
+    background: var(--danger-light);
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+.btn-danger-ghost:hover { background: #fee2e2; transform: translateY(-1px); }
+
+/* Quick links row */
+.quick-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.quick-link {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 8px 16px;
+    border-radius: 30px;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+}
+.quick-link:hover {
+    background: #ffffff;
+    color: var(--primary-color);
+    transform: translateY(-1px);
+}
+.quick-link.active {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: transparent;
+}
+
+.page-intro { margin-bottom: 24px; }
+.panel-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.page-desc { color: var(--text-muted); font-size: 14px; max-width: 640px; line-height: 1.5; }
+
+/* Status banner */
+.current-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+}
+.current-banner .icn {
+    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+.current-banner .banner-title { font-weight: 700; color: var(--text-main); font-family: 'Outfit', sans-serif; }
+.current-banner .banner-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.search-wrap { position: relative; flex: 1; min-width: 220px; }
+.search-wrap .search-icn {
+    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); pointer-events: none; font-size: 15px;
+}
+.search-wrap input.form-input { padding-left: 42px; }
+
+.form-input {
+    width: 100%;
+    padding: 13px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.7);
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    color: var(--text-main);
+    transition: var(--transition-smooth);
+}
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(13, 138, 138, 0.1);
+}
+select.form-input { width: 220px; cursor: pointer; }
+
+/* Doctor grid */
+.doctor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+
+.doctor-card {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: var(--transition-smooth);
+}
+.doctor-card:hover {
+    background: rgba(255, 255, 255, 0.88);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(13, 138, 138, 0.08);
+}
+
+.doctor-top { display: flex; align-items: center; gap: 12px; }
+.doctor-avatar {
+    width: 54px; height: 54px; border-radius: 50%; background: var(--primary-light);
+    color: var(--primary-color); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1.2rem; flex-shrink: 0; overflow: hidden;
+    font-family: 'Outfit', sans-serif;
+}
+.doctor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.doctor-name { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--text-main); font-size: 16px; }
+.doctor-spec { color: var(--primary-color); font-size: 12.5px; font-weight: 600; margin-top: 2px; }
+
+.doctor-meta { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-muted); }
+.doctor-meta .m-icn { opacity: .8; margin-right: 4px; }
+
+.doctor-intro {
+    font-size: 13px; color: #475569; background: rgba(255, 255, 255, 0.6);
+    border-radius: 10px; padding: 10px 12px; min-height: 40px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.doctor-actions { margin-top: auto; }
+.btn-choose {
+    width: 100%;
+    font-family: 'Outfit', sans-serif;
+    background: linear-gradient(135deg, #0d8a8a 0%, #0a7c7c 100%);
+    border: none; color: #fff; border-radius: 12px;
+    font-weight: 600; font-size: 14px; padding: 11px 14px;
+    cursor: pointer; transition: var(--transition-smooth);
+}
+.btn-choose:hover { background: linear-gradient(135deg, #0a7c7c 0%, #086363 100%); transform: translateY(-1px); }
+.btn-choose:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; transform: none; }
+
+.pill-badge {
+    padding: 4px 12px; border-radius: 30px; font-weight: 700; font-size: 11px;
+    margin-left: auto; white-space: nowrap;
+}
+.badge-current { background: var(--success-light); color: #047857; }
+.badge-pending-sm { background: var(--warning-light); color: #92400e; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; grid-column: 1/-1; }
+.empty-state .empty-icon { font-size: 42px; margin-bottom: 12px; }
+.empty-state .empty-text { color: var(--text-muted); font-size: 14px; }
+
+/* Load more / collapse */
+.grid-action-row { grid-column: 1/-1; text-align: center; margin-top: 6px; }
+
+/* Locked state layout */
+.locked-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; width: 100%; }
+.locked-row .doctor-panel { flex: 1.4 1 380px; }
+.locked-row .side-panel {
+    flex: 1 1 280px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px; padding: 22px;
+}
+.side-panel .panel-title-sm {
+    font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;
+    color: var(--primary-color); margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+}
+.status-track { display: flex; flex-direction: column; gap: 14px; }
+.status-step { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); }
+.status-step .dot { width: 9px; height: 9px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+.status-step.done { color: var(--primary-color); font-weight: 600; }
+.status-step.done .dot { background: var(--primary-color); }
+.status-step.current { color: var(--warning); font-weight: 600; }
+.status-step.current .dot { background: var(--warning); }
+
+/* Modal (matches profile.html pattern) */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-overlay.open { display: flex; }
+.modal-content {
+    background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 20px;
+    padding: 28px; width: 90%; max-width: 420px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+.modal-title {
+    font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 17px; color: var(--text-main);
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.modal-close { cursor: pointer; color: var(--text-muted); font-size: 22px; line-height: 1; }
+.modal-preview { display: flex; align-items: center; gap: 12px; background: var(--primary-light); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+.modal-footer-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.modal-icn-warn { font-size: 40px; text-align: center; color: var(--warning); margin-bottom: 8px; }
+.modal-text-center { text-align: center; }
+
+textarea.form-input { resize: vertical; font-family: 'Inter', sans-serif; }
+
+/* Toast */
+.toast-box {
+    position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+    background: #ffffff; border-radius: 14px; padding: 14px 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.15); font-size: 14px; font-weight: 500;
+    display: flex; align-items: center; gap: 10px; max-width: 340px;
+    transform: translateY(20px); opacity: 0; pointer-events: none;
+    transition: var(--transition-smooth); border-left: 4px solid var(--primary-color);
+}
+.toast-box.show { transform: translateY(0); opacity: 1; }
+.toast-box.success { border-left-color: var(--success); }
+.toast-box.danger { border-left-color: var(--danger); }
+
+@media (max-width: 768px) {
+    .page-wrapper { padding: 24px; }
+    select.form-input { width: 100%; }
+}
+
     </style>
 </head>
 <body>
 
-<div class="app-shell">
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="logo-icn"><i class="bi bi-activity"></i></div>
-            <div class="logo-text">GlucoTrackAlert<small>Đồng hành sức khỏe</small></div>
+<div class="page-wrapper">
+    <div class="page-header">
+        <h1 class="brand-title">
+            <span class="brand-icon">🩸</span> GlucoTrack
+        </h1>
+        <div class="actions-nav">
+            <a th:href="@{/patient/home}" class="action-btn btn-secondary">🏠 Trang chủ</a>
+            <a th:href="@{/patient/profile}" class="action-btn btn-secondary">👤 Hồ sơ của tôi</a>
         </div>
+    </div>
 
-        <div class="nav-section-label">Tổng quan</div>
-        <a href="/patient/home" class="nav-item"><i class="bi bi-house"></i>Trang chủ</a>
-        <a href="/patient/dashboard" class="nav-item"><i class="bi bi-graph-up"></i>Chỉ số đường huyết</a>
+    <div class="quick-links">
+        <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="quick-link">Chỉ số đường huyết</a>
+        <a th:href="@{/patient/choose-doctor}" class="quick-link active">Bác sĩ đồng hành</a>
+        <a th:href="@{/meal-logs}" class="quick-link">Nhật ký ăn uống</a>
+        <a th:href="@{/health-reminders}" class="quick-link">Nhắc nhở sức khỏe</a>
+        <a th:href="@{/patient/medications}" class="quick-link">Đơn thuốc của tôi</a>
+        <a th:href="@{/patient/relatives}" class="quick-link">Người thân</a>
+    </div>
 
-        <div class="nav-section-label">Chăm sóc</div>
-        <a href="/patient/assignments" class="nav-item active"><i class="bi bi-person-heart"></i>Bác sĩ đồng hành</a>
-        <a href="/meal-logs" class="nav-item"><i class="bi bi-egg-fried"></i>Nhật ký ăn uống</a>
-        <a href="/health-reminders" class="nav-item"><i class="bi bi-bell"></i>Nhắc nhở sức khỏe</a>
-        <a href="/patient/medications" class="nav-item"><i class="bi bi-capsule"></i>Đơn thuốc của tôi</a>
+    <div class="page-intro">
+        <h2 class="panel-title">Chọn bác sĩ đồng hành</h2>
+        <p class="page-desc">Đề xuất một bác sĩ theo dõi tình trạng sức khỏe của bạn. Admin sẽ duyệt đề xuất trước khi bác sĩ chính thức đồng hành.</p>
+    </div>
 
-        <div class="nav-section-label">Khác</div>
-        <a href="/patient/profile" class="nav-item"><i class="bi bi-person-gear"></i>Hồ sơ cá nhân</a>
-        <a href="/settings" class="nav-item"><i class="bi bi-gear"></i>Cài đặt</a>
+    <div id="currentBanner" style="display:none"></div>
 
-        <div class="sidebar-footer">
-            <div class="avatar" id="sbAvatar">?</div>
-            <div>
-                <div class="u-name" id="sbName">Đang tải...</div>
-                <div class="u-role">Bệnh nhân</div>
-            </div>
+    <div class="toolbar">
+        <div class="search-wrap">
+            <span class="search-icn">🔍</span>
+            <input type="text" id="searchInput" class="form-input" placeholder="Tìm theo tên bác sĩ, chuyên khoa, nơi công tác..."/>
         </div>
-    </aside>
+        <select class="form-input" id="filterSpec">
+            <option value="">Tất cả chuyên khoa</option>
+        </select>
+    </div>
 
-    <main class="main-content">
-        <div class="wrap">
-            <div class="page-head d-flex align-items-center justify-content-between">
-                <div>
-                    <h4><i class="bi bi-person-heart me-2" style="color:var(--primary)"></i>Chọn bác sĩ đồng hành</h4>
-                    <p>Đề xuất một bác sĩ theo dõi tình trạng sức khỏe của bạn. Admin sẽ duyệt đề xuất trước khi bác sĩ chính thức đồng hành.</p>
-                </div>
-                <a href="/patient/home" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Quay lại</a>
-            </div>
-
-            <div id="currentBanner" style="display:none"></div>
-
-            <div class="toolbar">
-                <div class="search-wrap">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="searchInput" placeholder="Tìm theo tên bác sĩ, chuyên khoa, nơi công tác..."/>
-                </div>
-                <select class="form-select" id="filterSpec">
-                    <option value="">Tất cả chuyên khoa</option>
-                </select>
-            </div>
-
-            <div id="doctorGrid" class="doctor-grid">
-                <div class="empty-state" style="grid-column:1/-1">
-                    <i class="bi bi-arrow-clockwise"></i>Đang tải danh sách bác sĩ...
-                </div>
-            </div>
-        </div>
-    </main>
-</div>
-
-<div class="toast-container">
-    <div id="toast" class="toast align-items-center border-0" role="alert">
-        <div class="d-flex">
-            <div class="toast-body fw-600" id="toastMsg"></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    <div id="doctorGrid" class="doctor-grid">
+        <div class="empty-state">
+            <div class="empty-icon">⏳</div>
+            <div class="empty-text">Đang tải danh sách bác sĩ...</div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="proposeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-send-check me-2" style="color:var(--primary)"></i>Gửi đề xuất bác sĩ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex align-items-center gap-3 mb-3" id="proposeDoctorPreview"></div>
-                <label class="form-label">Ghi chú gửi bác sĩ / admin (tuỳ chọn)</label>
-                <textarea class="form-control modal-control" id="proposeNote" rows="3"
-                          placeholder="VD: Tôi bị tiểu đường type 2, muốn được theo dõi định kỳ..."></textarea>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn-primary-custom btn" onclick="confirmPropose()">
-                    <i class="bi bi-check-lg me-1"></i>Gửi đề xuất
-                </button>
-            </div>
+<!-- Modal: Gửi đề xuất -->
+<div class="modal-overlay" id="proposeModalOverlay">
+    <div class="modal-content">
+        <div class="modal-title">
+            <span>Gửi đề xuất bác sĩ</span>
+            <span class="modal-close" onclick="closeProposeModal()">&times;</span>
+        </div>
+        <div class="modal-preview" id="proposeDoctorPreview"></div>
+        <div class="form-group">
+            <label class="form-label">Ghi chú gửi bác sĩ / admin (tuỳ chọn)</label>
+            <textarea class="form-input" id="proposeNote" rows="3"
+                      placeholder="VD: Tôi bị tiểu đường type 2, muốn được theo dõi định kỳ..."></textarea>
+        </div>
+        <div class="modal-footer-row">
+            <button type="button" class="action-btn btn-secondary" onclick="closeProposeModal()">Hủy</button>
+            <button type="button" class="action-btn btn-primary" onclick="confirmPropose()">Gửi đề xuất</button>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="cancelModal" tabindex="-1">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-body text-center py-4">
-                <div style="font-size:2.5rem; color:var(--warning)"><i class="bi bi-exclamation-circle"></i></div>
-                <h6 class="fw-700 mt-2">Hủy đề xuất đang chờ duyệt?</h6>
-                <p class="text-muted small mb-0">Bạn có thể gửi đề xuất khác với bác sĩ khác sau khi hủy.</p>
-            </div>
-            <div class="modal-footer border-0 justify-content-center gap-2">
-                <button class="btn btn-light" data-bs-dismiss="modal">Không</button>
-                <button class="btn btn-warning" onclick="confirmCancel()">Hủy đề xuất</button>
-            </div>
+<!-- Modal: Hủy đề xuất -->
+<div class="modal-overlay" id="cancelModalOverlay">
+    <div class="modal-content" style="max-width:380px;">
+        <div class="modal-icn-warn">⚠️</div>
+        <div class="modal-text-center">
+            <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;color:var(--text-main);margin-bottom:6px;">
+                Hủy đề xuất đang chờ duyệt?
+            </h3>
+            <p style="color:var(--text-muted);font-size:13px;">Bạn có thể gửi đề xuất khác với bác sĩ khác sau khi hủy.</p>
+        </div>
+        <div class="modal-footer-row" style="justify-content:center;">
+            <button type="button" class="action-btn btn-secondary" onclick="closeCancelModal()">Không</button>
+            <button type="button" class="action-btn btn-danger-ghost" onclick="confirmCancel()">Hủy đề xuất</button>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<div class="toast-box" id="toast">
+    <span id="toastIcn">✅</span>
+    <span id="toastMsg"></span>
+</div>
+
 <script>
     let allDoctors = [];
     let myAssignments = [];
-    let proposeModal, cancelModal, toastEl;
     let proposeTargetId = null;
     let cancelTargetId = null;
+    let showAllDoctors = false;
+    let toastTimer = null;
     const PAGE_SIZE = 9;
     let visibleCount = PAGE_SIZE;
 
     document.addEventListener('DOMContentLoaded', function () {
-        proposeModal = new bootstrap.Modal(document.getElementById('proposeModal'));
-        cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
-        toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
         loadAll();
-        loadSidebarUser();
 
         document.getElementById('searchInput').addEventListener('input', () => { visibleCount = PAGE_SIZE; renderGrid(); });
         document.getElementById('filterSpec').addEventListener('change', () => { visibleCount = PAGE_SIZE; renderGrid(); });
+
+        document.getElementById('proposeModalOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'proposeModalOverlay') closeProposeModal();
+        });
+        document.getElementById('cancelModalOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'cancelModalOverlay') closeCancelModal();
+        });
     });
 
     function authHeader() {
         return {'Authorization': `Bearer ${localStorage.getItem('token')}`};
-    }
-
-    function loadSidebarUser() {
-        const name = localStorage.getItem('fullName') || localStorage.getItem('username') || 'Bệnh nhân';
-        document.getElementById('sbName').textContent = name;
-        document.getElementById('sbAvatar').textContent = name.trim().split(' ').pop()[0].toUpperCase();
     }
 
     async function loadAll() {
@@ -346,7 +493,7 @@
             renderGrid();
         } catch (e) {
             document.getElementById('doctorGrid').innerHTML =
-                '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-wifi-off"></i>Không thể kết nối API</div>';
+                '<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">Không thể kết nối API</div></div>';
         }
     }
 
@@ -380,22 +527,22 @@
             banner.style.display = 'flex';
             banner.className = 'current-banner';
             banner.innerHTML = `
-                <div class="icn" style="background:#d4edda;color:#155724"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="icn" style="background:#d1fae5;color:#047857">✅</div>
                 <div>
-                    <div style="font-weight:700;color:#1a1a2e">Bác sĩ đồng hành hiện tại: ${active.doctorName || '—'}</div>
-                    <div style="font-size:.82rem;color:#6c757d">Đang hoạt động từ ${fmtDate(active.assignedAt)}</div>
+                    <div class="banner-title">Bác sĩ đồng hành hiện tại: ${active.doctorName || '—'}</div>
+                    <div class="banner-sub">Đang hoạt động từ ${fmtDate(active.assignedAt)}</div>
                 </div>`;
         } else if (pending) {
             banner.style.display = 'flex';
             banner.className = 'current-banner';
             banner.innerHTML = `
-                <div class="icn" style="background:#fff3cd;color:#856404"><i class="bi bi-hourglass-split"></i></div>
-                <div class="flex-grow-1">
-                    <div style="font-weight:700;color:#1a1a2e">Đề xuất tới ${pending.doctorName || '—'} đang chờ admin duyệt</div>
-                    <div style="font-size:.82rem;color:#6c757d">${pending.note ? 'Ghi chú: ' + escapeHtml(pending.note) : 'Gửi lúc ' + fmtDate(pending.assignedAt)}</div>
+                <div class="icn" style="background:#fef3c7;color:#92400e">⏳</div>
+                <div style="flex:1">
+                    <div class="banner-title">Đề xuất tới ${pending.doctorName || '—'} đang chờ admin duyệt</div>
+                    <div class="banner-sub">${pending.note ? 'Ghi chú: ' + escapeHtml(pending.note) : 'Gửi lúc ' + fmtDate(pending.assignedAt)}</div>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" onclick="openCancel(${pending.id})">
-                    <i class="bi bi-x-circle me-1"></i>Hủy đề xuất
+                <button class="action-btn btn-danger-ghost" onclick="openCancel(${pending.id})">
+                    Hủy đề xuất
                 </button>`;
         } else if (closed) {
             const isRejected = closed.status === 'rejected';
@@ -403,32 +550,30 @@
             banner.style.display = 'flex';
             banner.className = 'current-banner';
             banner.innerHTML = `
-                <div class="icn" style="background:#f8d7da;color:#721c24"><i class="bi bi-x-circle-fill"></i></div>
-                <div class="flex-grow-1">
-                    <div style="font-weight:700;color:#1a1a2e">
+                <div class="icn" style="background:#fee2e2;color:#b91c1c">❌</div>
+                <div style="flex:1">
+                    <div class="banner-title">
                         ${isRejected ? 'Đề xuất tới ' + (closed.doctorName || '—') + ' đã bị từ chối' : 'Bác sĩ đồng hành ' + (closed.doctorName || '—') + ' đã bị hủy'}
                     </div>
-                    <div style="font-size:.82rem;color:#6c757d">Lý do: ${escapeHtml(reason || 'Không có ghi chú')}</div>
+                    <div class="banner-sub">Lý do: ${escapeHtml(reason || 'Không có ghi chú')}</div>
                 </div>`;
         } else {
             banner.style.display = 'none';
         }
     }
 
-    let showAllDoctors = false;
-
     function cardHtml(d, active, pending) {
         const isCurrent = active && active.doctorId === d.id;
         const isPendingThis = pending && pending.doctorId === d.id;
         let actionHtml;
         if (isCurrent) {
-            actionHtml = `<button class="btn-choose" disabled><i class="bi bi-check-circle me-1"></i>Đang đồng hành</button>`;
+            actionHtml = `<button class="btn-choose" disabled>Đang đồng hành</button>`;
         } else if (isPendingThis) {
-            actionHtml = `<button class="btn-choose" disabled style="background:#f3c969"><i class="bi bi-hourglass-split me-1"></i>Chờ duyệt</button>`;
+            actionHtml = `<button class="btn-choose" disabled style="background:#f3c969">Chờ duyệt</button>`;
         } else if (pending || active) {
-            actionHtml = `<button class="btn-choose" disabled title="Bạn đang có đề xuất/bác sĩ đồng hành, hãy hủy trước khi chọn bác sĩ khác"><i class="bi bi-lock me-1"></i>Chọn bác sĩ này</button>`;
+            actionHtml = `<button class="btn-choose" disabled title="Bạn đang có đề xuất/bác sĩ đồng hành, hãy hủy trước khi chọn bác sĩ khác">Chọn bác sĩ này</button>`;
         } else {
-            actionHtml = `<button class="btn-choose" onclick="openPropose(${d.id})"><i class="bi bi-person-check me-1"></i>Chọn bác sĩ này</button>`;
+            actionHtml = `<button class="btn-choose" onclick="openPropose(${d.id})">Chọn bác sĩ này</button>`;
         }
 
         return `
@@ -437,16 +582,16 @@
                 <div class="doctor-avatar">
                     ${d.avatarUrl ? `<img src="${d.avatarUrl}" alt="">` : getInitials(d.fullName)}
                 </div>
-                <div>
+                <div style="flex:1">
                     <p class="doctor-name">${d.degree ? d.degree + '. ' : ''}${d.fullName || '—'}</p>
                     <div class="doctor-spec">${d.specialization || '—'}</div>
                 </div>
-                ${isCurrent ? '<span class="badge-current ms-auto">Đồng hành</span>' : (isPendingThis ? '<span class="badge-pending-sm ms-auto">Chờ duyệt</span>' : '')}
+                ${isCurrent ? '<span class="pill-badge badge-current">Đồng hành</span>' : (isPendingThis ? '<span class="pill-badge badge-pending-sm">Chờ duyệt</span>' : '')}
             </div>
             <div class="doctor-meta">
-                <span><i class="bi bi-briefcase me-1"></i>${d.experienceYears != null ? d.experienceYears + ' năm kinh nghiệm' : 'Chưa cập nhật kinh nghiệm'}</span>
-                <span><i class="bi bi-hospital me-1"></i>${d.workplace || 'Chưa cập nhật nơi công tác'}</span>
-                <span><i class="bi bi-clock me-1"></i>${d.workingFullLabel || (d.workingHours + ' | ' + d.workingDays)}</span>
+                <span>${d.experienceYears != null ? d.experienceYears + ' năm kinh nghiệm' : 'Chưa cập nhật kinh nghiệm'}</span>
+                <span>${d.workplace || 'Chưa cập nhật nơi công tác'}</span>
+                <span>${d.workingFullLabel || (d.workingHours + ' | ' + d.workingDays)}</span>
             </div>
             <div class="doctor-intro">${d.introduction ? escapeHtml(d.introduction) : 'Bác sĩ chưa cập nhật giới thiệu.'}</div>
             <div class="doctor-actions">${actionHtml}</div>
@@ -475,15 +620,15 @@
                 <div class="locked-row" style="grid-column:1/-1;">
                     <div class="doctor-panel">
                         ${d ? cardHtml(d, active, pending) : ''}
-                        <div style="text-align:center;margin-top:12px;">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="toggleShowAll()">
-                                <i class="bi bi-list-ul me-1"></i>Xem danh sách bác sĩ khác
+                        <div style="text-align:center;margin-top:14px;">
+                            <button class="action-btn btn-secondary" onclick="toggleShowAll()">
+                                Xem danh sách bác sĩ khác
                             </button>
                         </div>
                     </div>
 
                     <div class="side-panel">
-                        <p class="panel-title"><i class="bi bi-signpost-split text-success"></i>Tiến trình</p>
+                        <p class="panel-title-sm">Tiến trình</p>
                         <div class="status-track">
                             <div class="status-step done">
                                 <span class="dot"></span>Đã gửi đề xuất
@@ -494,16 +639,6 @@
                             <div class="status-step ${isPendingState ? '' : 'done'}">
                                 <span class="dot"></span>Bác sĩ chính thức đồng hành
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="side-panel">
-                        <p class="panel-title"><i class="bi bi-chat-square-text text-success"></i>Ghi chú bạn đã gửi</p>
-                        <div style="font-size:.85rem;color:#495057;line-height:1.6;">
-                            ${locked.note ? escapeHtml(locked.note) : '<span style="color:#adb5bd;font-style:italic">Bạn chưa gửi ghi chú nào kèm đề xuất này.</span>'}
-                        </div>
-                        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0f2f1;font-size:.78rem;color:#9aa0a6;">
-                            <i class="bi bi-clock-history me-1"></i>Gửi lúc ${fmtDate(locked.assignedAt)}
                         </div>
                     </div>
                 </div>`;
@@ -525,7 +660,7 @@
         });
 
         if (!filtered.length) {
-            grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-inbox"></i>Không tìm thấy bác sĩ phù hợp</div>';
+            grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Không tìm thấy bác sĩ phù hợp</div></div>';
             return;
         }
 
@@ -533,16 +668,16 @@
 
         grid.innerHTML = visible.map(d => cardHtml(d, active, pending)).join('')
             + (filtered.length > visibleCount
-                ? `<div style="grid-column:1/-1;text-align:center;margin-top:8px;">
-                     <button class="btn btn-outline-success" onclick="loadMore()">
+                ? `<div class="grid-action-row">
+                     <button class="action-btn btn-secondary" onclick="loadMore()">
                        Xem thêm (còn ${filtered.length - visibleCount})
                      </button>
                    </div>`
                 : '')
             + (locked
-                ? `<div style="grid-column:1/-1;text-align:center;margin-top:8px;">
-                     <button class="btn btn-outline-secondary btn-sm" onclick="toggleShowAll()">
-                       <i class="bi bi-chevron-up me-1"></i>Thu gọn
+                ? `<div class="grid-action-row">
+                     <button class="action-btn btn-secondary" onclick="toggleShowAll()">
+                       Thu gọn
                      </button>
                    </div>`
                 : '');
@@ -557,15 +692,21 @@
         proposeTargetId = doctorId;
         const d = allDoctors.find(x => x.id === doctorId);
         document.getElementById('proposeDoctorPreview').innerHTML = `
-            <div class="doctor-avatar" style="width:48px;height:48px;font-size:1.1rem">
+            <div class="doctor-avatar" style="width:44px;height:44px;font-size:1rem">
                 ${d.avatarUrl ? `<img src="${d.avatarUrl}" alt="">` : getInitials(d.fullName)}
             </div>
             <div>
-                <div style="font-weight:700;color:#1a1a2e">${d.degree ? d.degree + '. ' : ''}${d.fullName}</div>
-                <div style="font-size:.82rem;color:var(--primary)">${d.specialization || ''}</div>
+                <div style="font-weight:700;color:var(--text-main);font-family:'Outfit',sans-serif;">${d.degree ? d.degree + '. ' : ''}${d.fullName}</div>
+                <div style="font-size:.82rem;color:var(--primary-color)">${d.specialization || ''}</div>
             </div>`;
         document.getElementById('proposeNote').value = '';
-        proposeModal.show();
+        document.getElementById('proposeModalOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeProposeModal() {
+        document.getElementById('proposeModalOverlay').classList.remove('open');
+        document.body.style.overflow = 'auto';
     }
 
     async function confirmPropose() {
@@ -577,21 +718,27 @@
                 body: JSON.stringify({doctorId: proposeTargetId, note})
             });
             if (!res.ok) {
-                showToast('❌ ' + (await res.text() || 'Gửi đề xuất thất bại!'), 'danger');
+                showToast((await res.text() || 'Gửi đề xuất thất bại!'), 'danger');
                 return;
             }
-            proposeModal.hide();
-            showToast('✅ Đã gửi đề xuất! Vui lòng chờ admin duyệt.', 'success');
+            closeProposeModal();
+            showToast('Đã gửi đề xuất! Vui lòng chờ admin duyệt.', 'success');
             showAllDoctors = false;
             await loadAll();
         } catch {
-            showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
+            showToast('Lỗi kết nối. Vui lòng thử lại!', 'danger');
         }
     }
 
     function openCancel(assignmentId) {
         cancelTargetId = assignmentId;
-        cancelModal.show();
+        document.getElementById('cancelModalOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModalOverlay').classList.remove('open');
+        document.body.style.overflow = 'auto';
     }
 
     async function confirmCancel() {
@@ -601,15 +748,15 @@
                 headers: authHeader()
             });
             if (!res.ok) {
-                showToast('❌ ' + (await res.text() || 'Hủy thất bại!'), 'danger');
+                showToast((await res.text() || 'Hủy thất bại!'), 'danger');
                 return;
             }
-            cancelModal.hide();
+            closeCancelModal();
             showToast('Đã hủy đề xuất.', 'success');
             showAllDoctors = false;
             await loadAll();
         } catch {
-            showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
+            showToast('Lỗi kết nối. Vui lòng thử lại!', 'danger');
         }
     }
 
@@ -644,10 +791,15 @@
 
     function showToast(msg, type) {
         const el = document.getElementById('toast');
-        el.className = `toast align-items-center text-bg-${type} border-0`;
+        const icnEl = document.getElementById('toastIcn');
+        el.className = 'toast-box ' + (type === 'danger' ? 'danger' : 'success');
+        icnEl.textContent = type === 'danger' ? '❌' : '✅';
         const stripped = msg.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
         document.getElementById('toastMsg').textContent = stripped.length > 140 ? stripped.substring(0, 140) + '...' : stripped;
-        toastEl.show();
+
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
     }
 </script>
 </body>

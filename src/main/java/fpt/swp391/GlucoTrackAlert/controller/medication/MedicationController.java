@@ -1,6 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.controller.medication;
 
 import fpt.swp391.GlucoTrackAlert.dto.medication.MedicationLogResponse;
+import fpt.swp391.GlucoTrackAlert.dto.medication.MedicineResponse;
 import fpt.swp391.GlucoTrackAlert.dto.medication.PrescriptionRequest;
 import fpt.swp391.GlucoTrackAlert.dto.medication.PrescriptionResponse;
 import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
@@ -90,6 +91,11 @@ public class MedicationController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/catalog")
+    public ResponseEntity<List<MedicineResponse>> getMedicineCatalog() {
+        return ResponseEntity.ok(medicationService.getMedicineCatalog());
     }
 
     @GetMapping("/adherence/patient/{patientId}")
