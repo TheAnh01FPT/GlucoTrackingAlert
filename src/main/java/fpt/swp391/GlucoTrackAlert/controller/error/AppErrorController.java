@@ -10,6 +10,6 @@ public class AppErrorController implements ErrorController {
     @RequestMapping("/error")
     public String handleError() {
         // Return a friendly Thymeleaf error page
-        return "error";
+        return "error/error";
     }
 }

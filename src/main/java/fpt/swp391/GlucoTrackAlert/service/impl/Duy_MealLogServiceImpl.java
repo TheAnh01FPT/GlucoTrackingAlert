@@ -35,9 +35,9 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
         return repo.findById(id)
                 .map(existing -> {
                     if (log.getFoodName() != null) existing.setFoodName(log.getFoodName());
-                    if (log.getQuantityText() != null) existing.setQuantityText(log.getQuantityText());
-                    if (log.getSugarEstimation() != null) existing.setSugarEstimation(log.getSugarEstimation());
                     if (log.getMealType() != null) existing.setMealType(log.getMealType());
+                    if (log.getSugarEstimation() != null) existing.setSugarEstimation(log.getSugarEstimation());
+                    if (log.getCarbEstimation() != null) existing.setCarbEstimation(log.getCarbEstimation());
                     if (log.getNote() != null) existing.setNote(log.getNote());
                     if (log.getMealDate() != null) existing.setMealDate(log.getMealDate());
                     return repo.save(existing);
@@ -55,38 +55,32 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
 
     @Override
     public Double calculateTotalSugarForUser(Long patientId) {
-        // Tinh tong luong duong uoc tinh cua tat ca bua an trong ngay theo patientId
         return repo.findByPatientId(patientId).stream()
-                .mapToDouble(x -> x.getSugarEstimation() == null ? 0.0 : x.getSugarEstimation())
+                .mapToDouble(x -> x.getCarbEstimation() == null ? 0.0 : x.getCarbEstimation())
                 .sum();
     }
 
     @Override
     public Double calculateAvgSugarForUser(Long patientId) {
-        // Tinh trung binh duong uoc tinh theo patientId
         return repo.findByPatientId(patientId).stream()
-                .filter(x -> x.getSugarEstimation() != null && x.getSugarEstimation() > 0)
-                .mapToDouble(Duy_Meal_Logs::getSugarEstimation)
+                .filter(x -> x.getCarbEstimation() != null && x.getCarbEstimation() > 0)
+                .mapToDouble(Duy_Meal_Logs::getCarbEstimation)
                 .average()
                 .orElse(0.0);
     }
 
     @Override
     public List<Duy_Meal_Logs> getHighSugarMeals() {
-        // Nguong hoi cao: >= 7.8 mmol/L
-        return repo.findBySugarEstimationGreaterThan(7.8);
+        return repo.findByCarbEstimationGreaterThan(7.8); // ✅ dùng carb thay sugar
     }
 
     @Override
     public List<Duy_Meal_Logs> getDangerSugarMeals() {
-        // Nguong nguy hiem: >= 11.0 mmol/L
-        return repo.findBySugarEstimationGreaterThan(11.0);
+        return repo.findByCarbEstimationGreaterThan(11.0);
     }
 
     @Override
     public List<Duy_Meal_Logs> getLogsByPatient(Long patientId) {
         return repo.findByPatientId(patientId);
     }
-
-   
 }

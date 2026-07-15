@@ -2,6 +2,7 @@ package fpt.swp391.GlucoTrackAlert.controller;
 
 import fpt.swp391.GlucoTrackAlert.dto.AssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.dto.AssignmentResponse;
+import fpt.swp391.GlucoTrackAlert.dto.ReasonRequest;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;
 import java.util.List;
@@ -64,6 +65,35 @@ public class DoctorPatientAssignmentController {
     public ResponseEntity<String> hardDeleteAssignment(@PathVariable Long id) {
         assignmentService.hardDeleteAssignment(id);
         return ResponseEntity.ok("Assignment permanently deleted");
+    }
+
+    // ===== Admin xét duyệt đề xuất của bệnh nhân =====
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<AssignmentResponse>> getPendingAssignments() {
+        return ResponseEntity.ok(
+                assignmentService.getPendingAssignments()
+                        .stream()
+                        .map(AssignmentResponse::from)
+                        .toList()
+        );
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<AssignmentResponse> approveAssignment(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                AssignmentResponse.from(assignmentService.approveAssignment(id))
+        );
+    }
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<AssignmentResponse> rejectAssignment(
+            @PathVariable Long id,
+            @RequestBody ReasonRequest request
+    ) {
+        return ResponseEntity.ok(
+                AssignmentResponse.from(assignmentService.rejectAssignment(id, request.getReason()))
+        );
     }
 
     @ExceptionHandler(RuntimeException.class)

@@ -189,14 +189,21 @@ def heart_weekly_predict(data: dict) -> dict:
 # Ensemble 3 models
 # ============================================
 def ensemble_predict(data: dict) -> dict:
-    blood_sugar = float(data.get('bloodSugar', 5.5))
-    systolic    = int(data.get('systolic', 120))
-    diastolic   = int(data.get('diastolic', 80))
-    bmi         = float(data.get('bmi', 22.0))
-    age         = int(data.get('age', 40))
-    gender      = data.get('gender', 'MALE')
+    # Các field bắt buộc -- Java (MlAnalysisService) đã validate trước khi gửi sang,
+    # nhưng vẫn check lại ở đây để service Python không tự bịa số khi bị gọi trực tiếp
+    # (trước đây dùng data.get(key, default) khiến luôn có giá trị giả khi field thiếu)
+    required = ['bloodSugar', 'systolic', 'diastolic', 'bmi', 'age', 'gender']
+    missing = [k for k in required if data.get(k) is None]
+    if missing:
+        raise ValueError(f"Thiếu dữ liệu bắt buộc: {', '.join(missing)}")
+
+    blood_sugar = float(data['bloodSugar'])
+    systolic    = int(data['systolic'])
+    diastolic   = int(data['diastolic'])
+    bmi         = float(data['bmi'])
+    age         = int(data['age'])
+    gender      = data['gender']
     is_pregnant = bool(data.get('isPregnant', False))
-    # smoker/physActivity/genHealth không còn dùng (V3 đã bỏ) -- xem ghi chú trong ensemble_predict()
     hypertension = 1 if systolic >= 140 else 0
 
     # ---- Rule ADA cứng ----
@@ -220,11 +227,18 @@ def ensemble_predict(data: dict) -> dict:
         proba_v4 = float(model_v4.predict_proba(x_v4)[0][1])
 
         # Model V5 — Diabetes Prediction (blood_glucose + hypertension)
-        # Lưu ý: hệ thống chưa thu thập "smoker" thật từ bệnh nhân, nên KHÔNG
-        # bịa khẳng định "không hút" (sẽ làm model lệch lạc quan quá mức).
-        # Dùng giá trị trung tính (1, nằm giữa 0=không hút và 2=có hút) để
-        # model dựa chủ yếu vào các chỉ số có thật khác (glucose, bmi, age...).
-        smoke_enc = 1  # trung tính - chưa có dữ liệu thật, xem TODO ở MlAnalysisService.java
+        # smokingStatus lấy từ Patient.smokingStatus (cột đã có sẵn trong DB),
+        # mapping y hệt logic DailyHealthLogServiceImpl.java đang dùng cho model khác:
+        # "never smoked"=0, "formerly smoked"=1, "smokes"=2, không rõ/khác -> trung tính=1
+        smoking_status = str(data.get('smokingStatus') or '').strip().lower()
+        if smoking_status == 'never smoked':
+            smoke_enc = 0
+        elif smoking_status == 'formerly smoked':
+            smoke_enc = 1
+        elif smoking_status == 'smokes':
+            smoke_enc = 2
+        else:
+            smoke_enc = 1  # chưa rõ thông tin -> dùng giá trị trung tính, không suy diễn "không hút"
         gender_enc = 1 if gender == 'FEMALE' else 0
         x_v5 = np.array([[
             glucose_mgdl, bmi, age,
@@ -290,6 +304,8 @@ def predict():
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         return jsonify(ensemble_predict(data))
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

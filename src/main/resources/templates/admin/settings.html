@@ -770,6 +770,229 @@
         }
     }
 
+<<<<<<< HEAD:src/main/resources/templates/admin/settings.html
+            /** Chỉ hiển thị thông tin đọc – không có form chỉnh sửa */
+            let CURRENT_DOC = null;
+
+            function fillDisplay(doc) {
+                CURRENT_DOC = doc;
+                document.getElementById('infoName').textContent = doc.fullName || '–';
+                document.getElementById('infoSpec').textContent = doc.specialization || '–';
+                document.getElementById('infoDegree').textContent = doc.degree || '–';
+                document.getElementById('infoExp').textContent = doc.experienceYears ? doc.experienceYears + ' năm' : '–';
+                document.getElementById('infoWorkplace').textContent = doc.workplace || '–';
+                document.getElementById('infoPhone').textContent = doc.phone || '–';
+                document.getElementById('infoEmail').textContent = doc.userEmail || '–';
+                document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
+
+                // Cập nhật trạng thái xác minh
+                const badge = document.getElementById('verifyStatusBadge');
+                const alert = document.getElementById('verifyAlert');
+                const btn = document.getElementById('btnUpload');
+                const status = doc.status;
+
+                if (status === 'pending_verification') {
+                    badge.style.cssText = 'background:#fff3e0;color:#e65100';
+                    badge.textContent = '📋 Chưa gửi';
+                } else if (status === 'pending_approval') {
+                    badge.style.cssText = 'background:#e3f2fd;color:#1565c0';
+                    badge.textContent = '⏳ Chờ duyệt';
+                    alert.style.cssText = 'display:flex;background:#e3f2fd;color:#1565c0;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
+                    alert.innerHTML = '<i class="bi bi-hourglass-split"></i> Hồ sơ đang chờ Admin xét duyệt. Nếu muốn cập nhật ảnh, bạn vẫn có thể upload lại.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Upload lại';
+                } else if (status === 'active') {
+                    badge.style.cssText = 'background:#e8f5e9;color:#2e7d32';
+                    badge.textContent = '✅ Đã xác minh';
+                    alert.style.cssText = 'display:flex;background:#e8f5e9;color:#2e7d32;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
+                    alert.innerHTML = '<i class="bi bi-patch-check-fill"></i> Hồ sơ đã được xác minh. Nếu muốn cập nhật giấy tờ mới, hãy upload lại — hồ sơ sẽ chờ Admin duyệt lại.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Cập nhật giấy tờ';
+                } else if (status === 'rejected') {
+                    badge.style.cssText = 'background:#ffebee;color:#c62828';
+                    badge.textContent = '❌ Bị từ chối';
+                    alert.style.cssText = 'display:flex;background:#ffebee;color:#c62828;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
+                    alert.innerHTML = '<i class="bi bi-x-circle-fill"></i> Hồ sơ bị từ chối. Hãy chọn lại ảnh rõ nét hơn rồi bấm <strong> Gửi lại</strong>.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi lại';
+                }
+
+                // Hiển thị ảnh đã upload nếu có
+                if (doc.nationalIdImageUrl) showExistingImage('previewCCCD', doc.nationalIdImageUrl);
+                if (doc.practiceLicenseImageUrl) showExistingImage('previewCC', doc.practiceLicenseImageUrl);
+                if (doc.avatarUrl) showExistingImage('previewAvatar', doc.avatarUrl);
+
+                // Điền lại số CCCD / số chứng chỉ đã lưu (nếu có) để không bị mất khi chỉ muốn cập nhật avatar
+                const inputNationalId = document.getElementById('inputNationalId');
+                const inputPracticeLicense = document.getElementById('inputPracticeLicense');
+                if (doc.nationalId && !inputNationalId.value) inputNationalId.value = doc.nationalId;
+                if (doc.practiceLicense && !inputPracticeLicense.value) inputPracticeLicense.value = doc.practiceLicense;
+            }
+
+            function showExistingImage(previewId, url) {
+                const el = document.getElementById(previewId);
+                el.style.border = '2px solid #a5d6a7';
+                el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+            }
+
+            function previewImage(input, previewId) {
+                const file = input.files[0];
+                if (!file) return;
+                const el = document.getElementById(previewId);
+                const reader = new FileReader();
+                reader.onload = e => {
+                    el.style.border = '2px solid #a5d6a7';
+                    el.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            async function uploadVerification() {
+                const cccdFile = document.getElementById('inputCCCD').files[0];
+                const ccFile = document.getElementById('inputCC').files[0];
+                const avatarFile = document.getElementById('inputAvatar').files[0];
+                const nationalId = document.getElementById('inputNationalId').value.trim();
+                const practiceLicense = document.getElementById('inputPracticeLicense').value.trim();
+
+                // Đã có CCCD/chứng chỉ lưu sẵn trong hồ sơ (đã từng xác minh) thì không bắt nhập/upload lại,
+                // trừ khi người dùng tự xoá ô số hoặc chủ động chọn ảnh mới.
+                const hasSavedCCCD = !!(CURRENT_DOC && CURRENT_DOC.nationalIdImageUrl);
+                const hasSavedLicense = !!(CURRENT_DOC && CURRENT_DOC.practiceLicenseImageUrl);
+
+                // Nếu chỉ đổi avatar (không đổi ảnh CCCD/chứng chỉ, số liệu vẫn còn) → cho phép submit chỉ với avatar
+                const onlyUpdatingAvatar = avatarFile && !cccdFile && !ccFile && hasSavedCCCD && hasSavedLicense;
+
+                if (!onlyUpdatingAvatar) {
+                    if (!nationalId) { showToast('Vui lòng nhập số CCCD', 'danger'); return; }
+                    if (!practiceLicense) { showToast('Vui lòng nhập số chứng chỉ hành nghề', 'danger'); return; }
+                    if (!cccdFile && !hasSavedCCCD) { showToast('Vui lòng chọn ảnh CCCD', 'danger'); return; }
+                    if (!ccFile && !hasSavedLicense) { showToast('Vui lòng chọn ảnh chứng chỉ hành nghề', 'danger'); return; }
+                }
+
+                if (!avatarFile && !cccdFile && !ccFile) {
+                    showToast('Bạn chưa chọn ảnh nào để cập nhật', 'danger');
+                    return;
+                }
+
+                const formData = new FormData();
+                if (cccdFile) formData.append('nationalIdImage', cccdFile);
+                if (ccFile) formData.append('practiceLicenseImage', ccFile);
+                if (avatarFile) formData.append('avatar', avatarFile);
+                if (nationalId) formData.append('nationalId', nationalId);
+                if (practiceLicense) formData.append('practiceLicense', practiceLicense);
+
+                const btn = document.getElementById('btnUpload');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang gửi...';
+
+                try {
+                    const res = await fetch(`/api/doctors/${DOCTOR_ID}/upload-verification`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                        body: formData
+                    });
+                    if (res.ok) {
+                        showToast('Gửi xác minh thành công! Admin sẽ xét duyệt sớm.', 'success');
+                        loadDoctor();
+                    } else {
+                        const msg = await res.text();
+                        showToast('Lỗi: ' + msg, 'danger');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi xác minh';
+                    }
+                } catch {
+                    showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi xác minh';
+                }
+            }
+
+            async function loadDoctor() {
+                try {
+                    const doc = await fetch(`/api/doctors/${DOCTOR_ID}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
+                    fillDisplay(doc);
+                } catch {
+                    showToast('Không tải được thông tin bác sĩ', 'danger');
+                }
+            }
+
+            loadDoctor();
+
+            function togglePassword(inputId, btn) {
+                const input = document.getElementById(inputId);
+                const icon = btn.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'bi bi-eye-slash';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'bi bi-eye';
+                }
+            }
+
+            const changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+
+            function openChangePasswordModal() {
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                changePasswordModal.show();
+            }
+
+            async function changePassword() {
+                const oldPassword = document.getElementById('oldPassword').value.trim();
+                const newPassword = document.getElementById('newPassword').value.trim();
+                const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+                if (!oldPassword) {
+                    showToast('Vui lòng nhập mật khẩu hiện tại', 'danger'); return;
+                }
+                if (!newPassword) {
+                    showToast('Vui lòng nhập mật khẩu mới', 'danger'); return;
+                }
+                if (!confirmPassword) {
+                    showToast('Vui lòng xác nhận mật khẩu mới', 'danger'); return;
+                }
+                if (newPassword.length < 6) {
+                    showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'danger'); return;
+                }
+                if (newPassword === oldPassword) {
+                    showToast('Mật khẩu mới không được trùng mật khẩu hiện tại', 'danger'); return;
+                }
+                if (newPassword !== confirmPassword) {
+                    showToast('Mật khẩu mới không khớp', 'danger'); return;
+                }
+                try {
+                    const res = await fetch('/api/auth/change-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({oldPassword, newPassword})
+                    });
+                    const msg = await res.text();
+                    if (res.ok) {
+                        changePasswordModal.hide();
+                        showToast('✅ ' + msg, 'success');
+                    } else {
+                        showToast('❌ ' + msg, 'danger');
+                    }
+                } catch {
+                    showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
+                }
+            }
+
+            function logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('email');
+                localStorage.removeItem('role');
+                document.cookie = 'jwt=; path=/; max-age=0';
+                window.location.href = '/login';
+            }
+        </script>
+    </body>
+=======
     function logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('email');
@@ -790,4 +1013,5 @@
     }
 </script>
 </body>
+>>>>>>> 85d63dacece2a53e290c6cff71c5f8c737ff9783:src/main/resources/templates/settings.html
 </html>
