@@ -31,7 +31,6 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/reminders/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
-                        .requestMatchers("/api/ai/**").hasAnyRole("DOCTOR", "ADMIN")
                         .requestMatchers("/ai/**").hasAnyRole("ADMIN", "DOCTOR")
 
                         // Article management - Bác sĩ/Admin quản lý bài viết
@@ -56,9 +55,13 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
+                        .requestMatchers("/api/patient/assignments/**").hasRole("PATIENT")
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
                         // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
                         .requestMatchers("/uploads/articles/**").permitAll()
+                        // Ảnh avatar bác sĩ: public để bệnh nhân xem được
+                        .requestMatchers("/uploads/doctors/*/avatar*").permitAll()
+                        // Ảnh CCCD/chứng chỉ nhạy cảm: chỉ ADMIN và DOCTOR
                         .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/patient/**").hasRole("PATIENT")

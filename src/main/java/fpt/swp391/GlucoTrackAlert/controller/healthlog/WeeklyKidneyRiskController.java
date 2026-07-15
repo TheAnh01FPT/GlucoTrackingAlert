@@ -33,9 +33,8 @@ public class WeeklyKidneyRiskController {
     private final UserRepository userRepository;
     private final WeeklyHealthReportRepository weeklyHealthReportRepository;
     private final DoctorPatientAssignmentRepository assignmentRepository;
-    private final fpt.swp391.GlucoTrackAlert.repository.DoctorRepository doctorRepository;
+    private final fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository doctorRepository;
     private final WeeklyReportService weeklyReportService;
-
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
