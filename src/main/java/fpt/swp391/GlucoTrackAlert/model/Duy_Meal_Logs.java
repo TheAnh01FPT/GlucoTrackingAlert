@@ -16,22 +16,22 @@ public class Duy_Meal_Logs {
     private Long patientId;
 
     @NotBlank(message = "Mo ta mon an khong duoc de trong")
-    @Column(name = "food_description", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "food_name", nullable = false, columnDefinition = "TEXT")
     private String foodName;  // ✅ giữ tên Java cũ để frontend không phải đổi
 
-    @Column(name = "meal_time")
+    @Column(name = "meal_type")
     private String mealType;  // ✅ giữ tên Java cũ
 
-    @Column(name = "sugar_level")
+    @Column(name = "sugar_estimation")
     private String sugarEstimation;  // ✅ giữ tên Java cũ (String thay vì Double)
 
     @Column(name = "carb_estimation")
-    private Double carbEstimation;
+private Double carbEstimation;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 
-    @Column(name = "meal_date", nullable = false)
+    @Column(name = "log_date", nullable = false)
     private LocalDate mealDate;
 
     @Column(name = "created_at")

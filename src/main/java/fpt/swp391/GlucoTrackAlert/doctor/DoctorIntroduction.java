@@ -49,8 +49,12 @@ public class DoctorIntroduction {
     public void prePersist() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) status = "active";
-        if (displayOrder == null) displayOrder = 0;
+        if (status == null) {
+            status = "active";
+        }
+        if (displayOrder == null) {
+            displayOrder = 0;
+        }
     }
 
     @PreUpdate

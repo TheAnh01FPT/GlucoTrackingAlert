@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
     private String frontendUrl;
 
     public UserServiceImpl(UserRepository userRepository,
-                           RoleRepository roleRepository,
-                           EmailVerificationTokenRepository tokenRepository,
-                           PasswordResetTokenRepository passwordResetTokenRepository,
-                           EmailService emailService,
-                           BCryptPasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil,
-                           DoctorRepository doctorRepository) {
+            RoleRepository roleRepository,
+            EmailVerificationTokenRepository tokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailService emailService,
+            BCryptPasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil,
+            DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
@@ -67,31 +67,67 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User register(RegisterRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail().trim())) {
-            throw new Exception("Email này đã được sử dụng trong hệ thống.");
+        String email = request.getEmail().trim();
+        String phone = request.getPhone().trim();
+
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user != null) {
+            // Email đã tồn tại và đã kích hoạt -> không cho đăng ký lại
+            if (Boolean.TRUE.equals(user.getEmailVerified()) || "active".equals(user.getStatus())) {
+                throw new Exception("Email này đã được sử dụng trong hệ thống.");
+            }
+            // Email tồn tại nhưng vẫn đang "pending_verification" (chưa xác nhận OTP lần trước)
+            // -> cho phép đăng ký lại: cập nhật thông tin và cấp OTP mới, KHÔNG throw lỗi
+            if (userRepository.existsByPhoneAndEmailNot(phone, email)) {
+                throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
+            }
+
+            Role role = roleRepository.findByName("PATIENT")
+                    .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
+
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            user.setFullName(request.getFullName().trim());
+            user.setPhone(phone);
+            user.setRole(role);
+            user.setStatus("pending_verification");
+            user.setEmailVerified(false);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            // Hủy toàn bộ OTP cũ còn đang pending của tài khoản này
+            tokenRepository.expireAllPendingByUserId(user.getId());
+        } else {
+            if (userRepository.existsByPhone(phone)) {
+                throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
+            }
+
+            Role role = roleRepository.findByName("PATIENT")
+                    .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
+
+            user = User.builder()
+                    .email(email)
+                    .passwordHash(passwordEncoder.encode(request.getPassword()))
+                    .fullName(request.getFullName().trim())
+                    .phone(phone)
+                    .role(role)
+                    .status("pending_verification")
+                    .emailVerified(false)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            userRepository.save(user);
         }
 
-        if (userRepository.existsByPhone(request.getPhone().trim())) {
-            throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
-        }
+        // Tạo OTP mới, đảm bảo không trùng với token đang tồn tại trong DB
+        // (verificationToken có ràng buộc unique)
+        String otp;
+        int attempts = 0;
+        do {
+            otp = generateOtp();
+            attempts++;
+        } while (tokenRepository.findByVerificationToken(otp).isPresent() && attempts < 10);
 
-        Role role = roleRepository.findByName("PATIENT")
-                .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
-
-        User user = User.builder()
-                .email(request.getEmail().trim())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName().trim())
-                .phone(request.getPhone().trim())
-                .role(role)
-                .status("pending_verification")
-                .emailVerified(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-        userRepository.save(user);
-
-        String otp = generateOtp();
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
                 .user(user)
                 .verificationToken(otp)
@@ -100,6 +136,8 @@ public class UserServiceImpl implements UserService {
                 .createdAt(LocalDateTime.now())
                 .build();
         tokenRepository.save(verificationToken);
+
+        sendOtpEmail(email, request.getFullName().trim(), otp);
 
         try {
             sendOtpEmail(request.getEmail().trim(), request.getFullName().trim(), otp);

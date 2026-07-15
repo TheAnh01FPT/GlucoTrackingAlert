@@ -34,12 +34,24 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
     public Duy_Meal_Logs updateLog(Long id, Duy_Meal_Logs log) {
         return repo.findById(id)
                 .map(existing -> {
-                    if (log.getFoodName() != null) existing.setFoodName(log.getFoodName());
-                    if (log.getMealType() != null) existing.setMealType(log.getMealType());
-                    if (log.getSugarEstimation() != null) existing.setSugarEstimation(log.getSugarEstimation());
-                    if (log.getCarbEstimation() != null) existing.setCarbEstimation(log.getCarbEstimation());
-                    if (log.getNote() != null) existing.setNote(log.getNote());
-                    if (log.getMealDate() != null) existing.setMealDate(log.getMealDate());
+                    if (log.getFoodName() != null) {
+                        existing.setFoodName(log.getFoodName());
+                    }
+                    if (log.getMealType() != null) {
+                        existing.setMealType(log.getMealType());
+                    }
+                    if (log.getSugarEstimation() != null) {
+                        existing.setSugarEstimation(log.getSugarEstimation());
+                    }
+                    if (log.getCarbEstimation() != null) {
+                        existing.setCarbEstimation(log.getCarbEstimation());
+                    }
+                    if (log.getNote() != null) {
+                        existing.setNote(log.getNote());
+                    }
+                    if (log.getMealDate() != null) {
+                        existing.setMealDate(log.getMealDate());
+                    }
                     return repo.save(existing);
                 })
                 .orElse(null);
@@ -76,7 +88,8 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
 
     @Override
     public List<Duy_Meal_Logs> getDangerSugarMeals() {
-        return repo.findByCarbEstimationGreaterThan(11.0);
+        // Nguong nguy hiem: >= 11.0 mmol/L (dung GreaterThanEqual de bao gom chinh xac 11.0)
+        return repo.findByCarbEstimationGreaterThanEqual(11.0);
     }
 
     @Override

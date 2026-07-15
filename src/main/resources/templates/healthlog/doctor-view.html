@@ -1,5 +1,30 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GlucoTrackAlert - Theo Dõi Sức Khỏe Bệnh Nhân</title>
+        <!-- Google Fonts: Inter -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+            :root {
+                --bg-primary: #f8fafc;
+                --card-bg: #ffffff;
+                --text-primary: #0f172a;
+                --text-secondary: #475569;
+                --primary: #4f46e5;
+                --primary-hover: #4338ca;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --border: #e2e8f0;
+                --indigo-light: #e0e7ff;
+                --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+                --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,446 +47,575 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+            }
 
-        .navbar {
-            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-            padding: 1rem 2rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+            /* Navbar Layout */
+            .navbar {
+                background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+                padding: 1rem 2rem;
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
 
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #ffffff;
-            text-decoration: none;
-            transition: var(--transition);
-        }
+            .navbar-brand {
+                font-size: 1.5rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: #ffffff;
+                text-decoration: none;
+                transition: var(--transition);
+            }
 
-        .navbar-brand:hover {
-            opacity: 0.9;
-        }
+            .navbar-brand:hover {
+                opacity: 0.9;
+            }
 
-        .navbar-menu {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
+            .navbar-menu {
+                display: flex;
+                gap: 1.5rem;
+                align-items: center;
+            }
 
-        .navbar-link {
-            color: #cbd5e1;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-        }
+            .navbar-link {
+                color: #cbd5e1;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 0.95rem;
+                transition: var(--transition);
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+            }
 
-        .navbar-link:hover,
-        .navbar-link.active {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+            .navbar-link:hover,
+            .navbar-link.active {
+                color: white;
+                background-color: rgba(255, 255, 255, 0.1);
+            }
 
-        .navbar-admin {
-            background-color: #3b82f6;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
+            .navbar-admin {
+                background-color: #3b82f6;
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 0.9rem;
+                transition: var(--transition);
+            }
 
-        .navbar-admin:hover {
-            background-color: #2563eb;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-        }
+            .navbar-admin:hover {
+                background-color: #2563eb;
+                box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            }
 
-        .main-container {
-            max-width: 1250px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-            animation: fadeIn 0.6s ease;
-        }
+            /* Main Container */
+            .main-container {
+                max-width: 1250px;
+                margin: 2rem auto;
+                padding: 0 1.5rem;
+                animation: fadeIn 0.6s ease;
+            }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(15px);
+                }
 
-        .page-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 1.5rem;
-            margin-top: 0;
-        }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
 
-        .action-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
-            border: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
+            /* Page Title */
+            .page-title {
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-bottom: 1.5rem;
+                margin-top: 0;
+            }
 
-        .user-selector-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
+            /* Upper Action Bar */
+            .action-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: var(--card-bg);
+                padding: 1.5rem;
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                margin-bottom: 2rem;
+                border: 1px solid var(--border);
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
 
-        .user-selector-label {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
+            .user-selector-container {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
 
-        .user-select {
-            padding: 0.6rem 2.5rem 0.6rem 1rem;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            font-size: 0.95rem;
-            font-family: inherit;
-            background-color: #f1f5f9;
-            color: var(--text-primary);
-            cursor: pointer;
-            outline: none;
-            transition: var(--transition);
-            font-weight: 500;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1rem;
-            -webkit-appearance: none;
-            appearance: none;
-            min-width: 200px;
-        }
+            .user-selector-label {
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: var(--text-secondary);
+            }
 
-        .user-select:focus {
-            border-color: var(--primary);
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-        }
+            .user-select {
+                padding: 0.6rem 2.5rem 0.6rem 1rem;
+                border-radius: 10px;
+                border: 1px solid var(--border);
+                font-size: 0.95rem;
+                font-family: inherit;
+                background-color: #f1f5f9;
+                color: var(--text-primary);
+                cursor: pointer;
+                outline: none;
+                transition: var(--transition);
+                font-weight: 500;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 1rem center;
+                background-size: 1rem;
+                -webkit-appearance: none;
+                appearance: none;
+                min-width: 200px;
+            }
 
-        .patient-info-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border-left: 4px solid var(--primary);
-        }
+            .user-select:focus {
+                border-color: var(--primary);
+                background-color: white;
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            }
 
-        .patient-info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
+            /* Patient Info Card */
+            .patient-info-card {
+                background: var(--card-bg);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                border: 1px solid var(--border);
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                border-left: 4px solid var(--primary);
+            }
 
-        .patient-info-main {
-            flex: 1;
-        }
+            .patient-info-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
 
-        .patient-info-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
+            .patient-info-main {
+                flex: 1;
+            }
 
-        .patient-info-details {
-            display: flex;
-            gap: 2rem;
-            margin-top: 0.75rem;
-            flex-wrap: wrap;
-        }
+            .patient-info-name {
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
 
-        .patient-info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
+            .patient-info-details {
+                display: flex;
+                gap: 2rem;
+                margin-top: 0.75rem;
+                flex-wrap: wrap;
+            }
 
-        .patient-info-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+            .patient-info-item {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
 
-        .patient-info-value {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+            .patient-info-label {
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
 
-        .patient-type-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.2rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.6rem;
-            border-radius: 8px;
-            vertical-align: middle;
-        }
+            .patient-info-value {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--text-primary);
+            }
 
-        .badge-adult    { background-color: #e0e7ff; color: #4338ca; }
-        .badge-elderly  { background-color: #fef3c7; color: #b45309; }
-        .badge-pregnant { background-color: #fce7f3; color: #be185d; }
-        .badge-child    { background-color: #d1fae5; color: #065f46; }
+            /* Patient Type Badges */
+            .patient-type-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.2rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                padding: 0.25rem 0.6rem;
+                border-radius: 8px;
+                vertical-align: middle;
+            }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+            .badge-adult {
+                background-color: #e0e7ff;
+                color: #4338ca;
+            }
 
-        .stat-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: var(--transition);
-        }
+            .badge-elderly {
+                background-color: #fef3c7;
+                color: #b45309;
+            }
 
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08);
-        }
+            .badge-pregnant {
+                background-color: #fce7f3;
+                color: #be185d;
+            }
 
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
+            .badge-child {
+                background-color: #d1fae5;
+                color: #065f46;
+            }
 
-        .stat-icon-blood    { background-color: #fee2e2; color: #ef4444; }
-        .stat-icon-pressure { background-color: #e0e7ff; color: #6366f1; }
-        .stat-icon-sleep    { background-color: #fef3c7; color: #f59e0b; }
-        .stat-icon-water    { background-color: #e0f2fe; color: #0284c7; }
+            /* Health Stats Card Grid */
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
 
-        .stat-info { display: flex; flex-direction: column; }
+            .stat-card {
+                background: var(--card-bg);
+                padding: 1.5rem;
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                border: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                transition: var(--transition);
+            }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+            .stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08);
+            }
 
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-top: 0.25rem;
-        }
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+            }
 
-        .table-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
+            .stat-icon-blood {
+                background-color: #fee2e2;
+                color: #ef4444;
+            }
 
-        .table-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+            .stat-icon-pressure {
+                background-color: #e0e7ff;
+                color: #6366f1;
+            }
 
-        .table-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin: 0;
-            color: var(--text-primary);
-        }
+            .stat-icon-sleep {
+                background-color: #fef3c7;
+                color: #f59e0b;
+            }
 
-        .table-responsive { overflow-x: auto; }
+            .stat-icon-water {
+                background-color: #e0f2fe;
+                color: #0284c7;
+            }
 
-        table { width: 100%; border-collapse: collapse; text-align: left; }
+            .stat-info {
+                display: flex;
+                flex-direction: column;
+            }
 
-        th {
-            background-color: #f8fafc;
-            padding: 1rem 1.5rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border);
-        }
+            .stat-label {
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
 
-        td {
-            padding: 1.1rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            transition: var(--transition);
-        }
+            .stat-value {
+                font-size: 1.4rem;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-top: 0.25rem;
+            }
 
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background-color: #f8fafc; }
+            /* Table Card */
+            .table-card {
+                background: var(--card-bg);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                border: 1px solid var(--border);
+                overflow: hidden;
+                margin-bottom: 2rem;
+            }
 
-        .row-alert-danger { background-color: #fef2f2; }
-        .row-alert-danger:hover td { background-color: #fee2e2; }
+            .table-header {
+                padding: 1.5rem;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
 
-        .value-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 0.25rem 0.6rem;
-            border-radius: 8px;
-        }
+            .table-title {
+                font-size: 1.15rem;
+                font-weight: 700;
+                margin: 0;
+                color: var(--text-primary);
+            }
 
-        .badge-danger  { background-color: #fee2e2; color: #ef4444; }
-        .badge-success { background-color: #d1fae5; color: #10b981; }
-        .badge-warning { background-color: #fef3c7; color: #d97706; }
-        .badge-neutral { background-color: #f1f5f9; color: #475569; }
+            .table-responsive {
+                overflow-x: auto;
+            }
 
-        .action-links { display: flex; gap: 0.5rem; align-items: center; }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                text-align: left;
+            }
 
-        .btn-action {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-        }
+            th {
+                background-color: #f8fafc;
+                padding: 1rem 1.5rem;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                border-bottom: 1px solid var(--border);
+            }
 
-        .btn-view { background-color: #fee2e2; color: #ef4444; }
-        .btn-view:hover { background-color: #fca5a5; transform: scale(1.1); }
+            td {
+                padding: 1.1rem 1.5rem;
+                border-bottom: 1px solid var(--border);
+                font-size: 0.95rem;
+                color: var(--text-primary);
+                transition: var(--transition);
+            }
 
-        .pagination-container {
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #ffffff;
-            border-top: 1px solid var(--border);
-        }
+            tr:last-child td {
+                border-bottom: none;
+            }
 
-        .pagination-info { font-size: 0.875rem; color: var(--text-secondary); }
-        .pagination-buttons { display: flex; gap: 0.35rem; }
+            tr:hover td {
+                background-color: #f8fafc;
+            }
 
-        .pagination-btn {
-            padding: 0.5rem 0.9rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background-color: white;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            text-decoration: none;
-            transition: var(--transition);
-        }
+            /* Alert row styles */
+            .row-alert-danger {
+                background-color: #fef2f2;
+            }
 
-        .pagination-btn:hover:not(.disabled) {
-            background-color: #f1f5f9;
-            color: var(--text-primary);
-            border-color: #cbd5e1;
-        }
+            .row-alert-danger:hover td {
+                background-color: #fee2e2;
+            }
 
-        .pagination-btn.active { background-color: var(--primary); color: white; border-color: var(--primary); }
-        .pagination-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+            /* Value Badges */
+            .value-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                font-weight: 600;
+                font-size: 0.9rem;
+                padding: 0.25rem 0.6rem;
+                border-radius: 8px;
+            }
 
-        .empty-state { padding: 4rem 2rem; text-align: center; color: var(--text-secondary); }
-        .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+            .badge-danger {
+                background-color: #fee2e2;
+                color: #ef4444;
+            }
 
-        .page-size-selector { display: flex; align-items: center; gap: 0.5rem; }
-        .page-size-selector label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+            .badge-success {
+                background-color: #d1fae5;
+                color: #10b981;
+            }
 
-        .page-size-select {
-            padding: 0.35rem 0.6rem;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            font-size: 0.85rem;
-            font-family: inherit;
-            background-color: white;
-            cursor: pointer;
-            outline: none;
-            transition: var(--transition);
-        }
+            .badge-warning {
+                background-color: #fef3c7;
+                color: #d97706;
+            }
 
-        .page-size-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
-        }
+            .badge-neutral {
+                background-color: #f1f5f9;
+                color: #475569;
+            }
 
-        .btn-threshold {
-            display: inline-block;
-            padding: 0.4rem 1rem;
-            background: #6366f1;
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        .btn-threshold:hover { background: #4f46e5; }
-    </style>
-</head>
+            /* Actions styling */
+            .action-links {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+            }
+
+            .btn-action {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                transition: var(--transition);
+                border: none;
+                cursor: pointer;
+            }
+
+            .btn-view {
+                background-color: #fee2e2;
+                color: #ef4444;
+            }
+
+            .btn-view:hover {
+                background-color: #fca5a5;
+                transform: scale(1.1);
+            }
+
+            /* Pagination container */
+            .pagination-container {
+                padding: 1.25rem 1.5rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: #ffffff;
+                border-top: 1px solid var(--border);
+            }
+
+            .pagination-info {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+            }
+
+            .pagination-buttons {
+                display: flex;
+                gap: 0.35rem;
+            }
+
+            .pagination-btn {
+                padding: 0.5rem 0.9rem;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background-color: white;
+                color: var(--text-secondary);
+                font-weight: 500;
+                font-size: 0.875rem;
+                text-decoration: none;
+                transition: var(--transition);
+            }
+
+            .pagination-btn:hover:not(.disabled) {
+                background-color: #f1f5f9;
+                color: var(--text-primary);
+                border-color: #cbd5e1;
+            }
+
+            .pagination-btn.active {
+                background-color: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+            .pagination-btn.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
+            .empty-state {
+                padding: 4rem 2rem;
+                text-align: center;
+                color: var(--text-secondary);
+            }
+
+            .empty-state-icon {
+                font-size: 3rem;
+                margin-bottom: 1rem;
+                display: block;
+            }
+
+            /* Page size selector */
+            .page-size-selector {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .page-size-selector label {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+                font-weight: 500;
+            }
+
+            .page-size-select {
+                padding: 0.35rem 0.6rem;
+                border-radius: 6px;
+                border: 1px solid var(--border);
+                font-size: 0.85rem;
+                font-family: inherit;
+                background-color: white;
+                cursor: pointer;
+                outline: none;
+                transition: var(--transition);
+            }
+
+            .page-size-select:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+            }
+
+            .btn-threshold {
+                display: inline-block;
+                padding: 0.4rem 1rem;
+                background: #6366f1;
+                color: white;
+                border-radius: 8px;
+                text-decoration: none;
+                font-size: 0.85rem;
+                font-weight: 500;
+                transition: background 0.2s;
+            }
+            .btn-threshold:hover {
+                background: #4f46e5;
+            }
+        </style>
+    </head>
 
 <body>
-
     <!-- Header Navigation -->
     <header class="navbar">
         <a href="/health-logs/doctor-view" class="navbar-brand">
@@ -476,7 +630,6 @@
             <a th:href="@{/doctor/home}" class="navbar-link">🏠 Trang Chủ</a>
         </nav>
     </header>
-
     <!-- Main Content -->
     <main class="main-container">
 
@@ -533,7 +686,7 @@
                         <div class="patient-info-item">
                             <span class="patient-info-label">Giới tính</span>
                             <span class="patient-info-value"
-                                  th:text="${selectedPatient.gender != null ? (selectedPatient.gender.equalsIgnoreCase('male') ? '👨 Nam' : '👩 Nữ') : '--'}">Nam</span>
+                                  th:text="${selectedPatient.gender != null ? ((selectedPatient.gender.equalsIgnoreCase('male') or selectedPatient.gender.equalsIgnoreCase('nam')) ? '👨 Nam' : '👩 Nữ') : '--'}">Nam</span>
                         </div>
 
                     </div>
@@ -781,6 +934,7 @@
                      background:#f8f7ff; border:1px solid #e0e7ff; border-radius:12px;
                      font-size:0.93rem; line-height:2; color:#1e1b4b; white-space:pre-wrap;
                      font-family:'Inter',monospace; max-height:600px; overflow-y:auto;">
+                    <span id="aiResultText"></span>
                 </div>
                 <p style="margin-top:0.75rem; font-size:0.82rem; color:#94a3b8;">
                     * Kết quả chỉ mang tính tham khảo, không thay thế chẩn đoán lâm sàng của bác sĩ.
@@ -811,6 +965,9 @@
                     </div>
                     <div id="recMsg" style="display:none; margin-top:0.75rem; font-size:0.88rem;"></div>
                 </div>
+                <div style="margin-top: 1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin:0;">📋 Danh Sách Khuyến Nghị</h3>
 
                 <div style="margin-top:1.5rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
@@ -820,147 +977,175 @@
                             Hiển thị đã xóa
                         </label>
                     </div>
-                    <div id="recItems" style="display:flex; flex-direction:column; gap:0.75rem;">
-                        <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
-                    </div>
+                    <div id="recItems" style="display:flex; flex-direction:column; gap:0.75rem;"><p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p></div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </main>
 
-    </main>
-
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        function filterByPatientType() {
-            var patientType = document.getElementById('patientTypeSelect').value;
-            location.href = '/health-logs/doctor-view?patientType=' + encodeURIComponent(patientType);
-        }
-
-        function selectPatient() {
-            var userId = document.getElementById('patientSelect').value;
-            var patientType = /*[[${patientType}]]*/ '';
-            var pageSize = /*[[${pageSize}]]*/ 10;
-            var url = '/health-logs/doctor-view?userId=' + userId + '&size=' + pageSize;
-            if (patientType) url += '&patientType=' + encodeURIComponent(patientType);
-            location.href = url;
-        }
-
-        function changePageSize() {
-            var size = document.getElementById('pageSizeSelect').value;
-            var userId = /*[[${selectedUserId}]]*/ '';
-            var patientType = /*[[${patientType}]]*/ '';
-            var url = '/health-logs/doctor-view?page=0&size=' + size;
-            if (userId) url += '&userId=' + userId;
-            if (patientType) url += '&patientType=' + encodeURIComponent(patientType);
-            location.href = url;
-        }
-
-        async function analyzeWithAI() {
-            const patientId = /*[[${selectedUserId}]]*/ null;
-            if (!patientId) return;
-
-            const btn = document.getElementById('btnAnalyze');
-            const resultBox = document.getElementById('aiResultBox');
-            const loading = document.getElementById('aiLoading');
-
-            btn.disabled = true;
-            btn.textContent = '⏳ Đang phân tích...';
-            resultBox.style.display = 'none';
-            loading.style.display = 'block';
-
-            try {
-                const response = await fetch(`/ai/analyze?patientId=${patientId}`, { method: 'POST' });
-                const data = await response.json();
-                resultBox.textContent = data.result || data.error || 'Không có kết quả.';
-                resultBox.style.display = 'block';
-            } catch (e) {
-                resultBox.textContent = '❌ Lỗi kết nối đến AI. Vui lòng thử lại.';
-                resultBox.style.display = 'block';
-            } finally {
-                loading.style.display = 'none';
-                btn.disabled = false;
-                btn.textContent = '✨ Phân Tích Lại';
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            function filterByPatientType() {
+                var patientType = document.getElementById('patientTypeSelect').value;
+                var url = '/health-logs/doctor-view?patientType=' + encodeURIComponent(patientType);
+                location.href = url;
             }
-        }
 
-        const patientIdForRec = /*[[${selectedUserId}]]*/ null;
-
-        async function loadRecommendations() {
-            if (!patientIdForRec) return;
-            const showInactive = document.getElementById('showInactive')?.checked;
-            const url = showInactive
-                ? `/api/recommendations/doctor/patient/${patientIdForRec}/all`
-                : `/api/recommendations/doctor/patient/${patientIdForRec}`;
-            const res = await fetch(url);
-            const list = await res.json();
-            const container = document.getElementById('recItems');
-            if (!list.length) {
-                container.innerHTML = "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>";
-                return;
+            function selectPatient() {
+                var userId = document.getElementById('patientSelect').value;
+                var patientType = /*[[${patientType}]]*/ '';
+                var pageSize = /*[[${pageSize}]]*/ 10;
+                var url = '/health-logs/doctor-view?userId=' + userId + '&size=' + pageSize;
+                if (patientType) {
+                    url += '&patientType=' + encodeURIComponent(patientType);
+                }
+                location.href = url;
             }
-            container.innerHTML = list.map(r => {
-                const isInactive = r.status === 'inactive';
-                const cardStyle = isInactive
-                    ? 'background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:1rem 1.25rem; opacity:0.65;'
-                    : 'background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:1rem 1.25rem;';
-                const titleStyle = isInactive
-                    ? 'font-size:0.95rem; color:#94a3b8; text-decoration:line-through;'
-                    : 'font-size:0.95rem; color:#1e293b;';
-                const contentStyle = isInactive
-                    ? 'margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;'
-                    : 'margin-top:0.5rem; font-size:0.88rem; color:#475569;';
-                const actionBtn = isInactive
-                    ? `<span style="font-size:0.78rem; background:#f1f5f9; color:#94a3b8; padding:0.25rem 0.7rem; border-radius:6px;">Đã xóa</span>`
-                    : `<button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer;">🗑 Xóa</button>`;
-                return `<div style="${cardStyle}">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong style="${titleStyle}">${r.title}</strong>
-                        <div style="display:flex; gap:0.5rem; align-items:center;">${actionBtn}</div>
-                    </div>
-                    <p style="${contentStyle}">${r.recommendation}</p>
-                    <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
-                </div>`;
-            }).join('');
-        }
 
-        async function saveRecommendation() {
-            const title = document.getElementById('recTitle').value.trim();
-            const content = document.getElementById('recContent').value.trim();
-            const msg = document.getElementById('recMsg');
-            if (!title || !content) {
-                msg.style.display = 'block';
-                msg.style.color = '#dc2626';
-                msg.textContent = 'Vui lòng điền đầy đủ tiêu đề và nội dung!';
-                return;
+            async function analyzeWithAI() {
+                const patientId = /*[[${selectedUserId}]]*/ null;
+                if (!patientId)
+                    return;
+
+                const btn = document.getElementById('btnAnalyze');
+                const resultBox = document.getElementById('aiResultBox');
+                const resultText = document.getElementById('aiResultText');
+                const loading = document.getElementById('aiLoading');
+
+                btn.disabled = true;
+                btn.textContent = '⏳ Đang phân tích...';
+                // FIX 1+2: ẩn resultBox, hiện loading (loading đã nằm ngoài resultBox)
+                resultBox.style.display = 'none';
+                resultText.textContent = '';
+                loading.style.display = 'block';
+
+                try {
+                    const response = await fetch(`/ai/analyze?patientId=${patientId}`, {method: 'POST'});
+                    const data = await response.json();
+                    // FIX 2: ghi vào aiResultText, không dùng textContent trên resultBox (tránh xóa disclaimer)
+                    resultText.textContent = data.result || data.error || 'Không có kết quả.';
+                    resultBox.style.display = 'block';
+                } catch (e) {
+                    resultText.textContent = '❌ Lỗi kết nối đến AI. Vui lòng thử lại.';
+                    resultBox.style.display = 'block';
+                } finally {
+                    loading.style.display = 'none';
+                    btn.disabled = false;
+                    btn.textContent = '✨ Phân Tích Lại';
+                }
             }
-            const res = await fetch('/api/recommendations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, recommendation: content, patientId: patientIdForRec })
-            });
-            if (res.ok) {
-                msg.style.display = 'block';
-                msg.style.color = '#16a34a';
-                msg.textContent = '✅ Lưu thành công!';
-                document.getElementById('recTitle').value = '';
-                document.getElementById('recContent').value = '';
-                loadRecommendations();
-            } else {
-                msg.style.display = 'block';
-                msg.style.color = '#dc2626';
-                msg.textContent = '❌ Lưu thất bại, vui lòng thử lại.';
+
+
+            const patientIdForRec = /*[[${selectedUserId}]]*/ null;
+
+            // FIX 3: hàm escape chống XSS khi render innerHTML từ dữ liệu server
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
             }
-        }
 
-        async function deleteRecommendation(id) {
-            if (!confirm('Bạn có chắc muốn xóa khuyến nghị này?')) return;
-            const res = await fetch(`/api/recommendations/${id}`, { method: 'DELETE' });
-            if (res.ok) loadRecommendations();
-        }
+            async function loadRecommendations() {
+                if (!patientIdForRec)
+                    return;
+                const container = document.getElementById("recItems");
+                // FIX 4: try/catch để bắt lỗi network/API
+                try {
+                    const showInactive = document.getElementById('showInactive') && document.getElementById('showInactive').checked;
+                    const url = showInactive
+                            ? `/api/recommendations/doctor/patient/${patientIdForRec}/all`
+                            : `/api/recommendations/doctor/patient/${patientIdForRec}`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const list = await res.json();
+                    if (!list.length) {
+                        container.innerHTML = "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>";
+                        return;
+                    }
+                    container.innerHTML = list.map(r => {
+                        const isInactive = r.status === 'inactive';
+                        const cardStyle = isInactive
+                                ? 'background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:1rem 1.25rem; opacity:0.65;'
+                                : 'background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:1rem 1.25rem;';
+                        const titleStyle = isInactive
+                                ? 'font-size:0.95rem; color:#94a3b8; text-decoration:line-through;'
+                                : 'font-size:0.95rem; color:#1e293b;';
+                        const contentStyle = isInactive
+                                ? 'margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;'
+                                : 'margin-top:0.5rem; font-size:0.88rem; color:#475569;';
+                        const actionBtn = isInactive
+                                ? `<span style="font-size:0.78rem; background:#f1f5f9; color:#94a3b8; padding:0.25rem 0.7rem; border-radius:6px;">Đã xóa</span>`
+                                : `<button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer;">🗑 Xóa</button>`;
+                        // FIX 3: dùng escapeHtml() cho r.title và r.recommendation trước khi nhét vào innerHTML
+                        return `<div style="${cardStyle}">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="${titleStyle}">${escapeHtml(r.title)}</strong>
+                                <div style="display:flex; gap:0.5rem; align-items:center;">${actionBtn}</div>
+                            </div>
+                            <p style="${contentStyle}">${escapeHtml(r.recommendation)}</p>
+                            <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
+                        </div>`;
+                    }).join("");
+                } catch (err) {
+                    // FIX 4: hiện thông báo lỗi thay vì im lặng
+                    container.innerHTML = "<p style='color:#ef4444; font-size:0.9rem;'>❌ Không thể tải khuyến nghị. Vui lòng thử lại.</p>";
+                    console.error('loadRecommendations error:', err);
+                }
+            }
 
-        window.onload = () => loadRecommendations();
-        /*]]>*/
-    </script>
+            async function saveRecommendation() {
+                const title = document.getElementById("recTitle").value.trim();
+                const content = document.getElementById("recContent").value.trim();
+                const msg = document.getElementById("recMsg");
+                if (!title || !content) {
+                    msg.style.display = "block";
+                    msg.style.color = "#dc2626";
+                    msg.textContent = "Vui lòng điền đầy đủ tiêu đề và nội dung!";
+                    return;
+                }
+                const res = await fetch("/api/recommendations", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({title, recommendation: content, patientId: patientIdForRec})});
+                if (res.ok) {
+                    msg.style.display = "block";
+                    msg.style.color = "#16a34a";
+                    msg.textContent = "✅ Lưu thành công!";
+                    document.getElementById("recTitle").value = "";
+                    document.getElementById("recContent").value = "";
+                    loadRecommendations();
+                } else {
+                    msg.style.display = "block";
+                    msg.style.color = "#dc2626";
+                    msg.textContent = "❌ Lưu thất bại, vui lòng thử lại.";
+                }
+            }
+
+            async function deleteRecommendation(id) {
+                if (!confirm("Bạn có chắc muốn xóa khuyến nghị này?"))
+                    return;
+                const res = await fetch(`/api/recommendations/${id}`, {method: "DELETE"});
+                if (res.ok)
+                    loadRecommendations();
+            }
+
+            window.onload = () => loadRecommendations();
+            function changePageSize() {
+                var size = document.getElementById('pageSizeSelect').value;
+                var userId = /*[[${selectedUserId}]]*/ '';
+                var patientType = /*[[${patientType}]]*/ '';
+                var url = '/health-logs/doctor-view?page=0&size=' + size;
+                if (userId) {
+                    url += '&userId=' + userId;
+                }
+                if (patientType) {
+                    url += '&patientType=' + encodeURIComponent(patientType);
+                }
+                location.href = url;
+            }
+            /*]]>*/
+        </script>
+
 
 </body>
 </html>
