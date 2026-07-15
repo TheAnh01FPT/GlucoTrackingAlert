@@ -18,6 +18,8 @@ import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +36,7 @@ import java.util.UUID;
 @Transactional
 public class HealthArticleServiceImpl implements HealthArticleService {
 
+    private static final Logger log = LoggerFactory.getLogger(HealthArticleServiceImpl.class);
     private final HealthArticleRepository articleRepository;
     private final UserRepository userRepository;
 
@@ -182,6 +185,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
                 throw new Exception("Kích thước ảnh không được vượt quá 5MB");
             }
 
+            String oldThumbnailUrl = article.getThumbnailUrl();
             try {
                 Path uploadDir = Paths.get("uploads", "articles");
                 if (!Files.exists(uploadDir)) {
@@ -198,6 +202,15 @@ public class HealthArticleServiceImpl implements HealthArticleService {
 
                 Files.copy(thumbFile2.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 article.setThumbnailUrl("/uploads/articles/" + fileName);
+
+                if (oldThumbnailUrl != null && !oldThumbnailUrl.isBlank() && oldThumbnailUrl.startsWith("/uploads/articles/")) {
+                    try {
+                        Path oldPath = Paths.get(".", oldThumbnailUrl);
+                        Files.deleteIfExists(oldPath);
+                    } catch (IOException deleteEx) {
+                        log.warn("Không thể xóa ảnh thumbnail cũ: {}", oldThumbnailUrl, deleteEx);
+                    }
+                }
             } catch (IOException e) {
                 throw new Exception("Lỗi khi lưu ảnh đại diện: " + e.getMessage(), e);
             }

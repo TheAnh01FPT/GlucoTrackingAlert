@@ -6,11 +6,14 @@ import fpt.swp391.GlucoTrackAlert.model.article.HealthArticle;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.article.HealthArticleService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +41,7 @@ public class HealthArticleManageController {
     private static final Logger log = LoggerFactory.getLogger(HealthArticleManageController.class);
     private final HealthArticleService articleService;
     private final UserRepository userRepository;
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 5;
     private static final Pattern UNSUPPORTED_EMBED_PATTERN = Pattern.compile("(?i)<\\s*(iframe|video|embed)\\b[^>]*>");
 
     /**
@@ -49,6 +52,19 @@ public class HealthArticleManageController {
             .getAuthentication().getPrincipal();
         return userRepository.findByEmail(email)
             .orElseThrow(() -> new Exception("User không tồn tại"));
+    }
+
+    private boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(role));
+    }
+
+    private void checkOwnership(HealthArticle article, User currentUser) throws AccessDeniedException {
+        boolean isAdmin = hasRole("ROLE_ADMIN");
+        if (!isAdmin && (article.getCreatedBy() == null || !article.getCreatedBy().getId().equals(currentUser.getId()))) {
+            throw new AccessDeniedException("Bạn không có quyền thao tác trên bài viết này");
+        }
     }
 
     private boolean containsUnsupportedEmbeddedContent(String content) {
@@ -87,6 +103,13 @@ public class HealthArticleManageController {
         return "article/form";
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public String handleAccessDenied(AccessDeniedException ex, HttpServletRequest request, HttpServletResponse response, Model model) {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        model.addAttribute("errorMessage", ex.getMessage());
+        return "error";
+    }
+
     /**
      * [DOCTOR, ADMIN] Danh sách quản lý bài viết
      * GET /articles/manage
@@ -101,10 +124,20 @@ public class HealthArticleManageController {
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<HealthArticle> articles = articleService.getArticlesForManagement(status, keyword, pageable);
 
+        User currentUser;
+        try {
+            currentUser = getLoggedInUser();
+        } catch (Exception e) {
+            log.error("Không lấy được người dùng hiện tại", e);
+            return "redirect:/login";
+        }
+
         model.addAttribute("articles", articles);
         model.addAttribute("currentPage", page);
         model.addAttribute("status", status);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("currentUserId", currentUser.getId());
+        model.addAttribute("isAdmin", hasRole("ROLE_ADMIN"));
 
         return "article/manage-list";
     }
@@ -172,6 +205,15 @@ public class HealthArticleManageController {
             return "redirect:/articles/manage";
         }
 
+        User currentUser;
+        try {
+            currentUser = getLoggedInUser();
+        } catch (Exception e) {
+            log.error("Không lấy được người dùng hiện tại", e);
+            return "redirect:/articles/manage";
+        }
+        checkOwnership(article.get(), currentUser);
+
         HealthArticle a = article.get();
         HealthArticleRequest request = new HealthArticleRequest();
         request.setTitle(a.getTitle());
@@ -201,6 +243,20 @@ public class HealthArticleManageController {
             @Valid @ModelAttribute("article") HealthArticleRequest request,
             BindingResult bindingResult,
             Model model) {
+
+        Optional<HealthArticle> existingArticle = articleService.getArticleById(id);
+        if (existingArticle.isEmpty()) {
+            return "redirect:/articles/manage";
+        }
+
+        User currentUser;
+        try {
+            currentUser = getLoggedInUser();
+        } catch (Exception e) {
+            log.error("Không lấy được người dùng hiện tại", e);
+            return "redirect:/articles/manage";
+        }
+        checkOwnership(existingArticle.get(), currentUser);
 
         if (bindingResult.hasErrors()) {
             populateArticleFormModel(model, request, id, true);
@@ -232,8 +288,24 @@ public class HealthArticleManageController {
     @PostMapping("/{id}/delete")
     public String deleteArticle(@PathVariable Long id) {
 
+        Optional<HealthArticle> existingArticle = articleService.getArticleById(id);
+        if (existingArticle.isEmpty()) {
+            return "redirect:/articles/manage";
+        }
+
+        User currentUser;
         try {
+            currentUser = getLoggedInUser();
+        } catch (Exception e) {
+            log.error("Không lấy được người dùng hiện tại", e);
+            return "redirect:/articles/manage";
+        }
+
+        try {
+            checkOwnership(existingArticle.get(), currentUser);
             articleService.deleteArticle(id);
+        } catch (AccessDeniedException ex) {
+            throw ex;
         } catch (Exception e) {
             log.error("Xóa bài viết thất bại, id={}", id, e);
         }

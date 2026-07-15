@@ -909,7 +909,7 @@
       <!-- Menu Navigation -->
       <nav class="navbar-menu">
         <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
-        <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
+        <a th:href="${isDoctorOrAdmin} ? @{/doctor/home} : @{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
       </nav>
     </header>
 

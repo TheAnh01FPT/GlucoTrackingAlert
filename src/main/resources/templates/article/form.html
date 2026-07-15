@@ -499,6 +499,7 @@
             const articleForm = document.querySelector('form[enctype="multipart/form-data"]');
             if (articleForm) {
                 articleForm.addEventListener('submit', function (event) {
+                    tinymce.triggerSave();
                     const thumbnailInput = document.getElementById('thumbnailFile');
                     if (!thumbnailInput || !thumbnailInput.files || thumbnailInput.files.length === 0) {
                         return;

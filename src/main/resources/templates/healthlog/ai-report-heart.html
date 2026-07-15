@@ -390,7 +390,7 @@
 
     <nav class="navbar-menu">
         <a th:href="${isDoctorOrAdmin} ? @{/health-logs/ai-report(patientId=${patient.id})} : @{/health-logs/ai-report}" class="navbar-link">🤖 Báo Cáo AI</a>
-        <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
+        <a th:href="${isDoctorOrAdmin} ? @{/doctor/home} : @{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
     </nav>
 </header>
 

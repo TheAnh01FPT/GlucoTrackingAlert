@@ -1,719 +1,793 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>Cài đặt – GlucoTrackAlert</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com"/>
-        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
-        <style>
-            :root {
-                --primary: #1565c0;
-                --primary-light: #e3f2fd;
-                --primary-dark: #0d47a1;
-                --accent: #42a5f5;
-                --sidebar-w: 240px;
-                --font: 'Be Vietnam Pro', sans-serif;
-            }
-            * {
-                font-family: var(--font);
-            }
-            body {
-                background: #f0f4f8;
-            }
-            .sidebar {
-                width:var(--sidebar-w);
-                min-height:100vh;
-                background:var(--primary-dark);
-                position:fixed;
-                top:0;
-                left:0;
-                display:flex;
-                flex-direction:column;
-                z-index:100;
-            }
-            .sidebar-logo {
-                padding:24px 20px 16px;
-                border-bottom:1px solid rgba(255,255,255,.1);
-            }
-            .sidebar-logo span {
-                color:#fff;
-                font-weight:700;
-                font-size:1.1rem;
-            }
-            .sidebar-logo small {
-                color:rgba(255,255,255,.5);
-                font-size:.7rem;
-                display:block;
-            }
-            .sidebar-nav {
-                padding:12px 0;
-                flex:1;
-            }
-            .nav-item-link {
-                display:flex;
-                align-items:center;
-                gap:10px;
-                padding:10px 20px;
-                color:rgba(255,255,255,.7);
-                text-decoration:none;
-                font-size:.875rem;
-                transition:all .2s;
-            }
-            .nav-item-link:hover, .nav-item-link.active {
-                color:#fff;
-                background:rgba(255,255,255,.1);
-                border-left:3px solid var(--accent);
-                padding-left:17px;
-            }
-            .nav-item-link i {
-                font-size:1rem;
-                width:20px;
-            }
-            .main {
-                margin-left:var(--sidebar-w);
-                padding:28px 32px;
-                max-width: 860px;
-            }
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cài đặt – GlucoTrackAlert</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --primary: #1565c0;
+            --primary-light: #e3f2fd;
+            --primary-dark: #0d47a1;
+            --accent: #42a5f5;
+            --sidebar-w: 240px;
+            --font: 'Be Vietnam Pro', sans-serif;
+        }
 
-            .page-header {
-                margin-bottom: 28px;
-            }
-            .page-header h4 {
-                font-weight:700;
-                color:#1a1a2e;
-                margin:0 0 4px;
-                font-size:1.3rem;
-            }
-            .page-header p {
-                color:#6c757d;
-                font-size:.875rem;
-                margin:0;
-            }
+        * {
+            font-family: var(--font);
+        }
 
-            .settings-card {
-                background: #fff;
-                border-radius: 16px;
-                border: 1px solid #e3eaf5;
-                box-shadow: 0 2px 8px rgba(0,0,0,.05);
-                margin-bottom: 24px;
-                overflow: hidden;
-            }
-            .settings-card-header {
-                padding: 18px 24px;
-                border-bottom: 1px solid #f0f4f8;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            .settings-card-header .icon {
-                width: 36px;
-                height: 36px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1rem;
-                flex-shrink: 0;
-            }
-            .settings-card-header h6 {
-                margin:0;
-                font-weight:700;
-                color:#1a1a2e;
-                font-size:.95rem;
-            }
-            .settings-card-header p  {
-                margin:0;
-                font-size:.78rem;
-                color:#6c757d;
-            }
-            .settings-card-body {
-                padding: 24px;
-            }
+        body {
+            background: #f0f4f8;
+        }
 
-            .info-row {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 12px 0;
-                border-bottom: 1px solid #f5f7fb;
-                font-size: .875rem;
-            }
-            .info-row:last-child {
-                border-bottom: none;
-                padding-bottom: 0;
-            }
-            .info-label {
-                color: #6c757d;
-                min-width: 140px;
-                flex-shrink: 0;
-            }
-            .info-value {
-                color: #1a1a2e;
-                font-weight: 600;
-            }
-            .info-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 2px 10px;
-                border-radius: 20px;
-                font-size: .75rem;
-                font-weight: 600;
-            }
-            .badge-readonly {
-                background: #f0f4f8;
-                color: #6c757d;
-            }
+        .sidebar {
+            width: var(--sidebar-w);
+            min-height: 100vh;
+            background: var(--primary-dark);
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
 
-            #toast-wrap {
-                position:fixed;
-                bottom:24px;
-                right:24px;
-                z-index:9999;
-                display:flex;
-                flex-direction:column;
-                gap:8px;
-            }
-            .toast-msg {
-                padding: 12px 18px;
-                border-radius: 10px;
-                color: #fff;
-                font-size: .85rem;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                box-shadow: 0 4px 16px rgba(0,0,0,.2);
-                animation: slideIn .2s ease;
-            }
-            @keyframes slideIn {
-                from {
-                    transform: translateX(40px);
-                    opacity:0
-                }
-                to {
-                    transform: translateX(0);
-                    opacity:1
-                }
-            }
-        </style>
-    </head>
-    <body>
+        .sidebar-logo {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, .1);
+        }
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-logo">
-                <span><i class="bi bi-heart-pulse-fill me-2" style="color:var(--accent)"></i>GlucoTrackAlert</span>
-                <small>Cổng bác sĩ</small>
+        .sidebar-logo span {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-logo small {
+            color: rgba(255, 255, 255, .5);
+            font-size: .7rem;
+            display: block;
+        }
+
+        .sidebar-nav {
+            padding: 12px 0;
+            flex: 1;
+        }
+
+        .nav-item-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            color: rgba(255, 255, 255, .7);
+            text-decoration: none;
+            font-size: .875rem;
+            transition: all .2s;
+        }
+
+        .nav-item-link:hover, .nav-item-link.active {
+            color: #fff;
+            background: rgba(255, 255, 255, .1);
+            border-left: 3px solid var(--accent);
+            padding-left: 17px;
+        }
+
+        .nav-item-link i {
+            font-size: 1rem;
+            width: 20px;
+        }
+
+        .main {
+            margin-left: var(--sidebar-w);
+            padding: 28px 32px;
+            max-width: 860px;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h4 {
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0 0 4px;
+            font-size: 1.3rem;
+        }
+
+        .page-header p {
+            color: #6c757d;
+            font-size: .875rem;
+            margin: 0;
+        }
+
+        .settings-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e3eaf5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .settings-card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f4f8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-card-header .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .settings-card-header h6 {
+            margin: 0;
+            font-weight: 700;
+            color: #1a1a2e;
+            font-size: .95rem;
+        }
+
+        .settings-card-header p {
+            margin: 0;
+            font-size: .78rem;
+            color: #6c757d;
+        }
+
+        .settings-card-body {
+            padding: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f7fb;
+            font-size: .875rem;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            color: #6c757d;
+            min-width: 140px;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .badge-readonly {
+            background: #f0f4f8;
+            color: #6c757d;
+        }
+
+        #toast-wrap {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast-msg {
+            padding: 12px 18px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: .85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .2);
+            animation: slideIn .2s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(40px);
+                opacity: 0
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <span><i class="bi bi-heart-pulse-fill me-2" style="color:var(--accent)"></i>GlucoTrackAlert</span>
+        <small>Cổng bác sĩ</small>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/doctor/home" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+        <a href="/doctor/my-patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân của tôi</a>
+        <a href="#" class="nav-item-link"><i class="bi bi-graph-up"></i> Chỉ số Glucose</a>
+        <a href="#" class="nav-item-link"><i class="bi bi-bell"></i> Cảnh báo</a>
+        <a href="/doctor/settings" class="nav-item-link active"><i class="bi bi-gear"></i> Cài đặt</a>
+    </nav>
+    <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
+        <div style="color:rgba(255,255,255,.5); font-size:.75rem">Bác sĩ</div>
+        <div style="color:#fff; font-size:.85rem; font-weight:600" id="sidebarDrName">–</div>
+        <button onclick="logout()"
+                style="margin-top:12px; width:100%; padding:8px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:8px; color:#fff; font-size:.85rem; cursor:pointer;">
+            <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+        </button>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h4><i class="bi bi-gear-fill me-2" style="color:var(--primary)"></i>Cài đặt tài khoản</h4>
+        <p>Xem thông tin cá nhân của bạn</p>
+    </div>
+
+    <!-- Thông tin chỉ đọc -->
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <div class="icon" style="background:#f0f4f8; color:#6c757d"><i class="bi bi-person-circle"></i></div>
+            <div>
+                <h6>Thông tin hồ sơ</h6>
+                <p>Thông tin cá nhân hiện tại của bạn trong hệ thống</p>
             </div>
-            <nav class="sidebar-nav">
-                <a href="/doctor/home"        class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
-                <a href="/doctor/my-patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân của tôi</a>
-                <a href="#"                   class="nav-item-link"><i class="bi bi-graph-up"></i> Chỉ số Glucose</a>
-                <a href="#"                   class="nav-item-link"><i class="bi bi-bell"></i> Cảnh báo</a>
-                <a href="/doctor/settings"    class="nav-item-link active"><i class="bi bi-gear"></i> Cài đặt</a>
-            </nav>
-            <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
-                <div style="color:rgba(255,255,255,.5); font-size:.75rem">Bác sĩ</div>
-                <div style="color:#fff; font-size:.85rem; font-weight:600" id="sidebarDrName">–</div>
-                <button onclick="logout()" style="margin-top:12px; width:100%; padding:8px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:8px; color:#fff; font-size:.85rem; cursor:pointer;">
-                    <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+        </div>
+        <div class="settings-card-body">
+            <div class="info-row">
+                <span class="info-label">Họ và tên</span>
+                <span class="info-value" id="infoName">–</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Chuyên khoa</span>
+                <span class="info-value" id="infoSpec">–</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Học vị</span>
+                <span class="info-value" id="infoDegree">–</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Kinh nghiệm</span>
+                <span class="info-value" id="infoExp">–</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Nơi công tác</span>
+                <span class="info-value" id="infoWorkplace">–</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Số điện thoại</span>
+                <span class="info-value" id="infoPhone">–</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email đăng nhập</span>
+                <span class="info-value" id="infoEmail">–</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Giờ làm việc</span>
+                <span class="info-value">08:00 – 17:00 &nbsp;|&nbsp; Thứ 2 – Chủ nhật</span>
+                <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Cố định</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Card Đổi mật khẩu -->
+    <div class="settings-card" id="changePasswordCard">
+        <div class="settings-card-header">
+            <div class="icon" style="background:#e3f2fd; color:#1565c0"><i class="bi bi-shield-lock"></i></div>
+            <div>
+                <h6 style="color:#1565c0">🔒 Đổi mật khẩu</h6>
+                <p>Thay đổi mật khẩu đăng nhập của bạn</p>
+            </div>
+        </div>
+        <div class="settings-card-body">
+            <form id="doctorChangePwdForm" onsubmit="handleDoctorChangePwd(event)">
+                <div id="drPwdAlert"
+                     style="display:none; padding:10px 15px; border-radius:8px; margin-bottom:15px; font-size:0.85rem"></div>
+                <div style="margin-bottom:15px">
+                    <label style="font-weight:600;font-size:0.875rem;margin-bottom:6px;display:block;color:#1a1a2e">Mật
+                        khẩu hiện tại</label>
+                    <input type="password" id="drCurrentPwd" class="form-control" required
+                           style="border-radius:8px; font-size:0.875rem; padding:10px 14px">
+                </div>
+                <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap">
+                    <div style="flex:1; min-width:200px">
+                        <label style="font-weight:600;font-size:0.875rem;margin-bottom:6px;display:block;color:#1a1a2e">Mật
+                            khẩu mới</label>
+                        <input type="password" id="drNewPwd" class="form-control" required
+                               style="border-radius:8px; font-size:0.875rem; padding:10px 14px">
+                    </div>
+                    <div style="flex:1; min-width:200px">
+                        <label style="font-weight:600;font-size:0.875rem;margin-bottom:6px;display:block;color:#1a1a2e">Xác
+                            nhận mật khẩu mới</label>
+                        <input type="password" id="drConfirmPwd" class="form-control" required
+                               style="border-radius:8px; font-size:0.875rem; padding:10px 14px">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                        style="background:#1565c0; border:none; padding:10px 20px; font-weight:600; font-size:0.875rem; border-radius:8px; transition:0.2s">
+                    <i class="bi bi-check-circle me-1"></i> Cập nhật mật khẩu
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Card upload CCCD + chứng chỉ -->
+    <div class="settings-card" style="border-color:#e8f5e9" id="uploadCard">
+        <div class="settings-card-header" style="background:linear-gradient(135deg,#e8f5e9,#f0f4f8)">
+            <div class="icon" style="background:#c8e6c9;color:#2e7d32"><i class="bi bi-patch-check-fill"></i></div>
+            <div>
+                <h6 style="color:#2e7d32">Xác minh hồ sơ</h6>
+                <p>Upload ảnh CCCD và chứng chỉ hành nghề để Admin xét duyệt</p>
+            </div>
+            <span class="info-badge ms-auto" id="verifyStatusBadge"
+                  style="background:#fff3e0;color:#e65100">Chưa gửi</span>
+        </div>
+        <div class="settings-card-body">
+            <!-- Thông báo trạng thái -->
+            <div id="verifyAlert"
+                 style="display:none;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px"></div>
+
+            <!-- Số CCCD + Số chứng chỉ -->
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+                <div style="flex:1;min-width:220px">
+                    <label style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:6px;display:block">
+                        <i class="bi bi-card-text me-1" style="color:#1565c0"></i> Số CCCD / CMND <span
+                            style="color:#e74c3c">*</span>
+                    </label>
+                    <input type="text" id="inputNationalId" class="form-control" placeholder="VD: 012345678901"
+                           maxlength="20" style="border-radius:10px;font-size:.875rem">
+                    <div style="font-size:.75rem;color:#6c757d;margin-top:4px">Nhập đúng số trên mặt trước CCCD</div>
+                </div>
+                <div style="flex:1;min-width:220px">
+                    <label style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:6px;display:block">
+                        <i class="bi bi-file-medical me-1" style="color:#1565c0"></i> Số chứng chỉ hành nghề <span
+                            style="color:#e74c3c">*</span>
+                    </label>
+                    <input type="text" id="inputPracticeLicense" class="form-control" placeholder="VD: 123456/BYT-CCHN"
+                           maxlength="50" style="border-radius:10px;font-size:.875rem">
+                    <div style="font-size:.75rem;color:#6c757d;margin-top:4px">Nhập đúng số trên chứng chỉ hành nghề
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload ảnh -->
+            <div style="display:flex;gap:20px;flex-wrap:wrap">
+                <!-- Avatar -->
+                <div style="flex:1;min-width:160px">
+                    <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
+                        <i class="bi bi-person-circle me-1" style="color:#6c757d"></i> Ảnh đại diện
+                    </div>
+                    <div id="previewAvatar"
+                         style="width:100%;height:160px;border-radius:12px;border:2px dashed #ced4da;background:#f8f9fa;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s"
+                         onclick="document.getElementById('inputAvatar').click()">
+                        <i class="bi bi-person-bounding-box" style="font-size:2rem;color:#adb5bd"></i>
+                        <div style="font-size:.8rem;color:#adb5bd;margin-top:6px">Bấm để chọn ảnh</div>
+                    </div>
+                    <input type="file" id="inputAvatar" accept="image/*" style="display:none"
+                           onchange="previewImage(this,'previewAvatar')">
+                </div>
+
+                <!-- Upload CCCD -->
+                <div style="flex:1;min-width:220px">
+                    <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
+                        <i class="bi bi-credit-card-2-front me-1" style="color:#1565c0"></i> Ảnh CCCD <span
+                            style="color:#e74c3c">*</span>
+                    </div>
+                    <div id="previewCCCD"
+                         style="width:100%;height:160px;border-radius:12px;border:2px dashed #bbdefb;background:#f8fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s"
+                         onclick="document.getElementById('inputCCCD').click()">
+                        <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#90caf9"></i>
+                        <div style="font-size:.8rem;color:#90a4ae;margin-top:6px">Bấm để chọn ảnh</div>
+                    </div>
+                    <input type="file" id="inputCCCD" accept="image/*" style="display:none"
+                           onchange="previewImage(this,'previewCCCD')">
+                </div>
+
+                <!-- Upload chứng chỉ -->
+                <div style="flex:1;min-width:220px">
+                    <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
+                        <i class="bi bi-file-earmark-medical me-1" style="color:#1565c0"></i> Ảnh chứng chỉ hành nghề
+                        <span style="color:#e74c3c">*</span>
+                    </div>
+                    <div id="previewCC"
+                         style="width:100%;height:160px;border-radius:12px;border:2px dashed #bbdefb;background:#f8fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s"
+                         onclick="document.getElementById('inputCC').click()">
+                        <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#90caf9"></i>
+                        <div style="font-size:.8rem;color:#90a4ae;margin-top:6px">Bấm để chọn ảnh</div>
+                    </div>
+                    <input type="file" id="inputCC" accept="image/*" style="display:none"
+                           onchange="previewImage(this,'previewCC')">
+                </div>
+            </div>
+
+            <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+                <div style="font-size:.8rem;color:#6c757d">
+                    <i class="bi bi-info-circle me-1"></i> Ảnh rõ nét, đúng mặt trước. Tối đa 10MB/ảnh.
+                </div>
+                <button class="btn btn-success px-4" id="btnUpload" onclick="uploadVerification()">
+                    <i class="bi bi-send me-1"></i> Gửi xác minh
                 </button>
             </div>
         </div>
+    </div>
 
-        <div class="main">
-            <div class="page-header">
-                <h4><i class="bi bi-gear-fill me-2" style="color:var(--primary)"></i>Cài đặt tài khoản</h4>
-                <p>Xem thông tin cá nhân của bạn</p>
+    <!-- Liên hệ admin để thay đổi -->
+    <div class="settings-card" style="border-color:#e3f2fd">
+        <div class="settings-card-header" style="background:linear-gradient(135deg,#e3f2fd,#f0f4f8)">
+            <div class="icon" style="background:#bbdefb;color:#1565c0"><i class="bi bi-shield-lock-fill"></i></div>
+            <div>
+                <h6 style="color:#1565c0">Muốn thay đổi thông tin?</h6>
+                <p>Liên hệ Admin để được cập nhật hồ sơ</p>
             </div>
+        </div>
+        <div class="settings-card-body">
 
-            <!-- Thông tin chỉ đọc -->
-            <div class="settings-card">
-                <div class="settings-card-header">
-                    <div class="icon" style="background:#f0f4f8; color:#6c757d"><i class="bi bi-person-circle"></i></div>
-                    <div>
-                        <h6>Thông tin hồ sơ</h6>
-                        <p>Thông tin cá nhân hiện tại của bạn trong hệ thống</p>
+            <!-- Cảnh báo -->
+            <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start;margin-bottom:20px">
+                <i class="bi bi-exclamation-triangle-fill"
+                   style="color:#f9a825;font-size:1.2rem;flex-shrink:0;margin-top:2px"></i>
+                <div>
+                    <div style="font-weight:700;color:#7d5a00;font-size:.875rem;margin-bottom:4px">Bác sĩ không được tự
+                        sửa thông tin
                     </div>
-                </div>
-                <div class="settings-card-body">
-                    <div class="info-row">
-                        <span class="info-label">Họ và tên</span>
-                        <span class="info-value" id="infoName">–</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Chuyên khoa</span>
-                        <span class="info-value" id="infoSpec">–</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Học vị</span>
-                        <span class="info-value" id="infoDegree">–</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Kinh nghiệm</span>
-                        <span class="info-value" id="infoExp">–</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Nơi công tác</span>
-                        <span class="info-value" id="infoWorkplace">–</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Số điện thoại</span>
-                        <span class="info-value" id="infoPhone">–</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Email đăng nhập</span>
-                        <span class="info-value" id="infoEmail">–</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Chỉ đọc</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Giờ làm việc</span>
-                        <span class="info-value">08:00 – 17:00 &nbsp;|&nbsp; Thứ 2 – Chủ nhật</span>
-                        <span class="info-badge badge-readonly ms-auto"><i class="bi bi-lock-fill"></i> Cố định</span>
+                    <div style="font-size:.82rem;color:#795548;line-height:1.6">
+                        Toàn bộ thông tin hồ sơ chỉ được cập nhật bởi <strong>Admin hệ thống</strong>.
+                        Vui lòng liên hệ Admin và cung cấp thông tin cần thay đổi.
                     </div>
                 </div>
             </div>
 
-            <!-- Card upload CCCD + chứng chỉ -->
-            <div class="settings-card" style="border-color:#e8f5e9" id="uploadCard">
-                <div class="settings-card-header" style="background:linear-gradient(135deg,#e8f5e9,#f0f4f8)">
-                    <div class="icon" style="background:#c8e6c9;color:#2e7d32"><i class="bi bi-patch-check-fill"></i></div>
-                    <div>
-                        <h6 style="color:#2e7d32">Xác minh hồ sơ</h6>
-                        <p>Upload ảnh CCCD và chứng chỉ hành nghề để Admin xét duyệt</p>
+            <!-- 2 cột -->
+            <div style="display:flex;gap:16px;flex-wrap:wrap">
+                <div style="flex:1;min-width:200px;background:#f8f9fa;border-radius:12px;padding:16px 18px;border:1px solid #e9ecef">
+                    <div style="font-size:.72rem;font-weight:700;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">
+                        <i class="bi bi-person-gear me-1"></i> Liên hệ Admin qua
                     </div>
-                    <span class="info-badge ms-auto" id="verifyStatusBadge" style="background:#fff3e0;color:#e65100">Chưa gửi</span>
+                    <div style="display:flex;flex-direction:column;gap:8px;font-size:.84rem;color:#1a1a2e">
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <i class="bi bi-envelope-fill" style="color:#1565c0;width:16px"></i>
+                            <span>Email: <strong>admin@glucotrackalert.vn</strong></span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <i class="bi bi-chat-dots-fill" style="color:#1565c0;width:16px"></i>
+                            <span>Nhắn tin qua hệ thống nội bộ</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <i class="bi bi-telephone-fill" style="color:#1565c0;width:16px"></i>
+                            <span>Hotline: <strong>1900 xxxx</strong> (giờ hành chính)</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="settings-card-body">
-                    <!-- Thông báo trạng thái -->
-                    <div id="verifyAlert" style="display:none;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px"></div>
 
-                    <!-- Số CCCD + Số chứng chỉ -->
-                    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
-                        <div style="flex:1;min-width:220px">
-                            <label style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:6px;display:block">
-                                <i class="bi bi-card-text me-1" style="color:#1565c0"></i> Số CCCD / CMND <span style="color:#e74c3c">*</span>
-                            </label>
-                            <input type="text" id="inputNationalId" class="form-control" placeholder="VD: 012345678901" maxlength="20" style="border-radius:10px;font-size:.875rem">
-                            <div style="font-size:.75rem;color:#6c757d;margin-top:4px">Nhập đúng số trên mặt trước CCCD</div>
-                        </div>
-                        <div style="flex:1;min-width:220px">
-                            <label style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:6px;display:block">
-                                <i class="bi bi-file-medical me-1" style="color:#1565c0"></i> Số chứng chỉ hành nghề <span style="color:#e74c3c">*</span>
-                            </label>
-                            <input type="text" id="inputPracticeLicense" class="form-control" placeholder="VD: 123456/BYT-CCHN" maxlength="50" style="border-radius:10px;font-size:.875rem">
-                            <div style="font-size:.75rem;color:#6c757d;margin-top:4px">Nhập đúng số trên chứng chỉ hành nghề</div>
-                        </div>
+                <div style="flex:1;min-width:200px;background:#f8f9fa;border-radius:12px;padding:16px 18px;border:1px solid #e9ecef">
+                    <div style="font-size:.72rem;font-weight:700;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">
+                        <i class="bi bi-list-check me-1"></i> Thông tin Admin quản lý
                     </div>
-
-                    <!-- Upload ảnh -->
-                    <div style="display:flex;gap:20px;flex-wrap:wrap">
-                        <!-- Avatar -->
-                        <div style="flex:1;min-width:160px">
-                            <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
-                                <i class="bi bi-person-circle me-1" style="color:#6c757d"></i> Ảnh đại diện
-                            </div>
-                            <div id="previewAvatar" style="width:100%;height:160px;border-radius:12px;border:2px dashed #ced4da;background:#f8f9fa;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s" onclick="document.getElementById('inputAvatar').click()">
-                                <i class="bi bi-person-bounding-box" style="font-size:2rem;color:#adb5bd"></i>
-                                <div style="font-size:.8rem;color:#adb5bd;margin-top:6px">Bấm để chọn ảnh</div>
-                            </div>
-                            <input type="file" id="inputAvatar" accept="image/*" style="display:none" onchange="previewImage(this,'previewAvatar')">
-                        </div>
-
-                        <!-- Upload CCCD -->
-                        <div style="flex:1;min-width:220px">
-                            <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
-                                <i class="bi bi-credit-card-2-front me-1" style="color:#1565c0"></i> Ảnh CCCD <span style="color:#e74c3c">*</span>
-                            </div>
-                            <div id="previewCCCD" style="width:100%;height:160px;border-radius:12px;border:2px dashed #bbdefb;background:#f8fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s" onclick="document.getElementById('inputCCCD').click()">
-                                <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#90caf9"></i>
-                                <div style="font-size:.8rem;color:#90a4ae;margin-top:6px">Bấm để chọn ảnh</div>
-                            </div>
-                            <input type="file" id="inputCCCD" accept="image/*" style="display:none" onchange="previewImage(this,'previewCCCD')">
-                        </div>
-
-                        <!-- Upload chứng chỉ -->
-                        <div style="flex:1;min-width:220px">
-                            <div style="font-weight:600;font-size:.875rem;color:#1a1a2e;margin-bottom:8px">
-                                <i class="bi bi-file-earmark-medical me-1" style="color:#1565c0"></i> Ảnh chứng chỉ hành nghề <span style="color:#e74c3c">*</span>
-                            </div>
-                            <div id="previewCC" style="width:100%;height:160px;border-radius:12px;border:2px dashed #bbdefb;background:#f8fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:.2s" onclick="document.getElementById('inputCC').click()">
-                                <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#90caf9"></i>
-                                <div style="font-size:.8rem;color:#90a4ae;margin-top:6px">Bấm để chọn ảnh</div>
-                            </div>
-                            <input type="file" id="inputCC" accept="image/*" style="display:none" onchange="previewImage(this,'previewCC')">
-                        </div>
+                    <div style="display:flex;flex-direction:column;gap:5px;font-size:.82rem;color:#495057">
+                        <div><i class="bi bi-dot" style="color:#1565c0"></i> Họ và tên, chuyên khoa, bằng cấp</div>
+                        <div><i class="bi bi-dot" style="color:#1565c0"></i> Kinh nghiệm, nơi công tác</div>
+                        <div><i class="bi bi-dot" style="color:#1565c0"></i> Số điện thoại, email đăng nhập</div>
+                        <div><i class="bi bi-dot" style="color:#1565c0"></i> Ảnh đại diện, giới thiệu bản thân</div>
+                        <div><i class="bi bi-dot" style="color:#1565c0"></i> Giờ làm việc, phân công bệnh nhân</div>
                     </div>
+                </div>
+            </div>
+            <!-- Nút đổi mật khẩu -->
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e9ecef;display:flex;align-items:center;justify-content:space-between">
+                <div>
+                    <div style="font-weight:600;font-size:.875rem;color:#1a1a2e">Mật khẩu đăng nhập</div>
+                    <div style="font-size:.8rem;color:#6c757d;margin-top:2px">Bạn có thể tự đổi mật khẩu của mình</div>
+                </div>
+                <button class="btn btn-outline-primary btn-sm px-4" onclick="openChangePasswordModal()">
+                    <i class="bi bi-lock me-1"></i>Đổi mật khẩu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-                    <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-                        <div style="font-size:.8rem;color:#6c757d">
-                            <i class="bi bi-info-circle me-1"></i> Ảnh rõ nét, đúng mặt trước. Tối đa 10MB/ảnh.
-                        </div>
-                        <button class="btn btn-success px-4" id="btnUpload" onclick="uploadVerification()">
-                            <i class="bi bi-send me-1"></i> Gửi xác minh
+<!-- Modal đổi mật khẩu -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 8px 32px rgba(0,0,0,.15)">
+            <div class="modal-header border-0 pb-0" style="padding:24px 24px 12px">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:40px;height:40px;border-radius:10px;background:#e3f2fd;display:flex;align-items:center;justify-content:center">
+                        <i class="bi bi-lock-fill" style="color:#1565c0;font-size:1.1rem"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-700 mb-0">Đổi mật khẩu</h5>
+                        <div style="font-size:.8rem;color:#6c757d">Cập nhật mật khẩu đăng nhập của bạn</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:16px 24px 24px">
+                <div class="mb-3">
+                    <label class="form-label fw-600" style="font-size:.875rem">Mật khẩu hiện tại</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="oldPassword"
+                               placeholder="Nhập mật khẩu hiện tại"/>
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="togglePassword('oldPassword', this)" tabindex="-1">
+                            <i class="bi bi-eye"></i>
                         </button>
                     </div>
                 </div>
-            </div>
-
-            <!-- Liên hệ admin để thay đổi -->
-            <div class="settings-card" style="border-color:#e3f2fd">
-                <div class="settings-card-header" style="background:linear-gradient(135deg,#e3f2fd,#f0f4f8)">
-                    <div class="icon" style="background:#bbdefb;color:#1565c0"><i class="bi bi-shield-lock-fill"></i></div>
-                    <div>
-                        <h6 style="color:#1565c0">Muốn thay đổi thông tin?</h6>
-                        <p>Liên hệ Admin để được cập nhật hồ sơ</p>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-
-                    <!-- Cảnh báo -->
-                    <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start;margin-bottom:20px">
-                        <i class="bi bi-exclamation-triangle-fill" style="color:#f9a825;font-size:1.2rem;flex-shrink:0;margin-top:2px"></i>
-                        <div>
-                            <div style="font-weight:700;color:#7d5a00;font-size:.875rem;margin-bottom:4px">Bác sĩ không được tự sửa thông tin</div>
-                            <div style="font-size:.82rem;color:#795548;line-height:1.6">
-                                Toàn bộ thông tin hồ sơ chỉ được cập nhật bởi <strong>Admin hệ thống</strong>.
-                                Vui lòng liên hệ Admin và cung cấp thông tin cần thay đổi.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2 cột -->
-                    <div style="display:flex;gap:16px;flex-wrap:wrap">
-                        <div style="flex:1;min-width:200px;background:#f8f9fa;border-radius:12px;padding:16px 18px;border:1px solid #e9ecef">
-                            <div style="font-size:.72rem;font-weight:700;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">
-                                <i class="bi bi-person-gear me-1"></i> Liên hệ Admin qua
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:8px;font-size:.84rem;color:#1a1a2e">
-                                <div style="display:flex;align-items:center;gap:8px">
-                                    <i class="bi bi-envelope-fill" style="color:#1565c0;width:16px"></i>
-                                    <span>Email: <strong>admin@glucotrackalert.vn</strong></span>
-                                </div>
-                                <div style="display:flex;align-items:center;gap:8px">
-                                    <i class="bi bi-chat-dots-fill" style="color:#1565c0;width:16px"></i>
-                                    <span>Nhắn tin qua hệ thống nội bộ</span>
-                                </div>
-                                <div style="display:flex;align-items:center;gap:8px">
-                                    <i class="bi bi-telephone-fill" style="color:#1565c0;width:16px"></i>
-                                    <span>Hotline: <strong>1900 xxxx</strong> (giờ hành chính)</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="flex:1;min-width:200px;background:#f8f9fa;border-radius:12px;padding:16px 18px;border:1px solid #e9ecef">
-                            <div style="font-size:.72rem;font-weight:700;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">
-                                <i class="bi bi-list-check me-1"></i> Thông tin Admin quản lý
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:5px;font-size:.82rem;color:#495057">
-                                <div><i class="bi bi-dot" style="color:#1565c0"></i> Họ và tên, chuyên khoa, bằng cấp</div>
-                                <div><i class="bi bi-dot" style="color:#1565c0"></i> Kinh nghiệm, nơi công tác</div>
-                                <div><i class="bi bi-dot" style="color:#1565c0"></i> Số điện thoại, email đăng nhập</div>
-                                <div><i class="bi bi-dot" style="color:#1565c0"></i> Ảnh đại diện, giới thiệu bản thân</div>
-                                <div><i class="bi bi-dot" style="color:#1565c0"></i> Giờ làm việc, phân công bệnh nhân</div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Nút đổi mật khẩu -->
-                    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e9ecef;display:flex;align-items:center;justify-content:space-between">
-                        <div>
-                            <div style="font-weight:600;font-size:.875rem;color:#1a1a2e">Mật khẩu đăng nhập</div>
-                            <div style="font-size:.8rem;color:#6c757d;margin-top:2px">Bạn có thể tự đổi mật khẩu của mình</div>
-                        </div>
-                        <button class="btn btn-outline-primary btn-sm px-4" onclick="openChangePasswordModal()">
-                            <i class="bi bi-lock me-1"></i>Đổi mật khẩu
+                <div class="mb-3">
+                    <label class="form-label fw-600" style="font-size:.875rem">Mật khẩu mới</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="newPassword" placeholder="Ít nhất 6 ký tự"/>
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="togglePassword('newPassword', this)" tabindex="-1">
+                            <i class="bi bi-eye"></i>
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Modal đổi mật khẩu -->
-        <div class="modal fade" id="changePasswordModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 8px 32px rgba(0,0,0,.15)">
-                    <div class="modal-header border-0 pb-0" style="padding:24px 24px 12px">
-                        <div style="display:flex;align-items:center;gap:12px">
-                            <div style="width:40px;height:40px;border-radius:10px;background:#e3f2fd;display:flex;align-items:center;justify-content:center">
-                                <i class="bi bi-lock-fill" style="color:#1565c0;font-size:1.1rem"></i>
-                            </div>
-                            <div>
-                                <h5 class="modal-title fw-700 mb-0">Đổi mật khẩu</h5>
-                                <div style="font-size:.8rem;color:#6c757d">Cập nhật mật khẩu đăng nhập của bạn</div>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="mb-4">
+                    <label class="form-label fw-600" style="font-size:.875rem">Xác nhận mật khẩu mới</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="confirmPassword"
+                               placeholder="Nhập lại mật khẩu mới"/>
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="togglePassword('confirmPassword', this)" tabindex="-1">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
-                    <div class="modal-body" style="padding:16px 24px 24px">
-                        <div class="mb-3">
-                            <label class="form-label fw-600" style="font-size:.875rem">Mật khẩu hiện tại</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="oldPassword" placeholder="Nhập mật khẩu hiện tại"/>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('oldPassword', this)" tabindex="-1">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-600" style="font-size:.875rem">Mật khẩu mới</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="newPassword" placeholder="Ít nhất 6 ký tự"/>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('newPassword', this)" tabindex="-1">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-600" style="font-size:.875rem">Xác nhận mật khẩu mới</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="confirmPassword" placeholder="Nhập lại mật khẩu mới"/>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword', this)" tabindex="-1">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2 justify-content-end">
-                            <button class="btn btn-light px-4" data-bs-dismiss="modal">Hủy</button>
-                            <button class="btn btn-primary px-4" onclick="changePassword()">
-                                <i class="bi bi-check-lg me-1"></i>Cập nhật
-                            </button>
-                        </div>
-                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-light px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-primary px-4" onclick="changePassword()">
+                        <i class="bi bi-check-lg me-1"></i>Cập nhật
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div id="toast-wrap"></div>
+<div id="toast-wrap"></div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            const DOCTOR_ID = parseInt(localStorage.getItem('doctorId'));
-            if (!DOCTOR_ID) { window.location.href = '/login'; }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const DOCTOR_ID = parseInt(localStorage.getItem('doctorId'));
+    if (!DOCTOR_ID) {
+        window.location.href = '/login';
+    }
 
-            function handleAuthError(status) {
-                if (status === 401 || status === 403) {
-                    localStorage.clear();
-                    document.cookie = 'jwt=; path=/; max-age=0';
-                    window.location.href = '/login';
-                    return true;
-                }
-                return false;
+    function handleAuthError(status) {
+        if (status === 401 || status === 403) {
+            localStorage.clear();
+            document.cookie = 'jwt=; path=/; max-age=0';
+            window.location.href = '/login';
+            return true;
+        }
+        return false;
+    }
+
+    // Hàm hiển thị Toast thông báo và tự động biến mất sau 3 giây
+    function showToast(msg, type = 'success') {
+        const colors = {success: '#1b5e20', danger: '#b71c1c'};
+        const icons = {success: 'bi-check-circle-fill', danger: 'bi-x-circle-fill'};
+        const t = document.createElement('div');
+        t.className = 'toast-msg';
+        t.style.background = colors[type];
+        t.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        t.innerHTML = `<i class="bi ${icons[type]}"></i><span>${msg}</span>`;
+
+        document.getElementById('toast-wrap').appendChild(t);
+
+        // Tự động kích hoạt hiệu ứng biến mất sau 3 giây
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.transform = 'translateY(-10px)';
+            setTimeout(() => t.remove(), 500);
+        }, 3000);
+    }
+
+    async function loadDoctor() {
+        try {
+            const doc = await fetch(`/api/doctors/${DOCTOR_ID}`, {
+                headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}
+            }).then(r => r.json());
+            fillDisplay(doc);
+        } catch {
+            showToast('Không tải được thông tin bác sĩ', 'danger');
+        }
+    }
+
+    loadDoctor();
+
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+
+    const changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+
+    function openChangePasswordModal() {
+        document.getElementById('oldPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        changePasswordModal.show();
+    }
+
+    // 1. Xử lý đổi mật khẩu trong MODAL (sử dụng Toast thông báo tự ẩn)
+    async function changePassword() {
+        const oldPassword = document.getElementById('oldPassword').value.trim();
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+        if (!oldPassword) {
+            showToast('Vui lòng nhập mật khẩu hiện tại', 'danger');
+            return;
+        }
+        if (!newPassword) {
+            showToast('Vui lòng nhập mật khẩu mới', 'danger');
+            return;
+        }
+        if (!confirmPassword) {
+            showToast('Vui lòng xác nhận mật khẩu mới', 'danger');
+            return;
+        }
+        if (newPassword.length < 6) {
+            showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'danger');
+            return;
+        }
+        if (newPassword === oldPassword) {
+            showToast('Mật khẩu mới không được trùng mật khẩu hiện tại', 'danger');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showToast('Mật khẩu mới không khớp', 'danger');
+            return;
+        }
+        try {
+            const res = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({oldPassword, newPassword})
+            });
+            const msg = await res.text();
+            if (res.ok) {
+                changePasswordModal.hide();
+                showToast('✅ ' + msg, 'success');
+            } else {
+                showToast('❌ ' + msg, 'danger');
+            }
+        } catch {
+            showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
+        }
+    }
+
+    // 2. Xử lý đổi mật khẩu TRỰC TIẾP trên trang (Form trên Card tự ẩn thông báo sau 3 giây)
+    async function handleDoctorChangePwd(e) {
+        e.preventDefault();
+        const current = document.getElementById('drCurrentPwd').value;
+        const newPwd = document.getElementById('drNewPwd').value;
+        const confirmPwd = document.getElementById('drConfirmPwd').value;
+        const alertBox = document.getElementById('drPwdAlert');
+
+        // Hàm tiện ích để hiển thị thông báo lỗi/thành công trong 3 giây rồi tự biến mất
+        const showLocalAlert = (text, isSuccess) => {
+            alertBox.style.display = 'block';
+            alertBox.style.opacity = '1';
+            alertBox.style.transition = 'opacity 0.5s ease';
+            alertBox.innerText = text;
+            if (isSuccess) {
+                alertBox.style.backgroundColor = '#d1e7dd';
+                alertBox.style.color = '#0f5132';
+            } else {
+                alertBox.style.backgroundColor = '#f8d7da';
+                alertBox.style.color = '#842029';
             }
 
-            function showToast(msg, type = 'success') {
-                const colors = {success: '#1b5e20', danger: '#b71c1c'};
-                const icons = {success: 'bi-check-circle-fill', danger: 'bi-x-circle-fill'};
-                const t = document.createElement('div');
-                t.className = 'toast-msg';
-                t.style.background = colors[type];
-                t.innerHTML = `<i class="bi ${icons[type]}"></i>${msg}`;
-                document.getElementById('toast-wrap').appendChild(t);
-                setTimeout(() => t.remove(), 3500);
+            // Tự động ẩn sau 3 giây (3000ms)
+            setTimeout(() => {
+                alertBox.style.opacity = '0';
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 500); // Đợi hiệu ứng mờ kết thúc rồi ẩn hẳn
+            }, 2000);
+        };
+
+        if (newPwd !== confirmPwd) {
+            showLocalAlert('Mật khẩu xác nhận không khớp!', false);
+            return;
+        }
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('currentPassword', current);
+            formData.append('newPassword', newPwd);
+
+            const response = await fetch('/doctor/api/change-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData.toString()
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                showLocalAlert(result.success || 'Cập nhật mật khẩu thành công!', true);
+                document.getElementById('doctorChangePwdForm').reset();
+            } else {
+                showLocalAlert(result.error || 'Lỗi cập nhật mật khẩu.', false);
             }
+        } catch (error) {
+            showLocalAlert('Lỗi kết nối server.', false);
+        }
+    }
 
-            /** Chỉ hiển thị thông tin đọc – không có form chỉnh sửa */
-            function fillDisplay(doc) {
-                document.getElementById('infoName').textContent = doc.fullName || '–';
-                document.getElementById('infoSpec').textContent = doc.specialization || '–';
-                document.getElementById('infoDegree').textContent = doc.degree || '–';
-                document.getElementById('infoExp').textContent = doc.experienceYears ? doc.experienceYears + ' năm' : '–';
-                document.getElementById('infoWorkplace').textContent = doc.workplace || '–';
-                document.getElementById('infoPhone').textContent = doc.phone || '–';
-                document.getElementById('infoEmail').textContent = doc.userEmail || '–';
-                document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('email');
+        localStorage.removeItem('role');
+        document.cookie = 'jwt=; path=/; max-age=0';
+        window.location.href = '/login';
+    }
 
-                // Cập nhật trạng thái xác minh
-                const badge = document.getElementById('verifyStatusBadge');
-                const alert = document.getElementById('verifyAlert');
-                const btn = document.getElementById('btnUpload');
-                const status = doc.status;
-
-                if (status === 'pending_verification') {
-                    badge.style.cssText = 'background:#fff3e0;color:#e65100';
-                    badge.textContent = '📋 Chưa gửi';
-                } else if (status === 'pending_approval') {
-                    badge.style.cssText = 'background:#e3f2fd;color:#1565c0';
-                    badge.textContent = '⏳ Chờ duyệt';
-                    alert.style.cssText = 'display:flex;background:#e3f2fd;color:#1565c0;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
-                    alert.innerHTML = '<i class="bi bi-hourglass-split"></i> Hồ sơ đang chờ Admin xét duyệt. Nếu muốn cập nhật ảnh, bạn vẫn có thể upload lại.';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Upload lại';
-                } else if (status === 'active') {
-                    badge.style.cssText = 'background:#e8f5e9;color:#2e7d32';
-                    badge.textContent = '✅ Đã xác minh';
-                    alert.style.cssText = 'display:flex;background:#e8f5e9;color:#2e7d32;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
-                    alert.innerHTML = '<i class="bi bi-patch-check-fill"></i> Hồ sơ đã được xác minh. Nếu muốn cập nhật giấy tờ mới, hãy upload lại — hồ sơ sẽ chờ Admin duyệt lại.';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Cập nhật giấy tờ';
-                } else if (status === 'rejected') {
-                    badge.style.cssText = 'background:#ffebee;color:#c62828';
-                    badge.textContent = '❌ Bị từ chối';
-                    alert.style.cssText = 'display:flex;background:#ffebee;color:#c62828;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.85rem;align-items:center;gap:10px';
-                    alert.innerHTML = '<i class="bi bi-x-circle-fill"></i> Hồ sơ bị từ chối. Hãy chọn lại ảnh rõ nét hơn rồi bấm <strong> Gửi lại</strong>.';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi lại';
-                }
-
-                // Hiển thị ảnh đã upload nếu có
-                if (doc.nationalIdImageUrl) showExistingImage('previewCCCD', doc.nationalIdImageUrl);
-                if (doc.practiceLicenseImageUrl) showExistingImage('previewCC', doc.practiceLicenseImageUrl);
-            }
-
-            function showExistingImage(previewId, url) {
-                const el = document.getElementById(previewId);
-                el.style.border = '2px solid #a5d6a7';
-                el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
-            }
-
-            function previewImage(input, previewId) {
-                const file = input.files[0];
-                if (!file) return;
-                const el = document.getElementById(previewId);
-                const reader = new FileReader();
-                reader.onload = e => {
-                    el.style.border = '2px solid #a5d6a7';
-                    el.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
-                };
-                reader.readAsDataURL(file);
-            }
-
-            async function uploadVerification() {
-                const cccdFile = document.getElementById('inputCCCD').files[0];
-                const ccFile = document.getElementById('inputCC').files[0];
-                const avatarFile = document.getElementById('inputAvatar').files[0];
-                const nationalId = document.getElementById('inputNationalId').value.trim();
-                const practiceLicense = document.getElementById('inputPracticeLicense').value.trim();
-
-                if (!nationalId) { showToast('Vui lòng nhập số CCCD', 'danger'); return; }
-                if (!practiceLicense) { showToast('Vui lòng nhập số chứng chỉ hành nghề', 'danger'); return; }
-                if (!cccdFile) { showToast('Vui lòng chọn ảnh CCCD', 'danger'); return; }
-                if (!ccFile) { showToast('Vui lòng chọn ảnh chứng chỉ hành nghề', 'danger'); return; }
-
-                const formData = new FormData();
-                formData.append('nationalIdImage', cccdFile);
-                formData.append('practiceLicenseImage', ccFile);
-                if (avatarFile) formData.append('avatar', avatarFile);
-                formData.append('nationalId', nationalId);
-                formData.append('practiceLicense', practiceLicense);
-
-                const btn = document.getElementById('btnUpload');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang gửi...';
-
-                try {
-                    const res = await fetch(`/api/doctors/${DOCTOR_ID}/upload-verification`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                        body: formData
-                    });
-                    if (res.ok) {
-                        showToast('Gửi xác minh thành công! Admin sẽ xét duyệt sớm.', 'success');
-                        loadDoctor();
-                    } else {
-                        const msg = await res.text();
-                        showToast('Lỗi: ' + msg, 'danger');
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi xác minh';
-                    }
-                } catch {
-                    showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-send me-1"></i> Gửi xác minh';
-                }
-            }
-
-            async function loadDoctor() {
-                try {
-                    const doc = await fetch(`/api/doctors/${DOCTOR_ID}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
-                    fillDisplay(doc);
-                } catch {
-                    showToast('Không tải được thông tin bác sĩ', 'danger');
-                }
-            }
-
-            loadDoctor();
-
-            function togglePassword(inputId, btn) {
-                const input = document.getElementById(inputId);
-                const icon = btn.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'bi bi-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'bi bi-eye';
-                }
-            }
-
-            const changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-
-            function openChangePasswordModal() {
-                document.getElementById('oldPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-                changePasswordModal.show();
-            }
-
-            async function changePassword() {
-                const oldPassword = document.getElementById('oldPassword').value.trim();
-                const newPassword = document.getElementById('newPassword').value.trim();
-                const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-                if (!oldPassword) {
-                    showToast('Vui lòng nhập mật khẩu hiện tại', 'danger'); return;
-                }
-                if (!newPassword) {
-                    showToast('Vui lòng nhập mật khẩu mới', 'danger'); return;
-                }
-                if (!confirmPassword) {
-                    showToast('Vui lòng xác nhận mật khẩu mới', 'danger'); return;
-                }
-                if (newPassword.length < 6) {
-                    showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'danger'); return;
-                }
-                if (newPassword === oldPassword) {
-                    showToast('Mật khẩu mới không được trùng mật khẩu hiện tại', 'danger'); return;
-                }
-                if (newPassword !== confirmPassword) {
-                    showToast('Mật khẩu mới không khớp', 'danger'); return;
-                }
-                try {
-                    const res = await fetch('/api/auth/change-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({oldPassword, newPassword})
-                    });
-                    const msg = await res.text();
-                    if (res.ok) {
-                        changePasswordModal.hide();
-                        showToast('✅ ' + msg, 'success');
-                    } else {
-                        showToast('❌ ' + msg, 'danger');
-                    }
-                } catch {
-                    showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
-                }
-            }
-
-            function logout() {
-                localStorage.removeItem('token');
-                localStorage.removeItem('email');
-                localStorage.removeItem('role');
-                document.cookie = 'jwt=; path=/; max-age=0';
-                window.location.href = '/login';
-            }
-        </script>
-    </body>
+    function fillDisplay(doc) {
+        document.getElementById('infoName').textContent = doc.fullName || '–';
+        document.getElementById('infoSpec').textContent = doc.specialization || '–';
+        document.getElementById('infoDegree').textContent = doc.degree || '–';
+        document.getElementById('infoExp').textContent = doc.experienceYears ? doc.experienceYears + ' năm' : '–';
+        document.getElementById('infoWorkplace').textContent = doc.workplace || '–';
+        document.getElementById('infoPhone').textContent = doc.phone || '–';
+        document.getElementById('infoEmail').textContent = doc.userEmail || '–';
+        document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
+    }
+</script>
+</body>
 </html>

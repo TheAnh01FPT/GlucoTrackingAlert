@@ -32,10 +32,51 @@
             box-sizing: border-box;
         }
 
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: var(--light);
+            background: linear-gradient(180deg, #eaf5ff 0%, #f6fbff 100%);
             color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .page-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+            border: 1px solid rgba(56, 144, 255, 0.16);
+            border-radius: 28px;
+            box-shadow: 0 20px 44px rgba(15, 23, 42, 0.08);
+            padding: 2rem 2rem 2.5rem;
+        }
+
+        .manage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .manage-header h1 {
+            color: var(--primary);
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .btn-new {
+            min-height: 48px;
+            padding: 0.75rem 1.5rem;
         }
 
         /* Navbar */
@@ -56,6 +97,8 @@
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
+            overflow: hidden;
+            height: calc(100vh - 100px);
         }
 
         /* Header section */
@@ -66,6 +109,14 @@
             margin-bottom: 2rem;
             flex-wrap: wrap;
             gap: 1rem;
+        }
+
+        .manage-header h1 {
+            margin-bottom: 0;
+        }
+
+        .page-card .filter-section {
+            margin-bottom: 2rem;
         }
 
         .manage-header h1 {
@@ -141,11 +192,14 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+            overflow: auto;
+            max-height: calc(100vh - 420px);
         }
 
         .table {
             margin: 0;
+            table-layout: fixed;
+            width: 100%;
         }
 
         .table thead {
@@ -242,6 +296,7 @@
 
         /* Title column */
         .article-title-cell {
+            display: block;
             font-weight: 600;
             color: var(--primary);
             max-width: 300px;
@@ -369,17 +424,18 @@
 
     <!-- Main Content -->
     <div class="container">
-        <!-- Header -->
-        <div class="manage-header">
-            <h1><i class="bi bi-newspaper"></i> Quản lý Bài viết</h1>
-            <a href="/articles/manage/new" class="btn-new">
-                <i class="bi bi-plus-circle"></i> Bài viết mới
-            </a>
-        </div>
+        <div class="page-card">
+            <!-- Header -->
+            <div class="manage-header">
+                <h1><i class="bi bi-newspaper"></i> Quản lý Bài viết</h1>
+                <a href="/articles/manage/new" class="btn-new">
+                    <i class="bi bi-plus-circle"></i> Bài viết mới
+                </a>
+            </div>
 
-        <!-- Filter Section -->
-        <div class="filter-section">
-            <form method="get" action="/articles/manage" class="row align-items-end">
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <form method="get" action="/articles/manage" class="row align-items-end">
                 <div class="col-12 col-md-4">
                     <label class="form-label fw-600">Tìm kiếm</label>
                     <input type="text" name="keyword" class="form-control" 
@@ -403,6 +459,7 @@
 
         <!-- Articles Table -->
         <div th:if="${articles.hasContent()}" class="table-container">
+            <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -433,10 +490,12 @@
                                 <a th:href="'/articles/' + ${article.slug}" class="btn-icon btn-view" title="Xem bài viết">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a th:href="'/articles/manage/' + ${article.id} + '/edit'" class="btn-icon btn-edit" title="Sửa bài viết">
+                                <a th:if="${isAdmin} or ${article.createdBy.id} == ${currentUserId}"
+                                   th:href="'/articles/manage/' + ${article.id} + '/edit'" class="btn-icon btn-edit" title="Sửa bài viết">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form method="post" th:action="'/articles/manage/' + ${article.id} + '/delete'" 
+                                <form th:if="${isAdmin} or ${article.createdBy.id} == ${currentUserId}"
+                                      method="post" th:action="'/articles/manage/' + ${article.id} + '/delete'" 
                                       style="display: inline; margin: 0;" 
                                       onsubmit="return confirm('Bạn chắc chắn muốn xóa bài viết này?');">
                                     <button type="submit" class="btn-icon btn-delete" title="Xóa bài viết">
@@ -448,6 +507,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
 
             <!-- Pagination -->
             <div th:if="${articles.totalPages > 1}" class="pagination-section">
@@ -485,6 +545,7 @@
             <a href="/articles/manage/new" class="empty-state-link">
                 Tạo bài viết mới <i class="bi bi-arrow-right"></i>
             </a>
+        </div>
         </div>
     </div>
 

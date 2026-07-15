@@ -179,11 +179,6 @@
                     <li class="nav-item"><a class="nav-link" href="#testimonials">Đánh giá</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contact">Liên hệ</a></li>
                 </ul>
-<<<<<<< HEAD
-                <div class="d-flex align-items-center gap-2" id="authArea">
-                    <a href="/login" class="btn btn-outline-custom">Đăng nhập</a>
-                    <a href="/register" class="btn btn-primary-custom">Đăng ký</a>
-=======
                 <div class="d-flex align-items-center gap-2">
                     <div th:if="${!isAuthenticated}">
                         <a href="/login" class="btn btn-outline-custom">Đăng nhập</a>
@@ -193,7 +188,6 @@
                         <a th:href="${userRole == 'ROLE_ADMIN' ? '/admin/dashboard' : (userRole == 'ROLE_DOCTOR' ? '/doctor/homepage' : '/patient/homepage')}" class="btn btn-primary-custom">Vào Dashboard</a>
                         <a href="/logout" class="btn btn-outline-custom">Đăng xuất</a>
                     </div>
->>>>>>> 18c452245ab8307f7818858e945bcfd864ec46c4
                 </div>
             </div>
         </div>
