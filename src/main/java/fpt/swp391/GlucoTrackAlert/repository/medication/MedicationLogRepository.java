@@ -13,8 +13,15 @@ import java.util.List;
 public interface MedicationLogRepository extends JpaRepository<MedicationLog, Long> {
     List<MedicationLog> findByPatientIdOrderByScheduledTimeAsc(Long patientId);
 
-    @Query("SELECT m FROM MedicationLog m WHERE m.patient.id = :patientId " +
-           "AND m.scheduledTime BETWEEN :start AND :end ORDER BY m.scheduledTime ASC")
+    // Chỉ lấy log của các đơn thuốc CHƯA bị huỷ (CANCELLED)
+    // để bệnh nhân không thấy lịch uống của đơn mà bác sĩ đã cancel
+    @Query("SELECT m FROM MedicationLog m " +
+           "JOIN m.prescriptionItem pi " +
+           "JOIN pi.prescription p " +
+           "WHERE m.patient.id = :patientId " +
+           "AND m.scheduledTime BETWEEN :start AND :end " +
+           "AND p.status <> 'CANCELLED' " +
+           "ORDER BY m.scheduledTime ASC")
     List<MedicationLog> findByPatientAndDateRange(
             @Param("patientId") Long patientId,
             @Param("start") LocalDateTime start,

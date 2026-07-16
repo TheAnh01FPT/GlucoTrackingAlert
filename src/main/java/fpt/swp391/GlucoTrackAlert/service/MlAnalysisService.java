@@ -21,8 +21,8 @@ public class MlAnalysisService {
     private static final String ML_SERVICE_URL = "http://localhost:5000/predict";
 
     public String analyzePatient(Patient patient,
-                                 List<DailyHealthLogResponse> logs,
-                                 Map<LocalDate, List<Duy_Meal_Logs>> mealsByDate) {
+            List<DailyHealthLogResponse> logs,
+            Map<LocalDate, List<Duy_Meal_Logs>> mealsByDate) {
         DailyHealthLogResponse latest = logs.get(0);
 
         OptionalDouble avgBloodSugar = logs.stream()
@@ -35,11 +35,21 @@ public class MlAnalysisService {
         );
 
         List<String> missingFields = new ArrayList<>();
-        if (patient.getBmi() == null) missingFields.add("BMI");
-        if (patient.getAge() == null) missingFields.add("tuổi");
-        if (patient.getGender() == null || patient.getGender().isBlank()) missingFields.add("giới tính");
-        if (latest.getSystolic() == null) missingFields.add("huyết áp tâm thu (hôm nay)");
-        if (latest.getDiastolic() == null) missingFields.add("huyết áp tâm trương (hôm nay)");
+        if (patient.getBmi() == null) {
+            missingFields.add("BMI");
+        }
+        if (patient.getAge() == null) {
+            missingFields.add("tuổi");
+        }
+        if (patient.getGender() == null || patient.getGender().isBlank()) {
+            missingFields.add("giới tính");
+        }
+        if (latest.getSystolic() == null) {
+            missingFields.add("huyết áp tâm thu (hôm nay)");
+        }
+        if (latest.getDiastolic() == null) {
+            missingFields.add("huyết áp tâm trương (hôm nay)");
+        }
 
         if (!missingFields.isEmpty()) {
             return "⚠️ Không thể phân tích AI vì thiếu dữ liệu: " + String.join(", ", missingFields) + ". "
@@ -58,6 +68,7 @@ public class MlAnalysisService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(java.util.Collections.singletonList(MediaType.APPLICATION_JSON));
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(
@@ -81,20 +92,23 @@ public class MlAnalysisService {
 
     @SuppressWarnings("unchecked")
     private String buildAnalysisText(Patient patient,
-                                     List<DailyHealthLogResponse> logs,
-                                     double avgBloodSugar,
-                                     Map<String, Object> mlResult,
-                                     Map<LocalDate, List<Duy_Meal_Logs>> mealsByDate) {
+            List<DailyHealthLogResponse> logs,
+            double avgBloodSugar,
+            Map<String, Object> mlResult,
+            Map<LocalDate, List<Duy_Meal_Logs>> mealsByDate) {
 
-        String riskLabel    = (String) mlResult.get("riskLabel");
-        String riskColor    = (String) mlResult.get("riskColor");
+        String riskLabel = (String) mlResult.get("riskLabel");
+        String riskColor = (String) mlResult.get("riskColor");
         Boolean ruleApplied = (Boolean) mlResult.getOrDefault("ruleApplied", false);
         List<String> advice = (List<String>) mlResult.getOrDefault("advice", List.of());
 
         String riskEmoji = switch (riskColor != null ? riskColor : "GREEN") {
-            case "RED"    -> "🔴";
-            case "YELLOW" -> "🟡";
-            default       -> "🟢";
+            case "RED" ->
+                "🔴";
+            case "YELLOW" ->
+                "🟡";
+            default ->
+                "🟢";
         };
 
         DailyHealthLogResponse latest = logs.get(0);
@@ -151,16 +165,20 @@ public class MlAnalysisService {
         } else {
             for (DailyHealthLogResponse l : abnormalDays) {
                 sb.append("📅 ").append(l.getLogDate())
-                  .append(" — Đường huyết: ").append(l.getBloodSugar()).append(" mmol/L\n");
+                        .append(" — Đường huyết: ").append(l.getBloodSugar()).append(" mmol/L\n");
                 List<Duy_Meal_Logs> dayMeals = mealsByDate.getOrDefault(l.getLogDate(), List.of());
                 if (dayMeals.isEmpty()) {
                     sb.append("   (Không có dữ liệu bữa ăn ngày này)\n");
                 } else {
                     for (Duy_Meal_Logs m : dayMeals) {
                         sb.append("   • ");
-                        if (m.getMealType() != null) sb.append(m.getMealType()).append(": ");
+                        if (m.getMealType() != null) {
+                            sb.append(m.getMealType()).append(": ");
+                        }
                         sb.append(m.getFoodName());
-                        if (m.getSugarEstimation() != null) sb.append(" — đường: ").append(m.getSugarEstimation());
+                        if (m.getSugarEstimation() != null) {
+                            sb.append(" — đường: ").append(m.getSugarEstimation());
+                        }
                         sb.append("\n");
                     }
                 }
@@ -186,7 +204,9 @@ public class MlAnalysisService {
     }
 
     private String buildTrendLine(List<DailyHealthLogResponse> logs) {
-        if (logs.size() < 4) return "";
+        if (logs.size() < 4) {
+            return "";
+        }
 
         int mid = logs.size() / 2;
         OptionalDouble recentAvg = logs.subList(0, mid).stream()
@@ -204,9 +224,16 @@ public class MlAnalysisService {
 
         double diff = recentAvg.getAsDouble() - olderAvg.getAsDouble();
         String arrow, desc;
-        if (diff > 0.3)       { arrow = "📈"; desc = "tăng"; }
-        else if (diff < -0.3) { arrow = "📉"; desc = "giảm"; }
-        else                  { arrow = "➡️"; desc = "ổn định"; }
+        if (diff > 0.3) {
+            arrow = "📈";
+            desc = "tăng";
+        } else if (diff < -0.3) {
+            arrow = "📉";
+            desc = "giảm";
+        } else {
+            arrow = "➡️";
+            desc = "ổn định";
+        }
 
         return String.format("   Xu hướng:       %s Đường huyết %s %.1f mmol/L so với kỳ trước (%.1f → %.1f)\n",
                 arrow, desc, Math.abs(diff), olderAvg.getAsDouble(), recentAvg.getAsDouble());

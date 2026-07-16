@@ -770,7 +770,6 @@
         }
     }
 
-<<<<<<< HEAD:src/main/resources/templates/admin/settings.html
             /** Chỉ hiển thị thông tin đọc – không có form chỉnh sửa */
             let CURRENT_DOC = null;
 
@@ -992,26 +991,4 @@
             }
         </script>
     </body>
-=======
-    function logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('email');
-        localStorage.removeItem('role');
-        document.cookie = 'jwt=; path=/; max-age=0';
-        window.location.href = '/login';
-    }
-
-    function fillDisplay(doc) {
-        document.getElementById('infoName').textContent = doc.fullName || '–';
-        document.getElementById('infoSpec').textContent = doc.specialization || '–';
-        document.getElementById('infoDegree').textContent = doc.degree || '–';
-        document.getElementById('infoExp').textContent = doc.experienceYears ? doc.experienceYears + ' năm' : '–';
-        document.getElementById('infoWorkplace').textContent = doc.workplace || '–';
-        document.getElementById('infoPhone').textContent = doc.phone || '–';
-        document.getElementById('infoEmail').textContent = doc.userEmail || '–';
-        document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
-    }
-</script>
-</body>
->>>>>>> 85d63dacece2a53e290c6cff71c5f8c737ff9783:src/main/resources/templates/settings.html
 </html>

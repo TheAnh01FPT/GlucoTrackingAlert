@@ -189,6 +189,14 @@ def heart_weekly_predict(data: dict) -> dict:
 # Ensemble 3 models
 # ============================================
 def ensemble_predict(data: dict) -> dict:
+    blood_sugar = float(data.get('bloodSugar') or 5.5)
+    systolic    = int(data.get('systolic') or 120)
+    diastolic   = int(data.get('diastolic') or 80)
+    bmi         = float(data.get('bmi') or 22.0)
+    age         = int(data.get('age') or 40)
+    gender      = data.get('gender') or 'MALE'
+    is_pregnant = bool(data.get('isPregnant') or False)
+    # smoker/physActivity/genHealth không còn dùng (V3 đã bỏ) -- xem ghi chú trong ensemble_predict()
     # Các field bắt buộc -- Java (MlAnalysisService) đã validate trước khi gửi sang,
     # nhưng vẫn check lại ở đây để service Python không tự bịa số khi bị gọi trực tiếp
     # (trước đây dùng data.get(key, default) khiến luôn có giá trị giả khi field thiếu)
@@ -300,13 +308,20 @@ def health():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True, silent=True)
         if not data:
             return jsonify({'error': 'No data provided'}), 400
+        print(f"[DEBUG] Request data: {data}")
+        result = ensemble_predict(data)
+        print(f"[DEBUG] Result: {result}")
+        return jsonify(result)
+
         return jsonify(ensemble_predict(data))
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
@@ -357,6 +372,9 @@ if __name__ == '__main__':
     print("🚀 GlucoTracking ML Service v3.0")
     print("📍 http://localhost:5000")
     print("   GET  /health")
+    print("   POST /predict")
+    print("   POST /predict/batch")
+    app.run(host='0.0.0.0', port=5000, debug=False)
     print("   POST /predict              (Diabetes ensemble)")
     print("   POST /predict/batch        (Diabetes batch)")
     print("   POST /predict-cardio       (Heart Disease - profile data)")
