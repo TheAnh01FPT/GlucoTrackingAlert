@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Tìm kiếm danh sách tài khoản lọc theo id vai trò cụ thể
     List<User> findByRoleId(Long roleId);
     boolean existsByPhone(String phone);
+    // Count users by role name (e.g., DOCTOR, PATIENT)
+    long countByRole_Name(String roleName);
 }

@@ -19,9 +19,12 @@
         .feedback-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
         .feedback-header { font-size: 13px; color: #64748b; margin-bottom: 10px; }
         .feedback-content { font-size: 15px; color: #334155; margin-bottom: 15px; line-height: 1.5; }
-        .admin-reply { background: #e0f2fe; padding: 15px; border-radius: 6px; border-left: 4px solid #0284c7; }
-        .admin-reply-header { font-size: 13px; color: #0284c7; font-weight: 600; margin-bottom: 5px; }
-        .admin-reply-content { font-size: 14px; color: #0f172a; }
+        .action-buttons { margin-top: 10px; }
+        .btn-sm { padding: 5px 12px; font-size: 13px; border-radius: 4px; cursor: pointer; border: none; margin-right: 5px; }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-delete { background: #ef4444; color: white; }
+        .edit-form { display: none; margin-top: 15px; }
+        .edit-form textarea { height: 80px; }
     </style>
 </head>
 <body>
@@ -50,14 +53,23 @@
             <div class="feedback-header">
                 Đã gửi vào: <span th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
             </div>
-            <div class="feedback-content" th:text="${fb.content}"></div>
+            <div class="feedback-content" th:id="'content-' + ${fb.id}" th:text="${fb.content}"></div>
             
-            <div th:if="${fb.adminReply != null}" class="admin-reply">
-                <div class="admin-reply-header">Phản hồi từ Admin - <span th:text="${#temporals.format(fb.repliedAt, 'dd/MM/yyyy HH:mm')}"></span>:</div>
-                <div class="admin-reply-content" th:text="${fb.adminReply}"></div>
+            <div class="action-buttons">
+                <button type="button" class="btn-sm btn-edit" th:onclick="'toggleEdit(' + ${fb.id} + ')'">Sửa</button>
+                <form action="/patient/feedbacks/delete" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này không?');">
+                    <input type="hidden" name="feedbackId" th:value="${fb.id}">
+                    <button type="submit" class="btn-sm btn-delete">Xóa</button>
+                </form>
             </div>
-            <div th:if="${fb.adminReply == null}" style="font-size: 13px; color: #94a3b8; font-style: italic;">
-                Đang chờ phản hồi từ quản trị viên...
+
+            <div class="edit-form" th:id="'edit-form-' + ${fb.id}">
+                <form action="/patient/feedbacks/update" method="post">
+                    <input type="hidden" name="feedbackId" th:value="${fb.id}">
+                    <textarea name="content" required th:text="${fb.content}"></textarea>
+                    <button type="submit" class="btn-sm" style="background: #27ae60; color: white;">Lưu thay đổi</button>
+                    <button type="button" class="btn-sm" style="background: #64748b; color: white;" th:onclick="'toggleEdit(' + ${fb.id} + ')'">Hủy</button>
+                </form>
             </div>
         </div>
         
@@ -65,5 +77,18 @@
             <a href="/patient/homepage" style="color: #27ae60; text-decoration: none;">&larr; Quay lại trang chủ</a>
         </div>
     </div>
+    <script>
+        function toggleEdit(id) {
+            var form = document.getElementById('edit-form-' + id);
+            var content = document.getElementById('content-' + id);
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                content.style.display = 'none';
+            } else {
+                form.style.display = 'none';
+                content.style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>

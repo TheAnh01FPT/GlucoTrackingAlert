@@ -58,9 +58,20 @@ public class UserAdminServiceImpl implements UserAdminService {
     }
 
     @Override
+    public long getDoctorCount() {
+        return userRepository.countByRole_Name("DOCTOR");
+    }
+
+    @Override
+    public long getPatientCount() {
+        return userRepository.countByRole_Name("PATIENT");
+    }
+
+    @Override
     public List<User> getUsersFilteredByRole(Long roleId) {
         return userRepository.findByRoleId(roleId);
     }
+
 
     @Override
     public User getUserById(Long id) throws Exception {

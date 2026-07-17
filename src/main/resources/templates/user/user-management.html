@@ -1,293 +1,328 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>GlucoTrackAlert - Quản Trị Người Dùng</title>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
-          rel="stylesheet">
+        rel="stylesheet">
     <!-- Đường dẫn tới file CSS riêng vừa tạo -->
     <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
 </head>
+
 <body>
-<!-- SIDEBAR -->
-<div class="sidebar">
-    <div class="sidebar-logo">
-        <h2>GlucoTrackAlert</h2>
-        <span>Admin Portal</span>
-    </div>
-    <div class="sidebar-menu">
-        <a href="/admin/dashboard" class="menu-item active">👤 Quản Lý Tài Khoản</a>
-        <a href="/admin/doctors" class="menu-item">🩺 Quản Lý Bác Sĩ</a>
-        <a href="/admin/assignments" class="menu-item">📋 Phân Công Bác Sĩ</a>
-        <a href="/admin/requests" class="menu-item">📁 Yêu Cầu Thay Đổi</a>
-        <a href="/admin/banners" class="menu-item">🖼️ Quản Lý Banner</a>
-        <a href="/admin/feedbacks" class="menu-item">💬 Quản Lý Đánh Giá</a>
-    </div>
-</div>
-
-<!-- MAIN CONTENT -->
-<div class="main-content">
-    <!-- TOPBAR -->
-    <div class="topbar">
-        <div class="topbar-title">Hệ Thống Quản Trị Hệ Thống (Phân Hệ Đối Tượng Y Tế)</div>
-        <a href="/logout" class="btn-logout">Đăng xuất 🚪</a>
-    </div>
-
-    <!-- STAT CARDS -->
-    <div class="stat-cards">
-        <div class="stat-card">
-            <div class="stat-title">Tổng Tài Khoản</div>
-            <div class="stat-value" th:text="${totalItems != null ? totalItems : 0}">0</div>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2>GlucoTrackAlert</h2>
+            <span>Admin Portal</span>
         </div>
-        <div class="stat-card">
-            <div class="stat-title">Bác Sĩ</div>
-            <div class="stat-value">--</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-title">Bệnh Nhân</div>
-            <div class="stat-value">--</div>
+        <div class="sidebar-menu">
+            <a href="/admin/dashboard" class="menu-item active">👤 Quản Lý Tài Khoản</a>
+            <a href="/admin/doctors" class="menu-item">🩺 Quản Lý Bác Sĩ</a>
+            <a href="/admin/assignments" class="menu-item">📋 Phân Công Bác Sĩ</a>
+            <a href="/admin/requests" class="menu-item">📁 Yêu Cầu Thay Đổi</a>
+            <a href="/admin/banners" class="menu-item">🖼️ Quản Lý Banner</a>
+            <a href="/admin/feedbacks" class="menu-item">💬 Quản Lý Đánh Giá</a>
         </div>
     </div>
 
-    <!-- MAIN CONTAINER -->
-    <div class="container">
-        <h2>👤 Quản Lý Tài Khoản (Bệnh Nhân & Bác Sĩ)</h2>
-
-        <!-- Alert Banners -->
-        <div id="successAlert" th:if="${successMessage}" class="alert-success">
-            <span th:text="${successMessage}"></span>
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="topbar-title">Hệ Thống Quản Trị Hệ Thống (Phân Hệ Đối Tượng Y Tế)</div>
+            <a href="/logout" class="btn-logout">Đăng xuất 🚪</a>
         </div>
-        <div id="errorAlert" th:if="${errorMessage}" class="alert-error">
-            <span th:text="${errorMessage}"></span>
+
+        <!-- STAT CARDS -->
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="stat-title">Tổng Tài Khoản</div>
+                <div class="stat-value" th:text="${totalItems != null ? totalItems : 0}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Bác Sĩ</div>
+                <div class="stat-value" th:text="${doctorCount != null ? doctorCount : 0}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Bệnh Nhân</div>
+                <div class="stat-value" th:text="${patientCount != null ? patientCount : 0}">0</div>
+            </div>
         </div>
-        <div id="clientMessageBox" class="alert-error" style="display: none;"></div>
 
-        <form id="userForm" th:action="@{/admin/users/save}" method="POST">
-            <input type="hidden" id="userFormId" name="id">
+        <!-- MAIN CONTAINER -->
+        <div class="container">
+            <h2>👤 Quản Lý Tài Khoản (Bệnh Nhân & Bác Sĩ)</h2>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="userEmail">Email người dùng:</label>
-                    <input type="email" id="userEmail" name="email" class="form-control" placeholder="example@gmail.com" required>
+            <!-- Alert Banners -->
+            <div id="successAlert" th:if="${successMessage}" class="alert-success">
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div id="errorAlert" th:if="${errorMessage}" class="alert-error">
+                <span th:text="${errorMessage}"></span>
+            </div>
+            <div id="clientMessageBox" class="alert-error" style="display: none;"></div>
+
+            <form id="userForm" th:action="@{/admin/users/save}" method="POST">
+                <input type="hidden" id="userFormId" name="id">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="userEmail">Email người dùng:</label>
+                        <input type="email" id="userEmail" name="email" class="form-control"
+                            placeholder="example@gmail.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword" id="passwordLabel">Mật khẩu khởi tạo:</label>
+                        <input type="password" id="userPassword" name="password" class="form-control"
+                            placeholder="Nhập mật khẩu" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userStatus">Trạng thái:</label>
+                        <select id="userStatus" name="status" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="pending_verification">Pending</option>
+                            <option value="banned">Banned</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Vai trò:</label>
+                        <select id="userRole" name="roleName" class="form-control">
+                            <option value="PATIENT">PATIENT</option>
+                            <option value="DOCTOR">DOCTOR</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-checkbox" style="flex: 0.5;">
+                        <input type="checkbox" id="userEmailVerified" name="emailVerified" value="true" checked>
+                        <label for="userEmailVerified">Đã xác thực</label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" id="btnSubmitUser" class="btn btn-blue">💾 Lưu</button>
+                        <span id="cancelUserEdit" class="cancel-edit" onclick="resetUserForm()">Hủy</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="userPassword" id="passwordLabel">Mật khẩu khởi tạo:</label>
-                    <input type="password" id="userPassword" name="password" class="form-control" placeholder="Nhập mật khẩu" required>
-                </div>
-                <div class="form-group">
-                    <label for="userStatus">Trạng thái:</label>
-                    <select id="userStatus" name="status" class="form-control">
-                        <option value="active">Active</option>
-                        <option value="pending_verification">Pending</option>
-                        <option value="banned">Banned</option>
+            </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">ID</th>
+                        <th style="width: 32%;">Email</th>
+                        <th style="width: 20%;">Vai trò (Role)</th>
+                        <th style="width: 15%;">Trạng thái</th>
+                        <th style="width: 15%;">Xác thực Email</th>
+                        <th style="width: 6%;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}">1</td>
+                        <td th:text="${user.email}" style="font-weight: 500;">user@gmail.com</td>
+                        <td>
+                            <span th:text="${user.role != null ? user.role.name : 'Chưa gán'}"
+                                th:class="${user.role != null && user.role.name == 'DOCTOR'} ? 'badge badge-doctor' : 'badge badge-patient'">
+                                PATIENT
+                            </span>
+                        </td>
+                        <td>
+                            <span th:text="${user.status}"
+                                th:class="${user.status == 'active' ? 'badge badge-active' : (user.status == 'banned' ? 'badge badge-banned' : 'badge badge-pending')}">active</span>
+                        </td>
+                        <td th:text="${user.emailVerified ? 'Đã xác thực ✔' : 'Chưa xác thực ❌'}">Đã xác thực</td>
+                        <td>
+                            <a href="#" class="btn-sm btn-edit"
+                                th:onclick="fillUserToForm([[${user.id}]], [[${user.email}]], [[${user.status}]], [[${user.role != null ? user.role.name : ''}]], [[${user.emailVerified}]])">Sửa</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có tài
+                            khoản Bệnh
+                            nhân hoặc Bác sĩ nào.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- Paging -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                <span style="font-size: 13px; color: #64748b;">
+                    Hiển thị trang <strong th:text="${currentPage + 1}"></strong>
+                    / <strong th:text="${totalPages}"></strong>
+                    (Tổng <strong th:text="${totalItems}"></strong> tài khoản)
+                </span>
+
+                <!-- Page size selector -->
+                <form th:action="@{/admin/dashboard}" method="get" class="page-size-form" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <input type="hidden" name="page" th:value="${currentPage}" />
+                    <label for="sizeSelect" style="font-size: 13px; color: #64748b; font-weight: 500;">Số mục mỗi trang:</label>
+                    <select id="sizeSelect" name="size" th:onchange="this.form.submit()" class="custom-select-size">
+                        <option th:value="5" th:selected="${pageSize == 5}">5</option>
+                        <option th:value="10" th:selected="${pageSize == 10}">10</option>
+                        <option th:value="15" th:selected="${pageSize == 15}">15</option>
+                        <option th:value="20" th:selected="${pageSize == 20}">20</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label for="userRole">Vai trò:</label>
-                    <select id="userRole" name="roleName" class="form-control">
-                        <option value="PATIENT">PATIENT</option>
-                        <option value="DOCTOR">DOCTOR</option>
-                    </select>
-                </div>
-                <div class="form-group form-checkbox" style="flex: 0.5;">
-                    <input type="checkbox" id="userEmailVerified" name="emailVerified" value="true" checked>
-                    <label for="userEmailVerified">Đã xác thực</label>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" id="btnSubmitUser" class="btn btn-blue">💾 Lưu</button>
-                    <span id="cancelUserEdit" class="cancel-edit" onclick="resetUserForm()">Hủy</span>
+                </form>
+
+                <style>
+                    .custom-select-size {
+                        padding: 7px 28px 7px 14px; /* Trùng khớp padding dọc/ngang của nút số trang */
+                        font-size: 13px;            /* Cỡ chữ đồng bộ */
+                        color: #334155;             /* Màu chữ trung tính */
+                        background: #f1f5f9 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") no-repeat right 10px center;
+                        background-size: 10px;
+                        border: 1px solid #cbd5e1;  /* Màu viền chuẩn xám nhẹ */
+                        border-radius: 6px;         /* Bo góc 6px trùng nút paging */
+                        cursor: pointer;
+                        outline: none;
+                        appearance: none;           /* Ẩn mũi tên mặc định xấu xí của trình duyệt */
+                        -webkit-appearance: none;
+                        -moz-appearance: none;
+                        transition: all 0.2s ease;
+                    }
+
+                    .custom-select-size:hover {
+                        background-color: #e2e8f0;  /* Hiệu ứng hover tối hơn một chút */
+                        border-color: #94a3b8;
+                    }
+
+                    .custom-select-size:focus {
+                        border-color: #3b82f6;      /* Đổi màu viền xanh dương khi click chọn */
+                        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+                    }
+                </style>
+                <div style="display: flex; gap: 8px;">
+                    <a th:if="${currentPage > 0}"
+                        th:href="@{/admin/dashboard(page=${currentPage - 1}, size=${pageSize})}"
+                        style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
+                        ← Trước
+                    </a>
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <a th:href="@{/admin/dashboard(page=${i}, size=${pageSize})}" th:text="${i + 1}"
+                            th:style="${i == currentPage} ? 'padding: 7px 14px; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px; text-decoration: none;'
+                                             : 'padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;'">
+                        </a>
+                    </th:block>
+                    <a th:if="${currentPage < totalPages - 1}"
+                        th:href="@{/admin/dashboard(page=${currentPage + 1}, size=${pageSize})}"
+                        style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
+                        Sau →
+                    </a>
                 </div>
             </div>
-        </form>
-
-    <table>
-        <thead>
-        <tr>
-            <th style="width: 8%;">ID</th>
-            <th style="width: 32%;">Email</th>
-            <th style="width: 20%;">Vai trò (Role)</th>
-            <th style="width: 15%;">Trạng thái</th>
-            <th style="width: 15%;">Xác thực Email</th>
-            <th style="width: 6%;">Hành động</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="user : ${users}">
-            <td th:text="${user.id}">1</td>
-            <td th:text="${user.email}" style="font-weight: 500;">user@gmail.com</td>
-            <td>
-                <span th:text="${user.role != null ? user.role.name : 'Chưa gán'}"
-                      th:class="${user.role != null && user.role.name == 'DOCTOR'} ? 'badge badge-doctor' : 'badge badge-patient'">
-                    PATIENT
-                </span>
-            </td>
-            <td>
-                <span th:text="${user.status}"
-                      th:class="${user.status == 'active' ? 'badge badge-active' : (user.status == 'banned' ? 'badge badge-banned' : 'badge badge-pending')}">active</span>
-            </td>
-            <td th:text="${user.emailVerified ? 'Đã xác thực ✔' : 'Chưa xác thực ❌'}">Đã xác thực</td>
-            <td>
-                <a href="#" class="btn-sm btn-edit"
-                   th:onclick="fillUserToForm([[${user.id}]], [[${user.email}]], [[${user.status}]], [[${user.role != null ? user.role.name : ''}]], [[${user.emailVerified}]])">Sửa</a>
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(users)}">
-            <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có tài khoản Bệnh
-                nhân hoặc Bác sĩ nào.
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <!-- Paging -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-    <span style="font-size: 13px; color: #64748b;">
-        Hiển thị trang <strong th:text="${currentPage + 1}"></strong>
-        / <strong th:text="${totalPages}"></strong>
-        (Tổng <strong th:text="${totalItems}"></strong> tài khoản)
-    </span>
-            <!-- Page size selector -->
-            <form th:action="@{/admin/dashboard}" method="get" style="margin:0;">
-                <input type="hidden" name="page" th:value="${currentPage}" />
-                <select name="size" th:onchange="this.form.submit()" class="form-select" style="width:auto; display:inline-block;">
-                    <option th:value="5" th:selected="${pageSize == 5}">5</option>
-                    <option th:value="10" th:selected="${pageSize == 10}">10</option>
-                    <option th:value="15" th:selected="${pageSize == 15}">15</option>
-                    <option th:value="20" th:selected="${pageSize == 20}">20</option>
-                </select>
-            </form>
-            <div style="display: flex; gap: 8px;">
-            <a th:if="${currentPage > 0}"
-               th:href="@{/admin/dashboard(page=${currentPage - 1}, size=${pageSize})}"
-               style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
-                ← Trước
-            </a>
-            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-                <a th:href="@{/admin/dashboard(page=${i}, size=${pageSize})}"
-                   th:text="${i + 1}"
-                   th:style="${i == currentPage} ? 'padding: 7px 14px; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px; text-decoration: none;'
-                                             : 'padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;'">
-                </a>
-            </th:block>
-            <a th:if="${currentPage < totalPages - 1}"
-               th:href="@{/admin/dashboard(page=${currentPage + 1}, size=${pageSize})}"
-               style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
-                Sau →
-            </a>
         </div>
-    </div>
-</div>
 
-<script>
-    function fillUserToForm(id, email, status, roleName, emailVerified) {
-        hideClientError();
-        document.getElementById('userFormId').value = id;
-        document.getElementById('userEmail').value = email;
-        document.getElementById('userStatus').value = status;
-        document.getElementById('userRole').value = roleName.toUpperCase();
-        document.getElementById('userEmailVerified').checked = emailVerified;
+        <script>
+            function fillUserToForm(id, email, status, roleName, emailVerified) {
+                hideClientError();
+                document.getElementById('userFormId').value = id;
+                document.getElementById('userEmail').value = email;
+                document.getElementById('userStatus').value = status;
+                document.getElementById('userRole').value = roleName.toUpperCase();
+                document.getElementById('userEmailVerified').checked = emailVerified;
 
-        document.getElementById('userPassword').required = false;
-        document.getElementById('userPassword').placeholder = "Bỏ trống nếu giữ nguyên mật khẩu cũ";
-        document.getElementById('passwordLabel').innerText = "Cập nhật mật khẩu mới:";
-        document.getElementById('btnSubmitUser').innerText = "💾 Cập Nhật Tài Khoản";
-        document.getElementById('cancelUserEdit').style.display = "inline-flex";
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function resetUserForm() {
-        hideClientError();
-        document.getElementById('userFormId').value = "";
-        document.getElementById('userEmail').value = "";
-        document.getElementById('userPassword').value = "";
-        document.getElementById('userPassword').required = true;
-        document.getElementById('userPassword').placeholder = "Nhập mật khẩu";
-        document.getElementById('passwordLabel').innerText = "Mật khẩu khởi tạo:";
-        document.getElementById('userStatus').selectedIndex = 0;
-        document.getElementById('userRole').selectedIndex = 0;
-        document.getElementById('userEmailVerified').checked = true;
-        document.getElementById('btnSubmitUser').innerText = "💾 Lưu Thông Tin";
-        document.getElementById('cancelUserEdit').style.display = "none";
-    }
-
-    document.getElementById('userForm').addEventListener('submit', function (e) {
-        hideClientError();
-        const emailInput = document.getElementById('userEmail');
-        const passwordInput = document.getElementById('userPassword');
-        const userIdInput = document.getElementById('userFormId');
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        const isEdit = userIdInput && userIdInput.value !== "";
-
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(email)) {
-            showClientError("Địa chỉ Email không đúng định dạng!");
-            e.preventDefault();
-            return;
-        }
-
-        if (!isEdit) {
-            if (!password || password.trim() === "") {
-                showClientError("Mật khẩu không được để trống");
-                e.preventDefault();
-                return;
+                document.getElementById('userPassword').required = false;
+                document.getElementById('userPassword').placeholder = "Bỏ trống nếu giữ nguyên mật khẩu cũ";
+                document.getElementById('passwordLabel').innerText = "Cập nhật mật khẩu mới:";
+                document.getElementById('btnSubmitUser').innerText = "💾 Cập Nhật Tài Khoản";
+                document.getElementById('cancelUserEdit').style.display = "inline-flex";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-            const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
-            if (!passRegex.test(password)) {
-                showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
-                e.preventDefault();
-                return;
+
+            function resetUserForm() {
+                hideClientError();
+                document.getElementById('userFormId').value = "";
+                document.getElementById('userEmail').value = "";
+                document.getElementById('userPassword').value = "";
+                document.getElementById('userPassword').required = true;
+                document.getElementById('userPassword').placeholder = "Nhập mật khẩu";
+                document.getElementById('passwordLabel').innerText = "Mật khẩu khởi tạo:";
+                document.getElementById('userStatus').selectedIndex = 0;
+                document.getElementById('userRole').selectedIndex = 0;
+                document.getElementById('userEmailVerified').checked = true;
+                document.getElementById('btnSubmitUser').innerText = "💾 Lưu Thông Tin";
+                document.getElementById('cancelUserEdit').style.display = "none";
             }
-        } else {
-            if (password && password.trim() !== "") {
-                const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
-                if (!passRegex.test(password)) {
-                    showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
+
+            document.getElementById('userForm').addEventListener('submit', function (e) {
+                hideClientError();
+                const emailInput = document.getElementById('userEmail');
+                const passwordInput = document.getElementById('userPassword');
+                const userIdInput = document.getElementById('userFormId');
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const isEdit = userIdInput && userIdInput.value !== "";
+
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(email)) {
+                    showClientError("Địa chỉ Email không đúng định dạng!");
                     e.preventDefault();
                     return;
                 }
+
+                if (!isEdit) {
+                    if (!password || password.trim() === "") {
+                        showClientError("Mật khẩu không được để trống");
+                        e.preventDefault();
+                        return;
+                    }
+                    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
+                    if (!passRegex.test(password)) {
+                        showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
+                        e.preventDefault();
+                        return;
+                    }
+                } else {
+                    if (password && password.trim() !== "") {
+                        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
+                        if (!passRegex.test(password)) {
+                            showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
+                            e.preventDefault();
+                            return;
+                        }
+                    }
+                }
+            });
+
+            let clientMessageTimeout;
+
+            function showClientError(msg) {
+                const msgBox = document.getElementById('clientMessageBox');
+                msgBox.innerText = msg;
+                msgBox.style.opacity = '1';
+                msgBox.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (clientMessageTimeout) clearTimeout(clientMessageTimeout);
+                clientMessageTimeout = setTimeout(() => {
+                    msgBox.style.transition = 'opacity 0.5s ease';
+                    msgBox.style.opacity = '0';
+                    setTimeout(() => {
+                        msgBox.style.display = 'none';
+                    }, 500);
+                }, 4000);
             }
-        }
-    });
 
-    let clientMessageTimeout;
-
-    function showClientError(msg) {
-        const msgBox = document.getElementById('clientMessageBox');
-        msgBox.innerText = msg;
-        msgBox.style.opacity = '1';
-        msgBox.style.display = 'block';
-        window.scrollTo({top: 0, behavior: 'smooth'});
-        if (clientMessageTimeout) clearTimeout(clientMessageTimeout);
-        clientMessageTimeout = setTimeout(() => {
-            msgBox.style.transition = 'opacity 0.5s ease';
-            msgBox.style.opacity = '0';
-            setTimeout(() => {
+            function hideClientError() {
+                const msgBox = document.getElementById('clientMessageBox');
                 msgBox.style.display = 'none';
-            }, 500);
-        }, 4000);
-    }
+                msgBox.style.opacity = '1';
+                if (clientMessageTimeout) clearTimeout(clientMessageTimeout);
+            }
 
-    function hideClientError() {
-        const msgBox = document.getElementById('clientMessageBox');
-        msgBox.style.display = 'none';
-        msgBox.style.opacity = '1';
-        if (clientMessageTimeout) clearTimeout(clientMessageTimeout);
-    }
-
-    setTimeout(() => {
-        const successAlert = document.getElementById('successAlert');
-        const errorAlert = document.getElementById('errorAlert');
-        if (successAlert) {
-            successAlert.style.transition = 'opacity 0.5s ease';
-            successAlert.style.opacity = '0';
-            setTimeout(() => successAlert.style.display = 'none', 500);
-        }
-        if (errorAlert) {
-            errorAlert.style.transition = 'opacity 0.5s ease';
-            errorAlert.style.opacity = '0';
-            setTimeout(() => errorAlert.style.display = 'none', 500);
-        }
-    }, 4000);
-</script>
+            setTimeout(() => {
+                const successAlert = document.getElementById('successAlert');
+                const errorAlert = document.getElementById('errorAlert');
+                if (successAlert) {
+                    successAlert.style.transition = 'opacity 0.5s ease';
+                    successAlert.style.opacity = '0';
+                    setTimeout(() => successAlert.style.display = 'none', 500);
+                }
+                if (errorAlert) {
+                    errorAlert.style.transition = 'opacity 0.5s ease';
+                    errorAlert.style.opacity = '0';
+                    setTimeout(() => errorAlert.style.display = 'none', 500);
+                }
+            }, 4000);
+        </script>
 </body>
+
 </html>

@@ -37,7 +37,8 @@ public class FeedbackController {
     };
 
     private String filterBadWords(String input) {
-        if (input == null) return null;
+        if (input == null)
+            return null;
         String filtered = input;
         for (String word : BAD_WORDS) {
             filtered = filtered.replaceAll("(?i)" + word, "***");
@@ -50,15 +51,18 @@ public class FeedbackController {
     public String patientFeedbacks(Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
         String email = (String) authentication.getPrincipal();
         User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
 
         Patient patient = patientRepository.findByUserId(user.getId()).orElse(null);
         if (patient == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần tạo hồ sơ y tế trước khi có thể gửi đánh giá.");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Bạn cần tạo hồ sơ y tế trước khi có thể gửi đánh giá.");
             return "redirect:/patient/profile";
         }
 
-        boolean hasReceivedAdvice = !recommendationRepository.findByPatientIdOrderByCreatedAtDesc(patient.getId()).isEmpty();
+        boolean hasReceivedAdvice = !recommendationRepository.findByPatientIdOrderByCreatedAtDesc(patient.getId())
+                .isEmpty();
         model.addAttribute("canFeedback", hasReceivedAdvice);
 
         List<Feedback> feedbacks = feedbackRepository.findByPatientOrderByCreatedAtDesc(patient);
@@ -70,21 +74,24 @@ public class FeedbackController {
     // --- PATIENT: SUBMIT FEEDBACK ---
     @PostMapping("/patient/feedbacks/submit")
     public String submitFeedback(@RequestParam("content") String content,
-                                 Authentication authentication,
-                                 RedirectAttributes redirectAttributes) {
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
         String email = (String) authentication.getPrincipal();
         User user = userRepository.findByEmail(email).orElse(null);
-        
-        if (user == null) return "redirect:/login";
-        
+
+        if (user == null)
+            return "redirect:/login";
+
         Patient patient = patientRepository.findByUserId(user.getId()).orElse(null);
         if (patient == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần tạo hồ sơ y tế trước khi có thể gửi đánh giá.");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Bạn cần tạo hồ sơ y tế trước khi có thể gửi đánh giá.");
             return "redirect:/patient/profile";
         }
 
         if (recommendationRepository.findByPatientIdOrderByCreatedAtDesc(patient.getId()).isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bạn chỉ được gửi đánh giá sau khi nhận lời khuyên từ bác sĩ.");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Bạn chỉ được gửi đánh giá sau khi nhận lời khuyên từ bác sĩ.");
             return "redirect:/patient/feedbacks";
         }
 
@@ -99,6 +106,52 @@ public class FeedbackController {
         return "redirect:/patient/feedbacks";
     }
 
+    // --- PATIENT: UPDATE FEEDBACK ---
+    @PostMapping("/patient/feedbacks/update")
+    public String updateFeedback(@RequestParam("feedbackId") Long feedbackId,
+                                 @RequestParam("content") String content,
+                                 Authentication authentication,
+                                 RedirectAttributes redirectAttributes) {
+        String email = (String) authentication.getPrincipal();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) return "redirect:/login";
+
+        Patient patient = patientRepository.findByUserId(user.getId()).orElse(null);
+        if (patient == null) return "redirect:/patient/profile";
+
+        Feedback feedback = feedbackRepository.findById(feedbackId).orElse(null);
+        if (feedback != null && feedback.getPatient().getId().equals(patient.getId())) {
+            feedback.setContent(filterBadWords(content));
+            feedbackRepository.save(feedback);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật đánh giá thành công.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật đánh giá này.");
+        }
+        return "redirect:/patient/feedbacks";
+    }
+
+    // --- PATIENT: DELETE FEEDBACK ---
+    @PostMapping("/patient/feedbacks/delete")
+    public String deleteFeedback(@RequestParam("feedbackId") Long feedbackId,
+                                 Authentication authentication,
+                                 RedirectAttributes redirectAttributes) {
+        String email = (String) authentication.getPrincipal();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) return "redirect:/login";
+
+        Patient patient = patientRepository.findByUserId(user.getId()).orElse(null);
+        if (patient == null) return "redirect:/patient/profile";
+
+        Feedback feedback = feedbackRepository.findById(feedbackId).orElse(null);
+        if (feedback != null && feedback.getPatient().getId().equals(patient.getId())) {
+            feedbackRepository.delete(feedback);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa đánh giá thành công.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa đánh giá này.");
+        }
+        return "redirect:/patient/feedbacks";
+    }
+
     // --- ADMIN: VIEW FEEDBACKS ---
     @GetMapping("/admin/feedbacks")
     public String adminFeedbacks(Model model) {
@@ -107,18 +160,4 @@ public class FeedbackController {
         return "feedback/admin-feedback";
     }
 
-    // --- ADMIN: REPLY FEEDBACK ---
-    @PostMapping("/admin/feedbacks/reply")
-    public String adminReplyFeedback(@RequestParam("feedbackId") Long feedbackId,
-                                     @RequestParam("adminReply") String adminReply,
-                                     RedirectAttributes redirectAttributes) {
-        Feedback feedback = feedbackRepository.findById(feedbackId).orElse(null);
-        if (feedback != null) {
-            feedback.setAdminReply(adminReply);
-            feedback.setRepliedAt(LocalDateTime.now());
-            feedbackRepository.save(feedback);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã trả lời đánh giá.");
-        }
-        return "redirect:/admin/feedbacks";
-    }
 }

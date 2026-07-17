@@ -8,6 +8,8 @@ import java.util.List;
 public interface UserAdminService {
     List<User> getAllUsers();
     Page<User> getUsersPaged(int page, int size);
+    long getDoctorCount();
+    long getPatientCount();
     List<User> getUsersFilteredByRole(Long roleId);
     User getUserById(Long id) throws Exception;
     User createUserByAdmin(UserAdminRequest request) throws Exception;
