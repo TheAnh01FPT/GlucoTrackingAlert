@@ -3,12 +3,12 @@ package fpt.swp391.GlucoTrackAlert.service.recommendation;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationRequest;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationResponse;
 
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.DoctorRecommendation;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRecommendationRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.NotificationService;
 import lombok.RequiredArgsConstructor;

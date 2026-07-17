@@ -424,8 +424,6 @@
                 <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
                 <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
                 <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
-                <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
-                <a href="/admin/patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
                 <a href="/admin/thresholds" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
             </nav>
             <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
@@ -804,7 +802,6 @@
                                 let allShifts = [];
                                 let filteredDoctors = [];
                                 let deactivateTargetId = null;
-                                let doctorModal, deactivateModal, toastEl;
                                 let hardDeleteTargetId = null;
                                 let doctorModal, deactivateModal, hardDeleteModal, toastEl;
                                 const PAGE_SIZE = 10;
@@ -956,7 +953,6 @@
                         <td>
                             <button class="action-btn edit" onclick='openEdit(${JSON.stringify(d)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
                             ${(d.status === 'pending_approval') ? `<button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt"><i class="bi bi-shield-check"></i></button>` : ''}
-                            <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
                             <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
                             <button class="action-btn" style="color:var(--danger);opacity:${d.status === 'inactive' ? '1' : '0.3'};cursor:${d.status === 'inactive' ? 'pointer' : 'not-allowed'}" onclick="${d.status === 'inactive' ? 'openHardDelete(' + d.id + ')' : 'void(0)'}" title="${d.status === 'inactive' ? 'Xóa vĩnh viễn' : 'Phải ngừng hoạt động trước'}"><i class="bi bi-trash3"></i></button>
                         </td>

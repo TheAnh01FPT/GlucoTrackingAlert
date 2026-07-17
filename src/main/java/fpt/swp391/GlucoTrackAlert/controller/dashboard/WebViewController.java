@@ -45,12 +45,12 @@ public class WebViewController {
 
     @GetMapping("/doctors")
     public String showDoctorsPage(Model model) {
-        return "doctors";
+        return "admin/doctors";
     }
 
     @GetMapping("/assignments")
     public String showAssignmentsPage(Model model) {
-        return "assignments";
+        return "admin/assignments";
     }
 
     @GetMapping("/patients")

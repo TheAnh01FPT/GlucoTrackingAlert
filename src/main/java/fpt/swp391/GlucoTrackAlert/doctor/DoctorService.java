@@ -1,8 +1,5 @@
-package fpt.swp391.GlucoTrackAlert.service;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
-import fpt.swp391.GlucoTrackAlert.dto.AdminCreateDoctorRequest;
-import fpt.swp391.GlucoTrackAlert.dto.DoctorRequest;
-import fpt.swp391.GlucoTrackAlert.dto.DoctorResponse;
 import java.util.List;
 
 public interface DoctorService {
