@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>GlucoTrackAlert - Quản Lý Yêu Cầu Liên Hệ</title>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 30px; color: #1e293b; }
+        .dashboard-header { margin-bottom: 25px; border-left: 5px solid #ec4899; padding-left: 15px; }
+        .dashboard-header h1 { margin: 0; font-size: 24px; color: #0f172a; }
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 35px; }
+        h2 { color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+
+        /* Filter Tab */
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+        .filter-btn { padding: 8px 16px; border: 1px solid #cbd5e1; background: #ffffff; border-radius: 6px; font-weight: 600; font-size: 13px; color: #64748b; cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover { background: #f8fafc; color: #1e293b; }
+        .filter-btn.active { background: #ec4899; color: #ffffff; border-color: #ec4899; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; }
+        tr:hover { background-color: #f8fafc; }
+
+        /* Badges & Buttons */
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-new { background-color: #fee2e2; color: #b91c1c; }
+        .badge-handled { background-color: #dcfce7; color: #15803d; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.2s; }
+        .btn-pink { background-color: #ec4899; color: white; }
+        .btn-pink:hover { background-color: #db2777; }
+        .btn-blue { background-color: #3b82f6; color: white; }
+        .btn-blue:hover { background-color: #2563eb; }
+
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 4px; font-weight: 500; text-decoration: none; cursor: pointer; }
+        .btn-reply { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+        .btn-reply:hover { background-color: #e2e8f0; }
+        .btn-view { background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .btn-view:hover { background-color: #dbeafe; }
+
+        /* Modal styling */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; }
+        .modal-box { background: white; width: 550px; max-width: 95%; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); padding: 25px; overflow: hidden; animation: fadeIn 0.3s ease-out; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; font-size: 18px; color: #0f172a; }
+        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        .modal-close:hover { color: #475569; }
+        .modal-body { max-height: 400px; overflow-y: auto; margin-bottom: 20px; }
+        .field-group { margin-bottom: 12px; }
+        .field-label { font-weight: 600; color: #475569; font-size: 13px; margin-bottom: 4px; }
+        .field-value { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 6px; font-size: 14px; color: #1e293b; min-height: 20px; }
+        
+        .textarea-reply { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; font-size: 14px; font-family: inherit; box-sizing: border-box; resize: vertical; }
+        .textarea-reply:focus { border-color: #ec4899; outline: none; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15); }
+
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+
+        /* Pagination */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 15px; }
+        .pagination-info { font-size: 13px; color: #64748b; }
+        .pagination-btns { display: flex; gap: 5px; }
+        .page-size-selector { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #64748b; }
+        .page-size-select { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; color: #334155; background-color: white; outline: none; cursor: pointer; }
+        .page-size-select:focus { border-color: #ec4899; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-header">
+    <h1>Hệ Thống Quản Trị Hệ Thống (Phân Hệ Liên Hệ)</h1>
+    <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="/admin/dashboard" class="btn btn-blue" style="background-color: #3b82f6;">👤 Quản Lý Tài Khoản</a>
+        <a href="/admin/doctors" class="btn btn-blue" style="background-color: #10b981;">🩺 Quản Lý Bác Sĩ</a>
+        <a href="/admin/assignments" class="btn btn-blue" style="background-color: #8b5cf6;">📋 Phân Công Bác Sĩ</a>
+        <a href="/admin/requests" class="btn btn-blue" style="background-color: #f59e0b;">📁 Yêu Cầu Thay Đổi</a>
+        <a href="/admin/contact-requests" class="btn btn-pink">✉️ Yêu Cầu Liên Hệ</a>
+    </div>
+</div>
+
+<div class="container">
+    <h2 style="color: #ec4899;"><i class="bi bi-envelope-open-fill"></i> ✉️ Quản Lý Yêu Cầu Liên Hệ từ Người dùng</h2>
+
+    <!-- Tabs Filter -->
+    <div class="filter-tabs">
+        <button class="filter-btn active" id="tabAll" onclick="changeTab('all')">Xem tất cả (All)</button>
+        <button class="filter-btn" id="tabNew" onclick="changeTab('new')">Chưa xử lý (New)</button>
+        <button class="filter-btn" id="tabHandled" onclick="changeTab('handled')">Đã xử lý (Handled)</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20%;">Họ và tên</th>
+                    <th style="width: 20%;">Email nhận tin</th>
+                    <th style="width: 15%;">Số điện thoại</th>
+                    <th style="width: 25%;">Tiêu đề câu hỏi</th>
+                    <th style="width: 10%;">Trạng thái</th>
+                    <th style="width: 10%; text-align: center;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="contactTableBody">
+                <!-- Data loaded dynamically via AJAX -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container">
+        <div class="pagination-info" id="paginationInfo">Hiển thị 0-0 trong tổng 0 bản ghi</div>
+        <div class="pagination-btns" id="paginationButtons">
+            <!-- Buttons dynamically generated -->
+        </div>
+        <div class="page-size-selector">
+            <span>Hiển thị:</span>
+            <select class="page-size-select" id="pageSizeSelect" onchange="changePageSize(this.value)">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+            <span>/ trang</span>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xem & phản hồi -->
+<div class="modal-overlay" id="replyModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modalTitle">Chi tiết & Phản hồi liên hệ</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="modalContactId">
+            <div class="field-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="field-group">
+                    <div class="field-label">Khách hàng:</div>
+                    <div class="field-value" id="modalFullName"></div>
+                </div>
+                <div class="field-group">
+                    <div class="field-label">Số điện thoại:</div>
+                    <div class="field-value" id="modalPhone"></div>
+                </div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">Hòm thư nhận phản hồi (Email):</div>
+                <div class="field-value" id="modalEmail"></div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">Tiêu đề thắc mắc:</div>
+                <div class="field-value" id="modalSubject" style="font-weight: 500;"></div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">Nội dung chi tiết câu hỏi:</div>
+                <div class="field-value" id="modalMessage" style="min-height: 80px; white-space: pre-wrap; font-size: 13.5px; color: #4b5563;"></div>
+            </div>
+
+            <!-- Giao diện xem lịch sử phản hồi nếu đã xử lý -->
+            <div id="handledSection" style="display: none;">
+                <div class="field-group">
+                    <div class="field-label">Admin đã phản hồi:</div>
+                    <div class="field-value" id="modalHandledBy"></div>
+                </div>
+                <div class="field-group">
+                    <div class="field-label">Thời gian phản hồi:</div>
+                    <div class="field-value" id="modalHandledAt"></div>
+                </div>
+                <div class="field-group">
+                    <div class="field-label">Nội dung phản hồi đã gửi:</div>
+                    <div class="field-value" id="modalReplyContentHistory" style="min-height: 80px; white-space: pre-wrap; font-size: 13.5px; color: #134d40; background-color: #e8f5f1; border-color: #d1e7dd;"></div>
+                </div>
+            </div>
+
+            <!-- Giao diện nhập câu trả lời nếu chưa xử lý -->
+            <div id="replySection">
+                <div class="field-group">
+                    <div class="field-label">Soạn câu trả lời gửi đến Email khách hàng:</div>
+                    <textarea class="textarea-reply" id="modalReplyContent" rows="5" placeholder="Chào bạn, thắc mắc của bạn về..." maxlength="10000"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-reply" style="padding: 8px 16px;" onclick="closeModal()">Đóng</button>
+            <button class="btn btn-pink" style="padding: 8px 16px;" id="btnSubmitReply" onclick="submitReply()">Gửi Email phản hồi</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStatus = 'all';
+    let currentPage = 0;
+    let pageSize = 5;
+    let contactRequestsList = [];
+
+    // Tải dữ liệu khi mở trang
+    document.addEventListener("DOMContentLoaded", function() {
+        loadContactRequests();
+    });
+
+    function changeTab(status) {
+        currentStatus = status;
+        currentPage = 0;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        if (status === 'new') {
+            document.getElementById('tabNew').classList.add('active');
+        } else if (status === 'handled') {
+            document.getElementById('tabHandled').classList.add('active');
+        } else {
+            document.getElementById('tabAll').classList.add('active');
+        }
+        loadContactRequests();
+    }
+
+    function loadContactRequests() {
+        const url = `/api/admin/contact-requests?status=${currentStatus}&page=${currentPage}&size=${pageSize}`;
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                contactRequestsList = data.content;
+                renderTable(data.content);
+                renderPagination(data);
+            })
+            .catch(err => console.error("Lỗi tải yêu cầu liên hệ: ", err));
+    }
+
+    function renderTable(list) {
+        const tbody = document.getElementById("contactTableBody");
+        tbody.innerHTML = "";
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Không có yêu cầu liên hệ nào ở trạng thái này.</td></tr>`;
+            return;
+        }
+
+        list.forEach(item => {
+            const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : 'N/A';
+            const badgeClass = item.status === 'new' ? 'badge-new' : 'badge-handled';
+            const badgeText = item.status === 'new' ? 'Chờ xử lý' : 'Đã phản hồi';
+            const actionButton = item.status === 'new' 
+                ? `<button class="btn btn-sm btn-reply" onclick="openReplyModal(${item.id})"><i class="bi bi-reply-fill"></i> Phản hồi</button>`
+                : `<button class="btn btn-sm btn-view" onclick="openReplyModal(${item.id})"><i class="bi bi-eye-fill"></i> Xem</button>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight: 500; color: #0f172a;">${item.fullName}</td>
+                    <td>${item.email || 'N/A'}</td>
+                    <td>${item.phone || 'N/A'}</td>
+                    <td>${item.subject || 'N/A'}</td>
+                    <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                    <td style="text-align: center;">${actionButton}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function renderPagination(pageData) {
+        const start = pageData.empty ? 0 : (pageData.number * pageData.size) + 1;
+        const end = (pageData.number * pageData.size) + pageData.numberOfElements;
+        document.getElementById("paginationInfo").innerHTML = `Hiển thị <strong>${start}-${end}</strong> trong tổng <strong>${pageData.totalElements}</strong> bản ghi`;
+
+        const pButtons = document.getElementById("paginationButtons");
+        pButtons.innerHTML = "";
+
+        // Prev Button
+        const prevDisabled = pageData.first ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        pButtons.innerHTML += `<button class="filter-btn btn-sm" ${prevDisabled} onclick="goToPage(${currentPage - 1})">« Trước</button>`;
+
+        // Phân trang động (Dynamic Pagination) hiển thị tối đa 5 nút trang xung quanh trang hiện tại
+        const totalPages = pageData.totalPages;
+        const maxPageButtons = 5;
+        let startPage = Math.max(0, currentPage - 2);
+        let endPage = Math.min(totalPages - 1, startPage + maxPageButtons - 1);
+
+        if (endPage - startPage + 1 < maxPageButtons) {
+            startPage = Math.max(0, endPage - maxPageButtons + 1);
+        }
+
+        // Hiển thị trang đầu và dấu ...
+        if (startPage > 0) {
+            pButtons.innerHTML += `<button class="filter-btn btn-sm" onclick="goToPage(0)">1</button>`;
+            if (startPage > 1) {
+                pButtons.innerHTML += `<span style="padding: 6px 8px; color: #64748b;">...</span>`;
+            }
+        }
+
+        // Hiển thị các trang ở giữa
+        for (let i = startPage; i <= endPage; i++) {
+            const activeClass = i === currentPage ? 'active' : '';
+            pButtons.innerHTML += `<button class="filter-btn btn-sm ${activeClass}" onclick="goToPage(${i})">${i + 1}</button>`;
+        }
+
+        // Hiển thị trang cuối và dấu ...
+        if (endPage < totalPages - 1) {
+            if (endPage < totalPages - 2) {
+                pButtons.innerHTML += `<span style="padding: 6px 8px; color: #64748b;">...</span>`;
+            }
+            pButtons.innerHTML += `<button class="filter-btn btn-sm" onclick="goToPage(${totalPages - 1})">${totalPages}</button>`;
+        }
+
+        // Next Button
+        const nextDisabled = pageData.last ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        pButtons.innerHTML += `<button class="filter-btn btn-sm" ${nextDisabled} onclick="goToPage(${currentPage + 1})">Sau »</button>`;
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        loadContactRequests();
+    }
+
+    function changePageSize(size) {
+        pageSize = parseInt(size);
+        currentPage = 0;
+        loadContactRequests();
+    }
+
+    function openReplyModal(id) {
+        const item = contactRequestsList.find(c => c.id === id);
+        if (!item) return;
+
+        document.getElementById("modalContactId").value = item.id;
+        document.getElementById("modalFullName").innerText = item.fullName;
+        document.getElementById("modalPhone").innerText = item.phone || 'Chưa cung cấp';
+        document.getElementById("modalEmail").innerText = item.email || 'Chưa cung cấp';
+        document.getElementById("modalSubject").innerText = item.subject || 'N/A';
+        document.getElementById("modalMessage").innerText = item.message || '';
+
+        const replyContent = document.getElementById("modalReplyContent");
+        const btnSubmit = document.getElementById("btnSubmitReply");
+        const handledSection = document.getElementById("handledSection");
+        const replySection = document.getElementById("replySection");
+
+        if (item.status === 'new') {
+            document.getElementById("modalTitle").innerText = "✉️ Phản Hồi Câu Hỏi Khách Hàng";
+            replyContent.value = "";
+            btnSubmit.style.display = "inline-flex";
+            handledSection.style.display = "none";
+            replySection.style.display = "block";
+        } else {
+            document.getElementById("modalTitle").innerText = "👁️ Xem Lịch Sử Phản Hồi Liên Hệ";
+            btnSubmit.style.display = "none";
+            handledSection.style.display = "block";
+            replySection.style.display = "none";
+            document.getElementById("modalHandledBy").innerText = item.handledByEmail || 'Admin';
+            document.getElementById("modalHandledAt").innerText = item.handledAt ? new Date(item.handledAt).toLocaleString('vi-VN') : 'N/A';
+            document.getElementById("modalReplyContentHistory").innerText = item.replyContent || '';
+        }
+
+        document.getElementById("replyModal").style.display = "flex";
+    }
+
+    function closeModal() {
+        document.getElementById("replyModal").style.display = "none";
+    }
+
+    function submitReply() {
+        const id = document.getElementById("modalContactId").value;
+        const content = document.getElementById("modalReplyContent").value.trim();
+
+        if (!content) {
+            alert("Vui lòng soạn câu trả lời trước khi gửi!");
+            return;
+        }
+
+        const btnSubmit = document.getElementById("btnSubmitReply");
+        const originalText = btnSubmit.innerHTML;
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = "Đang gửi email...";
+
+        fetch(`/api/admin/contact-requests/${id}/reply`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ replyContent: content })
+        })
+        .then(async res => {
+            if (res.ok) {
+                alert("Đã gửi email phản hồi và lưu vết thành công!");
+                closeModal();
+                loadContactRequests();
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || 'Gửi phản hồi thất bại.');
+            }
+        })
+        .catch(err => {
+            alert("Gặp sự cố khi gửi phản hồi: " + err.message);
+        })
+        .finally(() => {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = originalText;
+        });
+    }
+</script>
+</body>
+</html>

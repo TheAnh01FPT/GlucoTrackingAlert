@@ -770,6 +770,7 @@
         <section class="table-card">
             <div class="table-header">
                 <h2 class="table-title">📅 Lịch Sử Chỉ Số Sức Khỏe</h2>
+                <button th:if="${selectedUserId != null}" onclick="exportExcel()" class="btn-threshold" style="border:none; cursor:pointer; background-color: #10b981;">📥 Xuất Excel</button>
             </div>
 
             <div class="table-responsive">
@@ -1000,6 +1001,16 @@
                 }
                 location.href = url;
             }
+
+        function exportExcel() {
+            var patientId = /*[[${selectedUserId}]]*/ '';
+            if (!patientId) {
+                alert("Vui lòng chọn bệnh nhân trước khi xuất!");
+                return;
+            }
+            window.location.href = '/health-logs/export?patientId=' + patientId;
+        }
+
 
             async function analyzeWithAI() {
                 const patientId = /*[[${selectedUserId}]]*/ null;

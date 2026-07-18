@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
     private String frontendUrl;
 
     public UserServiceImpl(UserRepository userRepository,
-            RoleRepository roleRepository,
-            EmailVerificationTokenRepository tokenRepository,
-            PasswordResetTokenRepository passwordResetTokenRepository,
-            EmailService emailService,
-            BCryptPasswordEncoder passwordEncoder,
-            JwtUtil jwtUtil,
-            DoctorRepository doctorRepository) {
+                           RoleRepository roleRepository,
+                           EmailVerificationTokenRepository tokenRepository,
+                           PasswordResetTokenRepository passwordResetTokenRepository,
+                           EmailService emailService,
+                           BCryptPasswordEncoder passwordEncoder,
+                           JwtUtil jwtUtil,
+                           DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;

@@ -34,6 +34,10 @@ public class GlobalExceptionHandler {
                 message = "Bạn đã nhập nhật ký sức khỏe cho ngày này rồi. Vui lòng chỉnh sửa thay vì tạo mới.";
             } else if (detailed.contains("fk_ai_analysis_logs_daily_log_id") || detailed.contains("ai_analysis_logs") ) {
                 message = "Không thể xóa nhật ký: tồn tại bản ghi phân tích liên quan (AI). Vui lòng xóa các bản ghi phụ trước.";
+            } else if (detailed.contains("users.email")) {
+                message = "Email này đã được sử dụng trong hệ thống.";
+            } else if (detailed.contains("users.phone")) {
+                message = "Số điện thoại này đã được sử dụng trong hệ thống.";
             }
         }
         body.put("message", message);
