@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Phân công Bác sĩ – GlucoTrackAlert</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+        <style>
+            :root {
+                --primary: #1a6b5a;
+                --primary-light: #e8f5f1;
+                --primary-dark: #134d40;
+                --accent: #27ae60;
+                --sidebar-w: 240px;
+                --font: 'Be Vietnam Pro', sans-serif;
+            }
+            * {
+                font-family: var(--font);
+            }
+            body {
+                background: #f4f7f6;
+            }
+            .sidebar {
+                width:var(--sidebar-w);
+                min-height:100vh;
+                background:var(--primary-dark);
+                position:fixed;
+                top:0;
+                left:0;
+                display:flex;
+                flex-direction:column;
+                z-index:100;
+            }
+            .sidebar-logo {
+                padding:24px 20px 16px;
+                border-bottom:1px solid rgba(255,255,255,.1);
+            }
+            .sidebar-logo span {
+                color:#fff;
+                font-weight:700;
+                font-size:1.1rem;
+            }
+            .sidebar-logo small {
+                color:rgba(255,255,255,.5);
+                font-size:.7rem;
+                display:block;
+            }
+            .sidebar-nav {
+                padding:12px 0;
+                flex:1;
+            }
+            .nav-item-link {
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding:10px 20px;
+                color:rgba(255,255,255,.7);
+                text-decoration:none;
+                font-size:.875rem;
+                transition:all .2s;
+            }
+            .nav-item-link:hover, .nav-item-link.active {
+                color:#fff;
+                background:rgba(255,255,255,.1);
+                border-left:3px solid var(--accent);
+                padding-left:17px;
+            }
+            .nav-item-link i {
+                font-size:1rem;
+                width:20px;
+            }
+            .main {
+                margin-left:var(--sidebar-w);
+                padding:28px 32px;
+            }
+            .topbar {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                margin-bottom:24px;
+            }
+            .topbar h4 {
+                font-weight:700;
+                color:#1a1a2e;
+                margin:0;
+            }
+            .topbar-sub {
+                color:#6c757d;
+                font-size:.85rem;
+            }
+            .stat-card {
+                background:#fff;
+                border-radius:12px;
+                padding:20px 24px;
+                display:flex;
+                align-items:center;
+                gap:16px;
+                box-shadow:0 1px 4px rgba(0,0,0,.06);
+                border:1px solid #eef1ee;
+            }
+            .stat-icon {
+                width:48px;
+                height:48px;
+                border-radius:12px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:1.3rem;
+            }
+            .stat-label {
+                font-size:.78rem;
+                color:#6c757d;
+                font-weight:500;
+            }
+            .stat-val {
+                font-size:1.6rem;
+                font-weight:700;
+                color:#1a1a2e;
+                line-height:1;
+            }
+            .toolbar {
+                background:#fff;
+                border-radius:12px;
+                padding:16px 20px;
+                display:flex;
+                gap:12px;
+                align-items:center;
+                margin-bottom:16px;
+                box-shadow:0 1px 4px rgba(0,0,0,.06);
+                border:1px solid #eef1ee;
+            }
+            .search-wrap {
+                position:relative;
+                flex:1;
+            }
+            .search-wrap i {
+                position:absolute;
+                left:12px;
+                top:50%;
+                transform:translateY(-50%);
+                color:#aaa;
+            }
+            .search-wrap input {
+                padding-left:36px;
+                border-radius:8px;
+                border:1px solid #dde;
+                font-size:.875rem;
+                height:38px;
+                width:100%;
+            }
+            .search-wrap input:focus {
+                outline:none;
+                border-color:var(--primary);
+                box-shadow:0 0 0 3px rgba(26,107,90,.12);
+            }
+            .table-wrap {
+                background:#fff;
+                border-radius:12px;
+                overflow:hidden;
+                box-shadow:0 1px 4px rgba(0,0,0,.06);
+                border:1px solid #eef1ee;
+            }
+            .table {
+                margin:0;
+                font-size:.875rem;
+            }
+            .table thead th {
+                background:#f8faf9;
+                font-weight:600;
+                color:#495057;
+                font-size:.78rem;
+                text-transform:uppercase;
+                letter-spacing:.5px;
+                padding:13px 16px;
+                border-bottom:1px solid #e9ecef;
+            }
+            .table tbody td {
+                padding:13px 16px;
+                vertical-align:middle;
+                border-color:#f0f0f0;
+            }
+            .table tbody tr:hover {
+                background:#fafcfb;
+            }
+            .badge-status {
+                padding:4px 10px;
+                border-radius:20px;
+                font-size:.75rem;
+                font-weight:600;
+            }
+            .badge-active {
+                background:#d4edda;
+                color:#155724;
+            }
+            .badge-inactive {
+                background:#f8d7da;
+                color:#721c24;
+            }
+            .modal-title {
+                font-weight:700;
+                color:#1a1a2e;
+            }
+            .form-label {
+                font-size:.825rem;
+                font-weight:600;
+                color:#495057;
+                margin-bottom:4px;
+            }
+            .form-control, .form-select {
+                border-radius:8px;
+                border-color:#dde;
+                font-size:.875rem;
+            }
+            .form-control:focus, .form-select:focus {
+                border-color:var(--primary);
+                box-shadow:0 0 0 3px rgba(26,107,90,.12);
+            }
+            .btn-primary-custom {
+                background:var(--primary);
+                border:none;
+                color:#fff;
+                border-radius:8px;
+                font-weight:600;
+                padding:8px 20px;
+            }
+            .btn-primary-custom:hover {
+                background:var(--primary-dark);
+                color:#fff;
+            }
+            .btn-add {
+                background:var(--primary);
+                border:none;
+                color:#fff;
+                border-radius:8px;
+                font-weight:600;
+                font-size:.875rem;
+                padding:8px 16px;
+                display:flex;
+                align-items:center;
+                gap:6px;
+            }
+            .btn-add:hover {
+                background:var(--primary-dark);
+                color:#fff;
+            }
+            .action-btn {
+                border:none;
+                background:none;
+                padding:5px 8px;
+                border-radius:6px;
+                font-size:.9rem;
+                cursor:pointer;
+                transition:background .15s;
+            }
+            .action-btn.edit {
+                color:var(--primary);
+            }
+            .action-btn.edit:hover {
+                background:var(--primary-light);
+            }
+            .action-btn.delete {
+                color:#e74c3c;
+            }
+            .action-btn.delete:hover {
+                background:#fde8e8;
+            }
+            .pill-doctor {
+                background:#e8f5f1;
+                color:var(--primary);
+                padding:3px 10px;
+                border-radius:20px;
+                font-weight:600;
+                font-size:.8rem;
+            }
+            .pill-patient {
+                background:#e8eaf6;
+                color:#3949ab;
+                padding:3px 10px;
+                border-radius:20px;
+                font-weight:600;
+                font-size:.8rem;
+            }
+            .toast-container {
+                position:fixed;
+                top:20px;
+                right:20px;
+                z-index:9999;
+            }
+            .link-icon {
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                color:#aaa;
+                font-size:1.1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <span><i class="bi bi-droplet-half me-2" style="color:#27ae60"></i>GlucoTrackAlert</span>
+                <small>Hệ thống quản trị</small>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+                <a href="/admin/doctors" class="nav-item-link"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
+                <a href="/admin/assignments" class="nav-item-link active"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
+                <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
+                <a href="/admin/contact-requests" class="nav-item-link"><i class="bi bi-envelope"></i> Yêu cầu liên hệ</a>
+                <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
+                <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+            </nav>
+            <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
+                <div style="color:rgba(255,255,255,.5); font-size:.75rem">Admin</div>
+                <div style="color:#fff; font-size:.85rem; font-weight:600">Nguyễn Quang</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="topbar">
+                <div>
+                    <h4><i class="bi bi-diagram-3 me-2" style="color:var(--primary)"></i>Phân công Bác sĩ</h4>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#e8f5f1; color:var(--primary)"><i class="bi bi-diagram-3"></i></div>
+                        <div><div class="stat-label">Tổng phân công</div><div class="stat-val" id="totalAssign">–</div></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#d4edda; color:#155724"><i class="bi bi-activity"></i></div>
+                        <div><div class="stat-label">Đang hoạt động</div><div class="stat-val" id="activeAssign">–</div></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fde8e8; color:#c0392b"><i class="bi bi-x-circle"></i></div>
+                        <div><div class="stat-label">Đã hủy</div><div class="stat-val" id="inactiveAssign">–</div></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#e8eaf6; color:#3949ab"><i class="bi bi-person-badge"></i></div>
+                        <div><div class="stat-label">Bác sĩ có phân công</div><div class="stat-val" id="doctorCount">–</div></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fff3cd; color:#856404"><i class="bi bi-hourglass-split"></i></div>
+                        <div><div class="stat-label">Đề xuất chờ duyệt</div><div class="stat-val" id="pendingCount">–</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="autoInactiveWarn" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:10px; padding:12px 16px; margin-bottom:16px; align-items:center; color:#856404; font-size:.875rem; gap:8px;">
+            </div>
+
+            <!-- Khu vực: Đề xuất bác sĩ từ bệnh nhân, chờ Admin duyệt -->
+            <div class="table-wrap mb-4" id="pendingSection">
+                <div style="padding:14px 20px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between;">
+                    <h6 class="fw-700 mb-0"><i class="bi bi-hourglass-split me-2" style="color:#856404"></i>Đề xuất chờ duyệt</h6>
+                </div>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Bệnh nhân</th>
+                            <th style="width:30px"></th>
+                            <th>Bác sĩ đề xuất</th>
+                            <th>Thời gian đề xuất</th>
+                            <th>Ghi chú</th>
+                            <th style="width:170px">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTable">
+                        <tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-arrow-clockwise me-1"></i>Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm theo bác sĩ, bệnh nhân, ghi chú..."/>
+                </div>
+                <select class="form-select" id="filterStatus" style="width:160px; height:38px; font-size:.875rem; border-radius:8px">
+                    <option value="active" selected>Hoạt động</option>
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="inactive">Đã hủy</option>
+                </select>
+                <button class="btn-add" onclick="openCreate()">
+                    <i class="bi bi-plus-lg"></i> Thêm phân công
+                </button>
+            </div>
+
+            <div class="table-wrap">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Bác sĩ</th>
+                            <th style="width:30px"></th>
+                            <th>Bệnh nhân</th>
+                            <th>Ngày phân công</th>
+                            <th>Ghi chú</th>
+                            <th>Trạng thái</th>
+                            <th style="width:110px">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignTable">
+                        <tr><td colspan="8" class="text-center py-4 text-muted"><i class="bi bi-arrow-clockwise me-1"></i>Đang tải...</td></tr>
+                    </tbody>
+                </table>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-top:1px solid #f0f0f0;">
+                    <div id="pagInfo" style="font-size:.8rem; color:#6c757d;"></div>
+                    <div id="pagBtns" style="display:flex; gap:4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toast-container">
+            <div id="toast" class="toast align-items-center border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body fw-600" id="toastMsg"></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Thêm / Sửa phân công -->
+        <div class="modal fade" id="assignModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Thêm phân công</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="assignId"/>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Bác sĩ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="doctorSelect">
+                                    <option value="">-- Chọn bác sĩ --</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Bệnh nhân <span class="text-danger">*</span></label>
+                                <select class="form-select" id="patientSelect">
+                                    <option value="">-- Chọn bệnh nhân --</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Ghi chú</label>
+                                <textarea class="form-control" id="note" rows="3" placeholder="Ghi chú thêm về phân công..."></textarea>
+                            </div>
+                            <div class="col-12" id="statusField" style="display:none">
+                                <label class="form-label">Trạng thái</label>
+                                <select class="form-select" id="assignStatus">
+                                    <option value="active">Hoạt động</option>
+                                    <option value="inactive">Đã hủy</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn-primary-custom btn" onclick="saveAssignment()">
+                            <i class="bi bi-check-lg me-1"></i><span id="saveBtnText">Thêm phân công</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Xác nhận Xóa -->
+        <div class="modal fade" id="deleteModal" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-body text-center py-4">
+                        <div style="font-size:2.5rem; color:#e74c3c"><i class="bi bi-exclamation-triangle"></i></div>
+                        <h6 class="fw-700 mt-2">Xác nhận hủy phân công?</h6>
+                        <p class="text-muted small mb-0">Phân công sẽ được chuyển sang trạng thái đã hủy.</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center gap-2">
+                        <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                        <button class="btn btn-danger" onclick="confirmDelete()">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Xác nhận Xóa hẳn -->
+        <div class="modal fade" id="hardDeleteModal" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-body text-center py-4">
+                        <div style="font-size:2.5rem; color:#e74c3c"><i class="bi bi-trash3"></i></div>
+                        <h6 class="fw-700 mt-2">Xóa khỏi nhật ký?</h6>
+                        <p class="text-muted small mb-0">Hành động này sẽ xóa vĩnh viễn bản ghi phân công này, không thể khôi phục.</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center gap-2">
+                        <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                        <button class="btn btn-danger" onclick="confirmHardDelete()">Xóa vĩnh viễn</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Từ chối đề xuất -->
+        <div class="modal fade" id="rejectModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Từ chối đề xuất</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="rejectReason" rows="3" placeholder="Nhập lý do để bệnh nhân biết vì sao bị từ chối..."></textarea>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-danger" onclick="confirmReject()">Xác nhận từ chối</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+                            const PAGE_SIZE = 10;
+                            let currentPage = 1;
+                            let filteredList = [];
+                            let allAssignments = [], allDoctors = [], allPatients = [];
+                            let deleteTargetId = null, hardDeleteTargetId = null;
+                            const assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
+                            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                            const hardDeleteModal = new bootstrap.Modal(document.getElementById('hardDeleteModal'));
+                            const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+                            let rejectTargetId = null;
+                            const toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
+
+                            async function loadAll() {
+                                try {
+                                    const token = localStorage.getItem('token');
+                                    const authHeaders = {'Authorization': `Bearer ${token}`};
+
+                                    const fetchJson = async (url) => {
+                                        const r = await fetch(url, {headers: authHeaders});
+                                        if (!r.ok) {
+                                            const errText = await r.text();
+                                            console.error(`[loadAll] ${url} → ${r.status}:`, errText);
+                                            throw new Error(`${url} thất bại (${r.status}): ${errText}`);
+                                        }
+                                        return r.json();
+                                    };
+
+                                    const [a, d, p] = await Promise.all([
+                                        fetchJson('/api/assignments'),
+                                        fetchJson('/api/doctors'),
+                                        fetchJson('/api/patient')
+                                    ]);
+                                    allAssignments = Array.isArray(a) ? a : [];
+                                    allDoctors = Array.isArray(d) ? d : [];
+                                    allPatients = Array.isArray(p) ? p : [];
+                                    populateDoctorSelect();
+                                    filteredList = [...allAssignments];
+                                    applyFilters();
+                                    updateStats(allAssignments);
+                                } catch (err) {
+                                    console.error('[loadAll] Lỗi:', err);
+                                    document.getElementById('assignTable').innerHTML =
+                                            `<tr><td colspan="8" class="text-center text-danger py-4"><i class="bi bi-wifi-off me-1"></i>Lỗi tải dữ liệu: ${err.message}</td></tr>`;
+                                }
+                            }
+
+                            function populateDoctorSelect() {
+                                const sel = document.getElementById('doctorSelect');
+                                sel.innerHTML = '<option value="">-- Chọn bác sĩ --</option>' +
+                                        allDoctors.map(d =>
+                                                `<option value='${JSON.stringify(d).replace(/'/g, "&#39;")}' ${d.status === 'inactive' ? 'disabled' : ''}>${d.fullName} – ${d.specialization || ''}${d.status === 'inactive' ? ' (Ngừng hoạt động)' : ''}</option>`
+                                        ).join('');
+                            }
+
+                            function populatePatientSelect(selectedPatientId = null) {
+                                const sel = document.getElementById('patientSelect');
+                                // Hiển thị bệnh nhân active, cộng thêm bệnh nhân đang được chọn dù inactive
+                                const visible = allPatients.filter(p =>
+                                    p.status !== 'inactive' || p.id == selectedPatientId
+                                );
+                                sel.innerHTML = '<option value="">-- Chọn bệnh nhân --</option>' +
+                                        visible.map(p =>
+                                                `<option value='${JSON.stringify(p).replace(/'/g, "&#39;")}' ${selectedPatientId == p.id ? 'selected' : ''}>${p.fullName} ${p.phone ? '– ' + p.phone : ''}${p.status === 'inactive' ? ' (Ngừng)' : ''}</option>`
+                                        ).join('');
+                            }
+
+                            function updateStats(list) {
+                                document.getElementById('totalAssign').textContent = list.length;
+                                document.getElementById('activeAssign').textContent = list.filter(a => a.status === 'active').length;
+                                document.getElementById('inactiveAssign').textContent = list.filter(a => a.status === 'inactive').length;
+                                const docs = new Set(list.filter(a => a.doctorId).map(a => a.doctorId));
+                                document.getElementById('doctorCount').textContent = docs.size;
+
+                                // Hiển thị cảnh báo nếu có bác sĩ ngừng hoạt động còn trong danh sách
+                                const inactiveDocAssigns = list.filter(a =>
+                                    a.status === 'inactive' && a.doctorId && a.note === 'Bác sĩ ngừng hoạt động - tự động hủy phân công'
+                                );
+                                const warnEl = document.getElementById('autoInactiveWarn');
+                                if (inactiveDocAssigns.length > 0) {
+                                    const doctorNames = [...new Set(inactiveDocAssigns.map(a => a.doctorName).filter(Boolean))];
+                                    warnEl.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>${inactiveDocAssigns.length} phân công</strong> đã tự động hủy vì bác sĩ ngừng hoạt động
+                    (${doctorNames.join(', ')}). Bệnh nhân liên quan chưa có bác sĩ chăm sóc — hãy phân công lại.`;
+                                    warnEl.style.display = 'flex';
+                                } else {
+                                    warnEl.style.display = 'none';
+                                }
+                            }
+
+                            function fmtDate(str) {
+                                if (!str)
+                                    return '–';
+                                return new Date(str).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+                            }
+
+                            // ===== Đề xuất chờ duyệt (bệnh nhân đề xuất bác sĩ) =====
+                            async function loadPending() {
+                                try {
+                                    const token = localStorage.getItem('token');
+                                    const res = await fetch('/api/assignments/pending', {headers: {'Authorization': `Bearer ${token}`}});
+                                    if (!res.ok) {
+                                        if (handleAuthError(res.status))
+                                            return;
+                                        throw new Error(await res.text());
+                                    }
+                                    const list = await res.json();
+                                    document.getElementById('pendingCount').textContent = list.length;
+                                    renderPendingTable(list);
+                                } catch (err) {
+                                    console.error('[loadPending] Lỗi:', err);
+                                    document.getElementById('pendingTable').innerHTML =
+                                            `<tr><td colspan="7" class="text-center text-danger py-4">Lỗi tải danh sách đề xuất</td></tr>`;
+                                }
+                            }
+
+                            function renderPendingTable(list) {
+                                const tbody = document.getElementById('pendingTable');
+                                if (!list.length) {
+                                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Không có đề xuất nào đang chờ duyệt</td></tr>';
+                                    return;
+                                }
+                                tbody.innerHTML = list.map((a, i) => `
+                <tr>
+                    <td class="text-muted">${i + 1}</td>
+                    <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${a.patientName || 'N/A'}</span></td>
+                    <td class="link-icon"><i class="bi bi-arrow-right"></i></td>
+                    <td><span class="pill-doctor"><i class="bi bi-person-badge me-1"></i>${a.doctorName || 'N/A'}</span></td>
+                    <td style="font-size:.82rem; color:#666">${fmtDate(a.assignedAt)}</td>
+                    <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${a.note || ''}">${a.note || '<span class="text-muted">–</span>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success me-1" onclick="approveAssignment(${a.id})"><i class="bi bi-check-lg"></i> Duyệt</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="openReject(${a.id})"><i class="bi bi-x-lg"></i> Từ chối</button>
+                    </td>
+                </tr>`).join('');
+                            }
+
+                            async function approveAssignment(id) {
+                                try {
+                                    const res = await fetch(`/api/assignments/${id}/approve`, {method: 'PUT', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                    if (!res.ok) {
+                                        if (handleAuthError(res.status))
+                                            return;
+                                        const err = await res.text();
+                                        showToast('❌ ' + (err || 'Duyệt thất bại'), 'danger');
+                                        return;
+                                    }
+                                    showToast('Đã duyệt đề xuất!', 'success');
+                                    loadPending();
+                                    loadAll();
+                                } catch {
+                                    showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
+                                }
+                            }
+
+                            function openReject(id) {
+                                rejectTargetId = id;
+                                document.getElementById('rejectReason').value = '';
+                                rejectModal.show();
+                            }
+
+                            async function confirmReject() {
+                                const reason = document.getElementById('rejectReason').value.trim();
+                                if (!reason) {
+                                    showToast('Vui lòng nhập lý do từ chối!', 'danger');
+                                    return;
+                                }
+                                try {
+                                    const res = await fetch(`/api/assignments/${rejectTargetId}/reject`, {
+                                        method: 'PUT',
+                                        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
+                                        body: JSON.stringify({reason})
+                                    });
+                                    if (!res.ok) {
+                                        if (handleAuthError(res.status))
+                                            return;
+                                        const err = await res.text();
+                                        showToast('❌ ' + (err || 'Từ chối thất bại'), 'danger');
+                                        return;
+                                    }
+                                    rejectModal.hide();
+                                    showToast('Đã từ chối đề xuất!', 'success');
+                                    loadPending();
+                                } catch {
+                                    showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
+                                }
+                            }
+
+                            function renderTable(list, offset = 0) {
+                                const tbody = document.getElementById('assignTable');
+                                if (!list.length) {
+                                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Không có dữ liệu</td></tr>';
+                                    return;
+                                }
+                                tbody.innerHTML = list.map((a, i) => {
+                                    const isInactive = a.status === 'inactive';
+                                    const actions = isInactive
+                                            ? `<button class="action-btn" onclick="openHardDelete(${a.id})" title="Xóa khỏi nhật ký" style="color:#aaa;"><i class="bi bi-trash3"></i></button>`
+                                            : `<button class="action-btn edit" onclick='openEdit(${JSON.stringify(a)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
+                       <button class="action-btn delete" onclick="openDelete(${a.id})" title="Hủy phân công"><i class="bi bi-x-circle"></i></button>`;
+                                    return `
+                <tr>
+                    <td class="text-muted">${offset + i + 1}</td>
+                    <td><span class="pill-doctor"><i class="bi bi-person-badge me-1"></i>${a.doctorName || 'N/A'}</span></td>
+                    <td class="link-icon"><i class="bi bi-arrow-right"></i></td>
+                    <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${a.patientName || 'N/A'}</span></td>
+                    <td style="font-size:.82rem; color:#666">${fmtDate(a.assignedAt)}</td>
+                    <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${a.note || ''}">${a.note || '<span class="text-muted">–</span>'}</td>
+                    <td><span class="badge-status ${isInactive ? 'badge-inactive' : 'badge-active'}">${isInactive ? 'Đã hủy' : 'Hoạt động'}</span></td>
+                    <td>${actions}</td>
+                </tr>`;
+                                }).join('');
+                            }
+
+                            document.getElementById('searchInput').addEventListener('input', () => {
+                                currentPage = 1;
+                                applyFilters();
+                            });
+                            document.getElementById('filterStatus').addEventListener('change', () => {
+                                currentPage = 1;
+                                applyFilters();
+                            });
+                            function applyFilters() {
+                                const q = document.getElementById('searchInput').value.toLowerCase();
+                                const st = document.getElementById('filterStatus').value;
+                                filteredList = allAssignments.filter(a => {
+                                    const matchQ = !q || (a.doctorName || '').toLowerCase().includes(q)
+                                            || (a.patientName || '').toLowerCase().includes(q)
+                                            || (a.note || '').toLowerCase().includes(q);
+                                    const matchSt = !st || a.status === st;
+                                    return matchQ && matchSt;
+                                });
+                                renderPage();
+                            }
+
+                            function renderPage() {
+                                const total = filteredList.length;
+                                const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+                                if (currentPage > totalPages)
+                                    currentPage = totalPages;
+                                const start = (currentPage - 1) * PAGE_SIZE;
+                                const pageData = filteredList.slice(start, start + PAGE_SIZE);
+                                renderTable(pageData, start);
+                                renderPagination(total, totalPages);
+                            }
+
+                            function renderPagination(total, totalPages) {
+                                const start = (currentPage - 1) * PAGE_SIZE + 1;
+                                const end = Math.min(currentPage * PAGE_SIZE, total);
+                                document.getElementById('pagInfo').textContent =
+                                        total ? `Hiển thị ${start}–${end} / ${total} bản ghi` : '';
+
+                                const btns = document.getElementById('pagBtns');
+                                if (totalPages <= 1) {
+                                    btns.innerHTML = '';
+                                    return;
+                                }
+                                const btnStyle = (active) =>
+                                        `style="min-width:32px;height:32px;border-radius:6px;border:1px solid ${active ? 'var(--primary)' : '#dee2e6'};background:${active ? 'var(--primary)' : '#fff'};color:${active ? '#fff' : '#495057'};font-size:.8rem;cursor:pointer;padding:0 8px;"`;
+                                let html = `<button ${btnStyle(false)} onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+                                for (let i = 1; i <= totalPages; i++) {
+                                    if (totalPages > 7 && Math.abs(i - currentPage) > 2 && i !== 1 && i !== totalPages) {
+                                        if (i === 2 || i === totalPages - 1)
+                                            html += `<span style="padding:0 4px;color:#aaa">…</span>`;
+                                        continue;
+                                    }
+                                    html += `<button ${btnStyle(i === currentPage)} onclick="goPage(${i})">${i}</button>`;
+                                }
+                                html += `<button ${btnStyle(false)} onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+                                btns.innerHTML = html;
+                            }
+
+                            function goPage(p) {
+                                currentPage = p;
+                                renderPage();
+                            }
+
+                            function openCreate() {
+                                document.getElementById('modalTitle').textContent = 'Thêm phân công mới';
+                                document.getElementById('saveBtnText').textContent = 'Thêm phân công';
+                                document.getElementById('assignId').value = '';
+                                populateDoctorSelect();
+                                document.getElementById('doctorSelect').selectedIndex = 0;
+                                populatePatientSelect();
+                                document.getElementById('note').value = '';
+                                document.getElementById('statusField').style.display = 'none';
+                                assignModal.show();
+                            }
+
+                            function openEdit(a) {
+                                document.getElementById('modalTitle').textContent = 'Chỉnh sửa phân công';
+                                document.getElementById('saveBtnText').textContent = 'Lưu thay đổi';
+                                document.getElementById('assignId').value = a.id;
+                                document.getElementById('note').value = a.note || '';
+                                document.getElementById('assignStatus').value = a.status || 'active';
+                                document.getElementById('statusField').style.display = 'block';
+                                populateDoctorSelect();
+                                populatePatientSelect(a.patientId);
+                                // Set doctor bằng selectedIndex để tránh lỗi so sánh string
+                                const doctorSel = document.getElementById('doctorSelect');
+                                if (a.doctorId) {
+                                    const matchIndex = Array.from(doctorSel.options).findIndex(o => {
+                                        try {
+                                            return JSON.parse(o.value)?.id == a.doctorId;
+                                        } catch {
+                                            return false;
+                                        }
+                                    });
+                                    if (matchIndex >= 0)
+                                        doctorSel.selectedIndex = matchIndex;
+                                }
+                                assignModal.show();
+                            }
+
+                            async function saveAssignment() {
+                                const id = document.getElementById('assignId').value;
+                                let payload;
+                                if (id) {
+                                    const patientRaw = document.getElementById('patientSelect').value;
+                                    const doctorRaw = document.getElementById('doctorSelect').value;
+                                    if (!doctorRaw) {
+                                        showToast('Vui lòng chọn bác sĩ!', 'danger');
+                                        return;
+                                    }
+                                    if (!patientRaw) {
+                                        showToast('Vui lòng chọn bệnh nhân!', 'danger');
+                                        return;
+                                    }
+                                    const doctorObj = JSON.parse(doctorRaw);
+                                    const patientObj = JSON.parse(patientRaw);
+                                    payload = {
+                                        doctorId: doctorObj.id,
+                                        patientId: patientObj.id,
+                                        note: document.getElementById('note').value,
+                                        status: document.getElementById('assignStatus').value
+                                    };
+                                } else {
+                                    const doctorRaw = document.getElementById('doctorSelect').value;
+                                    const patientRaw = document.getElementById('patientSelect').value;
+                                    if (!doctorRaw) {
+                                        showToast('Vui lòng chọn bác sĩ!', 'danger');
+                                        return;
+                                    }
+                                    if (!patientRaw) {
+                                        showToast('Vui lòng chọn bệnh nhân!', 'danger');
+                                        return;
+                                    }
+                                    const doctorObj = JSON.parse(doctorRaw);
+                                    const patientObj = JSON.parse(patientRaw);
+                                    payload = {doctorId: doctorObj.id, patientId: patientObj.id, note: document.getElementById('note').value};
+                                }
+
+
+
+
+
+                                try {
+                                    const url = id ? `/api/assignments/${id}` : '/api/assignments';
+                                    const method = id ? 'PUT' : 'POST';
+                                    const res = await fetch(url, {method, headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`}, body: JSON.stringify(payload)});
+                                    if (!res.ok) {
+                                        const err = await res.text();
+                                        showToast('❌ ' + (err || 'Lưu thất bại, vui lòng thử lại!'), 'danger');
+                                        return;
+                                    }
+                                    assignModal.hide();
+                                    showToast(id ? 'Cập nhật phân công thành công!' : 'Thêm phân công thành công!', 'success');
+                                    loadAll();
+                                } catch {
+                                    showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
+                                }
+                            }
+
+                            function openDelete(id) {
+                                deleteTargetId = id;
+                                deleteModal.show();
+                            }
+                            async function confirmDelete() {
+                                try {
+                                    const res = await fetch(`/api/assignments/${deleteTargetId}`, {method: 'DELETE', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                    if (!res.ok)
+                                        throw new Error();
+                                    deleteModal.hide();
+                                    showToast('Đã hủy phân công!', 'success');
+                                    loadAll();
+                                } catch {
+                                    showToast('Lỗi khi thực hiện thao tác!', 'danger');
+                                }
+                            }
+
+                            function openHardDelete(id) {
+                                hardDeleteTargetId = id;
+                                hardDeleteModal.show();
+                            }
+                            async function confirmHardDelete() {
+                                try {
+                                    const res = await fetch(`/api/assignments/${hardDeleteTargetId}/permanent`, {method: 'DELETE', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                    if (!res.ok)
+                                        throw new Error();
+                                    hardDeleteModal.hide();
+                                    showToast('Đã xóa khỏi nhật ký!', 'success');
+                                    loadAll();
+                                } catch {
+                                    showToast('Lỗi khi thực hiện thao tác!', 'danger');
+                                }
+                            }
+
+                            function handleAuthError(status) {
+                                if (status === 401 || status === 403) {
+                                    localStorage.clear();
+                                    document.cookie = 'jwt=; path=/; max-age=0';
+                                    window.location.href = '/login';
+                                    return true;
+                                }
+                                return false;
+                            }
+
+                            function showToast(msg, type) {
+                                const el = document.getElementById('toast');
+                                el.className = `toast align-items-center text-bg-${type} border-0`;
+                                // Strip HTML tags từ server error response
+                                const stripped = msg.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+                                const display = stripped.length > 120 ? stripped.substring(0, 120) + '...' : stripped;
+                                document.getElementById('toastMsg').textContent = display;
+                                toastEl.show();
+                            }
+
+                            loadAll();
+                            loadPending();
+        </script>
+    </body>
+</html>

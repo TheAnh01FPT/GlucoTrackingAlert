@@ -1,9 +1,11 @@
 package fpt.swp391.GlucoTrackAlert.controller;
 
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.Duy_Meal_Logs;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.repository.Duy_MealLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
 import fpt.swp391.GlucoTrackAlert.service.MlAnalysisService;
@@ -13,23 +15,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/ai")
 @RequiredArgsConstructor
 public class AiController {
 
-    private final MlAnalysisService mlAnalysisService;  // thay GeminiService
+    private final MlAnalysisService mlAnalysisService;
     private final DailyHealthLogService dailyHealthLogService;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final Duy_MealLogRepository mealLogRepository; // ✅ thêm
 
     @PostMapping("/analyze")
     public ResponseEntity<?> analyze(@RequestParam Long patientId, Principal principal) {
 
-        // Chỉ bác sĩ active mới được phân tích
         if (principal != null) {
             Doctor doctor = doctorRepository.findByUserEmail(principal.getName()).orElse(null);
             if (doctor != null && !"active".equals(doctor.getStatus())) {
@@ -52,7 +56,17 @@ public class AiController {
             return ResponseEntity.ok(Map.of("result", "⚠️ Bệnh nhân chưa có dữ liệu sức khỏe nào để phân tích."));
         }
 
-        String result = mlAnalysisService.analyzePatient(patient, logs);
+        // ✅ Fetch meal logs cùng khoảng thời gian với health logs
+        LocalDate newest = logs.get(0).getLogDate();
+        LocalDate oldest = logs.get(logs.size() - 1).getLogDate();
+
+        List<Duy_Meal_Logs> meals = mealLogRepository
+                .findByPatientIdAndMealDateBetweenOrderByMealDateAsc(patientId, oldest, newest);
+
+        Map<LocalDate, List<Duy_Meal_Logs>> mealsByDate = meals.stream()
+                .collect(Collectors.groupingBy(Duy_Meal_Logs::getMealDate));
+
+        String result = mlAnalysisService.analyzePatient(patient, logs, mealsByDate);
         return ResponseEntity.ok(Map.of("result", result));
     }
 }

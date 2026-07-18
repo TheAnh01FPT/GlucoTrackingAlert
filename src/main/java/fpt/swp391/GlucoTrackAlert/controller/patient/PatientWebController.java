@@ -5,6 +5,8 @@ import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
+import fpt.swp391.GlucoTrackAlert.model.patient.ProfileChangeRequest;
+import fpt.swp391.GlucoTrackAlert.service.patient.ProfileChangeRequestService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,10 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import fpt.swp391.GlucoTrackAlert.model.patient.ProfileChangeRequest;
-import fpt.swp391.GlucoTrackAlert.service.patient.ProfileChangeRequestService;
 import org.springframework.data.domain.Page;
-import java.util.List;
 
 @Controller
 @RequestMapping("/patient")
@@ -33,7 +32,10 @@ public class PatientWebController {
     }
 
     private User getLoggedInUser() {
-        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // Dùng getName() thay vì cast getPrincipal() sang String
+        // vì getPrincipal() trả về UserDetails object, không phải String
+        // → cast thẳng sẽ throw ClassCastException khi chạy thật
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Tài khoản chưa đăng nhập hoặc không tồn tại"));
     }
@@ -46,13 +48,12 @@ public class PatientWebController {
             PatientProfileResponse profile = patientService.getProfileByUserId(userId);
             model.addAttribute("profile", profile);
             model.addAttribute("userId", userId);
-            
-            // Check only active pending requests for locks on profile view
+
             boolean pendingHypertension = requestService.hasPendingRequest(profile.getId(), "hypertension");
             boolean pendingHeartDisease = requestService.hasPendingRequest(profile.getId(), "heartDisease");
             model.addAttribute("pendingHypertension", pendingHypertension);
             model.addAttribute("pendingHeartDisease", pendingHeartDisease);
-            
+
             return "patient/profile";
         } catch (Exception e) {
             return "redirect:/patient/profile/edit";
@@ -68,15 +69,14 @@ public class PatientWebController {
         Long userId = loggedInUser.getId();
         try {
             PatientProfileResponse profile = patientService.getProfileByUserId(userId);
-            
             Page<ProfileChangeRequest> requestsPage = requestService.getRequestsByPatientPaged(profile.getId(), page, size);
-            
+
             model.addAttribute("requestsPage", requestsPage);
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", requestsPage.getTotalPages());
             model.addAttribute("totalItems", requestsPage.getTotalElements());
             model.addAttribute("pageSize", size);
-            
+
             return "patient/requests";
         } catch (Exception e) {
             return "redirect:/patient/profile";
@@ -107,6 +107,12 @@ public class PatientWebController {
                     .workType(profile.getWorkType())
                     .residenceType(profile.getResidenceType())
                     .smokingStatus(profile.getSmokingStatus())
+                    // GIỮ LẠI CHOLESTEROL ở Profile DTO
+                    .cholesterol(profile.getCholesterol())
+                    // Các trường lối sống sinh hoạt
+                    .smoke(profile.getSmoke())
+                    .alco(profile.getAlco())
+                    .active(profile.getActive())
                     .build();
             model.addAttribute("profileForm", request);
             model.addAttribute("isNew", false);
@@ -122,21 +128,35 @@ public class PatientWebController {
     }
 
     @PostMapping("/profile/save")
-    public String saveProfile(@Valid @ModelAttribute("profileForm") PatientProfileRequest request, 
-                               BindingResult result,
-                               @RequestParam("isNew") boolean isNew,
-                               Model model) {
+    public String saveProfile(@Valid @ModelAttribute("profileForm") PatientProfileRequest request,
+                              BindingResult result,
+                              @RequestParam("isNew") boolean isNew,
+                              Model model) {
         User loggedInUser = getLoggedInUser();
-        
-        // Enforce security by setting/verifying correct userId in the request
         request.setUserId(loggedInUser.getId());
+
+        if (request.getSmoke() == null) request.setSmoke(0);
+        if (request.getAlco() == null) request.setAlco(0);
+        if (request.getActive() == null) request.setActive(0);
+
+        if (!isNew) {
+            try {
+                PatientProfileResponse currentProfile = patientService.getProfileByUserId(loggedInUser.getId());
+                if (Boolean.TRUE.equals(currentProfile.getHypertension())) {
+                    request.setHypertension(true);
+                }
+                if (Boolean.TRUE.equals(currentProfile.getHeartDisease())) {
+                    request.setHeartDisease(true);
+                }
+            } catch (Exception ignored) {}
+        }
 
         if (result.hasErrors()) {
             model.addAttribute("isNew", isNew);
             model.addAttribute("userId", loggedInUser.getId());
             return "patient/edit";
         }
-        
+
         try {
             if (isNew) {
                 patientService.createProfile(request);

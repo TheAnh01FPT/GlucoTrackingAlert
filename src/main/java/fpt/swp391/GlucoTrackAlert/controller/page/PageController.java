@@ -2,7 +2,10 @@ package fpt.swp391.GlucoTrackAlert.controller.page;
 
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.dto.relative.RelativeResponse;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorIntroduction;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
 import fpt.swp391.GlucoTrackAlert.service.relative.RelativeService;
@@ -23,23 +26,79 @@ public class PageController {
     private final PatientService patientService;
     private final UserRepository userRepository;
     private final RelativeService relativeService;
+    private final DoctorRepository doctorRepository;
+    private final fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository;
 
     @Autowired
     public PageController(PatientService patientService,
                           UserRepository userRepository,
-                          RelativeService relativeService) {
+                          RelativeService relativeService,
+                          DoctorRepository doctorRepository,
+                          fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;
+        this.doctorRepository = doctorRepository;
+        this.bannerRepository = bannerRepository;
     }
 
+    private static final int MAX_FEATURED_DOCTORS = 4; // đúng 1 hàng với layout col-lg-3
+
+    /**
+     * Trang chủ hiển thị "giới thiệu đội ngũ bác sĩ" tự động lấy từ hồ sơ bác sĩ
+     * (Doctor) đang active — không cần admin nhập tay lại lần 2. Ưu tiên bác sĩ
+     * nhiều năm kinh nghiệm nhất lên đầu.
+     */
     @GetMapping("/")
-    public String indexPage() {
+    public String indexPage(Model model) {
+        try {
+            List<DoctorIntroduction> doctors = doctorRepository.findByStatus("active").stream()
+                    .sorted((a, b) -> Integer.compare(
+                            b.getExperienceYears() == null ? 0 : b.getExperienceYears(),
+                            a.getExperienceYears() == null ? 0 : a.getExperienceYears()))
+                    .limit(MAX_FEATURED_DOCTORS)
+                    .map(this::toShowcaseCard)
+                    .toList();
+            model.addAttribute("doctors", doctors);
+        } catch (Exception e) {
+            model.addAttribute("doctors", List.of());
+        }
+        model.addAttribute("banners", bannerRepository.findByStatusOrderByDisplayOrderAsc(true));
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        if (isAuthenticated) {
+            String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("");
+            model.addAttribute("userRole", role);
+        }
+       
         return "index";
+    }
+
+    private DoctorIntroduction toShowcaseCard(Doctor d) {
+        DoctorIntroduction card = new DoctorIntroduction();
+        card.setDoctorId(d.getId());
+        card.setDisplayName(d.getFullName());
+        card.setTitle(d.getDegree());
+        card.setSpecialization(d.getSpecialization());
+        card.setIntroduction(d.getIntroduction());
+        card.setAvatarUrl(d.getAvatarUrl());
+        return card;
     }
 
     @GetMapping("/login")
     public String loginPage() { return "login/login"; }
+
+    @GetMapping("/oauth2/success")
+    public String oauth2Success(Model model, @RequestParam("token") String token, 
+                                @RequestParam("email") String email, 
+                                @RequestParam("role") String role) {
+        model.addAttribute("token", token);
+        model.addAttribute("email", email);
+        model.addAttribute("role", role);
+        return "login/oauth2-success";
+    }
 
     @GetMapping("/register")
     public String registerPage() { return "register/register"; }
@@ -85,12 +144,12 @@ public class PageController {
 
     @GetMapping({"/doctor/homepage", "/doctor/home"})
     public String doctorDashboard() {
-        return "doctor-home";
+        return "doctor/doctor-home";
     }
 
     @GetMapping("/doctor/my-patients")
     public String doctorMyPatients() {
-        return "my-patients";
+        return "doctor/my-patients";
     }
 
     @GetMapping("/doctor/settings")
@@ -100,7 +159,7 @@ public class PageController {
 
     @GetMapping("/doctor/prescriptions")
     public String doctorPrescriptions() {
-        return "prescriptions";
+        return "doctor/prescriptions";
     }
 
     @GetMapping("/health-reminders")
@@ -118,6 +177,19 @@ public class PageController {
             model.addAttribute("patientName", "Bệnh nhân");
         }
         return "health-reminders";
+    }
+
+    @GetMapping("/patient/choose-doctor")
+    public String chooseDoctorPage(Model model) {
+        Long userId = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            String email = (String) auth.getPrincipal();
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) userId = user.getId();
+        }
+        model.addAttribute("userId", userId);
+        return "patient/choose-doctor";
     }
 
     @GetMapping("/patient/medications")

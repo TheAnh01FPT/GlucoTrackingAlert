@@ -58,6 +58,7 @@ public class Patient {
 
     @Column(name = "patient_type", length = 20)
     private String patientType;
+
     @Column(name = "identity_card", length = 20)
     private String identityCard;
 
@@ -89,6 +90,15 @@ public class Patient {
     @Column(name = "smoking_status", length = 50)
     @Builder.Default
     private String smokingStatus = "Unknown";
+
+    // --- CÁC TRƯỜNG THÓI QUEN SINH HOẠT VÀ NỀN DỊCH TỄ BIẾN ĐỔI ---
+    private Integer cholesterol;
+
+    private Integer smoke; // 0 hoặc 1, được đồng bộ tự động từ smokingStatus phục vụ Cardio AI
+
+    private Integer alco;
+
+    private Integer active;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

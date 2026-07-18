@@ -10,7 +10,7 @@
     --text-main: #1e293b;
     --text-muted: #64748b;
     --accent-blue: #0284c7;
-    
+
     --shadow-premium: 0 10px 30px -5px rgba(0, 138, 138, 0.08), 0 8px 20px -6px rgba(0, 0, 0, 0.04);
     --shadow-hover: 0 20px 40px -5px rgba(0, 138, 138, 0.15), 0 12px 25px -6px rgba(0, 0, 0, 0.06);
     --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -277,4 +277,74 @@ body {
     border-radius: 30px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* Alert / Danger themed variant for the "notification history" card —
+   distinguishes it visually from the standard teal feature cards since it
+   relates to emergency alerts sent to relatives. */
+.feature-card.card-alert {
+    border-color: rgba(192, 57, 43, 0.16);
+}
+
+.feature-card.card-alert .card-icon {
+    background: #fdecea;
+    color: #c0392b;
+}
+
+.feature-card.card-alert:hover {
+    background: #ffffff;
+    box-shadow: 0 15px 35px rgba(192, 57, 43, 0.12);
+    border-color: rgba(192, 57, 43, 0.28);
+}
+
+.feature-card.card-alert:hover .card-icon {
+    background: #c0392b;
+    color: #ffffff;
+    transform: scale(1.08) rotate(5deg);
+}
+
+.feature-card.card-alert:hover .card-title {
+    color: #c0392b;
+}
+
+.feature-card.card-alert .arrow-icon {
+    color: #c0392b;
+}
+
+.badge-live {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #fdecea;
+    color: #c0392b;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 10px 4px 8px;
+    border-radius: 30px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge-live .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c0392b;
+    box-shadow: 0 0 6px #c0392b;
+    animation: pulse-live 1.6s infinite;
+}
+
+@keyframes pulse-live {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 1;
+    }
 }

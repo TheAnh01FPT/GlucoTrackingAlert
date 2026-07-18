@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Quản Trị Banner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/banner-admin.css}">
+</head>
+<body>
+
+<!-- 1. SIDEBAR DUY NHẤT -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <span><i class="bi bi-droplet-half me-2" style="color:#27ae60"></i>GlucoTrackAlert</span>
+        <small>Hệ thống quản trị</small>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+        <a href="/admin/banners" class="nav-item-link active"><i class="bi bi-image"></i> Quản lý Banner</a>
+        <a href="/admin/doctors" class="nav-item-link"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
+        <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
+        <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
+        <a href="/admin/patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
+        <a href="/admin/thresholds" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+    </nav>
+    <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
+        <div style="color:rgba(255,255,255,.5); font-size:.75rem">Admin</div>
+        <div style="color:#fff; font-size:.85rem; font-weight:600">Nguyễn Quang</div>
+    </div>
+</div>
+
+<!-- 2. KHU VỰC NỘI DUNG CHÍNH (MAIN) -->
+<div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+        <div>
+            <h4>🖼️ Quản Lý Banner Trang Chủ</h4>
+            <div class="topbar-sub">Quản lý danh sách hình ảnh banner hiển thị ngoài trang chủ</div>
+        </div>
+        <div>
+            <a href="/admin/banners/create" class="btn-primary-custom"><i class="bi bi-plus-lg"></i> Thêm Banner Mới</a>
+        </div>
+    </div>
+
+    <!-- Thông báo Alert -->
+    <div id="successAlert" th:if="${successMessage}" class="alert alert-success" role="alert">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div id="errorAlert" th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Bảng Dữ Liệu Được Bọc Class Chuẩn -->
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+            <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 20%;">Ảnh</th>
+                <th style="width: 30%;">Tiêu đề</th>
+                <th style="width: 15%;">Thứ tự</th>
+                <th style="width: 15%;">Trạng thái</th>
+                <th style="width: 10%;">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="banner : ${banners}">
+                <td th:text="${banner.id}">1</td>
+                <td>
+                    <img th:src="${banner.imageUrl}" alt="Banner" style="max-height: 50px; border-radius: 4px;">
+                </td>
+                <td th:text="${banner.title}" style="font-weight: 500;">Banner 1</td>
+                <td th:text="${banner.displayOrder}">0</td>
+                <td>
+                            <span th:text="${banner.status ? 'Hoạt động' : 'Tạm ẩn'}"
+                                  th:class="${banner.status ? 'badge-status badge-active' : 'badge-status badge-inactive'}">Hoạt động</span>
+                </td>
+                <td style="white-space: nowrap;">
+                    <a th:href="@{/admin/banners/edit/{id}(id=${banner.id})}" class="action-btn edit"><i
+                            class="bi bi-pencil-square"></i> Sửa</a>
+                    <a th:href="@{/admin/banners/delete/{id}(id=${banner.id})}" class="action-btn delete"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa banner này?');"><i class="bi bi-trash"></i>
+                        Xóa</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(banners)}">
+                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có banner
+                    nào.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+      
+        <!-- Paging -->
+        <div th:if="${totalPages > 0}"
+             style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+    <span style="font-size: 13px; color: #64748b;">
+        Hiển thị trang <strong th:text="${currentPage + 1}"></strong> / <strong th:text="${totalPages}"></strong>
+        (Tổng <strong th:text="${totalItems}"></strong> banner)
+    </span>
+            <!-- Page size selector -->
+            <form th:action="@{/admin/banners}" method="get" style="margin:0;">
+                <input type="hidden" name="page" th:value="${currentPage}"/>
+                <select name="size" th:onchange="this.form.submit()" class="form-select"
+                        style="width:auto; display:inline-block;">
+                    <option th:value="5" th:selected="${pageSize == 5}">5</option>
+                    <option th:value="10" th:selected="${pageSize == 10}">10</option>
+                    <option th:value="15" th:selected="${pageSize == 15}">15</option>
+                    <option th:value="20" th:selected="${pageSize == 20}">20</option>
+                </select>
+            </form>
+            <div style="display: flex; gap: 8px;">
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/admin/banners(page=${currentPage - 1}, size=${pageSize})}"
+                   style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
+                    ← Trước
+                </a>
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                    <a th:href="@{/admin/banners(page=${i}, size=${pageSize})}"
+                       th:text="${i + 1}"
+                       th:style="${i == currentPage} ? 'padding: 7px 14px; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px; text-decoration: none;' : 'padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;'">
+                    </a>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script Tự Tắt Alert -->
+<script>
+    setTimeout(() => {
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        if (successAlert) {
+            successAlert.style.transition = 'opacity 0.5s ease';
+            successAlert.style.opacity = '0';
+            setTimeout(() => successAlert.style.display = 'none', 500);
+        }
+        if (errorAlert) {
+            errorAlert.style.transition = 'opacity 0.5s ease';
+            errorAlert.style.opacity = '0';
+            setTimeout(() => errorAlert.style.display = 'none', 500);
+        }
+    }, 4000);
+</script>
+</body>
+</html>

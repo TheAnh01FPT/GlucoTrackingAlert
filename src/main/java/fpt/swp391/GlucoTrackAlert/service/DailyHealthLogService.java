@@ -18,4 +18,5 @@ public interface DailyHealthLogService {
     List<DailyHealthLogResponse> getChartData(Long patientId, LocalDate from, LocalDate to);
     void assessWeeklyRisk(Long patientId);
     Map<String, Object> calculateDynamicRisk(Long patientId, LocalDate from, LocalDate to);
+    Map<String, Object> calculateDynamicHeartRisk(Long patientId, LocalDate from, LocalDate to);
 }

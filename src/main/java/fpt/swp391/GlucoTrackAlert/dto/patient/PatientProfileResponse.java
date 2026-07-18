@@ -36,4 +36,24 @@ public class PatientProfileResponse {
     private String smokingStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // Các thông số sinh hoạt nền
+    private Integer cholesterol;
+    private Integer smoke;
+    private Integer alco;
+    private Integer active;
+
+    // Kết quả phân tích động trả về từ các API AI trạm Python
+    private Double strokeRiskPercentage;
+    private String strokeRiskLevel;
+    private String strokeAlertMessage;
+
+    private Double cardioRiskPercentage;
+    private String cardioRiskLevel;
+    private String cardioAlertMessage;
+
+    // Các chỉ số trung bình tuần tính từ logs để hiển thị lên UI nếu cần
+    private Double computedAvgSystolic;
+    private Double computedAvgDiastolic;
+    private Double computedAvgGlucMmol;
 }

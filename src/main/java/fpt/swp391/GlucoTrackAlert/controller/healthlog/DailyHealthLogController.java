@@ -6,9 +6,9 @@ import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -18,6 +18,7 @@ import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
 import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,20 +29,18 @@ import org.springframework.validation.BindingResult;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.Map;
 import java.util.HashMap;
 
 import java.time.LocalDate;
-import java.time.DayOfWeek;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -50,6 +49,7 @@ import fpt.swp391.GlucoTrackAlert.service.export.ExportService;
 @Controller
 @RequestMapping("/health-logs")
 @RequiredArgsConstructor
+@Slf4j
 public class DailyHealthLogController {
 
     private final DailyHealthLogService dailyHealthLogService;
@@ -266,15 +266,15 @@ public class DailyHealthLogController {
             try {
                 dailyHealthLogService.assessWeeklyRisk(selectedPatientId);
             } catch (Exception e) {
-                // ignore
+                log.error("assessWeeklyRisk failed for patientId={}", selectedPatientId, e);
             }
 
             // Get the latest weekly AI prediction for this patient
             List<Map<String, Object>> riskList = jdbcTemplate.queryForList(
-                    "SELECT ra.id, ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at " +
-                            "FROM risk_assessments ra " +
-                            "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' " +
-                            "ORDER BY ra.assessed_at DESC LIMIT 1",
+                    "SELECT ra.id, ra.risk_percentage, ra.risk_level, ra.ai_summary, ra.recommendation, ra.assessed_at "
+                    + "FROM risk_assessments ra "
+                    + "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' "
+                    + "ORDER BY ra.assessed_at DESC LIMIT 1",
                     selectedPatientId
             );
 
@@ -388,13 +388,8 @@ public class DailyHealthLogController {
             return "redirect:/health-logs/my-logs?userId=" + (curUserId != null ? curUserId : "");
         }
 
-        // Chỉ ADMIN hoặc doctor được phân công mới xem được
-        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
-            if (!isDoctorAssignedToPatient(log.getPatientId())) {
-                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem nhật ký này");
-                return "redirect:/health-logs/doctor-view";
-            }
-        }
+        // checkOwnership() đã xử lý cả ADMIN và DOCTOR được phân công
+        // không cần check lại lần 2 ở đây (trước đây check lại gây Admin bị redirect nhầm)
         model.addAttribute("log", log);
         model.addAttribute("source", source);
         return "healthlog/detail";
@@ -453,59 +448,70 @@ public class DailyHealthLogController {
     }
 
     @PostMapping("/create")
-public String createLog(@RequestParam Long userId,
-        @RequestParam(required = false) String source,
-        @Valid @ModelAttribute("log") DailyHealthLogRequest request,
-        BindingResult bindingResult,
-        RedirectAttributes redirectAttributes) {
-    if (!hasRole("ROLE_ADMIN")) {
-        if (hasRole("ROLE_DOCTOR")) {
-            Long patientId = resolvePatientId(userId);
-            if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
-                redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
-                return "redirect:/health-logs/doctor-view";
-            }
-        } else {
-            Long curUserId = getCurrentUserId();
-            if (curUserId == null || !curUserId.equals(userId)) {
-                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
-                return "redirect:/login";
+    public String createLog(@RequestParam Long userId,
+            @RequestParam(required = false) String source,
+            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes) {
+        if (!hasRole("ROLE_ADMIN")) {
+            if (hasRole("ROLE_DOCTOR")) {
+                Long patientId = resolvePatientId(userId);
+                if (patientId == null || !isDoctorAssignedToPatient(patientId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không được phân công quản lý bệnh nhân này.");
+                    return "redirect:/health-logs/doctor-view";
+                }
+            } else {
+                Long curUserId = getCurrentUserId();
+                if (curUserId == null || !curUserId.equals(userId)) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
+                    return "redirect:/login";
+                }
             }
         }
-    }
 
-    if (bindingResult.hasErrors()) {
-        redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
-        redirectAttributes.addFlashAttribute("log", request);
-        String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
-        if ("my-logs".equals(source)) redirectUrl += "&source=my-logs";
-        else if ("doctor-view".equals(source)) redirectUrl += "&source=doctor-view";
-        return redirectUrl;
-    }
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
+            redirectAttributes.addFlashAttribute("log", request);
+            String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
+            if ("my-logs".equals(source)) {
+                redirectUrl += "&source=my-logs";
+            } else if ("doctor-view".equals(source)) {
+                redirectUrl += "&source=doctor-view";
+            }
+            return redirectUrl;
+        }
 
-    Long patientId = resolvePatientId(userId);
-    if (patientId == null) {
-        redirectAttributes.addFlashAttribute("error",
-                "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
-        if ("my-logs".equals(source)) return "redirect:/health-logs/my-logs?userId=" + userId;
+        Long patientId = resolvePatientId(userId);
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Không tìm thấy thông tin bệnh nhân tương ứng với ID: " + userId);
+            if ("my-logs".equals(source)) {
+                return "redirect:/health-logs/my-logs?userId=" + userId;
+            }
+            return "redirect:/health-logs?userId=" + userId;
+        }
+
+        try {
+            dailyHealthLogService.createLog(patientId, request);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("log", request);
+            String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
+            if ("my-logs".equals(source)) {
+                redirectUrl += "&source=my-logs";
+            } else if ("doctor-view".equals(source)) {
+                redirectUrl += "&source=doctor-view";
+            }
+            return redirectUrl;
+        }
+
+        if ("my-logs".equals(source)) {
+            return "redirect:/health-logs/my-logs?userId=" + userId;
+        } else if ("doctor-view".equals(source)) {
+            return "redirect:/health-logs/doctor-view?userId=" + userId;
+        }
         return "redirect:/health-logs?userId=" + userId;
     }
-
-    try {
-        dailyHealthLogService.createLog(patientId, request);
-    } catch (Exception e) {
-        redirectAttributes.addFlashAttribute("error", e.getMessage());
-        redirectAttributes.addFlashAttribute("log", request);
-        String redirectUrl = "redirect:/health-logs/create?userId=" + userId;
-        if ("my-logs".equals(source)) redirectUrl += "&source=my-logs";
-        else if ("doctor-view".equals(source)) redirectUrl += "&source=doctor-view";
-        return redirectUrl;
-    }
-
-    if ("my-logs".equals(source)) return "redirect:/health-logs/my-logs?userId=" + userId;
-    else if ("doctor-view".equals(source)) return "redirect:/health-logs/doctor-view?userId=" + userId;
-    return "redirect:/health-logs?userId=" + userId;
-}
 
     @GetMapping("/{id}/edit")
     public String editLogForm(@PathVariable Long id,
@@ -536,6 +542,7 @@ public String createLog(@RequestParam Long userId,
             request.setSugarConsumptionLevel(response.getSugarConsumptionLevel());
             request.setSymptoms(response.getSymptoms());
             request.setNote(response.getNote());
+            request.setPhysicalActivity(response.getPhysicalActivity());
             model.addAttribute("log", request);
         }
         model.addAttribute("userId", userId != null ? userId : response.getUserId());
@@ -727,18 +734,28 @@ public String createLog(@RequestParam Long userId,
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
             return "redirect:/login";
         }
+
+        // Lọc danh sách bệnh nhân theo role -- giống getDoctorView()
+        // Trước đây lấy tất cả active patients -> bác sĩ A xem được chart bệnh nhân của bác sĩ B
         List<Patient> patients;
-        if (hasRole("ROLE_DOCTOR")) {
+        if (hasRole("ROLE_ADMIN")) {
+            patients = patientRepository.findAllByStatus("active");
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAll();
+            }
+        } else {
             Long currentUserId = getCurrentUserId();
             Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
             if (doctor == null) {
-                return "redirect:/health-logs/doctor-view";
+                model.addAttribute("patients", Collections.emptyList());
+                model.addAttribute("chartData", Collections.emptyList());
+                model.addAttribute("selectedUserId", null);
+                model.addAttribute("from", LocalDate.now().minusDays(30));
+                model.addAttribute("to", LocalDate.now());
+                return "healthlog/doctor-chart";
             }
             List<DoctorPatientAssignment> assignments = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
             patients = assignments.stream().map(DoctorPatientAssignment::getPatient).collect(Collectors.toList());
-        } else {
-            patients = patientRepository.findAllByStatus("active");
-            if (patients.isEmpty()) patients = patientRepository.findAll();
         }
         model.addAttribute("patients", patients);
 
@@ -1034,8 +1051,113 @@ public String createLog(@RequestParam Long userId,
         return "healthlog/stroke-risk";
     }
 
+    @GetMapping("/heart-risk")
+    public String getHeartRisk(@RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long patientId,
+            Model model, RedirectAttributes redirectAttributes) {
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null) {
+            return "redirect:/login";
+        }
+
+        boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
+
+        // 1. Phân giải PatientId từ userId hoặc ngược lại
+        if (patientId == null && userId != null) {
+            Optional<Patient> pOpt = patientRepository.findByUserId(userId);
+            if (pOpt.isPresent()) {
+                patientId = pOpt.get().getId();
+            } else if (patientRepository.existsById(userId)) {
+                patientId = userId;
+            }
+        }
+        if (patientId == null) {
+            patientId = isDoctorOrAdminCaller ? null : resolvePatientId(curUserId);
+        }
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return isDoctorOrAdminCaller ? "redirect:/health-logs/doctor-view" : "redirect:/";
+        }
+
+        // 2. Kiểm tra quyền truy cập (Access Control)
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
+        }
+        if (!isDoctorOrAdminCaller) {
+            Long ownPatientId = resolvePatientId(curUserId);
+            if (ownPatientId == null || !ownPatientId.equals(patientId)) {
+                return "redirect:/login";
+            }
+        } else {
+            if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem báo cáo của bệnh nhân này.");
+                return "redirect:/health-logs/doctor-view";
+            }
+        }
+
+        // 3. Xử lý khoảng ngày đo dữ liệu (Mặc định 14 ngày gần nhất để phân tích tim mạch tốt hơn)
+        LocalDate toDate = to;
+        LocalDate fromDate = from;
+        if (toDate == null || fromDate == null) {
+            toDate = LocalDate.now();
+            fromDate = toDate.minusDays(14); // Thu thập dữ liệu trong 14 ngày
+        }
+        if (fromDate.isAfter(toDate)) {
+            LocalDate temp = fromDate;
+            fromDate = toDate;
+            toDate = temp;
+        }
+
+        // 4. Gọi Python AI thông qua Service xử lý động
+        Map<String, Object> heartRiskData = dailyHealthLogService.calculateDynamicHeartRisk(patientId, fromDate, toDate);
+
+        // 5. Bổ sung dữ liệu hiển thị thời gian phân tích 'assessedAtStr' cho phù hợp cấu trúc giao diện ai-report-heart.html
+        if (heartRiskData != null && !heartRiskData.containsKey("error") && !heartRiskData.containsKey("message")) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            heartRiskData.put("assessedAtStr", now.format(formatter));
+
+            // Ép key từ gạch dưới của Flask thành CamelCase để khớp với `ai-report-heart.html` cũ
+            if (heartRiskData.containsKey("risk_percentage")) {
+                heartRiskData.put("riskPercentage", formatDecimal(heartRiskData.get("risk_percentage")));
+            }
+            if (heartRiskData.containsKey("risk_level")) {
+                heartRiskData.put("riskLevel", heartRiskData.get("risk_level"));
+            }
+
+            model.addAttribute("latestRisk", heartRiskData);
+            model.addAttribute("hasRiskData", true);
+        } else {
+            model.addAttribute("hasRiskData", false);
+            if (heartRiskData != null && heartRiskData.containsKey("message")) {
+                model.addAttribute("aiMessage", heartRiskData.get("message"));
+            }
+        }
+
+        // 6. Đổ danh sách log trong khoảng ngày ra bảng giải trình dữ liệu
+        List<DailyHealthLog> rangeLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, fromDate, toDate);
+        rangeLogs.sort(java.util.Comparator.comparing(DailyHealthLog::getLogDate).reversed());
+
+        model.addAttribute("isDoctorOrAdmin", isDoctorOrAdminCaller);
+        model.addAttribute("patient", patient);
+        Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;
+        model.addAttribute("userId", targetUserId != null ? targetUserId : curUserId);
+        model.addAttribute("patientId", patientId);
+        model.addAttribute("from", fromDate);
+        model.addAttribute("to", toDate);
+        model.addAttribute("rangeLogs", rangeLogs);
+
+        return "healthlog/ai-report-heart"; // Render file HTML tim mạch của bạn
+    }
+
     private String formatDecimal(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) {
+            return null;
+        }
         if (obj instanceof java.math.BigDecimal) {
             return String.format("%.2f", ((java.math.BigDecimal) obj).doubleValue());
         } else if (obj instanceof Number) {
@@ -1071,9 +1193,15 @@ public String createLog(@RequestParam Long userId,
     }
 
     private java.math.BigDecimal getBigDecimalSafe(Object obj) {
-        if (obj == null) return null;
-        if (obj instanceof java.math.BigDecimal) return (java.math.BigDecimal) obj;
-        if (obj instanceof Number) return java.math.BigDecimal.valueOf(((Number) obj).doubleValue());
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof java.math.BigDecimal) {
+            return (java.math.BigDecimal) obj;
+        }
+        if (obj instanceof Number) {
+            return java.math.BigDecimal.valueOf(((Number) obj).doubleValue());
+        }
         return new java.math.BigDecimal(obj.toString());
     }
 

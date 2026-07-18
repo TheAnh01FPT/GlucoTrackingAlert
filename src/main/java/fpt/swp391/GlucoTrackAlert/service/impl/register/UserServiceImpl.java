@@ -10,8 +10,8 @@ import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepo
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.PasswordResetTokenRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.model.user.PasswordResetToken;
@@ -67,34 +67,67 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User register(RegisterRequest request) throws Exception {
-        String email = request.getEmail().trim().toLowerCase();
+        String email = request.getEmail().trim();
         String phone = request.getPhone().trim();
 
-        if (userRepository.existsByEmail(email)) {
-            throw new Exception("Email này đã được sử dụng trong hệ thống.");
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user != null) {
+            // Email đã tồn tại và đã kích hoạt -> không cho đăng ký lại
+            if (Boolean.TRUE.equals(user.getEmailVerified()) || "active".equals(user.getStatus())) {
+                throw new Exception("Email này đã được sử dụng trong hệ thống.");
+            }
+            // Email tồn tại nhưng vẫn đang "pending_verification" (chưa xác nhận OTP lần trước)
+            // -> cho phép đăng ký lại: cập nhật thông tin và cấp OTP mới, KHÔNG throw lỗi
+            if (userRepository.existsByPhoneAndEmailNot(phone, email)) {
+                throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
+            }
+
+            Role role = roleRepository.findByName("PATIENT")
+                    .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
+
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            user.setFullName(request.getFullName().trim());
+            user.setPhone(phone);
+            user.setRole(role);
+            user.setStatus("pending_verification");
+            user.setEmailVerified(false);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            // Hủy toàn bộ OTP cũ còn đang pending của tài khoản này
+            tokenRepository.expireAllPendingByUserId(user.getId());
+        } else {
+            if (userRepository.existsByPhone(phone)) {
+                throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
+            }
+
+            Role role = roleRepository.findByName("PATIENT")
+                    .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
+
+            user = User.builder()
+                    .email(email)
+                    .passwordHash(passwordEncoder.encode(request.getPassword()))
+                    .fullName(request.getFullName().trim())
+                    .phone(phone)
+                    .role(role)
+                    .status("pending_verification")
+                    .emailVerified(false)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            userRepository.save(user);
         }
 
-        if (userRepository.existsByPhone(phone)) {
-            throw new Exception("Số điện thoại này đã được sử dụng trong hệ thống.");
-        }
+        // Tạo OTP mới, đảm bảo không trùng với token đang tồn tại trong DB
+        // (verificationToken có ràng buộc unique)
+        String otp;
+        int attempts = 0;
+        do {
+            otp = generateOtp();
+            attempts++;
+        } while (tokenRepository.findByVerificationToken(otp).isPresent() && attempts < 10);
 
-        Role role = roleRepository.findByName("PATIENT")
-                .orElseThrow(() -> new Exception("Không tìm thấy role PATIENT trong hệ thống."));
-
-        User user = User.builder()
-                .email(email)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName().trim())
-                .phone(phone)
-                .role(role)
-                .status("pending_verification")
-                .emailVerified(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-        userRepository.save(user);
-
-        String otp = generateOtp();
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
                 .user(user)
                 .verificationToken(otp)
@@ -105,6 +138,15 @@ public class UserServiceImpl implements UserService {
         tokenRepository.save(verificationToken);
 
         sendOtpEmail(email, request.getFullName().trim(), otp);
+
+        try {
+            sendOtpEmail(request.getEmail().trim(), request.getFullName().trim(), otp);
+        } catch (Exception ex) {
+            // Không lộ message kỹ thuật (vd. SMTP "Authentication failed") ra ngoài.
+            // @Transactional sẽ rollback user + token vừa tạo do đây là RuntimeException.
+            throw new RuntimeException(
+                    "Không thể gửi email xác nhận lúc này. Vui lòng thử lại sau ít phút.");
+        }
 
         return user;
     }
@@ -143,8 +185,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void resendOtp(String email) throws Exception {
-        String cleanEmail = email.trim().toLowerCase();
-        User user = userRepository.findByEmail(cleanEmail)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Không tìm thấy tài khoản với email này."));
 
         if (Boolean.TRUE.equals(user.getEmailVerified())) {
@@ -163,13 +204,12 @@ public class UserServiceImpl implements UserService {
                 .build();
         tokenRepository.save(verificationToken);
 
-        sendOtpEmail(cleanEmail, user.getFullName(), otp);
+        sendOtpEmail(email, user.getFullName(), otp);
     }
 
     @Override
     public LoginResponse login(LoginRequest request) throws Exception {
-        String email = request.getEmail().trim().toLowerCase();
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new Exception("Email hoặc mật khẩu không đúng."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
@@ -189,9 +229,15 @@ public class UserServiceImpl implements UserService {
 
         Long doctorId = null;
         if ("DOCTOR".equals(roleName)) {
-            doctorId = doctorRepository.findByUserId(user.getId())
-                    .map(Doctor::getId)
-                    .orElse(null);
+            Doctor doctor = doctorRepository.findByUserId(user.getId()).orElse(null);
+            if (doctor == null) {
+                doctor = new Doctor();
+                doctor.setUser(user);
+                doctor.setFullName(user.getFullName() != null ? user.getFullName() : user.getEmail());
+                doctor.setStatus("active");
+                doctor = doctorRepository.save(doctor);
+            }
+            doctorId = doctor.getId();
         }
 
         return LoginResponse.builder()
@@ -206,8 +252,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) throws Exception {
-        String email = request.getEmail().trim().toLowerCase();
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
 
         if (!"active".equalsIgnoreCase(user.getStatus())) {
@@ -226,7 +271,7 @@ public class UserServiceImpl implements UserService {
 
         // Gửi email
         String body = buildPasswordResetOtpEmail(user.getFullName() != null ? user.getFullName() : "Bạn", otp);
-        emailService.sendHtmlMessageAsync(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
+        emailService.sendHtmlMessage(user.getEmail(), "Mã OTP Đặt Lại Mật Khẩu GlucoTrackAlert", body);
     }
 
     @Override
@@ -244,7 +289,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = token.getUser();
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail().trim())) {
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
             throw new Exception("Email không khớp với mã OTP");
         }
 
@@ -260,8 +305,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) throws Exception {
-        String cleanEmail = email.trim().toLowerCase();
-        User user = userRepository.findByEmail(cleanEmail)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Không tìm thấy tài khoản"));
 
         oldPassword = oldPassword.trim();
@@ -287,7 +331,7 @@ public class UserServiceImpl implements UserService {
     private void sendOtpEmail(String toEmail, String fullName, String otp) {
         String subject = "Mã xác nhận đăng ký tài khoản GlucoTrackAlert";
         String htmlContent = buildOtpEmail(fullName, otp);
-        emailService.sendHtmlMessageAsync(toEmail, subject, htmlContent);
+        emailService.sendHtmlMessage(toEmail, subject, htmlContent);
     }
 
     private String buildOtpEmail(String fullName, String otp) {

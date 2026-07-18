@@ -91,6 +91,7 @@ public class Duy_ReminderServiceImpl implements Duy_ReminderService {
     public List<Duy_ReminderResponse> getAllByPatient(Long patientId) {
         return repo.findByPatientIdOrderByReminderTimeAsc(patientId)
                 .stream()
+                .filter(r -> !"CANCELLED".equals(r.getStatus()))
                 .map(Duy_ReminderResponse::from)
                 .collect(Collectors.toList());
     }

@@ -22,7 +22,7 @@
             z-index: 1000;
             animation: fadeIn 0.3s ease;
         }
-        
+
         .modal-content {
             background: #ffffff;
             border: 1px solid rgba(0, 0, 0, 0.08);
@@ -37,15 +37,25 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes scaleIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
-        
+
         .badge-pending-req {
             background-color: #fef3c7;
             color: #d97706;
@@ -55,7 +65,7 @@
             font-weight: 600;
             display: inline-block;
         }
-        
+
         .request-update-btn {
             background: none;
             border: 1px solid var(--primary-color);
@@ -70,241 +80,397 @@
             align-items: center;
             gap: 4px;
         }
-        
+
         .request-update-btn:hover {
             background-color: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        /* Style bổ sung cho nút Đổi mật khẩu màu xanh ngọc */
+        .btn-teal {
+            background-color: #0d9488 !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .btn-teal:hover {
+            background-color: #0f766e !important;
             transform: translateY(-1px);
         }
     </style>
 </head>
 <body>
 
-    <div class="profile-wrapper">
-        <!-- Header -->
-        <div class="profile-header">
-            <h1 class="brand-title">
-                <span class="brand-icon">🩸</span> GlucoTrack
-            </h1>
-            <div style="display: flex; gap: 12px;">
-                <!-- Back to Home Button -->
-                <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">
-                    🏠 Trang chủ
-                </a>
-                <a th:href="@{/patient/profile/requests}" class="action-btn btn-secondary">
-                    📁 Lịch sử yêu cầu
-                </a>
-                <a th:href="@{/patient/profile/edit}" class="action-btn btn-primary">
-                    ✏️ Chỉnh sửa hồ sơ
-                </a>
-            </div>
+<div class="profile-wrapper">
+    <div class="profile-header">
+        <h1 class="brand-title">
+            <span class="brand-icon">🩸</span> GlucoTrack
+        </h1>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">
+                🏠 Trang chủ
+            </a>
+            <a th:href="@{/patient/profile/requests}" class="action-btn btn-secondary">
+                📁 Lịch sử yêu cầu
+            </a>
+            <!-- Nút Đổi mật khẩu được thêm mới tại đây -->
+            <button type="button" class="action-btn btn-teal" onclick="openPwdModal()">
+                🔒 Đổi mật khẩu
+            </button>
+            <a th:href="@{/patient/profile/edit}" class="action-btn btn-primary">
+                ✏️ Chỉnh sửa hồ sơ
+            </a>
         </div>
+    </div>
 
-        <!-- Main Grid Layout -->
-        <div class="profile-grid">
-            
-            <!-- Left Card: Personal Profile -->
-            <div class="info-card">
-                <h2 class="card-title">👤 Thông tin cá nhân</h2>
-                
-                <div class="detail-item">
-                    <span class="detail-label">Họ và tên</span>
-                    <span class="detail-value" th:text="${profile.fullName}">Nguyen Van A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Email tài khoản</span>
-                    <span class="detail-value" th:text="${profile.email}">email@example.com</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Ngày sinh</span>
-                    <span class="detail-value" th:text="${profile.dateOfBirth}">1995-10-15</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Tuổi</span>
-                    <span class="detail-value" th:text="${profile.age != null ? profile.age + ' tuổi' : 'Chưa cập nhật'}">30 tuổi</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Giới tính</span>
-                    <span class="detail-value" th:text="${profile.gender != null ? profile.gender : 'Chưa cập nhật'}">Nam</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Số điện thoại</span>
-                    <span class="detail-value" th:text="${profile.phone != null ? profile.phone : 'Chưa cập nhật'}">0987654321</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Địa chỉ</span>
-                    <span class="detail-value" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Đà Nẵng</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Số CCCD</span>
-                    <span class="detail-value" th:text="${profile.identityCard != null && !profile.identityCard.isEmpty() ? profile.identityCard : 'Chưa cập nhật'}">Chưa cập nhật</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Mã BHYT</span>
-                    <span class="detail-value" th:text="${profile.insuranceNumber != null && !profile.insuranceNumber.isEmpty() ? profile.insuranceNumber : 'Chưa cập nhật'}">Chưa cập nhật</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Phân loại bệnh nhân</span>
-                    <span class="detail-value" th:text="${profile.patientType == 'pregnant' ? 'Phụ nữ có thai' : (profile.patientType == 'elderly' ? 'Người cao tuổi' : (profile.patientType == 'child' ? 'Trẻ em' : 'Người trưởng thành'))}">Người trưởng thành</span>
-                </div>
-                <div class="detail-item" style="align-items: center;">
-                    <span class="detail-label">Tăng huyết áp</span>
-                    <div style="display: flex; align-items: center; gap: 10px;">
+    <div class="profile-grid">
+
+        <div class="info-card">
+            <h2 class="card-title">👤 Thông tin cá nhân</h2>
+
+            <div class="detail-item">
+                <span class="detail-label">Họ và tên</span>
+                <span class="detail-value" th:text="${profile.fullName}">Nguyen Van A</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Email tài khoản</span>
+                <span class="detail-value" th:text="${profile.email}">email@example.com</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Ngày sinh</span>
+                <span class="detail-value" th:text="${profile.dateOfBirth}">1995-10-15</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Tuổi</span>
+                <span class="detail-value" th:text="${profile.age != null ? profile.age + ' tuổi' : 'Chưa cập nhật'}">30 tuổi</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Giới tính</span>
+                <span class="detail-value"
+                      th:text="${profile.gender != null ? profile.gender : 'Chưa cập nhật'}">Nam</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Số điện thoại</span>
+                <span class="detail-value" th:text="${profile.phone != null ? profile.phone : 'Chưa cập nhật'}">0987654321</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Địa chỉ</span>
+                <span class="detail-value" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Đà Nẵng</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Số CCCD</span>
+                <span class="detail-value"
+                      th:text="${profile.identityCard != null && !profile.identityCard.isEmpty() ? profile.identityCard : 'Chưa cập nhật'}">Chưa cập nhật</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Mã BHYT</span>
+                <span class="detail-value"
+                      th:text="${profile.insuranceNumber != null && !profile.insuranceNumber.isEmpty() ? profile.insuranceNumber : 'Chưa cập nhật'}">Chưa cập nhật</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Phân loại bệnh nhân</span>
+                <span class="detail-value"
+                      th:text="${profile.patientType == 'pregnant' ? 'Phụ nữ có thai' : (profile.patientType == 'elderly' ? 'Người cao tuổi' : (profile.patientType == 'child' ? 'Trẻ em' : 'Người trưởng thành'))}">Người trưởng thành</span>
+            </div>
+
+            <div class="detail-item" style="align-items: center;">
+                <span class="detail-label">Tăng huyết áp</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
                         <span class="detail-value" th:style="${profile.hypertension} ? 'color: #ef4444;' : ''">
                             <span th:text="${profile.hypertension ? 'Có tiền sử 🔒' : 'Không có tiền sử'}">Không có tiền sử</span>
                         </span>
-                        <th:block th:if="${profile.hypertension}">
-                            <span th:if="${pendingHypertension}" class="badge-pending-req">Đang chờ duyệt... ⏳</span>
-                            <button th:unless="${pendingHypertension}" type="button" class="request-update-btn" onclick="openRequestModal('hypertension', 'Tăng huyết áp')">🔄 Yêu cầu cập nhật lại</button>
-                        </th:block>
-                    </div>
+                    <th:block th:if="${profile.hypertension}">
+                        <span th:if="${pendingHypertension}" class="badge-pending-req">Đang chờ duyệt... ⏳</span>
+                        <button th:unless="${pendingHypertension}" type="button" class="request-update-btn"
+                                onclick="openRequestModal('hypertension', 'Tăng huyết áp')">🔄 Yêu cầu cập nhật lại
+                        </button>
+                    </th:block>
                 </div>
-                <div class="detail-item" style="align-items: center;">
-                    <span class="detail-label">Tiền sử bệnh tim</span>
-                    <div style="display: flex; align-items: center; gap: 10px;">
+            </div>
+
+            <div class="detail-item" style="align-items: center;">
+                <span class="detail-label">Tiền sử bệnh tim</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
                         <span class="detail-value" th:style="${profile.heartDisease} ? 'color: #ef4444;' : ''">
                             <span th:text="${profile.heartDisease ? 'Có tiền sử 🔒' : 'Không có tiền sử'}">Không có tiền sử</span>
                         </span>
-                        <th:block th:if="${profile.heartDisease}">
-                            <span th:if="${pendingHeartDisease}" class="badge-pending-req">Đang chờ duyệt... ⏳</span>
-                            <button th:unless="${pendingHeartDisease}" type="button" class="request-update-btn" onclick="openRequestModal('heartDisease', 'Tiền sử bệnh tim')">🔄 Yêu cầu cập nhật lại</button>
-                        </th:block>
+                    <th:block th:if="${profile.heartDisease}">
+                        <span th:if="${pendingHeartDisease}" class="badge-pending-req">Đang chờ duyệt... ⏳</span>
+                        <button th:unless="${pendingHeartDisease}" type="button" class="request-update-btn"
+                                onclick="openRequestModal('heartDisease', 'Tiền sử bệnh tim')">🔄 Yêu cầu cập nhật lại
+                        </button>
+                    </th:block>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Đã từng kết hôn</span>
+                <span class="detail-value" th:text="${profile.everMarried == 'Yes' ? 'Đã kết hôn' : 'Chưa kết hôn'}">Chưa kết hôn</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Loại công việc</span>
+                <span class="detail-value"
+                      th:text="${profile.workType == 'Private' ? 'Tư nhân' : (profile.workType == 'Self-employed' ? 'Tự kinh doanh' : (profile.workType == 'Govt_job' ? 'Công chức' : (profile.workType == 'children' ? 'Trẻ em' : (profile.workType == 'Never_worked' ? 'Chưa từng đi làm' : 'Chưa cập nhật'))))}">Tư nhân</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Khu vực sinh sống</span>
+                <span class="detail-value"
+                      th:text="${profile.residenceType == 'Urban' ? 'Thành thị (Urban)' : (profile.residenceType == 'Rural' ? 'Nông thôn (Rural)' : 'Chưa cập nhật')}">Chưa cập nhật</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Tình trạng hút thuốc</span>
+                <span class="detail-value"
+                      th:text="${profile.smokingStatus == 'never smoked' ? 'Chưa từng hút thuốc' : (profile.smokingStatus == 'formerly smoked' ? 'Đã từng hút thuốc' : (profile.smokingStatus == 'smokes' ? 'Đang hút thuốc' : 'Không rõ'))}">Không rõ</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h2 class="card-title">⚖️ Chỉ số cơ thể</h2>
+
+            <div class="detail-item">
+                <span class="detail-label">Chiều cao</span>
+                <span class="detail-value"
+                      th:text="${profile.heightCm != null ? profile.heightCm + ' cm' : 'Chưa nhập'}">170 cm</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Cân nặng</span>
+                <span class="detail-value"
+                      th:text="${profile.weightKg != null ? profile.weightKg + ' kg' : 'Chưa nhập'}">65 kg</span>
+            </div>
+
+            <div class="bmi-box" th:if="${profile.bmi != null}">
+                <span class="detail-label">Chỉ số khối cơ thể (BMI)</span>
+                <div class="bmi-value-large" th:text="${profile.bmi}">22.49</div>
+
+                <div th:if="${profile.bmi < 18.5}" class="bmi-badge bmi-underweight">Thiếu cân (Underweight)</div>
+                <div th:if="${profile.bmi >= 18.5 && profile.bmi < 25}" class="bmi-badge bmi-normal">Bình thường
+                    (Normal)
+                </div>
+                <div th:if="${profile.bmi >= 25 && profile.bmi < 30}" class="bmi-badge bmi-overweight">Thừa cân
+                    (Overweight)
+                </div>
+                <div th:if="${profile.bmi >= 30}" class="bmi-badge bmi-obese">Béo phì (Obese)</div>
+
+                <div class="bmi-range-bar">
+                    <div class="bmi-marker"
+                         th:with="pos=${(profile.bmi - 15) / 20 * 100}"
+                         th:style="'left: ' + ${pos < 0 ? 0 : (pos > 100 ? 100 : pos)} + '%'">
                     </div>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Đã từng kết hôn</span>
-                    <span class="detail-value" th:text="${profile.everMarried == 'Yes' ? 'Đã kết hôn' : 'Chưa kết hôn'}">Chưa kết hôn</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Loại công việc</span>
-                    <span class="detail-value" th:text="${profile.workType == 'Private' ? 'Tư nhân' : (profile.workType == 'Self-employed' ? 'Tự kinh doanh' : (profile.workType == 'Govt_job' ? 'Công chức' : (profile.workType == 'children' ? 'Trẻ em' : (profile.workType == 'Never_worked' ? 'Chưa từng đi làm' : 'Chưa cập nhật'))))}">Tư nhân</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Khu vực sinh sống</span>
-                    <span class="detail-value" th:text="${profile.residenceType == 'Urban' ? 'Thành thị (Urban)' : (profile.residenceType == 'Rural' ? 'Nông thôn (Rural)' : 'Chưa cập nhật')}">Chưa cập nhật</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Tình trạng hút thuốc</span>
-                    <span class="detail-value" th:text="${profile.smokingStatus == 'never smoked' ? 'Chưa từng hút thuốc' : (profile.smokingStatus == 'formerly smoked' ? 'Đã từng hút thuốc' : (profile.smokingStatus == 'smokes' ? 'Đang hút thuốc' : 'Không rõ'))}">Không rõ</span>
-                </div>
             </div>
 
-            <!-- Right Card: Health Indicators & BMI -->
-            <div class="info-card">
-                <h2 class="card-title">⚖️ Chỉ số cơ thể & BMI</h2>
-                
-                <div class="detail-item">
-                    <span class="detail-label">Chiều cao</span>
-                    <span class="detail-value" th:text="${profile.heightCm != null ? profile.heightCm + ' cm' : 'Chưa nhập'}">170 cm</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Cân nặng</span>
-                    <span class="detail-value" th:text="${profile.weightKg != null ? profile.weightKg + ' kg' : 'Chưa nhập'}">65 kg</span>
-                </div>
-
-                <!-- BMI Evaluation Box -->
-                <div class="bmi-box" th:if="${profile.bmi != null}">
-                    <span class="detail-label">Chỉ số khối cơ thể (BMI)</span>
-                    <div class="bmi-value-large" th:text="${profile.bmi}">22.49</div>
-                    
-                    <!-- Conditions for BMI Badges -->
-                    <div th:if="${profile.bmi < 18.5}" class="bmi-badge bmi-underweight">Thiếu cân (Underweight)</div>
-                    <div th:if="${profile.bmi >= 18.5 && profile.bmi < 25}" class="bmi-badge bmi-normal">Bình thường (Normal)</div>
-                    <div th:if="${profile.bmi >= 25 && profile.bmi < 30}" class="bmi-badge bmi-overweight">Thừa cân (Overweight)</div>
-                    <div th:if="${profile.bmi >= 30}" class="bmi-badge bmi-obese">Béo phì (Obese)</div>
-                    
-                    <!-- Interactive Visual Range Bar -->
-                    <div class="bmi-range-bar">
-                        <div class="bmi-marker" 
-                             th:with="pos=${(profile.bmi - 15) / 20 * 100}"
-                             th:style="'left: ' + ${pos < 0 ? 0 : (pos > 100 ? 100 : pos)} + '%'">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bmi-box" th:unless="${profile.bmi != null}">
-                    <span class="detail-label">BMI</span>
-                    <p style="margin-top: 10px; color: var(--text-muted); font-style: italic; font-size: 14px;">
-                        Hãy cập nhật chiều cao và cân nặng để tính BMI tự động.
-                    </p>
-                </div>
+            <div class="bmi-box" th:unless="${profile.bmi != null}">
+                <span class="detail-label">BMI</span>
+                <p style="margin-top: 10px; color: var(--text-muted); font-style: italic; font-size: 14px;">
+                    Hãy cập nhật chiều cao và cân nặng để tính BMI tự động.
+                </p>
             </div>
-
-            <!-- Success & Error Alert Banners -->
-            <div class="success-banner" th:if="${successMessage != null}" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-top: 25px; display: flex; align-items: center; gap: 10px;">
-                <span>✔️</span>
-                <span th:text="${successMessage}">Thành công.</span>
-            </div>
-            <div class="error-banner" th:if="${errorMessage != null}" style="background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-top: 25px; display: flex; align-items: center; gap: 10px;">
-                <span>⚠️</span>
-                <span th:text="${errorMessage}">Đã xảy ra lỗi.</span>
-            </div>
-
-
-
         </div>
     </div>
 
-    <!-- Modal Yêu cầu Thay đổi -->
-    <div id="requestChangeModal" class="modal-overlay">
-        <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 12px;">
-                <h3 id="modalTitle" style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--primary-color);">🔄 Yêu cầu cập nhật lại bệnh lý</h3>
-                <span onclick="closeRequestModal()" style="font-size: 24px; cursor: pointer; color: var(--text-muted); font-weight: bold; line-height: 1;">&times;</span>
-            </div>
-            
-            <form th:action="@{/patient/profile/request-change}" method="post" enctype="multipart/form-data">
-                <input type="hidden" id="modalFieldName" name="fieldName">
-                
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 600; margin-bottom: 4px;">Mục thay đổi:</label>
-                    <input type="text" id="modalFieldDisplayName" class="form-input" style="background-color: #f1f5f9; font-weight: 600;" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="requestReason">Lý do thay đổi *</label>
-                    <textarea id="requestReason" name="reason" class="form-input" rows="4" placeholder="Nhập lý do chi tiết (Ví dụ: Ấn nhầm khi tạo tài khoản, hoặc có kết quả khám mới...)" required style="resize: vertical; font-family: inherit;"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="modalEvidenceFile">Minh chứng y tế đính kèm *</label>
-                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-style: italic; line-height: 1.4;">
-                        Bắt buộc tải lên sổ khám bệnh, phiếu xét nghiệm hoặc chẩn đoán có dấu đỏ xác nhận của cơ sở y tế.
-                    </p>
-                    <input type="file" id="modalEvidenceFile" name="evidenceFile" class="form-input" accept="image/*,.pdf,.doc,.docx" required>
-                </div>
-                
-                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 15px;">
-                    <button type="button" class="action-btn btn-secondary" onclick="closeRequestModal()" style="padding: 10px 18px; font-size: 14px;">Hủy bỏ</button>
-                    <button type="submit" class="action-btn btn-primary" style="padding: 10px 22px; font-size: 14px;">Gửi yêu cầu 📤</button>
-                </div>
-            </form>
-        </div>
+    <div class="success-banner" th:if="${successMessage != null}"
+         style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-top: 25px; display: flex; align-items: center; gap: 10px;">
+        <span>✔️</span>
+        <span th:text="${successMessage}">Thành công.</span>
     </div>
+    <div class="error-banner" th:if="${errorMessage != null}"
+         style="background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-top: 25px; display: flex; align-items: center; gap: 10px;">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Đã xảy ra lỗi.</span>
+    </div>
+</div>
 
-    <script>
-        function openRequestModal(fieldName, fieldDisplayName) {
-            document.getElementById('modalFieldName').value = fieldName;
-            document.getElementById('modalFieldDisplayName').value = fieldDisplayName;
-            document.getElementById('modalTitle').innerText = '🔄 Yêu cầu cập nhật lại: ' + fieldDisplayName;
-            document.getElementById('requestChangeModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Lock background scrolling
+<div id="requestChangeModal" class="modal-overlay">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 12px;">
+            <h3 id="modalTitle"
+                style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--primary-color);">
+                🔄 Yêu cầu cập nhật lại bệnh lý</h3>
+            <span onclick="closeRequestModal()"
+                  style="font-size: 24px; cursor: pointer; color: var(--text-muted); font-weight: bold; line-height: 1;">&times;</span>
+        </div>
+
+        <form th:action="@{/patient/profile/request-change}" method="post" enctype="multipart/form-data">
+            <input type="hidden" id="modalFieldName" name="fieldName">
+
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 4px;">Mục thay đổi:</label>
+                <input type="text" id="modalFieldDisplayName" class="form-input"
+                       style="background-color: #f1f5f9; font-weight: 600;" readonly>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="requestReason">Lý do thay đổi *</label>
+                <textarea id="requestReason" name="reason" class="form-input" rows="4"
+                          placeholder="Nhập lý do chi tiết (Ví dụ: Ấn nhầm khi tạo tài khoản, hoặc có kết quả khám mới...)"
+                          required style="resize: vertical; font-family: inherit;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modalEvidenceFile">Minh chứng y tế đính kèm *</label>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-style: italic; line-height: 1.4;">
+                    Bắt buộc tải lên sổ khám bệnh, phiếu xét nghiệm hoặc chẩn đoán có dấu đỏ xác nhận của cơ sở y tế.
+                </p>
+                <input type="file" id="modalEvidenceFile" name="evidenceFile" class="form-input"
+                       accept="image/*,.pdf,.doc,.docx" required>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 15px;">
+                <button type="button" class="action-btn btn-secondary" onclick="closeRequestModal()"
+                        style="padding: 10px 18px; font-size: 14px;">Hủy bỏ
+                </button>
+                <button type="submit" class="action-btn btn-primary" style="padding: 10px 22px; font-size: 14px;">Gửi
+                    yêu cầu 📤
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openRequestModal(fieldName, fieldDisplayName) {
+        document.getElementById('modalFieldName').value = fieldName;
+        document.getElementById('modalFieldDisplayName').value = fieldDisplayName;
+        document.getElementById('modalTitle').innerText = '🔄 Yêu cầu cập nhật lại: ' + fieldDisplayName;
+        document.getElementById('requestChangeModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRequestModal() {
+        document.getElementById('requestChangeModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        document.getElementById('requestReason').value = '';
+        document.getElementById('modalEvidenceFile').value = '';
+    }
+
+    window.onclick = function (event) {
+        var modal = document.getElementById('requestChangeModal');
+        var pwdModal = document.getElementById('pwdModal');
+        if (event.target == modal) {
+            closeRequestModal();
         }
-
-        function closeRequestModal() {
-            document.getElementById('requestChangeModal').style.display = 'none';
-            document.body.style.overflow = 'auto'; // Restore scrolling
-            // Reset form inputs
-            document.getElementById('requestReason').value = '';
-            document.getElementById('modalEvidenceFile').value = '';
+        if (event.target == pwdModal) {
+            closePwdModal();
         }
+    }
+</script>
 
-        // Close when clicking outside content area
-        window.onclick = function(event) {
-            var modal = document.getElementById('requestChangeModal');
-            if (event.target == modal) {
-                closeRequestModal();
+<!-- Modal Đổi Mật Khẩu -->
+<div id="pwdModal"
+     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; width:90%; max-width:400px; border-radius:20px; padding:30px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(1); animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid rgba(0, 0, 0, 0.08);">
+        <h5 style="color:#0f766e; font-weight:700; margin-top: 0; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; font-size: 1.15rem; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 12px;">
+            <span>🔒 Đổi mật khẩu</span>
+            <span style="cursor:pointer; color:#6c757d; font-size:1.5rem; line-height: 1;" onclick="closePwdModal()">&times;</span>
+        </h5>
+        <form id="ptChangePwdForm" onsubmit="handlePatientChangePwd(event)">
+            <div id="ptPwdAlert"
+                 style="display:none; padding:12px 15px; border-radius:8px; margin-bottom:15px; font-size:0.875rem; font-weight: 500; transition: opacity 0.5s ease;"></div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-weight:600; font-size:0.875rem; color:#1e293b; margin-bottom:6px;">Mật
+                    khẩu hiện tại</label>
+                <input type="password" id="ptCurrentPwd" required
+                       style="width:100%; border: 1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; padding:10px 14px; box-sizing: border-box; outline: none;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; font-weight:600; font-size:0.875rem; color:#1e293b; margin-bottom:6px;">Mật
+                    khẩu mới</label>
+                <input type="password" id="ptNewPwd" required
+                       style="width:100%; border: 1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; padding:10px 14px; box-sizing: border-box; outline: none;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; font-weight:600; font-size:0.875rem; color:#1e293b; margin-bottom:6px;">Xác
+                    nhận mật khẩu mới</label>
+                <input type="password" id="ptConfirmPwd" required
+                       style="width:100%; border: 1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; padding:10px 14px; box-sizing: border-box; outline: none;">
+            </div>
+
+            <button type="submit"
+                    style="width:100%; background:#0d9488; color: white; border:none; padding:12px; font-weight:600; font-size:0.95rem; border-radius:8px; cursor:pointer; transition:0.2s;">
+                Cập nhật mật khẩu
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openPwdModal() {
+        document.getElementById('ptChangePwdForm').reset();
+        const alertBox = document.getElementById('ptPwdAlert');
+        alertBox.style.display = 'none';
+        const modal = document.getElementById('pwdModal');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePwdModal() {
+        document.getElementById('pwdModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    async function handlePatientChangePwd(e) {
+        e.preventDefault();
+        const current = document.getElementById('ptCurrentPwd').value;
+        const newPwd = document.getElementById('ptNewPwd').value;
+        const confirmPwd = document.getElementById('ptConfirmPwd').value;
+        const alertBox = document.getElementById('ptPwdAlert');
+
+        // Hàm tiện ích để hiển thị alert và tự động ẩn sau 2 giây
+        const showAlert = (text, isSuccess) => {
+            alertBox.style.display = 'block';
+            alertBox.style.opacity = '1';
+            alertBox.innerText = text;
+            if (isSuccess) {
+                alertBox.style.backgroundColor = '#d1e7dd';
+                alertBox.style.color = '#0f5132';
+            } else {
+                alertBox.style.backgroundColor = '#f8d7da';
+                alertBox.style.color = '#842029';
             }
+
+            // Tự động mờ dần và ẩn sau 2 giây (2000ms)
+            setTimeout(() => {
+                alertBox.style.opacity = '0';
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 500);
+            }, 2000);
+        };
+
+        if (newPwd !== confirmPwd) {
+            showAlert('Mật khẩu xác nhận không khớp!', false);
+            return;
         }
-    </script>
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('currentPassword', current);
+            formData.append('newPassword', newPwd);
+
+            const response = await fetch('/patient/api/change-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData.toString()
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                showAlert(result.success || 'Đổi mật khẩu thành công!', true);
+                document.getElementById('ptChangePwdForm').reset();
+
+                // Đóng modal sau 2 giây cùng lúc thông báo ẩn
+                setTimeout(() => {
+                    closePwdModal();
+                }, 2000);
+            } else {
+                showAlert(result.error || 'Lỗi cập nhật mật khẩu.', false);
+            }
+        } catch (error) {
+            showAlert('Lỗi kết nối server.', false);
+        }
+    }
+</script>
+
 </body>
 </html>
