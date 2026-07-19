@@ -412,37 +412,12 @@
     </head>
     <body>
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-logo">
-                <span><i class="bi bi-droplet-half me-2" style="color:#27ae60"></i>GlucoTrackAlert</span>
-                <small>Hệ thống quản trị</small>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
-                <a href="/admin/doctors" class="nav-item-link active"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
-                <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
-                <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
-                <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
-                <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
-                <a href="/admin/patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
-                <a href="/admin/thresholds" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
-            </nav>
-            <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
-                <div style="color:rgba(255,255,255,.5); font-size:.75rem">Admin</div>
-                <div style="color:#fff; font-size:.85rem; font-weight:600">Nguyễn Quang</div>
-            </div>
-        </div>
+<div th:replace="fragments/layout :: sidebar"></div>
 
 
         <!-- Main -->
         <div class="main">
-            <!-- Topbar -->
-            <div class="topbar">
-                <div>
-                    <h4><i class="bi bi-person-badge me-2" style="color:var(--primary)"></i>Quản lý Bác sĩ</h4>
-                </div>
-            </div>
+<div th:replace="fragments/layout :: topbar('Quản lý Bác sĩ')"></div>
 
             <!-- Stats -->
             <div class="row g-3 mb-4">

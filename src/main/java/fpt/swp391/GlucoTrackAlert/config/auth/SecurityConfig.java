@@ -49,7 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
                         // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
-                        .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/patient/**").hasRole("PATIENT")
                         .requestMatchers("/health-reminders").hasAnyRole("PATIENT", "ADMIN")
@@ -67,6 +67,13 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .successHandler(oAuth2LoginSuccessHandler)
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID", "remember-me", "jwt")
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

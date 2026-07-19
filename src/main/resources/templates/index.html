@@ -191,7 +191,9 @@
                     <div th:if="${isAuthenticated}">
                         <a th:href="${userRole == 'ROLE_ADMIN' ? '/admin/dashboard' : (userRole == 'ROLE_DOCTOR' ? '/doctor/homepage' : '/patient/homepage')}"
                             class="btn btn-primary-custom">Vào Dashboard</a>
-                        <a href="/logout" class="btn btn-outline-custom">Đăng xuất</a>
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-custom">Đăng xuất</button>
+                        </form>
                     </div>
                 </div>
             </div>

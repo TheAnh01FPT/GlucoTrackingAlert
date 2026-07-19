@@ -4,6 +4,8 @@ import fpt.swp391.GlucoTrackAlert.model.Feedback;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.DoctorRecommendationRepository;
+import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.FeedbackRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
@@ -31,6 +33,9 @@ public class FeedbackController {
 
     @Autowired
     private DoctorRecommendationRepository recommendationRepository;
+
+    @Autowired
+    private DoctorRepository doctorRepository;
 
     private static final String[] BAD_WORDS = {
             "địt", "đụ", "cứt", "ngu", "lồn", "cặc", "chó", "đĩ", "đm", "đkm", "vcl"
@@ -63,7 +68,9 @@ public class FeedbackController {
 
         boolean hasReceivedAdvice = !recommendationRepository.findByPatientIdOrderByCreatedAtDesc(patient.getId())
                 .isEmpty();
-        model.addAttribute("canFeedback", hasReceivedAdvice);
+        List<Doctor> doctors = doctorRepository.findAll();
+model.addAttribute("doctors", doctors);
+model.addAttribute("canFeedback", hasReceivedAdvice);
 
         List<Feedback> feedbacks = feedbackRepository.findByPatientOrderByCreatedAtDesc(patient);
         model.addAttribute("feedbacks", feedbacks);
@@ -72,10 +79,12 @@ public class FeedbackController {
     }
 
     // --- PATIENT: SUBMIT FEEDBACK ---
-    @PostMapping("/patient/feedbacks/submit")
+        @PostMapping("/patient/feedbacks/submit")
     public String submitFeedback(@RequestParam("content") String content,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes) {
+                                @RequestParam("doctorId") Long doctorId,
+                                @RequestParam("rating") Integer rating,
+                                Authentication authentication,
+                                RedirectAttributes redirectAttributes) {
         String email = (String) authentication.getPrincipal();
         User user = userRepository.findByEmail(email).orElse(null);
 
@@ -97,14 +106,23 @@ public class FeedbackController {
 
         String filteredContent = filterBadWords(content);
 
+        Doctor doctor = doctorRepository.findById(doctorId).orElse(null);
+        if (doctor == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bác sĩ không tồn tại.");
+            return "redirect:/patient/feedbacks";
+        }
+
         Feedback feedback = new Feedback();
         feedback.setPatient(patient);
+        feedback.setDoctor(doctor);
+        feedback.setRating(rating);
         feedback.setContent(filteredContent);
         feedbackRepository.save(feedback);
 
         redirectAttributes.addFlashAttribute("successMessage", "Đã gửi đánh giá thành công.");
         return "redirect:/patient/feedbacks";
     }
+
 
     // --- PATIENT: UPDATE FEEDBACK ---
     @PostMapping("/patient/feedbacks/update")

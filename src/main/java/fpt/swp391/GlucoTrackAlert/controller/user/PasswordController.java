@@ -25,7 +25,7 @@ public class PasswordController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping({"/doctor/api/change-password", "/patient/api/change-password"})
+    @PostMapping({"/doctor/api/change-password", "/patient/api/change-password", "/admin/api/change-password"})
     public ResponseEntity<?> changePassword(@RequestParam("currentPassword") String currentPassword,
                                             @RequestParam("newPassword") String newPassword) {
         Map<String, String> response = new HashMap<>();
