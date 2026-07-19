@@ -365,31 +365,27 @@
                         <h3 class="fw-bold mb-4" style="color: var(--primary-dark)">Gửi Câu Hỏi Cho Chúng Tôi</h3>
 
                         <!-- Form Liên hệ hướng xử lý API lưu DB -->
-                        <form th:action="@{/api/contact-requests}" method="POST">
+                        <form id="contactForm">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Họ tên</label>
-                                    <input type="text" class="form-control" name="fullName" placeholder="Nguyễn Văn A"
-                                        required>
+                                    <input type="text" class="form-control" name="fullName" placeholder="Nguyễn Văn A" maxlength="150" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Email</label>
-                                    <input type="email" class="form-control" name="email"
-                                        placeholder="example@gmail.com" required>
+                                    <input type="email" class="form-control" name="email" placeholder="example@gmail.com" maxlength="150" required>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label fw-semibold">Số điện thoại</label>
-                                    <input type="text" class="form-control" name="phone" placeholder="0912345678">
+                                    <input type="text" class="form-control" name="phone" placeholder="0912345678 (Tùy chọn)" maxlength="20">
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label fw-semibold">Tiêu đề</label>
-                                    <input type="text" class="form-control" name="subject"
-                                        placeholder="Cần tư vấn dịch vụ..." required>
+                                    <input type="text" class="form-control" name="subject" placeholder="Cần tư vấn dịch vụ..." maxlength="255" required>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label fw-semibold">Nội dung thắc mắc</label>
-                                    <textarea class="form-control" name="message" rows="4"
-                                        placeholder="Nhập câu hỏi của bạn tại đây..." required></textarea>
+                                    <textarea class="form-control" name="message" rows="4" placeholder="Nhập câu hỏi của bạn tại đây..." maxlength="5000" required></textarea>
                                 </div>
                                 <div class="col-md-12 mt-4">
                                     <button type="submit" class="btn btn-primary-custom w-100 py-3">Gửi yêu cầu liên
@@ -417,6 +413,61 @@
 
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript xử lý gửi liên hệ qua AJAX -->
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            
+            const fullName = this.querySelector('input[name="fullName"]').value.trim();
+            const email = this.querySelector('input[name="email"]').value.trim();
+            const phone = this.querySelector('input[name="phone"]').value.trim();
+            const subject = this.querySelector('input[name="subject"]').value.trim();
+            const message = this.querySelector('textarea[name="message"]').value.trim();
+
+            // Validate số điện thoại phía Frontend
+            if (phone && !/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/.test(phone)) {
+                alert("Số điện thoại không đúng định dạng Việt Nam (phải gồm 10 chữ số)!");
+                return;
+            }
+
+            const formData = { fullName, email, phone, subject, message };
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang gửi...';
+
+            fetch('/api/contact-requests', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(async response => {
+                if (response.ok) {
+                    const cardBody = document.querySelector('#contact .col-lg-7 > div');
+                    cardBody.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                            <h3 class="fw-bold mt-4 mb-3 text-success">Gửi liên hệ thành công!</h3>
+                            <p class="text-muted mb-4">Cảm ơn bạn đã quan tâm. Ban Quản Trị GlucoTrackAlert đã nhận được câu hỏi và sẽ phản hồi chi tiết tới email <strong>${formData.email}</strong> của bạn sớm nhất.</p>
+                            <button class="btn btn-outline-success px-4 py-2" onclick="location.reload()">Gửi yêu cầu mới</button>
+                        </div>
+                    `;
+                } else {
+                    const errData = await response.json();
+                    throw new Error(errData.message || 'Gửi liên hệ thất bại.');
+                }
+            })
+            .catch(error => {
+                alert(error.message || 'Gửi liên hệ thất bại. Vui lòng kiểm tra lại mạng hoặc thử lại sau!');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    </script>
 </body>
 
 </html>

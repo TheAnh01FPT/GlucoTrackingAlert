@@ -447,7 +447,8 @@ CREATE TABLE contact_requests (
   status VARCHAR(30) DEFAULT 'new',
   created_at DATETIME,
   handled_at DATETIME,
-  handled_by INT
+  handled_by INT,
+  reply_content TEXT COMMENT 'Nội dung thư phản hồi chi tiết do Admin gửi cho khách vãng lai'
 ) COMMENT = 'Lưu yêu cầu liên hệ từ Guest trên website. Admin có thể xem và xử lý các contact request.';
 
 -- Table: export_requests

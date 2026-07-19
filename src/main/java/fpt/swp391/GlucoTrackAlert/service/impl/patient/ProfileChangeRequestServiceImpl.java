@@ -6,6 +6,7 @@ import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.ProfileChangeRequestRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
+import fpt.swp391.GlucoTrackAlert.service.CloudinaryService;
 import fpt.swp391.GlucoTrackAlert.service.patient.ProfileChangeRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,14 +28,17 @@ public class ProfileChangeRequestServiceImpl implements ProfileChangeRequestServ
     private final ProfileChangeRequestRepository requestRepository;
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
     public ProfileChangeRequestServiceImpl(ProfileChangeRequestRepository requestRepository,
                                            PatientRepository patientRepository,
-                                           UserRepository userRepository) {
+                                           UserRepository userRepository,
+                                           CloudinaryService cloudinaryService) {
         this.requestRepository = requestRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @Override
@@ -58,26 +62,12 @@ public class ProfileChangeRequestServiceImpl implements ProfileChangeRequestServ
             throw new IllegalArgumentException("Vui lòng tải lên tài liệu hoặc ảnh minh chứng y tế.");
         }
 
-        // Handle file storage
+        // Handle file storage via Cloudinary
         String evidenceUrl;
         try {
-            Path uploadDir = Paths.get("uploads");
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-            }
-
-            String originalFilename = evidenceFile.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String fileName = UUID.randomUUID().toString() + extension;
-            Path filePath = uploadDir.resolve(fileName);
-
-            Files.copy(evidenceFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            evidenceUrl = "/uploads/" + fileName;
+            evidenceUrl = cloudinaryService.uploadFile(evidenceFile, "patient_evidences");
         } catch (IOException e) {
-            throw new RuntimeException("Lỗi khi lưu trữ file minh chứng y tế: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi lưu trữ file minh chứng y tế lên Cloudinary: " + e.getMessage(), e);
         }
 
         // Get current values to record in log

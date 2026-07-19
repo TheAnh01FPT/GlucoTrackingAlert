@@ -76,7 +76,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/medications/prescriptions").hasAnyRole("DOCTOR", "ADMIN")
                         .requestMatchers("/api/medications/prescriptions/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                         .requestMatchers("/api/medications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
-
                         .requestMatchers("/health-logs/doctor-view", "/health-logs/doctor-chart").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers("/health-logs/kidney-risk/weekly").hasAnyRole("PATIENT", "ADMIN", "DOCTOR")
                         .requestMatchers("/health-logs/kidney-risk/weekly/**").hasAnyRole("ADMIN", "DOCTOR")
@@ -88,6 +87,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
                         // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/health-logs/**").hasAnyRole("DOCTOR", "ADMIN", "PATIENT")
+                        .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/assignments/**", "/api/assignments").hasAnyRole("ADMIN")
+                        .requestMatchers("/api/patient/assignments/**").hasRole("PATIENT")
+                        .requestMatchers("/api/doctors/**", "/api/doctors").hasAnyRole("ADMIN", "DOCTOR")
+                        // Ảnh avatar bác sĩ: public để bệnh nhân xem được
+                        .requestMatchers("/uploads/doctors/*/avatar*").permitAll()
+                        // /uploads/** chứa ảnh CCCD/chứng chỉ nhạy cảm - không để public
+                        .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
                         .requestMatchers("/api/patient/**", "/api/patient").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/patient/**").hasRole("PATIENT")
                         .requestMatchers("/health-reminders").hasAnyRole("PATIENT", "ADMIN")
