@@ -17,8 +17,12 @@
                 --sidebar-w: 240px;
                 --font: 'Be Vietnam Pro', sans-serif;
             }
-            * { font-family: var(--font); }
-            body { background: #f0f4f8; }
+            * {
+                font-family: var(--font);
+            }
+            body {
+                background: #f0f4f8;
+            }
             .sidebar {
                 width:var(--sidebar-w);
                 min-height:100vh;
@@ -30,112 +34,321 @@
                 flex-direction:column;
                 z-index:100;
             }
-            .sidebar-logo { padding:24px 20px 16px; border-bottom:1px solid rgba(255,255,255,.1); }
-            .sidebar-logo span { color:#fff; font-weight:700; font-size:1.1rem; }
-            .sidebar-logo small { color:rgba(255,255,255,.5); font-size:.7rem; display:block; }
-            .sidebar-nav { padding:12px 0; flex:1; }
+            .sidebar-logo {
+                padding:24px 20px 16px;
+                border-bottom:1px solid rgba(255,255,255,.1);
+            }
+            .sidebar-logo span {
+                color:#fff;
+                font-weight:700;
+                font-size:1.1rem;
+            }
+            .sidebar-logo small {
+                color:rgba(255,255,255,.5);
+                font-size:.7rem;
+                display:block;
+            }
+            .sidebar-nav {
+                padding:12px 0;
+                flex:1;
+            }
             .nav-item-link {
-                display:flex; align-items:center; gap:10px; padding:10px 20px;
-                color:rgba(255,255,255,.7); text-decoration:none; font-size:.875rem; transition:all .2s;
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding:10px 20px;
+                color:rgba(255,255,255,.7);
+                text-decoration:none;
+                font-size:.875rem;
+                transition:all .2s;
             }
             .nav-item-link:hover, .nav-item-link.active {
-                color:#fff; background:rgba(255,255,255,.1); border-left:3px solid var(--accent); padding-left:17px;
+                color:#fff;
+                background:rgba(255,255,255,.1);
+                border-left:3px solid var(--accent);
+                padding-left:17px;
             }
-            .nav-item-link i { font-size:1rem; width:20px; }
-            .main { margin-left:var(--sidebar-w); padding:28px 32px; }
-            .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
-            .topbar h4 { font-weight:700; color:#1a1a2e; margin:0; }
+            .nav-item-link i {
+                font-size:1rem;
+                width:20px;
+            }
+            .main {
+                margin-left:var(--sidebar-w);
+                padding:28px 32px;
+            }
+            .topbar {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                margin-bottom:24px;
+            }
+            .topbar h4 {
+                font-weight:700;
+                color:#1a1a2e;
+                margin:0;
+            }
 
             .panel {
-                background:#fff; border-radius:14px; padding:24px 28px;
-                box-shadow:0 1px 4px rgba(0,0,0,.06); border:1px solid #e8edf5; margin-bottom:24px;
+                background:#fff;
+                border-radius:14px;
+                padding:24px 28px;
+                box-shadow:0 1px 4px rgba(0,0,0,.06);
+                border:1px solid #e8edf5;
+                margin-bottom:24px;
             }
             .panel-title {
-                font-weight:700; color:#1a1a2e; font-size:1rem; margin-bottom:18px;
-                display:flex; align-items:center; gap:8px;
+                font-weight:700;
+                color:#1a1a2e;
+                font-size:1rem;
+                margin-bottom:18px;
+                display:flex;
+                align-items:center;
+                gap:8px;
             }
-            label.form-label { font-size:.82rem; font-weight:600; color:#495057; }
+            label.form-label {
+                font-size:.82rem;
+                font-weight:600;
+                color:#495057;
+            }
             .form-control, .form-select {
-                border-radius:8px; font-size:.875rem; border:1px solid #dde3ee;
+                border-radius:8px;
+                font-size:.875rem;
+                border:1px solid #dde3ee;
             }
             .form-control:focus, .form-select:focus {
-                border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.15);
+                border-color:var(--accent);
+                box-shadow:0 0 0 3px rgba(59,130,246,.15);
             }
             .item-card {
-                border:1px solid #e8edf5; border-radius:10px; padding:18px 18px 8px;
-                margin-bottom:14px; background:#fafbff; position:relative;
+                border:1px solid #e8edf5;
+                border-radius:10px;
+                padding:18px 18px 8px;
+                margin-bottom:14px;
+                background:#fafbff;
+                position:relative;
             }
             .item-card .remove-item-btn {
-                position:absolute; top:10px; right:10px; border:none; background:none;
-                color:#dc3545; font-size:1.1rem; cursor:pointer; line-height:1;
+                position:absolute;
+                top:10px;
+                right:10px;
+                border:none;
+                background:none;
+                color:#dc3545;
+                font-size:1.1rem;
+                cursor:pointer;
+                line-height:1;
             }
-            .item-card .remove-item-btn:hover { color:#a71d2a; }
+            .item-card .remove-item-btn:hover {
+                color:#a71d2a;
+            }
             .btn-add-item {
-                border:1.5px dashed #b9c6e6; background:#fff; color:var(--primary);
-                border-radius:8px; padding:10px; width:100%; font-size:.85rem; font-weight:600;
+                border:1.5px dashed #b9c6e6;
+                background:#fff;
+                color:var(--primary);
+                border-radius:8px;
+                padding:10px;
+                width:100%;
+                font-size:.85rem;
+                font-weight:600;
             }
-            .btn-add-item:hover { background:var(--primary-light); }
+            .btn-add-item:hover {
+                background:var(--primary-light);
+            }
             .btn-primary-glow {
                 background:linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-                border:none; font-weight:600; border-radius:8px; padding:10px 22px; font-size:.9rem;
+                border:none;
+                font-weight:600;
+                border-radius:8px;
+                padding:10px 22px;
+                font-size:.9rem;
             }
-            .btn-primary-glow:disabled { opacity:.6; }
+            .btn-primary-glow:disabled {
+                opacity:.6;
+            }
 
             .rx-card {
-                border:1px solid #e8edf5; border-radius:10px; padding:16px 18px; margin-bottom:12px;
+                border:1px solid #e8edf5;
+                border-radius:10px;
+                padding:16px 18px;
+                margin-bottom:12px;
                 background:#fff;
             }
-            .rx-card .rx-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+            .rx-card .rx-head {
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:8px;
+            }
             .rx-status {
-                font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:20px;
-                text-transform:uppercase; letter-spacing:.4px;
+                font-size:.72rem;
+                font-weight:700;
+                padding:3px 10px;
+                border-radius:20px;
+                text-transform:uppercase;
+                letter-spacing:.4px;
             }
-            .rx-status.ACTIVE { background:#d4edda; color:#155724; }
-            .rx-status.CANCELLED { background:#f8d7da; color:#721c24; }
+            .rx-status.ACTIVE {
+                background:#d4edda;
+                color:#155724;
+            }
+            .rx-status.CANCELLED {
+                background:#f8d7da;
+                color:#721c24;
+            }
             .rx-item-row {
-                font-size:.83rem; color:#495057; padding:6px 0; border-top:1px dashed #eef1f6;
+                font-size:.83rem;
+                color:#495057;
+                padding:6px 0;
+                border-top:1px dashed #eef1f6;
             }
-            .rx-item-row:first-of-type { border-top:none; }
+            .rx-item-row:first-of-type {
+                border-top:none;
+            }
             .badge-soft {
-                background:#eef2ff; color:#4338ca; border-radius:6px; padding:2px 8px; font-size:.72rem; font-weight:600;
+                background:#eef2ff;
+                color:#4338ca;
+                border-radius:6px;
+                padding:2px 8px;
+                font-size:.72rem;
+                font-weight:600;
             }
             .alert-floating {
-                position:fixed; top:20px; right:20px; z-index:1000; min-width:300px;
+                position:fixed;
+                top:20px;
+                right:20px;
+                z-index:1000;
+                min-width:300px;
                 box-shadow:0 8px 24px rgba(0,0,0,.15);
             }
-            .empty-hint { text-align:center; color:#9aa3b5; padding:32px 0; font-size:.85rem; }
+            .empty-hint {
+                text-align:center;
+                color:#9aa3b5;
+                padding:32px 0;
+                font-size:.85rem;
+            }
 
             /* Card chỉ số bệnh nhân */
             .stats-card {
                 background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
-                border: 1px solid #bfdbfe; border-radius: 12px;
-                padding: 16px 20px; margin-bottom: 16px; display: none;
+                border: 1px solid #bfdbfe;
+                border-radius: 12px;
+                padding: 16px 20px;
+                margin-bottom: 16px;
+                display: none;
             }
-            .stats-card.visible { display: block; }
-            .stats-card .stat-row { display:flex; gap:20px; flex-wrap:wrap; margin-top:10px; }
+            .stats-card.visible {
+                display: block;
+            }
+            .stats-card .stat-row {
+                display:flex;
+                gap:20px;
+                flex-wrap:wrap;
+                margin-top:10px;
+            }
             .stat-box {
-                background:#fff; border-radius:8px; padding:10px 16px;
-                border:1px solid #e0e7ff; flex:1; min-width:110px; text-align:center;
+                background:#fff;
+                border-radius:8px;
+                padding:10px 16px;
+                border:1px solid #e0e7ff;
+                flex:1;
+                min-width:110px;
+                text-align:center;
             }
-            .stat-box .val { font-size:1.25rem; font-weight:700; color:#1e3a8a; }
-            .stat-box .lbl { font-size:.72rem; color:#6b7280; margin-top:2px; }
-            .stat-box.danger .val { color:#dc2626; }
-            .stat-box.warning .val { color:#d97706; }
-            .stat-box.ok .val { color:#16a34a; }
+            .stat-box .val {
+                font-size:1.25rem;
+                font-weight:700;
+                color:#1e3a8a;
+            }
+            .stat-box .lbl {
+                font-size:.72rem;
+                color:#6b7280;
+                margin-top:2px;
+            }
+            .stat-box.danger .val {
+                color:#dc2626;
+            }
+            .stat-box.warning .val {
+                color:#d97706;
+            }
+            .stat-box.ok .val {
+                color:#16a34a;
+            }
 
             /* Nút AI */
             .btn-ai {
                 background: linear-gradient(135deg, #7c3aed, #4f46e5);
-                color:#fff; border:none; border-radius:8px;
-                padding:9px 18px; font-size:.875rem; font-weight:600;
-                cursor:pointer; display:flex; align-items:center; gap:8px;
+                color:#fff;
+                border:none;
+                border-radius:8px;
+                padding:9px 18px;
+                font-size:.875rem;
+                font-weight:600;
+                cursor:pointer;
+                display:flex;
+                align-items:center;
+                gap:8px;
                 transition: opacity .2s;
             }
-            .btn-ai:hover { opacity:.88; }
-            .btn-ai:disabled { opacity:.5; cursor:not-allowed; }
+            .btn-ai:hover {
+                opacity:.88;
+            }
+            .btn-ai:disabled {
+                opacity:.5;
+                cursor:not-allowed;
+            }
             .ai-badge {
-                background:#7c3aed; color:#fff; font-size:.65rem; font-weight:700;
-                padding:2px 7px; border-radius:10px; letter-spacing:.4px;
+                background:#7c3aed;
+                color:#fff;
+                font-size:.65rem;
+                font-weight:700;
+                padding:2px 7px;
+                border-radius:10px;
+                letter-spacing:.4px;
+            }
+
+            /* Dropdown gợi ý thuốc (gõ để tìm) */
+            .medicine-field {
+                position: relative;
+            }
+            .medicine-suggestions {
+                position: absolute;
+                top: calc(100% + 6px);
+                left: 0;
+                right: 0;
+                z-index: 50;
+                background: #fff;
+                border: 1px solid #e4e8f1;
+                border-radius: 12px;
+                max-height: 240px;
+                overflow-y: auto;
+                box-shadow: 0 12px 28px rgba(20,30,60,.12);
+                padding: 6px;
+            }
+            .medicine-suggestions .suggestion-item {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 9px 12px;
+                margin: 2px 0;
+                border: none;
+                border-radius: 8px;
+                background: none;
+                font-size: .85rem;
+                line-height: 1.3;
+                color: #1a1a2e;
+                cursor: pointer;
+                transition: background .12s ease;
+            }
+            .medicine-suggestions .suggestion-item:hover,
+            .medicine-suggestions .suggestion-item.active {
+                background: var(--primary-light);
+                color: var(--primary);
+            }
+            .medicine-suggestions .suggestion-empty {
+                padding: 10px 12px;
+                font-size: .8rem;
+                color: #9aa3b5;
+                text-align: center;
             }
         </style>
     </head>
@@ -184,10 +397,6 @@
                                     <i class="bi bi-activity me-1"></i> Chỉ số gần nhất
                                     <span style="font-weight:400; color:#6b7280; font-size:.75rem;" id="statsDate"></span>
                                 </div>
-                                <button type="button" class="btn-ai" id="btnAiSuggest" onclick="aiSuggest()">
-                                    <i class="bi bi-stars"></i> Gợi ý AI
-                                    <span class="ai-badge">AI</span>
-                                </button>
                             </div>
                             <div class="stat-row">
                                 <div class="stat-box" id="boxBloodSugar">
@@ -251,9 +460,11 @@
             <div class="item-card">
                 <button type="button" class="remove-item-btn" title="Xoá thuốc này"><i class="bi bi-x-circle-fill"></i></button>
                 <div class="row g-2">
-                    <div class="col-md-6">
+                    <div class="col-md-6 medicine-field">
                         <label class="form-label">Tên thuốc *</label>
-                        <input type="text" class="form-control item-medicineName" placeholder="VD: Metformin 500mg"/>
+                        <input type="text" class="form-control item-medicineName"
+                               placeholder="Gõ để tìm trong danh mục, hoặc nhập tên khác" autocomplete="off"/>
+                        <div class="medicine-suggestions d-none"></div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Liều lượng *</label>
@@ -275,6 +486,7 @@
                         <label class="form-label">Hướng dẫn sử dụng</label>
                         <input type="text" class="form-control item-instructions" placeholder="VD: Uống sau ăn"/>
                     </div>
+                    <div class="col-md-12 item-contraindications d-none" style="background:#fff5f5;border-left:3px solid #e53e3e;padding:6px 10px;margin-top:6px;font-size:.8rem;color:#c53030;border-radius:0 4px 4px 0;"></div>
                 </div>
             </div>
         </template>
@@ -308,28 +520,38 @@
 
             function getDoctorIdFromUrl() {
                 return new URLSearchParams(window.location.search).get('doctorId')
-                    || localStorage.getItem('doctorId');
+                        || localStorage.getItem('doctorId');
             }
 
             async function loadDoctorName() {
                 try {
                     const doc = await fetch(`/api/doctors/${currentDoctorId}`, {headers: authHeaders()})
-                        .then(r => { if (handleAuthError(r.status)) return null; return r.json(); });
-                    if (doc) document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
-                } catch (e) { /* không chặn luồng chính nếu lỗi */ }
+                            .then(r => {
+                                if (handleAuthError(r.status))
+                                    return null;
+                                return r.json();
+                            });
+                    if (doc)
+                        document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
+                } catch (e) { /* không chặn luồng chính nếu lỗi */
+                }
             }
 
             async function loadPatientOptions() {
                 const select = document.getElementById('patientSelect');
                 try {
                     const patients = await fetch(`/api/doctor/${currentDoctorId}/patients`, {headers: authHeaders()})
-                        .then(r => { if (handleAuthError(r.status)) return []; return r.json(); });
+                            .then(r => {
+                                if (handleAuthError(r.status))
+                                    return [];
+                                return r.json();
+                            });
                     if (!patients || !patients.length) {
                         select.innerHTML = '<option value="">— Bạn chưa có bệnh nhân nào được phân công —</option>';
                         return;
                     }
                     select.innerHTML = '<option value="">— Chọn bệnh nhân —</option>' +
-                        patients.map(p => `<option value="${p.id}">${p.fullName || ('Bệnh nhân #' + p.id)}${p.phone ? ' · ' + p.phone : ''}</option>`).join('');
+                            patients.map(p => `<option value="${p.id}">${p.fullName || ('Bệnh nhân #' + p.id)}${p.phone ? ' · ' + p.phone : ''}</option>`).join('');
 
                     const presetId = new URLSearchParams(window.location.search).get('patientId');
                     if (presetId) {
@@ -340,6 +562,79 @@
                 } catch (e) {
                     select.innerHTML = '<option value="">— Lỗi tải danh sách bệnh nhân —</option>';
                 }
+            }
+
+            // ==================== DANH MỤC THUỐC (dropdown gõ-để-tìm tự viết) ====================
+            let medicineCatalog = [];
+
+            async function loadMedicineCatalog() {
+                try {
+                    medicineCatalog = await fetch('/api/medications/catalog', {headers: authHeaders()})
+                            .then(r => {
+                                if (handleAuthError(r.status))
+                                    return [];
+                                return r.json();
+                            });
+                } catch (e) {
+                    medicineCatalog = [];
+                }
+            }
+
+            function checkContraindication(nameInput, contraBox) {
+                // So khớp đúng tên với danh mục để hiện cảnh báo chống chỉ định;
+                // gõ tên không khớp (thuốc ngoài danh mục) vẫn được chấp nhận bình thường.
+                const med = medicineCatalog.find(m => m.name === nameInput.value);
+                if (med && med.contraindications) {
+                    contraBox.textContent = `🚫 Chống chỉ định: ${med.contraindications}`;
+                    contraBox.classList.remove('d-none');
+                } else {
+                    contraBox.textContent = '';
+                    contraBox.classList.add('d-none');
+                }
+            }
+
+            function renderSuggestions(box, matches, nameInput, contraBox) {
+                if (!matches.length) {
+                    box.innerHTML = '<div class="suggestion-empty">Không có thuốc khớp trong danh mục — cứ gõ tiếp tên bạn muốn</div>';
+                } else {
+                    box.innerHTML = matches.map(m =>
+                            `<button type="button" class="suggestion-item" data-name="${escapeHtml(m.name)}">${escapeHtml(m.name)}</button>`
+                    ).join('');
+                }
+                box.classList.remove('d-none');
+
+                box.querySelectorAll('.suggestion-item').forEach(btn => {
+                    // dùng mousedown thay vì click để chạy TRƯỚC sự kiện blur của input
+                    btn.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        nameInput.value = btn.dataset.name;
+                        box.classList.add('d-none');
+                        checkContraindication(nameInput, contraBox);
+                    });
+                });
+            }
+
+            function wireMedicineSelect(card) {
+                const nameInput = card.querySelector('.item-medicineName');
+                const box = card.querySelector('.medicine-suggestions');
+                const contraBox = card.querySelector('.item-contraindications');
+
+                const showFiltered = () => {
+                    const q = nameInput.value.trim().toLowerCase();
+                    const matches = (q ? medicineCatalog.filter(m => m.name.toLowerCase().includes(q)) : medicineCatalog)
+                            .slice(0, 8);
+                    renderSuggestions(box, matches, nameInput, contraBox);
+                };
+
+                nameInput.addEventListener('focus', showFiltered);
+                nameInput.addEventListener('input', () => {
+                    showFiltered();
+                    checkContraindication(nameInput, contraBox);
+                });
+                nameInput.addEventListener('blur', () => {
+                    // delay nhỏ để mousedown trên gợi ý kịp xử lý trước khi list bị ẩn
+                    setTimeout(() => box.classList.add('d-none'), 150);
+                });
             }
 
             function addItemRow() {
@@ -354,6 +649,7 @@
                         showToast('Đơn thuốc phải có ít nhất một loại thuốc', 'warning');
                     }
                 });
+                wireMedicineSelect(card);
                 document.getElementById('itemsContainer').appendChild(clone);
             }
 
@@ -384,16 +680,22 @@
             }
 
             function validateBeforeSubmit(patientId, items) {
-                if (!patientId) return 'Vui lòng chọn bệnh nhân';
-                if (!items.length) return 'Vui lòng nhập ít nhất một loại thuốc';
+                if (!patientId)
+                    return 'Vui lòng chọn bệnh nhân';
+                if (!items.length)
+                    return 'Vui lòng nhập ít nhất một loại thuốc';
                 for (const it of items) {
-                    if (!it.medicineName) return 'Tên thuốc không được để trống';
-                    if (!it.dosage) return 'Liều lượng không được để trống';
-                    if (!it.timeOfDay) return 'Giờ uống thuốc không được để trống';
+                    if (!it.medicineName)
+                        return 'Tên thuốc không được để trống';
+                    if (!it.dosage)
+                        return 'Liều lượng không được để trống';
+                    if (!it.timeOfDay)
+                        return 'Giờ uống thuốc không được để trống';
                     if (!/^([01]\d|2[0-3]):[0-5]\d(\s*,\s*([01]\d|2[0-3]):[0-5]\d)*$/.test(it.timeOfDay)) {
                         return `Giờ uống thuốc "${it.timeOfDay}" sai định dạng (vd: 07:00,12:00,19:00)`;
                     }
-                    if (!it.durationDays || it.durationDays < 1) return 'Số ngày uống thuốc phải lớn hơn hoặc bằng 1';
+                    if (!it.durationDays || it.durationDays < 1)
+                        return 'Số ngày uống thuốc phải lớn hơn hoặc bằng 1';
                 }
                 return null;
             }
@@ -424,7 +726,8 @@
                         headers: authHeaders({'Content-Type': 'application/json'}),
                         body: JSON.stringify(payload)
                     });
-                    if (handleAuthError(res.status)) return;
+                    if (handleAuthError(res.status))
+                        return;
 
                     const data = await res.json();
                     if (!res.ok) {
@@ -457,7 +760,8 @@
                 list.innerHTML = '<div class="empty-hint"><i class="bi bi-arrow-clockwise"></i> Đang tải...</div>';
                 try {
                     const res = await fetch(`/api/medications/prescriptions/patient/${patientId}`, {headers: authHeaders()});
-                    if (handleAuthError(res.status)) return;
+                    if (handleAuthError(res.status))
+                        return;
                     const prescriptions = await res.json();
                     renderPrescriptions(prescriptions);
                 } catch (e) {
@@ -497,20 +801,23 @@
             }
 
             function escapeHtml(text) {
-                if (!text) return '';
+                if (!text)
+                    return '';
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
             }
 
             async function cancelPrescription(rxId) {
-                if (!confirm(`Xác nhận huỷ đơn thuốc #${rxId}? Các lời nhắc uống thuốc liên quan cũng sẽ bị huỷ.`)) return;
+                if (!confirm(`Xác nhận huỷ đơn thuốc #${rxId}? Các lời nhắc uống thuốc liên quan cũng sẽ bị huỷ.`))
+                    return;
                 try {
                     const res = await fetch(`/api/medications/prescriptions/${rxId}/cancel`, {
                         method: 'PATCH',
                         headers: authHeaders()
                     });
-                    if (handleAuthError(res.status)) return;
+                    if (handleAuthError(res.status))
+                        return;
                     if (!res.ok) {
                         showToast('Không thể huỷ đơn thuốc', 'danger');
                         return;
@@ -577,88 +884,18 @@
                     } else {
                         document.getElementById('statsSymptoms').style.display = 'none';
                     }
-                } catch(e) {
+                } catch (e) {
                     card.classList.remove('visible');
                     currentStats = null;
                 }
             }
 
-            // ==================== GỢI Ý AI ====================
-            async function aiSuggest() {
-                if (!currentStats) return;
-                const patientId = document.getElementById('patientSelect').value;
-                const patientName = document.getElementById('patientSelect').selectedOptions[0]?.text || 'bệnh nhân';
+            // ==================== KẾT THÚC PHẦN CHỈ SỐ / DANH MỤC THUỐC ====================
 
-                const btn = document.getElementById('btnAiSuggest');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang phân tích... <span class="ai-badge">AI</span>';
-
-                try {
-                    // Gọi backend proxy — API key được giữ an toàn phía server
-                    const res = await fetch('/api/ai/suggest', {
-                        method: 'POST',
-                        headers: authHeaders({'Content-Type': 'application/json'}),
-                        body: JSON.stringify(currentStats)
-                    });
-
-                    if (!res.ok) {
-                        const err = await res.json();
-                        throw new Error(err.error || 'Lỗi server');
-                    }
-
-                    const suggestion = await res.json();
-
-                    // Điền vào form
-                    if (suggestion.note) {
-                        document.getElementById('prescriptionNote').value = suggestion.note;
-                    }
-
-                    // Xoá các item cũ, thêm item từ AI
-                    document.getElementById('itemsContainer').innerHTML = '';
-                    // Xoá cảnh báo cũ nếu có
-                    const oldWarning = document.getElementById('ai-warning-box');
-                    if (oldWarning) oldWarning.remove();
-
-                    // Hiển thị cảnh báo đặc biệt (vd: pediatric, needsManualReview)
-                    if (suggestion.warning || suggestion.needsManualReview) {
-                        const warningBox = document.createElement('div');
-                        warningBox.id = 'ai-warning-box';
-                        warningBox.style = 'background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.85rem;color:#856404;';
-                        warningBox.innerHTML = `⚠️ <strong>Lưu ý:</strong> ${suggestion.warning || 'Độ tin cậy AI thấp — bác sĩ cần xem xét kỹ hơn bình thường.'}`;
-                        document.getElementById('itemsContainer').before(warningBox);
-                    }
-                    (suggestion.items || []).forEach(item => {
-                        addItemRow();
-                        const cards = document.querySelectorAll('#itemsContainer .item-card');
-                        const card = cards[cards.length - 1];
-                        card.querySelector('.item-medicineName').value = item.medicineName || '';
-                        card.querySelector('.item-dosage').value = item.dosage || '';
-                        card.querySelector('.item-frequency').value = item.frequency || '';
-                        card.querySelector('.item-timeOfDay').value = item.timeOfDay || '';
-                        card.querySelector('.item-durationDays').value = item.durationDays || '';
-                        card.querySelector('.item-instructions').value = item.instructions || '';
-
-                        // Hiển thị chống chỉ định ngay dưới mỗi thuốc
-                        if (item.contraindications) {
-                            const contra = document.createElement('div');
-                            contra.style = 'background:#fff5f5;border-left:3px solid #e53e3e;padding:6px 10px;margin-top:6px;font-size:.8rem;color:#c53030;border-radius:0 4px 4px 0;';
-                            contra.innerHTML = `🚫 <strong>Chống chỉ định:</strong> ${item.contraindications}`;
-                            card.appendChild(contra);
-                        }
-                    });
-
-                    showToast('✅ AI đã gợi ý đơn thuốc. Vui lòng xem lại trước khi kê đơn.', 'success');
-                } catch(e) {
-                    showToast('Không thể lấy gợi ý AI: ' + e.message, 'danger');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-stars"></i> Gợi ý AI <span class="ai-badge">AI</span>';
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', async function () {
                 currentDoctorId = getDoctorIdFromUrl();
                 document.getElementById('prescribedDate').value = new Date().toISOString().slice(0, 10);
+                await loadMedicineCatalog();
                 addItemRow();
 
                 if (!currentDoctorId) {

@@ -28,7 +28,7 @@ public class DoctorThresholdController {
     @Autowired
     private fpt.swp391.GlucoTrackAlert.repository.user.UserRepository userRepository;
     @Autowired
-    private fpt.swp391.GlucoTrackAlert.repository.DoctorRepository doctorRepository;
+    private fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository doctorRepository;
     @Autowired
     private fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository assignmentRepository;
 
@@ -50,7 +50,7 @@ public class DoctorThresholdController {
         if (hasRole("ROLE_ADMIN")) return true;
         if (!hasRole("ROLE_DOCTOR")) return false;
         Long currentUserId = getCurrentUserId();
-        fpt.swp391.GlucoTrackAlert.model.Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+        fpt.swp391.GlucoTrackAlert.doctor.Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
         if (doctor == null) return false;
         return assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId).isPresent();
     }

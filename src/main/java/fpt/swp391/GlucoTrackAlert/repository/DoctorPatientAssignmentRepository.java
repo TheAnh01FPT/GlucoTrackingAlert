@@ -19,7 +19,13 @@ public interface DoctorPatientAssignmentRepository
 
     List<DoctorPatientAssignment> findByPatientIdAndStatus(Long patientId, String status);
 
+    List<DoctorPatientAssignment> findByPatientId(Long patientId);
+
     Optional<DoctorPatientAssignment> findByDoctorIdAndPatientId(Long doctorId, Long patientId);
 
     long countByDoctorIdAndStatus(Long doctorId, String status);
+
+    Optional<DoctorPatientAssignment> findFirstByPatientIdAndStatus(Long patientId, String status);
+
+    List<DoctorPatientAssignment> findByStatus(String status);
 }

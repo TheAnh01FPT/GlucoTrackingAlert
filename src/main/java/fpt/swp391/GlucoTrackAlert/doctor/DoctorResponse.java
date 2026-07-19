@@ -1,7 +1,7 @@
-package fpt.swp391.GlucoTrackAlert.dto;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import lombok.Getter;
 import lombok.Setter;
 

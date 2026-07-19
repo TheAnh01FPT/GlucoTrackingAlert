@@ -1,12 +1,6 @@
-package fpt.swp391.GlucoTrackAlert.controller;
+package fpt.swp391.GlucoTrackAlert.doctor;
 
-import fpt.swp391.GlucoTrackAlert.dto.AdminCreateDoctorRequest;
-import fpt.swp391.GlucoTrackAlert.dto.DoctorRequest;
-import fpt.swp391.GlucoTrackAlert.dto.DoctorResponse;
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
-import fpt.swp391.GlucoTrackAlert.model.Doctor;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRepository;
-import fpt.swp391.GlucoTrackAlert.service.DoctorService;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.nio.file.Files;

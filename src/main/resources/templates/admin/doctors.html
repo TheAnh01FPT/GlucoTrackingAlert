@@ -412,6 +412,25 @@
     </head>
     <body>
 
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <span><i class="bi bi-droplet-half me-2" style="color:#27ae60"></i>GlucoTrackAlert</span>
+                <small>Hệ thống quản trị</small>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+                <a href="/admin/doctors" class="nav-item-link active"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
+                <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
+                <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
+                <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
+                <a href="/admin/thresholds" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+            </nav>
+            <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
+                <div style="color:rgba(255,255,255,.5); font-size:.75rem">Admin</div>
+                <div style="color:#fff; font-size:.85rem; font-weight:600">Nguyễn Quang</div>
+            </div>
+        </div>
 <div th:replace="fragments/layout :: sidebar"></div>
 
 
@@ -779,7 +798,6 @@
                                 let allShifts = [];
                                 let filteredDoctors = [];
                                 let deactivateTargetId = null;
-                                let doctorModal, deactivateModal, toastEl;
                                 let hardDeleteTargetId = null;
                                 let doctorModal, deactivateModal, hardDeleteModal, toastEl;
                                 const PAGE_SIZE = 10;
@@ -931,7 +949,6 @@
                         <td>
                             <button class="action-btn edit" onclick='openEdit(${JSON.stringify(d)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
                             ${(d.status === 'pending_approval') ? `<button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt"><i class="bi bi-shield-check"></i></button>` : ''}
-                            <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
                             <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
                             <button class="action-btn" style="color:var(--danger);opacity:${d.status === 'inactive' ? '1' : '0.3'};cursor:${d.status === 'inactive' ? 'pointer' : 'not-allowed'}" onclick="${d.status === 'inactive' ? 'openHardDelete(' + d.id + ')' : 'void(0)'}" title="${d.status === 'inactive' ? 'Xóa vĩnh viễn' : 'Phải ngừng hoạt động trước'}"><i class="bi bi-trash3"></i></button>
                         </td>

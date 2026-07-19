@@ -350,9 +350,38 @@
                         <div><div class="stat-label">Bác sĩ có phân công</div><div class="stat-val" id="doctorCount">–</div></div>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fff3cd; color:#856404"><i class="bi bi-hourglass-split"></i></div>
+                        <div><div class="stat-label">Đề xuất chờ duyệt</div><div class="stat-val" id="pendingCount">–</div></div>
+                    </div>
+                </div>
             </div>
 
             <div id="autoInactiveWarn" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:10px; padding:12px 16px; margin-bottom:16px; align-items:center; color:#856404; font-size:.875rem; gap:8px;">
+            </div>
+
+            <!-- Khu vực: Đề xuất bác sĩ từ bệnh nhân, chờ Admin duyệt -->
+            <div class="table-wrap mb-4" id="pendingSection">
+                <div style="padding:14px 20px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between;">
+                    <h6 class="fw-700 mb-0"><i class="bi bi-hourglass-split me-2" style="color:#856404"></i>Đề xuất chờ duyệt</h6>
+                </div>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Bệnh nhân</th>
+                            <th style="width:30px"></th>
+                            <th>Bác sĩ đề xuất</th>
+                            <th>Thời gian đề xuất</th>
+                            <th>Ghi chú</th>
+                            <th style="width:170px">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTable">
+                        <tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-arrow-clockwise me-1"></i>Đang tải...</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="toolbar">
@@ -484,6 +513,26 @@
             </div>
         </div>
 
+        <!-- Modal Từ chối đề xuất -->
+        <div class="modal fade" id="rejectModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Từ chối đề xuất</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="rejectReason" rows="3" placeholder="Nhập lý do để bệnh nhân biết vì sao bị từ chối..."></textarea>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-danger" onclick="confirmReject()">Xác nhận từ chối</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
                             const PAGE_SIZE = 10;
@@ -494,6 +543,8 @@
                             const assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
                             const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
                             const hardDeleteModal = new bootstrap.Modal(document.getElementById('hardDeleteModal'));
+                            const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+                            let rejectTargetId = null;
                             const toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
 
                             async function loadAll() {
@@ -517,13 +568,8 @@
                                         fetchJson('/api/patient')
                                     ]);
                                     allAssignments = Array.isArray(a) ? a : [];
-<<<<<<< HEAD
                                     allDoctors = Array.isArray(d) ? d : [];
                                     allPatients = Array.isArray(p) ? p : [];
-=======
-                                    allDoctors     = Array.isArray(d) ? d : [];
-                                    allPatients    = Array.isArray(p) ? p : [];
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                     populateDoctorSelect();
                                     filteredList = [...allAssignments];
                                     applyFilters();
@@ -582,6 +628,98 @@
                                 if (!str)
                                     return '–';
                                 return new Date(str).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+                            }
+
+                            // ===== Đề xuất chờ duyệt (bệnh nhân đề xuất bác sĩ) =====
+                            async function loadPending() {
+                                try {
+                                    const token = localStorage.getItem('token');
+                                    const res = await fetch('/api/assignments/pending', {headers: {'Authorization': `Bearer ${token}`}});
+                                    if (!res.ok) {
+                                        if (handleAuthError(res.status))
+                                            return;
+                                        throw new Error(await res.text());
+                                    }
+                                    const list = await res.json();
+                                    document.getElementById('pendingCount').textContent = list.length;
+                                    renderPendingTable(list);
+                                } catch (err) {
+                                    console.error('[loadPending] Lỗi:', err);
+                                    document.getElementById('pendingTable').innerHTML =
+                                            `<tr><td colspan="7" class="text-center text-danger py-4">Lỗi tải danh sách đề xuất</td></tr>`;
+                                }
+                            }
+
+                            function renderPendingTable(list) {
+                                const tbody = document.getElementById('pendingTable');
+                                if (!list.length) {
+                                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Không có đề xuất nào đang chờ duyệt</td></tr>';
+                                    return;
+                                }
+                                tbody.innerHTML = list.map((a, i) => `
+                <tr>
+                    <td class="text-muted">${i + 1}</td>
+                    <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${a.patientName || 'N/A'}</span></td>
+                    <td class="link-icon"><i class="bi bi-arrow-right"></i></td>
+                    <td><span class="pill-doctor"><i class="bi bi-person-badge me-1"></i>${a.doctorName || 'N/A'}</span></td>
+                    <td style="font-size:.82rem; color:#666">${fmtDate(a.assignedAt)}</td>
+                    <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${a.note || ''}">${a.note || '<span class="text-muted">–</span>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success me-1" onclick="approveAssignment(${a.id})"><i class="bi bi-check-lg"></i> Duyệt</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="openReject(${a.id})"><i class="bi bi-x-lg"></i> Từ chối</button>
+                    </td>
+                </tr>`).join('');
+                            }
+
+                            async function approveAssignment(id) {
+                                try {
+                                    const res = await fetch(`/api/assignments/${id}/approve`, {method: 'PUT', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                    if (!res.ok) {
+                                        if (handleAuthError(res.status))
+                                            return;
+                                        const err = await res.text();
+                                        showToast('❌ ' + (err || 'Duyệt thất bại'), 'danger');
+                                        return;
+                                    }
+                                    showToast('Đã duyệt đề xuất!', 'success');
+                                    loadPending();
+                                    loadAll();
+                                } catch {
+                                    showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
+                                }
+                            }
+
+                            function openReject(id) {
+                                rejectTargetId = id;
+                                document.getElementById('rejectReason').value = '';
+                                rejectModal.show();
+                            }
+
+                            async function confirmReject() {
+                                const reason = document.getElementById('rejectReason').value.trim();
+                                if (!reason) {
+                                    showToast('Vui lòng nhập lý do từ chối!', 'danger');
+                                    return;
+                                }
+                                try {
+                                    const res = await fetch(`/api/assignments/${rejectTargetId}/reject`, {
+                                        method: 'PUT',
+                                        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
+                                        body: JSON.stringify({reason})
+                                    });
+                                    if (!res.ok) {
+                                        if (handleAuthError(res.status))
+                                            return;
+                                        const err = await res.text();
+                                        showToast('❌ ' + (err || 'Từ chối thất bại'), 'danger');
+                                        return;
+                                    }
+                                    rejectModal.hide();
+                                    showToast('Đã từ chối đề xuất!', 'success');
+                                    loadPending();
+                                } catch {
+                                    showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
+                                }
                             }
 
                             function renderTable(list, offset = 0) {
@@ -698,7 +836,6 @@
                                 const doctorSel = document.getElementById('doctorSelect');
                                 if (a.doctorId) {
                                     const matchIndex = Array.from(doctorSel.options).findIndex(o => {
-<<<<<<< HEAD
                                         try {
                                             return JSON.parse(o.value)?.id == a.doctorId;
                                         } catch {
@@ -707,11 +844,6 @@
                                     });
                                     if (matchIndex >= 0)
                                         doctorSel.selectedIndex = matchIndex;
-=======
-                                        try { return JSON.parse(o.value)?.id == a.doctorId; } catch { return false; }
-                                    });
-                                    if (matchIndex >= 0) doctorSel.selectedIndex = matchIndex;
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                 }
                                 assignModal.show();
                             }
@@ -730,7 +862,6 @@
                                         showToast('Vui lòng chọn bệnh nhân!', 'danger');
                                         return;
                                     }
-<<<<<<< HEAD
                                     const doctorObj = JSON.parse(doctorRaw);
                                     const patientObj = JSON.parse(patientRaw);
                                     payload = {
@@ -738,13 +869,6 @@
                                         patientId: patientObj.id,
                                         note: document.getElementById('note').value,
                                         status: document.getElementById('assignStatus').value
-=======
-                                    payload = {
-                                        note: document.getElementById('note').value,
-                                        status: document.getElementById('assignStatus').value,
-                                        patient: JSON.parse(patientRaw),
-                                        doctor: JSON.parse(doctorRaw)
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                     };
                                 } else {
                                     const doctorRaw = document.getElementById('doctorSelect').value;
@@ -757,13 +881,9 @@
                                         showToast('Vui lòng chọn bệnh nhân!', 'danger');
                                         return;
                                     }
-<<<<<<< HEAD
                                     const doctorObj = JSON.parse(doctorRaw);
                                     const patientObj = JSON.parse(patientRaw);
                                     payload = {doctorId: doctorObj.id, patientId: patientObj.id, note: document.getElementById('note').value};
-=======
-                                    payload = {doctor: JSON.parse(doctorRaw), patient: JSON.parse(patientRaw), note: document.getElementById('note').value};
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                 }
 
 
@@ -822,7 +942,6 @@
                             }
 
                             function handleAuthError(status) {
-<<<<<<< HEAD
                                 if (status === 401 || status === 403) {
                                     localStorage.clear();
                                     document.cookie = 'jwt=; path=/; max-age=0';
@@ -833,18 +952,6 @@
                             }
 
                             function showToast(msg, type) {
-=======
-                if (status === 401 || status === 403) {
-                    localStorage.clear();
-                    document.cookie = 'jwt=; path=/; max-age=0';
-                    window.location.href = '/login';
-                    return true;
-                }
-                return false;
-            }
-
-            function showToast(msg, type) {
->>>>>>> 9591773d0b033e209124fc98320d74559225412f
                                 const el = document.getElementById('toast');
                                 el.className = `toast align-items-center text-bg-${type} border-0`;
                                 // Strip HTML tags từ server error response
@@ -855,6 +962,7 @@
                             }
 
                             loadAll();
+                            loadPending();
         </script>
     </body>
 </html>

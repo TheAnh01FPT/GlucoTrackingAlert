@@ -1,4 +1,5 @@
 package fpt.swp391.GlucoTrackAlert.model;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
@@ -11,40 +12,33 @@ public class Duy_Meal_Logs {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FIX 1: Đổi tên cột từ "user_id" → "patient_id" cho đúng với bảng patients
     @Column(name = "patient_id", nullable = false)
     private Long patientId;
 
-    @NotBlank(message = "Ten mon an khong duoc de trong")
-    @Column(name = "food_name", nullable = false)
-    private String foodName;
-
-    @Column(name = "quantity_text")
-    private String quantityText;
-
-    @Column(name = "sugar_estimation")
-    private Double sugarEstimation;
+    @NotBlank(message = "Mo ta mon an khong duoc de trong")
+    @Column(name = "food_name", nullable = false, columnDefinition = "TEXT")
+    private String foodName;  // ✅ giữ tên Java cũ để frontend không phải đổi
 
     @Column(name = "meal_type")
-    private String mealType;
+    private String mealType;  // ✅ giữ tên Java cũ
 
-    @Column(name = "note")
+    @Column(name = "sugar_estimation")
+    private String sugarEstimation;  // ✅ giữ tên Java cũ (String thay vì Double)
+
+    @Column(name = "carb_estimation")
+private Double carbEstimation;
+
+    @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 
     @Column(name = "log_date", nullable = false)
     private LocalDate mealDate;
 
-    // --- LOGIC ---
-    // FIX 2: Thống nhất ngưỡng đường huyết với Service và Controller
-    // Hơi cao (post-meal): > 7.8 mmol/L
-    public boolean isHighSugar() {
-        return sugarEstimation != null && sugarEstimation > 7.8;
-    }
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
 
-    // Nguy hiểm: >= 11.0 mmol/L
-    public boolean isDangerSugar() {
-        return sugarEstimation != null && sugarEstimation >= 11.0;
-    }
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
 
     // --- CONSTRUCTORS ---
     public Duy_Meal_Logs() {}
@@ -59,14 +53,14 @@ public class Duy_Meal_Logs {
     public String getFoodName() { return foodName; }
     public void setFoodName(String foodName) { this.foodName = foodName; }
 
-    public String getQuantityText() { return quantityText; }
-    public void setQuantityText(String quantityText) { this.quantityText = quantityText; }
-
-    public Double getSugarEstimation() { return sugarEstimation; }
-    public void setSugarEstimation(Double sugarEstimation) { this.sugarEstimation = sugarEstimation; }
-
     public String getMealType() { return mealType; }
     public void setMealType(String mealType) { this.mealType = mealType; }
+
+    public String getSugarEstimation() { return sugarEstimation; }
+    public void setSugarEstimation(String sugarEstimation) { this.sugarEstimation = sugarEstimation; }
+
+    public Double getCarbEstimation() { return carbEstimation; }
+    public void setCarbEstimation(Double carbEstimation) { this.carbEstimation = carbEstimation; }
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
@@ -74,12 +68,16 @@ public class Duy_Meal_Logs {
     public LocalDate getMealDate() { return mealDate; }
     public void setMealDate(LocalDate mealDate) { this.mealDate = mealDate; }
 
-    // --- NORMALIZE DATA ---
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
     @PrePersist
     @PreUpdate
     public void normalizeData() {
         if (foodName != null) foodName = foodName.trim();
-        if (quantityText != null) quantityText = quantityText.trim();
         if (mealDate == null) mealDate = LocalDate.now();
     }
 }

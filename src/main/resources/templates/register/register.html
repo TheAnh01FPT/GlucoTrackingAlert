@@ -42,7 +42,7 @@
         .illustration-side i { font-size: 80px; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .illustration-side h2 { font-size: 28px; font-weight: 700; margin-bottom: 15px; }
         .illustration-side p { font-size: 15px; line-height: 1.6; opacity: 0.9; }
-        
+
         .form-side {
             flex: 1.2;
             padding: 40px;
@@ -64,11 +64,11 @@
             margin-bottom: 25px;
             font-size: 14px;
         }
-        
+
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form-group { margin-bottom: 15px; position: relative; }
         .form-group.full-width { grid-column: span 2; }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 6px;
@@ -99,7 +99,7 @@
             transition: color 0.3s;
         }
         .form-group input:focus + i { color: #27ae60; }
-        
+
         button.btn-submit {
             width: 100%;
             padding: 12px;
@@ -116,11 +116,11 @@
         }
         button.btn-submit:hover { background-color: #134d40; }
         button.btn-submit:active { transform: scale(0.98); }
-        
+
         .switch-link { text-align: center; margin-top: 20px; font-size: 13px; color: #7f8c8d; }
         .switch-link a { color: #27ae60; text-decoration: none; font-weight: 600; }
         .switch-link a:hover { text-decoration: underline; }
-        
+
         .message { margin-top: 15px; text-align: center; font-size: 13px; padding: 12px; border-radius: 8px; display: none; font-weight: 500; grid-column: span 2; }
         .success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
@@ -151,12 +151,12 @@
             <h2>Tham gia cùng chúng tôi</h2>
             <p>Khởi tạo tài khoản chỉ trong vài bước để bắt đầu hành trình bảo vệ sức khỏe toàn diện và quản lý đường huyết chuyên nghiệp.</p>
         </div>
-        
+
         <div class="form-side">
             <div id="registerSection">
                 <h2>Đăng Ký Tài Khoản</h2>
                 <p class="subtitle">Điền thông tin của bạn vào bên dưới</p>
-                
+
                 <form id="registerForm" class="form-grid">
                     <div class="form-group full-width">
                         <label>Họ và tên</label>
@@ -183,11 +183,11 @@
                         <input type="password" id="confirmPassword" required placeholder="Nhập lại mật khẩu">
                         <i class="bi bi-lock-fill"></i>
                     </div>
-                    
+
                     <button type="submit" class="btn-submit">Đăng ký tài khoản</button>
                     <div id="messageBox" class="message"></div>
                 </form>
-                
+
                 <div class="switch-link">
                     Đã có tài khoản? <a href="/login">Đăng nhập ngay</a>
                 </div>
@@ -197,15 +197,15 @@
             <div id="otpSection">
                 <h2>Xác Nhận Email</h2>
                 <p class="otp-hint">Chúng tôi đã gửi một mã xác nhận gồm 6 chữ số đến email của bạn.<br>Vui lòng kiểm tra hộp thư đến (hoặc thư mục Spam).</p>
-                
+
                 <div class="form-group" style="margin-bottom: 25px;">
                     <label style="text-align: center;">Mã xác nhận OTP</label>
                     <input type="text" id="otpInput" class="otp-input" maxlength="6" placeholder="------">
                 </div>
-                
+
                 <button class="btn-submit" onclick="verifyOtp()">Xác nhận tài khoản</button>
                 <div id="otpMessageBox" class="message"></div>
-                
+
                 <div class="resend-link">
                     Không nhận được mã? <a href="#" id="resendBtn" onclick="resendOtp()">Gửi lại</a>
                 </div>
