@@ -778,23 +778,11 @@
                             <button type="button" class="btn btn-danger" onclick="confirmReject()">
                                 <i class="bi bi-send me-1"></i>Xác nhận từ chối
                             </button>
-            <!-- Modal Xác nhận Xóa vĩnh viễn -->
-            <div class="modal fade" id="hardDeleteModal" tabindex="-1">
-                <div class="modal-dialog modal-sm">
-                    <div class="modal-content border-0 shadow">
-                        <div class="modal-body text-center py-4">
-                            <div style="font-size:2.5rem; color:var(--danger)"><i class="bi bi-trash3-fill"></i></div>
-                            <h6 class="fw-700 mt-2">Xóa vĩnh viễn bác sĩ</h6>
-                            <p class="text-muted small mb-0">Hành động này <strong>không thể hoàn tác</strong>.</p>
-                            <p class="text-danger small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Toàn bộ hồ sơ bác sĩ, tài khoản đăng nhập và lịch sử phân công sẽ bị xóa vĩnh viễn khỏi hệ thống.</p>
-                        </div>
-                        <div class="modal-footer border-0 justify-content-center gap-2">
-                            <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                            <button class="btn btn-danger" onclick="confirmHardDelete()">Xóa vĩnh viễn</button>
                         </div>
                     </div>
                 </div>
             </div>
+
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
             <script>
                                 // ── State ─────────────────────────────────────────────
@@ -802,8 +790,7 @@
                                 let allShifts = [];
                                 let filteredDoctors = [];
                                 let deactivateTargetId = null;
-                                let hardDeleteTargetId = null;
-                                let doctorModal, deactivateModal, hardDeleteModal, toastEl;
+                                let doctorModal, deactivateModal, toastEl;
                                 const PAGE_SIZE = 10;
                                 let docPage = 1;
 
@@ -811,7 +798,6 @@
                                 document.addEventListener('DOMContentLoaded', function () {
                                     doctorModal = new bootstrap.Modal(document.getElementById('doctorModal'));
                                     deactivateModal = new bootstrap.Modal(document.getElementById('deactivateModal'));
-                                    hardDeleteModal = new bootstrap.Modal(document.getElementById('hardDeleteModal'));
                                     toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
                                     loadWorkingHours();
                                     loadDoctors();
@@ -954,7 +940,6 @@
                             <button class="action-btn edit" onclick='openEdit(${JSON.stringify(d)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
                             ${(d.status === 'pending_approval') ? `<button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt"><i class="bi bi-shield-check"></i></button>` : ''}
                             <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
-                            <button class="action-btn" style="color:var(--danger);opacity:${d.status === 'inactive' ? '1' : '0.3'};cursor:${d.status === 'inactive' ? 'pointer' : 'not-allowed'}" onclick="${d.status === 'inactive' ? 'openHardDelete(' + d.id + ')' : 'void(0)'}" title="${d.status === 'inactive' ? 'Xóa vĩnh viễn' : 'Phải ngừng hoạt động trước'}"><i class="bi bi-trash3"></i></button>
                         </td>
                     </tr>
                 `).join('');
@@ -1110,25 +1095,6 @@
                                             throw new Error(msg);
                                         deactivateModal.hide();
                                         showToast('Đã ngừng hoạt động bác sĩ!', 'success');
-                                        loadDoctors();
-                                    } catch (e) {
-                                        showToast('Lỗi: ' + (e.message || 'Vui lòng thử lại!'), 'danger');
-                                    }
-                                }
-
-                                function openHardDelete(id) {
-                                    hardDeleteTargetId = id;
-                                    hardDeleteModal.show();
-                                }
-
-                                async function confirmHardDelete() {
-                                    try {
-                                        const res = await fetch(`/api/doctors/${hardDeleteTargetId}/permanent`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}, method: 'DELETE'});
-                                        const msg = await res.text();
-                                        if (!res.ok)
-                                            throw new Error(msg);
-                                        hardDeleteModal.hide();
-                                        showToast('Đã xóa vĩnh viễn bác sĩ khỏi hệ thống!', 'success');
                                         loadDoctors();
                                     } catch (e) {
                                         showToast('Lỗi: ' + (e.message || 'Vui lòng thử lại!'), 'danger');

@@ -224,28 +224,11 @@ public class DoctorController {
         }
     }
 
-
-
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deactivateDoctor(@PathVariable Long id) {
         try {
             doctorService.deactivateDoctor(id);
             return ResponseEntity.ok("Bác sĩ đã được ngừng hoạt động và toàn bộ phân công active đã được hủy.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    /**
-     * [ADMIN] Xóa vĩnh viễn bác sĩ khỏi hệ thống. Yêu cầu bác sĩ phải ở trạng
-     * thái inactive trước. Xóa toàn bộ: Doctor profile + User (tài khoản đăng
-     * nhập) + tất cả assignment. Hành động này KHÔNG THỂ hoàn tác.
-     */
-    @DeleteMapping("/{id}/permanent")
-    public ResponseEntity<String> hardDeleteDoctor(@PathVariable Long id) {
-        try {
-            doctorService.hardDeleteDoctor(id);
-            return ResponseEntity.ok("Bác sĩ đã được xóa vĩnh viễn khỏi hệ thống.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

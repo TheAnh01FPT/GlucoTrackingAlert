@@ -199,34 +199,6 @@ public class DoctorServiceImp implements DoctorService {
         return DoctorResponse.from(doctorRepository.save(doctor));
     }
 
-    // ── Hard-delete (xóa vĩnh viễn) ──────────────────────────────────────────
-    @Override
-    @Transactional
-    public void hardDeleteDoctor(Long id) {
-        Doctor doctor = findOrThrow(id);
-        if (!"inactive".equals(doctor.getStatus())) {
-            throw new RuntimeException(
-                    "Chỉ có thể xóa vĩnh viễn bác sĩ đã ngừng hoạt động. "
-                    + "Vui lòng ngừng hoạt động bác sĩ trước.");
-        }
-
-        // Xóa toàn bộ assignment liên quan (tất cả status)
-        List<DoctorPatientAssignment> allAssignments
-                = assignmentRepository.findByDoctorId(id);
-        assignmentRepository.deleteAll(allAssignments);
-
-        // Lưu reference tới User trước khi xóa Doctor
-        User linkedUser = doctor.getUser();
-
-        // Xóa Doctor trước (FK tới User)
-        doctorRepository.delete(doctor);
-
-        // Xóa User liên kết (tài khoản đăng nhập)
-        if (linkedUser != null) {
-            userRepository.delete(linkedUser);
-        }
-    }
-
     // ── Helpers ───────────────────────────────────────────────────────────────
     private Doctor findOrThrow(Long id) {
         return doctorRepository.findById(id)
