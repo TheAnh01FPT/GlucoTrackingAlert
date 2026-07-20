@@ -232,12 +232,8 @@ public class DoctorServiceImp implements DoctorService {
         if (req.getAvatarUrl() != null) {
             doctor.setAvatarUrl(req.getAvatarUrl());
         }
-        if (req.getNationalId() != null) {
-            doctor.setNationalId(req.getNationalId());
-        }
-        if (req.getPracticeLicense() != null) {
-            doctor.setPracticeLicense(req.getPracticeLicense());
-        }
+        // KHÔNG set nationalId / practiceLicense ở đây: 2 field này bác sĩ tự
+        // nhập + upload ảnh sau khi đăng nhập lần đầu (xem uploadVerificationImages).
     }
 
     /**

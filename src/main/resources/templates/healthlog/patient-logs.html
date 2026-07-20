@@ -475,19 +475,6 @@
         <a th:href="@{/health-logs/ai-report}" class="navbar-link"
            style="background-color: rgba(99, 102, 241, 0.2); border: 1px solid #818cf8; color: #fff;">🤖 Báo Cáo AI</a>
         <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang Chủ</a>
-        <div style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
-            <span style="font-size:1.3rem;">🔔</span>
-            <span id="notiCount"
-                  style="display:none; position:absolute; top:-6px; right:-8px; background:#ef4444; color:white; border-radius:50%; font-size:0.65rem; font-weight:700; min-width:18px; height:18px; line-height:18px; text-align:center; padding:0 3px;"></span>
-        </div>
-        <div id="notiDropdown"
-             style="display:none; position:absolute; top:60px; right:20px; width:340px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:999;">
-            <div style="padding:0.75rem 1rem; border-bottom:1px solid #e2e8f0; font-weight:600; font-size:0.9rem; color:#1e293b;">
-                🔔 Thông Báo
-            </div>
-            <div id="notiList" style="max-height:320px; overflow-y:auto; padding:0.5rem 0;"><p
-                    style="padding:1rem; color:#94a3b8; font-size:0.88rem;">Đang tải...</p></div>
-        </div>
     </nav>
 </header>
 
@@ -739,51 +726,6 @@
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    async function loadNotifications() {
-        const userId = /*[[${userId}]]*/ null;
-        if (!userId) return;
-        try {
-            const res = await fetch(`/api/notifications?userId=${userId}`);
-            const list = await res.json();
-            const count = list.filter(n => !n.isRead).length;
-            const badge = document.getElementById("notiCount");
-            if (count > 0) {
-                badge.style.display = "block";
-                badge.textContent = count > 99 ? "99+" : count;
-            }
-            const notiList = document.getElementById("notiList");
-            if (!list.length) {
-                notiList.innerHTML = "<p style='padding:1rem; color:#94a3b8; font-size:0.88rem;'>Chưa có thông báo nào.</p>";
-                return;
-            }
-            notiList.innerHTML = list.map(n => `<div onclick="markRead(${n.id}, this)" style="padding:0.75rem 1rem; border-bottom:1px solid #f1f5f9; cursor:pointer; background:${n.isRead ? '#fff' : '#f0f9ff'}"><div style="font-size:0.88rem; font-weight:${n.isRead ? 400 : 600}; color:#1e293b;">${n.title}</div><div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">${n.message}</div><div style="font-size:0.75rem; color:#94a3b8; margin-top:0.25rem;">${new Date(n.createdAt).toLocaleString("vi-VN")}</div></div>`).join("");
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    function toggleNotifications() {
-        const dd = document.getElementById("notiDropdown");
-        dd.style.display = dd.style.display === "none" ? "block" : "none";
-        if (dd.style.display === "block") loadNotifications();
-    }
-
-    async function markRead(id, el) {
-        await fetch(`/api/notifications/${id}/read`, {method: "POST"});
-        el.style.background = "#fff";
-        const badge = document.getElementById("notiCount");
-        const count = parseInt(badge.textContent || "0") - 1;
-        if (count <= 0) badge.style.display = "none";
-        else badge.textContent = count;
-    }
-
-    document.addEventListener("click", function (e) {
-        if (!e.target.closest("#notiDropdown") && !e.target.closest("div[onclick]")) {
-            const dd = document.getElementById("notiDropdown");
-            if (dd) dd.style.display = "none";
-        }
-    });
-
     async function loadPatientRecommendations() {
         const patientId = /*[[${patientId}]]*/ null;
         if (!patientId) {

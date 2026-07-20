@@ -638,12 +638,13 @@
                                     <label class="form-label">Nơi công tác</label>
                                     <input type="text" class="form-control" id="workplace" placeholder="VD: Bệnh viện Bạch Mai"/>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Số CCCD <span class="text-danger">*</span></label>
+                                <div class="col-md-6" id="licenseFieldsWrap" style="display:none">
+                                    <label class="form-label">Số CCCD</label>
                                     <input type="text" class="form-control" id="nationalId" placeholder="VD: 001234567890" maxlength="12"/>
+                                    <div class="form-text text-muted">Bác sĩ tự nhập khi hoàn thiện hồ sơ; admin chỉ hiệu chỉnh nếu cần.</div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Số chứng chỉ hành nghề <span class="text-danger">*</span></label>
+                                <div class="col-md-6" id="licenseFieldsWrap2" style="display:none">
+                                    <label class="form-label">Số chứng chỉ hành nghề</label>
                                     <input type="text" class="form-control" id="practiceLicense" placeholder="VD: 027552/BYT-CCHN"/>
                                 </div>
                         <div class="col-md-6" id="statusField" style="display:none">
@@ -982,6 +983,8 @@
                                     document.getElementById('practiceLicense').value = '';
                                     document.getElementById('introduction').value = '';
                                     document.getElementById('statusField').style.display = 'none';
+                                    document.getElementById('licenseFieldsWrap').style.display = 'none';
+                                    document.getElementById('licenseFieldsWrap2').style.display = 'none';
                                     doctorModal.show();
                                 }
 
@@ -1001,6 +1004,8 @@
                                     document.getElementById('introduction').value = d.introduction || '';
                                     document.getElementById('status').value = d.status || 'active';
                                     document.getElementById('statusField').style.display = 'block';
+                                    document.getElementById('licenseFieldsWrap').style.display = 'block';
+                                    document.getElementById('licenseFieldsWrap2').style.display = 'block';
                                     doctorModal.show();
                                 }
 
@@ -1029,8 +1034,6 @@
                                             experienceYears: parseInt(document.getElementById('experienceYears').value) || null,
                                             phone: document.getElementById('phone').value.trim(),
                                             workplace: document.getElementById('workplace').value.trim(),
-                                            nationalId: document.getElementById('nationalId').value.trim(),
-                                            practiceLicense: document.getElementById('practiceLicense').value.trim(),
                                             introduction: document.getElementById('introduction').value.trim()
                                         };
                                         try {
