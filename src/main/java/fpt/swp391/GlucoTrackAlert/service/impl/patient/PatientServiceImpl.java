@@ -54,6 +54,12 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean existsByUserId(Long userId) {
+        return patientRepository.findByUserId(userId).isPresent();
+    }
+
+    @Override
     @Transactional
     public PatientProfileResponse createProfile(PatientProfileRequest request) {
         User user = userRepository.findById(request.getUserId())
@@ -399,8 +405,8 @@ public class PatientServiceImpl implements PatientService {
 
         return PatientProfileResponse.builder()
                 .id(patient.getId())
-                .userId(patient.getUser().getId())
-                .email(patient.getUser().getEmail())
+                .userId(patient.getUser() != null ? patient.getUser().getId() : null)
+                .email(patient.getUser() != null ? patient.getUser().getEmail() : null)
                 .fullName(patient.getFullName())
                 .dateOfBirth(patient.getDateOfBirth())
                 .age(patient.getAge())
