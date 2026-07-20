@@ -3,19 +3,16 @@ package fpt.swp391.GlucoTrackAlert.doctor;
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import fpt.swp391.GlucoTrackAlert.service.CloudinaryService;
 
 /**
  * Tất cả endpoint trong controller này chỉ dành cho ADMIN. Bác sĩ KHÔNG có
@@ -34,13 +31,13 @@ public class DoctorController {
 
     private final DoctorService doctorService;
     private final DoctorRepository doctorRepository;
+    private final CloudinaryService cloudinaryService;
 
     /**
      * [PUBLIC] Giờ làm việc cố định của tất cả bác sĩ trong hệ thống. Hardcode
      * trong WorkShift – không có DB, không cần auth. Dùng để hiển thị trên
      * trang admin và làm điều kiện gửi thông báo.
      */
-
     @GetMapping("/working-hours")
     public ResponseEntity<Map<String, String>> getWorkingHours() {
         Map<String, String> info = new LinkedHashMap<>();
@@ -97,7 +94,7 @@ public class DoctorController {
     }
 
     /**
-
+     *
      * [DOCTOR] Upload ảnh CCCD, chứng chỉ hành nghề, avatar + nhập số CCCD & số
      * chứng chỉ. Bác sĩ phải hoàn tất bước này trước khi được phân công và khám
      * bệnh. Sau khi submit, status chuyển sang pending_approval để admin duyệt.
@@ -146,32 +143,19 @@ public class DoctorController {
                 }
             }
 
-            String uploadDir = "uploads/doctors/" + id + "/";
-            Files.createDirectories(Paths.get(uploadDir));
-
             String nationalIdImageUrl = null;
             String practiceLicenseImageUrl = null;
             String avatarUrl = null;
-
+            
             if (nationalIdImage != null && !nationalIdImage.isEmpty()) {
-                String filename = "cccd_" + UUID.randomUUID() + "_" + sanitizeFilename(nationalIdImage.getOriginalFilename());
-                Path path = Paths.get(uploadDir + filename);
-                Files.write(path, nationalIdImage.getBytes());
-                nationalIdImageUrl = "/" + uploadDir + filename;
+                nationalIdImageUrl = cloudinaryService.uploadFile(nationalIdImage, "doctors/credentials");
             }
-
             if (practiceLicenseImage != null && !practiceLicenseImage.isEmpty()) {
-                String filename = "chungchi_" + UUID.randomUUID() + "_" + sanitizeFilename(practiceLicenseImage.getOriginalFilename());
-                Path path = Paths.get(uploadDir + filename);
-                Files.write(path, practiceLicenseImage.getBytes());
-                practiceLicenseImageUrl = "/" + uploadDir + filename;
+                practiceLicenseImageUrl = cloudinaryService.uploadFile(practiceLicenseImage, "doctors/credentials");
             }
 
             if (avatar != null && !avatar.isEmpty()) {
-                String filename = "avatar_" + UUID.randomUUID() + "_" + sanitizeFilename(avatar.getOriginalFilename());
-                Path path = Paths.get(uploadDir + filename);
-                Files.write(path, avatar.getBytes());
-                avatarUrl = "/" + uploadDir + filename;
+                avatarUrl = cloudinaryService.uploadFile(avatar, "doctors/avatars");
             }
 
             DoctorResponse response = doctorService.uploadVerificationImages(

@@ -513,79 +513,10 @@
                     </div>
                 </div>
             </div>
-            <!-- Nút đổi mật khẩu -->
-            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e9ecef;display:flex;align-items:center;justify-content:space-between">
-                <div>
-                    <div style="font-weight:600;font-size:.875rem;color:#1a1a2e">Mật khẩu đăng nhập</div>
-                    <div style="font-size:.8rem;color:#6c757d;margin-top:2px">Bạn có thể tự đổi mật khẩu của mình</div>
-                </div>
-                <button class="btn btn-outline-primary btn-sm px-4" onclick="openChangePasswordModal()">
-                    <i class="bi bi-lock me-1"></i>Đổi mật khẩu
-                </button>
-            </div>
         </div>
     </div>
 </div>
 
-<!-- Modal đổi mật khẩu -->
-<div class="modal fade" id="changePasswordModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 8px 32px rgba(0,0,0,.15)">
-            <div class="modal-header border-0 pb-0" style="padding:24px 24px 12px">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div style="width:40px;height:40px;border-radius:10px;background:#e3f2fd;display:flex;align-items:center;justify-content:center">
-                        <i class="bi bi-lock-fill" style="color:#1565c0;font-size:1.1rem"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-700 mb-0">Đổi mật khẩu</h5>
-                        <div style="font-size:.8rem;color:#6c757d">Cập nhật mật khẩu đăng nhập của bạn</div>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="padding:16px 24px 24px">
-                <div class="mb-3">
-                    <label class="form-label fw-600" style="font-size:.875rem">Mật khẩu hiện tại</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="oldPassword"
-                               placeholder="Nhập mật khẩu hiện tại"/>
-                        <button class="btn btn-outline-secondary" type="button"
-                                onclick="togglePassword('oldPassword', this)" tabindex="-1">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-600" style="font-size:.875rem">Mật khẩu mới</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="newPassword" placeholder="Ít nhất 6 ký tự"/>
-                        <button class="btn btn-outline-secondary" type="button"
-                                onclick="togglePassword('newPassword', this)" tabindex="-1">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label fw-600" style="font-size:.875rem">Xác nhận mật khẩu mới</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="confirmPassword"
-                               placeholder="Nhập lại mật khẩu mới"/>
-                        <button class="btn btn-outline-secondary" type="button"
-                                onclick="togglePassword('confirmPassword', this)" tabindex="-1">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-light px-4" data-bs-dismiss="modal">Hủy</button>
-                    <button class="btn btn-primary px-4" onclick="changePassword()">
-                        <i class="bi bi-check-lg me-1"></i>Cập nhật
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div id="toast-wrap"></div>
 
@@ -639,79 +570,7 @@
 
     loadDoctor();
 
-    function togglePassword(inputId, btn) {
-        const input = document.getElementById(inputId);
-        const icon = btn.querySelector('i');
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.className = 'bi bi-eye-slash';
-        } else {
-            input.type = 'password';
-            icon.className = 'bi bi-eye';
-        }
-    }
-
-    const changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-
-    function openChangePasswordModal() {
-        document.getElementById('oldPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-        changePasswordModal.show();
-    }
-
-    // 1. Xử lý đổi mật khẩu trong MODAL (sử dụng Toast thông báo tự ẩn)
-    async function changePassword() {
-        const oldPassword = document.getElementById('oldPassword').value.trim();
-        const newPassword = document.getElementById('newPassword').value.trim();
-        const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-        if (!oldPassword) {
-            showToast('Vui lòng nhập mật khẩu hiện tại', 'danger');
-            return;
-        }
-        if (!newPassword) {
-            showToast('Vui lòng nhập mật khẩu mới', 'danger');
-            return;
-        }
-        if (!confirmPassword) {
-            showToast('Vui lòng xác nhận mật khẩu mới', 'danger');
-            return;
-        }
-        if (newPassword.length < 6) {
-            showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'danger');
-            return;
-        }
-        if (newPassword === oldPassword) {
-            showToast('Mật khẩu mới không được trùng mật khẩu hiện tại', 'danger');
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            showToast('Mật khẩu mới không khớp', 'danger');
-            return;
-        }
-        try {
-            const res = await fetch('/api/auth/change-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({oldPassword, newPassword})
-            });
-            const msg = await res.text();
-            if (res.ok) {
-                changePasswordModal.hide();
-                showToast('✅ ' + msg, 'success');
-            } else {
-                showToast('❌ ' + msg, 'danger');
-            }
-        } catch {
-            showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
-        }
-    }
-
-    // 2. Xử lý đổi mật khẩu TRỰC TIẾP trên trang (Form trên Card tự ẩn thông báo sau 3 giây)
+    // Xử lý đổi mật khẩu (Form trên Card tự ẩn thông báo sau 3 giây)
     async function handleDoctorChangePwd(e) {
         e.preventDefault();
         const current = document.getElementById('drCurrentPwd').value;
@@ -905,91 +764,7 @@
                 }
             }
 
-            async function loadDoctor() {
-                try {
-                    const doc = await fetch(`/api/doctors/${DOCTOR_ID}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
-                    fillDisplay(doc);
-                } catch {
-                    showToast('Không tải được thông tin bác sĩ', 'danger');
-                }
-            }
 
-            loadDoctor();
-
-            function togglePassword(inputId, btn) {
-                const input = document.getElementById(inputId);
-                const icon = btn.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'bi bi-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'bi bi-eye';
-                }
-            }
-
-            const changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-
-            function openChangePasswordModal() {
-                document.getElementById('oldPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-                changePasswordModal.show();
-            }
-
-            async function changePassword() {
-                const oldPassword = document.getElementById('oldPassword').value.trim();
-                const newPassword = document.getElementById('newPassword').value.trim();
-                const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-                if (!oldPassword) {
-                    showToast('Vui lòng nhập mật khẩu hiện tại', 'danger'); return;
-                }
-                if (!newPassword) {
-                    showToast('Vui lòng nhập mật khẩu mới', 'danger'); return;
-                }
-                if (!confirmPassword) {
-                    showToast('Vui lòng xác nhận mật khẩu mới', 'danger'); return;
-                }
-                if (newPassword.length < 6) {
-                    showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'danger'); return;
-                }
-                if (newPassword === oldPassword) {
-                    showToast('Mật khẩu mới không được trùng mật khẩu hiện tại', 'danger'); return;
-                }
-                if (newPassword !== confirmPassword) {
-                    showToast('Mật khẩu mới không khớp', 'danger'); return;
-                }
-                try {
-                    const res = await fetch('/api/auth/change-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({oldPassword, newPassword})
-                    });
-                    const msg = await res.text();
-                    if (res.ok) {
-                        changePasswordModal.hide();
-                        showToast('✅ ' + msg, 'success');
-                    } else {
-                        showToast('❌ ' + msg, 'danger');
-                    }
-                } catch {
-                    showToast('Lỗi kết nối, vui lòng thử lại', 'danger');
-                }
-            }
-
-            function logout() {
-                localStorage.removeItem('token');
-                localStorage.removeItem('email');
-                localStorage.removeItem('role');
-                document.cookie = 'jwt=; path=/; max-age=0';
-                window.location.href = '/login';
-            }
-        </script>
-    </body>
     function logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('email');
@@ -998,16 +773,6 @@
         window.location.href = '/login';
     }
 
-    function fillDisplay(doc) {
-        document.getElementById('infoName').textContent = doc.fullName || '–';
-        document.getElementById('infoSpec').textContent = doc.specialization || '–';
-        document.getElementById('infoDegree').textContent = doc.degree || '–';
-        document.getElementById('infoExp').textContent = doc.experienceYears ? doc.experienceYears + ' năm' : '–';
-        document.getElementById('infoWorkplace').textContent = doc.workplace || '–';
-        document.getElementById('infoPhone').textContent = doc.phone || '–';
-        document.getElementById('infoEmail').textContent = doc.userEmail || '–';
-        document.getElementById('sidebarDrName').textContent = doc.fullName || '–';
-    }
-</script>
+    </script>
 </body>
 </html>

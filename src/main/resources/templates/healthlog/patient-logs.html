@@ -528,11 +528,14 @@
         </div>
     </section>
 
-    <!-- Log List Card -->
-    <section class="table-card">
-        <div class="table-header">
-            <h2 class="table-title">📅 Lịch Sử Chỉ Số Sức Khỏe</h2>
-        </div>
+        <!-- Log List Card -->
+        <section class="table-card">
+            <div class="table-header">
+                <h2 class="table-title">📅 Lịch Sử Chỉ Số Sức Khỏe</h2>
+                <button onclick="exportExcel()" class="btn" style="background-color: #10b981; color: white; padding: 0.4rem 1rem; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                    📥 Xuất Excel
+                </button>
+            </div>
 
         <div class="table-responsive">
             <table>
@@ -768,14 +771,18 @@
 
     window.onload = () => loadPatientRecommendations();
 
-    function changePageSize() {
-        var size = document.getElementById('pageSizeSelect').value;
-        var userId = /*[[${userId}]]*/ '';
-        location.href = '/health-logs/my-logs?page=0&size=' + size + '&userId=' + userId;
-    }
+        function changePageSize() {
+            var size = document.getElementById('pageSizeSelect').value;
+            var userId = /*[[${userId}]]*/ '';
+            location.href = '/health-logs/my-logs?page=0&size=' + size + '&userId=' + userId;
+        }
 
-    /*]]>*/
-</script>
+        function exportExcel() {
+            var userId = /*[[${userId}]]*/ '';
+            window.location.href = '/health-logs/export?userId=' + userId;
+        }
+        /*]]>*/
+    </script>
 
 </body>
 </html>

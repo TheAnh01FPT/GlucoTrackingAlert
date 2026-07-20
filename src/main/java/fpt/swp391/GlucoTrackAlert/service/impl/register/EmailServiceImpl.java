@@ -120,4 +120,26 @@ public class EmailServiceImpl implements EmailService {
             log.error("Không thể ghi NotificationLog: {}", ex.getMessage());
         }
     }
+
+    @Override
+    @org.springframework.scheduling.annotation.Async
+    public void sendSimpleMessageAsync(String to, String subject, String text) {
+        try {
+            sendSimpleMessage(to, subject, text);
+        } catch (Exception e) {
+            // Log exception or handle it since Async exceptions are unhandled by default caller
+            System.err.println("Error sending async simple email to " + to + ": " + e.getMessage());
+        }
+    }
+
+    @Override
+    @org.springframework.scheduling.annotation.Async
+    public void sendHtmlMessageAsync(String to, String subject, String htmlContent) {
+        try {
+            sendHtmlMessage(to, subject, htmlContent);
+        } catch (Exception e) {
+            // Log exception or handle it since Async exceptions are unhandled by default caller
+            System.err.println("Error sending async HTML email to " + to + ": " + e.getMessage());
+        }
+    }
 }

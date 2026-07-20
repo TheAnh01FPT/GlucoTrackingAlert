@@ -44,6 +44,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import fpt.swp391.GlucoTrackAlert.service.export.ExportService;
 
 @Controller
 @RequestMapping("/health-logs")
@@ -58,6 +59,7 @@ public class DailyHealthLogController {
     private final DoctorPatientAssignmentRepository assignmentRepository;
     private final DailyHealthLogRepository dailyHealthLogRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final ExportService exportService;
 
     private Long resolvePatientId(Long userId) {
         if (userId == null) {
@@ -113,10 +115,10 @@ public class DailyHealthLogController {
 
     @GetMapping
     public String getLogs(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String patientType,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Model model) {
+                          @RequestParam(required = false) String patientType,
+                          @RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "10") int size,
+                          Model model) {
         // Redirect về đúng trang theo role, tránh để /health-logs là trang chung
         if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
             return "redirect:/health-logs/doctor-view" + (userId != null ? "?userId=" + userId : "");
@@ -178,7 +180,7 @@ public class DailyHealthLogController {
     }
 
     @GetMapping("/doctor-view")
-    public String getDoctorView(@RequestParam(required = false) Long userId,
+        public String getDoctorView(@RequestParam(required = false) Long userId,
             @RequestParam(required = false) String patientType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -214,8 +216,8 @@ public class DailyHealthLogController {
                 model.addAttribute("pageSize", size);
                 return "healthlog/doctor-view";
             }
-            List<DoctorPatientAssignment> assignments
-                    = assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
+            List<DoctorPatientAssignment> assignments =
+                    assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active");
             patients = assignments.stream()
                     .map(DoctorPatientAssignment::getPatient)
                     .filter(p -> "active".equals(p.getStatus()))
@@ -337,9 +339,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/my-logs")
     public String getMyLogs(@RequestParam Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Model model) {
+                            @RequestParam(defaultValue = "0") int page,
+                            @RequestParam(defaultValue = "10") int size,
+                            Model model) {
         // If caller is not admin/doctor and the requested userId is not their own,
         // redirect to login to prevent tampering with the `userId` query parameter.
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
@@ -368,10 +370,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/detail")
     public String getLogById(@RequestParam Long logId,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String source,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+                             @RequestParam(required = false) Long userId,
+                             @RequestParam(required = false) String source,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse log = dailyHealthLogService.getLogById(logId);
         if (log == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
@@ -415,9 +417,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/create")
     public String createLogForm(@RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+                                @RequestParam(required = false) String source,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
         if (!hasRole("ROLE_ADMIN")) {
             if (hasRole("ROLE_DOCTOR")) {
                 Long patientId = resolvePatientId(userId);
@@ -513,10 +515,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/{id}/edit")
     public String editLogForm(@PathVariable Long id,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String source,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+                              @RequestParam(required = false) Long userId,
+                              @RequestParam(required = false) String source,
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
 
         if (response == null) {
@@ -558,11 +560,11 @@ public class DailyHealthLogController {
 
     @PostMapping("/{id}/edit")
     public String updateLog(@PathVariable Long id,
-            @RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
-            BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
+                            @RequestParam Long userId,
+                            @RequestParam(required = false) String source,
+                            @Valid @ModelAttribute("log") DailyHealthLogRequest request,
+                            BindingResult bindingResult,
+                            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.log", bindingResult);
             redirectAttributes.addFlashAttribute("log", request);
@@ -612,9 +614,9 @@ public class DailyHealthLogController {
 
     @PostMapping("/{id}/delete")
     public String deleteLog(@PathVariable Long id,
-            @RequestParam Long userId,
-            @RequestParam(required = false) String source,
-            RedirectAttributes redirectAttributes) {
+                            @RequestParam Long userId,
+                            @RequestParam(required = false) String source,
+                            RedirectAttributes redirectAttributes) {
         DailyHealthLogResponse response = dailyHealthLogService.getLogById(id);
         if (response == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhật ký");
@@ -659,9 +661,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/chart")
     public String getChart(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            Model model) {
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                           Model model) {
         List<Patient> patients = patientRepository.findAllByStatus("active");
         if (patients.isEmpty()) {
             patients = patientRepository.findAll();
@@ -703,9 +705,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/my-chart")
     public String getMyChart(@RequestParam Long userId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            Model model) {
+                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                             Model model) {
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             patientId = userId;
@@ -788,9 +790,9 @@ public class DailyHealthLogController {
 
     @GetMapping("/ai-report")
     public String getAiReport(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) Long patientId,
-            @RequestParam(required = false) String chartMonth,
-            Model model, RedirectAttributes redirectAttributes) {
+                              @RequestParam(required = false) Long patientId,
+                              @RequestParam(required = false) String chartMonth,
+                              Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
         if (curUserId == null) {
             return "redirect:/login";
@@ -955,10 +957,10 @@ public class DailyHealthLogController {
 
     @GetMapping("/stroke-risk")
     public String getStrokeRisk(@RequestParam(required = false) Long userId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) Long patientId,
-            Model model, RedirectAttributes redirectAttributes) {
+                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                                @RequestParam(required = false) Long patientId,
+                                Model model, RedirectAttributes redirectAttributes) {
         Long curUserId = getCurrentUserId();
         if (curUserId == null) {
             return "redirect:/login";
@@ -1203,4 +1205,69 @@ public class DailyHealthLogController {
         return new java.math.BigDecimal(obj.toString());
     }
 
+    @GetMapping("/export")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.InputStreamResource> exportExcel(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long patientId
+    ) {
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+
+        boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
+
+        if (patientId == null) {
+            if (userId != null) {
+                Optional<Patient> pOpt = patientRepository.findByUserId(userId);
+                if (pOpt.isPresent()) {
+                    patientId = pOpt.get().getId();
+                } else if (patientRepository.existsById(userId)) {
+                    patientId = userId;
+                }
+            }
+        }
+
+        if (patientId == null) {
+            if (!isDoctorOrAdminCaller) {
+                patientId = resolvePatientId(curUserId);
+            }
+        }
+
+        if (patientId == null) {
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+
+        // Quyền truy cập kiểm tra tương tự như khi xem
+        if (!isDoctorOrAdminCaller) {
+            Long ownPatientId = resolvePatientId(curUserId);
+            if (ownPatientId == null || !ownPatientId.equals(patientId)) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+        } else {
+            if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+        }
+
+        // Ngày mặc định nếu rỗng (lấy toàn bộ lịch sử từ năm 2000)
+        LocalDate toDate = to != null ? to : LocalDate.now();
+        LocalDate fromDate = from != null ? from : LocalDate.of(2000, 1, 1);
+
+        java.io.ByteArrayInputStream in = exportService.exportDailyLogsToExcel(patientId, fromDate, toDate);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=nhat_ky_suc_khoe_" + patientId + ".xlsx");
+
+        return org.springframework.http.ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new org.springframework.core.io.InputStreamResource(in));
+    }
 }
+
+
