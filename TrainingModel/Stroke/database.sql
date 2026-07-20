@@ -126,6 +126,7 @@ CREATE TABLE daily_health_logs (
   sugar_consumption_level VARCHAR(20),
   symptoms TEXT,
   note TEXT,
+  physical_activity INT DEFAULT 0,
   created_at DATETIME,
   updated_at DATETIME,
   UNIQUE KEY idx_patient_log_date (patient_id, log_date)
