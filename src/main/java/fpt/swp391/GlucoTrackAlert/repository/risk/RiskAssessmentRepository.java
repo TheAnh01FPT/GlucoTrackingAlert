@@ -10,6 +10,8 @@ public interface RiskAssessmentRepository extends JpaRepository<RiskAssessment, 
     Optional<RiskAssessment> findTopByPatient_IdAndAssessmentTypeOrderByAssessedAtDesc(
         Long patientId, String assessmentType);
 
+    Optional<RiskAssessment> findByWeeklyReportIdAndAssessmentType(Long weeklyReportId, String assessmentType);
+
     /**
      * Move references from an old weekly report id to a new one.
      * Deprecated: kept for rollback scripts only. Prefer service-level migration.
