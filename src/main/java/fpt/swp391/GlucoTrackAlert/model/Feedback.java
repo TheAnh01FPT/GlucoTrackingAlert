@@ -1,7 +1,6 @@
 package fpt.swp391.GlucoTrackAlert.model;
 
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,9 +24,7 @@ public class Feedback {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private Doctor doctor;
+
 
     @Column(name = "rating")
     private Integer rating;
