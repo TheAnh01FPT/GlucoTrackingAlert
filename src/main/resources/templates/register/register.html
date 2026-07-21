@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlucoTrackAlert - Đăng ký</title>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #f4f7f6;
+            background: linear-gradient(135deg, #e0f7fa, #a7ffeb);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,16 +24,18 @@
             color: #2c3e50;
             padding: 20px;
         }
+
         .page-container {
             display: flex;
             width: 900px;
             max-width: 100%;
             background: #fff;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             min-height: 600px;
         }
+
         .illustration-side {
             flex: 1;
             background: linear-gradient(135deg, #1a6b5a 0%, #27ae60 100%);
@@ -39,9 +47,24 @@
             align-items: center;
             text-align: center;
         }
-        .illustration-side i { font-size: 80px; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .illustration-side h2 { font-size: 28px; font-weight: 700; margin-bottom: 15px; }
-        .illustration-side p { font-size: 15px; line-height: 1.6; opacity: 0.9; }
+
+        .illustration-side i {
+            font-size: 80px;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .illustration-side h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .illustration-side p {
+            font-size: 15px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
 
         .form-side {
             flex: 1.2;
@@ -51,6 +74,7 @@
             justify-content: center;
             background: #fff;
         }
+
         .form-side h2 {
             font-size: 24px;
             font-weight: 700;
@@ -58,6 +82,7 @@
             margin-bottom: 10px;
             text-align: center;
         }
+
         .form-side p.subtitle {
             text-align: center;
             color: #7f8c8d;
@@ -65,9 +90,20 @@
             font-size: 14px;
         }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .form-group { margin-bottom: 15px; position: relative; }
-        .form-group.full-width { grid-column: span 2; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
 
         .form-group label {
             display: block;
@@ -76,6 +112,7 @@
             font-size: 12px;
             color: #34495e;
         }
+
         .form-group input {
             width: 100%;
             padding: 10px 15px 10px 35px;
@@ -85,11 +122,13 @@
             font-family: inherit;
             transition: all 0.3s ease;
         }
+
         .form-group input:focus {
             border-color: #27ae60;
             outline: none;
             box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
         }
+
         .form-group i {
             position: absolute;
             bottom: 12px;
@@ -98,7 +137,10 @@
             font-size: 14px;
             transition: color 0.3s;
         }
-        .form-group input:focus + i { color: #27ae60; }
+
+        .form-group input:focus + i {
+            color: #27ae60;
+        }
 
         button.btn-submit {
             width: 100%;
@@ -114,155 +156,252 @@
             grid-column: span 2;
             margin-top: 10px;
         }
-        button.btn-submit:hover { background-color: #134d40; }
-        button.btn-submit:active { transform: scale(0.98); }
 
-        .switch-link { text-align: center; margin-top: 20px; font-size: 13px; color: #7f8c8d; }
-        .switch-link a { color: #27ae60; text-decoration: none; font-weight: 600; }
-        .switch-link a:hover { text-decoration: underline; }
+        button.btn-submit:hover {
+            background-color: #134d40;
+        }
 
-        .message { margin-top: 15px; text-align: center; font-size: 13px; padding: 12px; border-radius: 8px; display: none; font-weight: 500; grid-column: span 2; }
-        .success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        button.btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .switch-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .switch-link a {
+            color: #27ae60;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 13px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+            grid-column: span 2;
+        }
+
+        .success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
 
         /* OTP Section Styles */
-        #otpSection { display: none; }
-        .otp-input { font-size: 24px; text-align: center; letter-spacing: 12px; font-weight: bold; padding-left: 20px !important; }
-        .otp-hint { text-align: center; color: #555; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
-        .resend-link { text-align: center; margin-top: 15px; font-size: 13px; color: #999; }
-        .resend-link a { color: #27ae60; text-decoration: none; font-weight: 600; }
-        .resend-link a.disabled { color: #aaa; pointer-events: none; text-decoration: none; cursor: not-allowed; }
+        #otpSection {
+            display: none;
+        }
+
+        .otp-input {
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 12px;
+            font-weight: bold;
+            padding-left: 20px !important;
+        }
+
+        .otp-hint {
+            text-align: center;
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .resend-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .resend-link a {
+            color: #27ae60;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .resend-link a.disabled {
+            color: #aaa;
+            pointer-events: none;
+            text-decoration: none;
+            cursor: not-allowed;
+        }
 
         @media (max-width: 768px) {
-            .page-container { flex-direction: column; width: 100%; min-height: auto; border-radius: 12px; }
-            .illustration-side { padding: 30px; display: none; }
-            .form-side { padding: 30px 20px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .form-group.full-width { grid-column: span 1; }
-            button.btn-submit { grid-column: span 1; }
-            .message { grid-column: span 1; }
+            .page-container {
+                flex-direction: column;
+                width: 100%;
+                min-height: auto;
+                border-radius: 12px;
+            }
+
+            .illustration-side {
+                padding: 30px;
+                display: none;
+            }
+
+            .form-side {
+                padding: 30px 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+
+            button.btn-submit {
+                grid-column: span 1;
+            }
+
+            .message {
+                grid-column: span 1;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <div class="illustration-side">
-            <i class="bi bi-person-vcard"></i>
-            <h2>Tham gia cùng chúng tôi</h2>
-            <p>Khởi tạo tài khoản chỉ trong vài bước để bắt đầu hành trình bảo vệ sức khỏe toàn diện và quản lý đường huyết chuyên nghiệp.</p>
+<div class="page-container">
+    <div class="illustration-side">
+        <i class="bi bi-person-vcard"></i>
+        <h2>Tham gia cùng chúng tôi</h2>
+        <p>Khởi tạo tài khoản chỉ trong vài bước để bắt đầu hành trình bảo vệ sức khỏe toàn diện và quản lý đường huyết
+            chuyên nghiệp.</p>
+    </div>
+
+    <div class="form-side">
+        <div id="registerSection">
+            <h2>Đăng Ký Tài Khoản</h2>
+            <p class="subtitle">Điền thông tin của bạn vào bên dưới</p>
+
+            <form id="registerForm" class="form-grid">
+                <div class="form-group full-width">
+                    <label>Họ và tên</label>
+                    <input type="text" id="fullName" required placeholder="Nguyễn Văn A">
+                    <i class="bi bi-person"></i>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required placeholder="example@gmail.com">
+                    <i class="bi bi-envelope"></i>
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" id="phone" required placeholder="0912345678">
+                    <i class="bi bi-telephone"></i>
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="password" required placeholder="Tối thiểu 6 ký tự">
+                    <i class="bi bi-lock"></i>
+                </div>
+                <div class="form-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <input type="password" id="confirmPassword" required placeholder="Nhập lại mật khẩu">
+                    <i class="bi bi-lock-fill"></i>
+                </div>
+
+                <button type="submit" class="btn-submit">Đăng ký tài khoản</button>
+                <div id="messageBox" class="message"></div>
+            </form>
+
+            <div class="switch-link">
+                Đã có tài khoản? <a href="/login">Đăng nhập ngay</a>
+            </div>
         </div>
 
-        <div class="form-side">
-            <div id="registerSection">
-                <h2>Đăng Ký Tài Khoản</h2>
-                <p class="subtitle">Điền thông tin của bạn vào bên dưới</p>
+        <!-- OTP Section -->
+        <div id="otpSection">
+            <h2>Xác Nhận Email</h2>
+            <p class="otp-hint">Chúng tôi đã gửi một mã xác nhận gồm 6 chữ số đến email của bạn.<br>Vui lòng kiểm tra
+                hộp thư đến (hoặc thư mục Spam).</p>
 
-                <form id="registerForm" class="form-grid">
-                    <div class="form-group full-width">
-                        <label>Họ và tên</label>
-                        <input type="text" id="fullName" required placeholder="Nguyễn Văn A">
-                        <i class="bi bi-person"></i>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="email" required placeholder="example@gmail.com">
-                        <i class="bi bi-envelope"></i>
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại</label>
-                        <input type="tel" id="phone" required placeholder="0912345678">
-                        <i class="bi bi-telephone"></i>
-                    </div>
-                    <div class="form-group">
-                        <label>Mật khẩu</label>
-                        <input type="password" id="password" required placeholder="Tối thiểu 6 ký tự">
-                        <i class="bi bi-lock"></i>
-                    </div>
-                    <div class="form-group">
-                        <label>Xác nhận mật khẩu</label>
-                        <input type="password" id="confirmPassword" required placeholder="Nhập lại mật khẩu">
-                        <i class="bi bi-lock-fill"></i>
-                    </div>
-
-                    <button type="submit" class="btn-submit">Đăng ký tài khoản</button>
-                    <div id="messageBox" class="message"></div>
-                </form>
-
-                <div class="switch-link">
-                    Đã có tài khoản? <a href="/login">Đăng nhập ngay</a>
-                </div>
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label style="text-align: center;">Mã xác nhận OTP</label>
+                <input type="text" id="otpInput" class="otp-input" maxlength="6" placeholder="------">
             </div>
 
-            <!-- OTP Section -->
-            <div id="otpSection">
-                <h2>Xác Nhận Email</h2>
-                <p class="otp-hint">Chúng tôi đã gửi một mã xác nhận gồm 6 chữ số đến email của bạn.<br>Vui lòng kiểm tra hộp thư đến (hoặc thư mục Spam).</p>
+            <button class="btn-submit" onclick="verifyOtp()">Xác nhận tài khoản</button>
+            <div id="otpMessageBox" class="message"></div>
 
-                <div class="form-group" style="margin-bottom: 25px;">
-                    <label style="text-align: center;">Mã xác nhận OTP</label>
-                    <input type="text" id="otpInput" class="otp-input" maxlength="6" placeholder="------">
-                </div>
-
-                <button class="btn-submit" onclick="verifyOtp()">Xác nhận tài khoản</button>
-                <div id="otpMessageBox" class="message"></div>
-
-                <div class="resend-link">
-                    Không nhận được mã? <a href="#" id="resendBtn" onclick="resendOtp()">Gửi lại</a>
-                </div>
+            <div class="resend-link">
+                Không nhận được mã? <a href="#" id="resendBtn" onclick="resendOtp()">Gửi lại</a>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let registeredEmail = '';
-        let countdownTimer;
+<script>
+    let registeredEmail = '';
+    let countdownTimer;
 
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
 
-            const fullName = document.getElementById('fullName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const messageBox = document.getElementById('messageBox');
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const messageBox = document.getElementById('messageBox');
 
-            const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỨỬỮỰYÝỲỸỶYÝỲỸỶỹỳýỵỷ\s]{2,50}$/;
-            if (!nameRegex.test(fullName)) {
-                showError(messageBox, "Họ và tên hợp lệ dài từ 2-50 ký tự và không chứa ký tự đặc biệt!");
-                return;
-            }
+        const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỨỬỮỰYÝỲỸỶYÝỲỸỶỹỳýỵỷ\s]{2,50}$/;
+        if (!nameRegex.test(fullName)) {
+            showError(messageBox, "Họ và tên hợp lệ dài từ 2-50 ký tự và không chứa ký tự đặc biệt!");
+            return;
+        }
 
-            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            if (!emailRegex.test(email)) {
-                showError(messageBox, "Địa chỉ Email không đúng định dạng!");
-                return;
-            }
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            showError(messageBox, "Địa chỉ Email không đúng định dạng!");
+            return;
+        }
 
-            const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
-            if (!phoneRegex.test(phone)) {
-                showError(messageBox, "Số điện thoại không hợp lệ!");
-                return;
-            }
+        const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
+        if (!phoneRegex.test(phone)) {
+            showError(messageBox, "Số điện thoại không hợp lệ!");
+            return;
+        }
 
-            const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
-            if (!passRegex.test(password)) {
-                showError(messageBox, "Mật khẩu 6-32 ký tự, ít nhất 1 chữ hoa, 1 chữ thường và 1 số!");
-                return;
-            }
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
+        if (!passRegex.test(password)) {
+            showError(messageBox, "Mật khẩu 6-32 ký tự, ít nhất 1 chữ hoa, 1 chữ thường và 1 số!");
+            return;
+        }
 
-            if (password !== confirmPassword) {
-                showError(messageBox, "Mật khẩu xác nhận không trùng khớp!");
-                return;
-            }
+        if (password !== confirmPassword) {
+            showError(messageBox, "Mật khẩu xác nhận không trùng khớp!");
+            return;
+        }
 
-            messageBox.style.display = 'none';
+        messageBox.style.display = 'none';
 
-            fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-                body: JSON.stringify({ fullName, email, phone, password })
-            })
+        fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: JSON.stringify({fullName, email, phone, password})
+        })
             .then(async response => {
                 const text = await response.text();
                 if (response.ok) {
@@ -281,19 +420,19 @@
             .catch(() => {
                 showError(messageBox, "Không thể kết nối đến server.");
             });
-        });
+    });
 
-        function verifyOtp() {
-            const otp = document.getElementById('otpInput').value.trim();
-            const messageBox = document.getElementById('otpMessageBox');
+    function verifyOtp() {
+        const otp = document.getElementById('otpInput').value.trim();
+        const messageBox = document.getElementById('otpMessageBox');
 
-            const otpRegex = /^[0-9]{6}$/;
-            if (!otpRegex.test(otp)) {
-                showError(messageBox, "Mã xác nhận OTP phải chứa đúng 6 chữ số!");
-                return;
-            }
+        const otpRegex = /^[0-9]{6}$/;
+        if (!otpRegex.test(otp)) {
+            showError(messageBox, "Mã xác nhận OTP phải chứa đúng 6 chữ số!");
+            return;
+        }
 
-            fetch(`/api/auth/verify-otp?otp=${otp}`, { method: 'POST' })
+        fetch(`/api/auth/verify-otp?otp=${otp}`, {method: 'POST'})
             .then(async response => {
                 const text = await response.text();
                 messageBox.style.display = 'block';
@@ -308,35 +447,35 @@
             .catch(() => {
                 showError(messageBox, "Không thể kết nối đến server.");
             });
-        }
+    }
 
-        function startResendCountdown() {
-            const resendBtn = document.getElementById('resendBtn');
-            let timeLeft = 60;
+    function startResendCountdown() {
+        const resendBtn = document.getElementById('resendBtn');
+        let timeLeft = 60;
 
-            resendBtn.removeAttribute('onclick');
-            resendBtn.classList.add('disabled');
+        resendBtn.removeAttribute('onclick');
+        resendBtn.classList.add('disabled');
 
-            countdownTimer = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(countdownTimer);
-                    resendBtn.innerText = "Gửi lại";
-                    resendBtn.setAttribute('onclick', 'resendOtp()');
-                    resendBtn.classList.remove('disabled');
-                } else {
-                    resendBtn.innerText = `Gửi lại (${timeLeft}s)`;
-                    timeLeft--;
-                }
-            }, 1000);
-        }
-
-        function resendOtp() {
-            const messageBox = document.getElementById('otpMessageBox');
-            if (!registeredEmail) {
-                showError(messageBox, 'Không xác định được email. Vui lòng đăng ký lại.');
-                return;
+        countdownTimer = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                resendBtn.innerText = "Gửi lại";
+                resendBtn.setAttribute('onclick', 'resendOtp()');
+                resendBtn.classList.remove('disabled');
+            } else {
+                resendBtn.innerText = `Gửi lại (${timeLeft}s)`;
+                timeLeft--;
             }
-            fetch(`/api/auth/resend-otp?email=${encodeURIComponent(registeredEmail)}`, { method: 'POST' })
+        }, 1000);
+    }
+
+    function resendOtp() {
+        const messageBox = document.getElementById('otpMessageBox');
+        if (!registeredEmail) {
+            showError(messageBox, 'Không xác định được email. Vui lòng đăng ký lại.');
+            return;
+        }
+        fetch(`/api/auth/resend-otp?email=${encodeURIComponent(registeredEmail)}`, {method: 'POST'})
             .then(async response => {
                 const text = await response.text();
                 messageBox.style.display = 'block';
@@ -351,13 +490,13 @@
             .catch(() => {
                 showError(messageBox, 'Không thể kết nối đến server.');
             });
-        }
+    }
 
-        function showError(element, msg) {
-            element.style.display = 'block';
-            element.className = 'message error';
-            element.innerText = msg;
-        }
-    </script>
+    function showError(element, msg) {
+        element.style.display = 'block';
+        element.className = 'message error';
+        element.innerText = msg;
+    }
+</script>
 </body>
 </html>

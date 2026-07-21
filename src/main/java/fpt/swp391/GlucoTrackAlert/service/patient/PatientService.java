@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface PatientService {
     PatientProfileResponse getProfileByUserId(Long userId);
+    boolean existsByUserId(Long userId);
     PatientProfileResponse createProfile(PatientProfileRequest request);
     PatientProfileResponse updateProfile(Long userId, PatientProfileRequest request);
      List<PatientProfileResponse> getAllPatients();

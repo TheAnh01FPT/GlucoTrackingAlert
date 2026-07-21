@@ -1,6 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.model;
 
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
+import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +9,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "feedbacks")
+@Table(name = "patient_testimonials")
 @Getter
 @Setter
 public class Feedback {
@@ -24,14 +25,29 @@ public class Feedback {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(columnDefinition = "TEXT")
-    private String adminReply;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
 
+    @Column(name = "rating")
+    private Integer rating;
+
+    @Column(nullable = false, columnDefinition = "VARCHAR(30) DEFAULT 'unread'")
+    private String status = "unread";
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    private LocalDateTime repliedAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

@@ -1,3 +1,6 @@
+/* ==========================================================================
+   HỆ THỐNG BIẾN TOÀN CỤC & ĐỊNH DẠNG CƠ BẢN (CHUẨN SAAS Y TẾ)
+   ========================================================================== */
 :root {
     --primary: #1a6b5a;
     --primary-light: #e8f5f1;
@@ -19,7 +22,9 @@ body {
     color: var(--text-color);
 }
 
-/* --- CỐ ĐỊNH SIDEBAR (Giữ nguyên cấu trúc) --- */
+/* ==========================================================================
+   BỐ CỤC CHÍNH (SIDEBAR & MAIN LAYOUT)
+   ========================================================================== */
 .sidebar {
     width: 240px;
     min-height: 100vh;
@@ -34,7 +39,7 @@ body {
     flex-direction: column !important;
 }
 
-/* Ép các thẻ link menu luôn nằm dọc, cách đều nhau */
+/* Các liên kết Menu điều hướng */
 .sidebar a, .sidebar .nav-link, .sidebar-nav a {
     display: flex !important;
     align-items: center !important;
@@ -46,10 +51,9 @@ body {
     font-weight: 500 !important;
     transition: all 0.2s ease !important;
     width: 100% !important;
-    float: none !important; /* Chống trôi chữ */
+    float: none !important;
 }
 
-/* Hiệu ứng hover menu */
 .sidebar a:hover, .sidebar a.active,
 .sidebar .nav-link:hover, .sidebar .nav-link.active {
     color: #ffffff !important;
@@ -58,7 +62,6 @@ body {
     padding-left: 20px !important;
 }
 
-/* Sửa khoảng cách phần Logo phía trên */
 .sidebar-logo, .sidebar h5, .sidebar .brand {
     padding: 10px 24px 20px !important;
     color: #ffffff !important;
@@ -67,20 +70,42 @@ body {
     display: block !important;
 }
 
-/* Đẩy phần thông tin Admin xuống dưới cùng nếu cần */
 .sidebar .admin-info, .sidebar div:last-child {
     margin-top: auto !important;
     padding: 20px 24px !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Khu vực chính - Tạo khoảng cách thở an toàn, không lo bị đè chữ */
 .main {
     margin-left: 240px;
     padding: 40px !important;
 }
 
-/* --- SỬA LỖI NÚT THÊM MỚI (Bỏ hoàn toàn việc ép khoảng cách) --- */
+/* ==========================================================================
+   KHU VỰC TIÊU ĐỀ (TOPBAR HỢP NHẤT)
+   ========================================================================== */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0 16px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.topbar h4 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+
+.topbar-sub {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+/* Nút thêm mới nằm trong khu vực Topbar header */
 .btn-blue, .btn-add, a[href*="create"] {
     background-color: var(--primary) !important;
     color: #fff !important;
@@ -94,7 +119,7 @@ body {
     align-items: center;
     gap: 8px;
     box-shadow: 0 4px 10px rgba(26, 107, 90, 0.15) !important;
-    margin-bottom: 15px !important; /* Tạo khoảng cách an toàn với chữ bên dưới */
+    margin-bottom: 15px !important;
     margin-top: 10px !important;
 }
 
@@ -103,19 +128,28 @@ body {
     box-shadow: 0 6px 12px rgba(26, 107, 90, 0.25) !important;
 }
 
-/* --- THIẾT KẾ LẠI BẢNG (TABLE) CHUẨN SAAS Y TẾ --- */
+/* ==========================================================================
+   BẢNG DANH SÁCH (TABLE & ĐIỀU HƯỚNG)
+   ========================================================================== */
+.custom-table-wrap {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
 .table {
     background: #ffffff !important;
     border-radius: 12px !important;
     overflow: hidden !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
     margin-top: 20px !important;
     border: 1px solid #e2e8f0 !important;
 }
 
-/* Tạo màu nền xám nhạt cao cấp cho thanh tiêu đề bảng */
 .table thead th {
     background-color: #f8fafc !important;
     color: #475569 !important;
@@ -128,7 +162,6 @@ body {
     border-top: none !important;
 }
 
-/* Căn giữa toàn bộ dữ liệu theo chiều dọc (Hết lệch chữ) */
 .table tbody td {
     padding: 16px 20px !important;
     vertical-align: middle !important;
@@ -137,11 +170,23 @@ body {
     border-bottom: 1px solid #f1f5f9 !important;
 }
 
-.table tbody tr:hover td {
-    background-color: #fdfefe !important;
+/* --- HIỆU ỨNG HOVER NỔI BẬT DÒNG (HOVER ROW EFFECT) --- */
+.table tbody tr {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Khung ảnh Banner tinh tế */
+.table tbody tr:hover td {
+    background-color: #ffffff !important; /* Giữ nền trắng tinh khi nổi lên */
+    color: var(--primary-dark) !important; /* Chữ đậm màu y tế hơn một chút */
+}
+
+.table tbody tr:hover {
+    transform: translateX(4px) !important; /* Nhích nhẹ sang phải tạo cảm giác tương tác */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(26, 107, 90, 0.04) !important; /* Đổ bóng 3D nổi hẳn lên */
+    position: relative;
+    z-index: 2;
+}
+
 .table img {
     width: 120px !important;
     height: auto !important;
@@ -151,22 +196,26 @@ body {
     border: 1px solid #cbd5e1 !important;
 }
 
-/* --- BADGES TRẠNG THÁI --- */
-.badge-status, .badge-active, .badge-inactive, .table .badge {
+/* Nhãn Trạng thái (Badges) */
+.badge-status, .table .badge {
     padding: 6px 12px !important;
     border-radius: 6px !important;
     font-size: 0.8rem !important;
     font-weight: 600 !important;
 }
 
-/* Tự động bắt theo class màu của bạn hoặc Bootstrap */
-.badge-success, [class*="active"], [class*="Hoạt động"] {
+.badge-active, .badge-success, [class*="active"], [class*="Hoạt động"] {
     background-color: #d1fae5 !important;
     color: #065f46 !important;
 }
 
-/* --- NÚT SỬA / XÓA CHUẨN THEO ẢNH --- */
-.table .btn-sm, .action-btn, a[href*="edit"], a[id*="delete"] {
+.badge-inactive {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+}
+
+/* Các nút Hành động (Sửa / Xóa) */
+.table .btn-sm, .action-btn, .btn-action-edit, .btn-action-delete, a[href*="edit"], a[id*="delete"] {
     padding: 6px 14px !important;
     font-size: 0.85rem !important;
     border-radius: 6px !important;
@@ -179,30 +228,40 @@ body {
 }
 
 /* Nút Sửa */
-.btn-edit, a[href*="edit"], .btn-outline-primary {
+.btn-action-edit, .btn-edit, a[href*="edit"], .btn-outline-primary {
     background-color: var(--primary-light) !important;
     color: var(--primary) !important;
     border-color: #bbf7d0 !important;
 }
 
-.btn-edit:hover, a[href*="edit"]:hover {
+.btn-action-edit:hover, .btn-edit:hover, a[href*="edit"]:hover {
     background-color: var(--primary) !important;
     color: #fff !important;
 }
 
 /* Nút Xóa */
-.btn-delete, [class*="delete"], .btn-outline-danger {
+.btn-action-delete, .btn-delete, [class*="delete"], .btn-outline-danger {
     background-color: var(--danger-light) !important;
     color: var(--danger) !important;
     border-color: #fecaca !important;
 }
 
-.btn-delete:hover, [class*="delete"]:hover {
+.btn-action-delete:hover, .btn-delete:hover, [class*="delete"]:hover {
     background-color: var(--danger) !important;
     color: #fff !important;
 }
 
-/* --- TRANG FORM NHẬP LIỆU --- */
+/* Dropdown Phân trang số mục hiển thị */
+.custom-select-size {
+    padding: 7px 28px 7px 14px;
+    font-size: 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+/* ==========================================================================
+   CẤU HÌNH FORM & MODAL NHẬP LIỆU
+   ========================================================================== */
 .form-container {
     background: #fff;
     max-width: 900px;
@@ -225,21 +284,26 @@ body {
     box-shadow: 0 0 0 4px rgba(26, 107, 90, 0.12) !important;
 }
 
-/* --- CHỈ SỬA 2 NÚT HỦY BỎ / LƯU BANNER BỊ LỖI THEO HÌNH --- */
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
 
-/* Khung bọc chân trang form để đẩy nút ra xa nhau */
+/* --- HÀNH ĐỘNG FORM (Nút Hủy bỏ / Lưu thông tin) --- */
 .form-container form > div:last-child,
 .form-actions {
     display: flex !important;
     justify-content: flex-end !important;
     align-items: center !important;
-    gap: 16px !important; /* Tạo khoảng cách giữa 2 nút */
+    gap: 16px !important;
     margin-top: 30px !important;
     padding-top: 20px !important;
     border-top: 1px solid #e2e8f0 !important;
 }
 
-/* Sửa nút Lưu Banner */
+/* Nút Lưu mẫu biểu */
 .form-container button[type="submit"],
 .form-container button:has(img),
 .form-container input[type="submit"] {
@@ -263,7 +327,7 @@ body {
     box-shadow: 0 6px 14px rgba(26, 107, 90, 0.25) !important;
 }
 
-/* Sửa nút Hủy Bỏ */
+/* Nút Hủy bỏ mẫu biểu */
 .form-container a[href*="banner"],
 .form-container a:contains("Hủy"),
 .form-container a.btn-light {
@@ -284,4 +348,18 @@ body {
 .form-container a[href*="banner"]:hover {
     background-color: #e2e8f0 !important;
     color: #1e293b !important;
+}
+
+/* --- CẤU HÌNH BO MẠCH CHO DIALOG MODAL --- */
+.modal-content {
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+.modal-header {
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
 }

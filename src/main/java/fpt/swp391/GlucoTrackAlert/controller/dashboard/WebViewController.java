@@ -1,4 +1,5 @@
 package fpt.swp391.GlucoTrackAlert.controller.dashboard;
+
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.service.role.RoleService;
@@ -24,7 +25,7 @@ public class WebViewController {
     @GetMapping("/dashboard")
     public String showDashboard(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
 
         Page<User> userPage = userAdminService.getUsersPaged(page, size);
@@ -35,6 +36,9 @@ public class WebViewController {
         model.addAttribute("totalItems", userPage.getTotalElements());
         model.addAttribute("pageSize", size);
         model.addAttribute("roles", roleService.getAllRoles());
+        // Add counts for doctors and patients
+        model.addAttribute("doctorCount", userAdminService.getDoctorCount());
+        model.addAttribute("patientCount", userAdminService.getPatientCount());
 
         return "user/user-management";
     }
@@ -84,5 +88,5 @@ public class WebViewController {
         }
         return "redirect:/admin/dashboard";
     }
-
 }
+
