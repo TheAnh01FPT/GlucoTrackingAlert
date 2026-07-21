@@ -50,7 +50,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     private final WeeklyCardioAiService weeklyCardioAiService;
 
     // Tạm thời giữ nguyên record Snapshot cho đồng bộ cấu trúc cũ của bạn
-    private record WeeklySnapshot(
+        private record WeeklySnapshot(
             BigDecimal avgBloodSugar,
             BigDecimal avgSystolic,
             BigDecimal avgDiastolic,
@@ -61,10 +61,11 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             double age,
             double avgDiaForModel,
             double avgBsForModel,
-            boolean htn
+            boolean htn,
+            double htnScore
             ) {
 
-    }
+        }
 
     private WeeklySnapshot computeSnapshot(Patient patient, Long patientId, LocalDate weekStart, LocalDate weekEnd) {
         List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, weekStart, weekEnd);
@@ -115,15 +116,29 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         boolean htnFromLogs = !logs.isEmpty() && (double) highBpDays / logs.size() >= 0.4;
         boolean htn = Boolean.TRUE.equals(patient.getHypertension()) || htnFromLogs;
 
+        // Tính điểm hypertension liên tục 0.0 - 1.0 theo logs và tiền sử
+        double htnScore;
+        if (!logs.isEmpty() && logs.size() >= 4) {
+            // đủ dữ liệu tuần -> ưu tiên phản ánh mức kiểm soát thực tế
+            htnScore = (double) highBpDays / logs.size();
+            if (Boolean.TRUE.equals(patient.getHypertension())) {
+                // có tiền sử THA -> đặt sàn tối thiểu
+                htnScore = Math.max(htnScore, 0.3);
+            }
+        } else {
+            // không đủ log -> dựa vào tiền sử nhưng giảm độ tin cậy (0.6 thay vì 1.0)
+            htnScore = Boolean.TRUE.equals(patient.getHypertension()) ? 0.6 : 0.0;
+        }
+
         double age = patient.getAge() != null ? patient.getAge().doubleValue() : 50.0;
         double avgDiaForModel = avgDiastolic != null ? avgDiastolic.doubleValue() : 80.0;
         double avgBsForModel = avgBloodSugar != null ? avgBloodSugar.doubleValue() : 6.0;
 
-        double riskPct = riskModelService.predictRiskPercentage(age, avgDiaForModel, avgBsForModel, htn);
+        double riskPct = riskModelService.predictRiskPercentage(age, avgDiaForModel, avgBsForModel, htnScore);
         RiskLevel level = riskModelService.mapToRiskLevel(riskPct);
         BigDecimal riskPercentage = BigDecimal.valueOf(riskPct).setScale(2, RoundingMode.HALF_UP);
 
-        return new WeeklySnapshot(avgBloodSugar, avgSystolic, avgDiastolic, logs.size(), level, riskPct, riskPercentage, age, avgDiaForModel, avgBsForModel, htn);
+        return new WeeklySnapshot(avgBloodSugar, avgSystolic, avgDiastolic, logs.size(), level, riskPct, riskPercentage, age, avgDiaForModel, avgBsForModel, htn, htnScore);
     }
 
     private void applySnapshot(WeeklyHealthReport report, WeeklySnapshot s) {
@@ -146,7 +161,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 .assessmentType("NEPHROPATHY_WEEKLY")
                 .riskLevel(s.level().name())
                 .riskPercentage(s.riskPercentage())
-                .lowConfidence(s.logCount() < 7)
+            .lowConfidence(s.logCount() < 7)
+            .hypertensionScore(s.htnScore())
                 .recommendation(report.getRecommendation())
                 .assessedAt(LocalDateTime.now())
                 .build();
@@ -237,6 +253,20 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 log.error("Lỗi khi tính toán lại báo cáo tuần: ", e);
             }
         });
+    }
+
+    @Override
+    @Transactional
+    public void syncWeeklyReport(Long patientId, LocalDate weekStart) {
+        if (weeklyHealthReportRepository.existsByPatientIdAndWeekStart(patientId, weekStart)) {
+            recalculateIfExists(patientId, weekStart);
+            return;
+        }
+
+        long logCount = dailyHealthLogRepository.countByPatientIdAndLogDateBetween(patientId, weekStart, weekStart.plusDays(6));
+        if (logCount == 7) {
+            generateWeeklyReport(patientId, weekStart);
+        }
     }
 
     @Override

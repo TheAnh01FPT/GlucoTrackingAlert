@@ -38,7 +38,7 @@ public class RiskModelService {
         return arr;
     }
 
-    public double predictRiskPercentage(double age, double diastolic, double bloodSugar, boolean hypertension) {
+    public double predictRiskPercentage(double age, double diastolic, double bloodSugar, double hypertensionScore) {
         // Convert blood sugar from mmol/L (app) to mg/dL (model training units)
         double bloodSugarMgDl = bloodSugar * 18.0182;
 
@@ -70,7 +70,9 @@ public class RiskModelService {
             clampedBloodSugar = 490;
         }
 
-        double[] x = {clampedAge, clampedDiastolic, clampedBloodSugar, hypertension ? 1.0 : 0.0};
+        // hypertensionScore đã là giá trị liên tục 0.0-1.0, clamp an toàn
+        double clampedHtn = Math.max(0.0, Math.min(1.0, hypertensionScore));
+        double[] x = {clampedAge, clampedDiastolic, clampedBloodSugar, clampedHtn};
         double z = intercept;
         for (int i = 0; i < coefficients.length; i++) {
             z += coefficients[i] * (x[i] - scalerMean[i]) / scalerScale[i];

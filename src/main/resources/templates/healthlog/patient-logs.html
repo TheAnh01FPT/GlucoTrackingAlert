@@ -472,8 +472,6 @@
     <nav class="navbar-menu">
         <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
         <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-        <a th:href="@{/health-logs/ai-report}" class="navbar-link"
-           style="background-color: rgba(99, 102, 241, 0.2); border: 1px solid #818cf8; color: #fff;">🤖 Báo Cáo AI</a>
         <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang Chủ</a>
         <div style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
             <span style="font-size:1.3rem;">🔔</span>
@@ -623,7 +621,7 @@
 
                     <td>
                         <div class="action-links">
-                            <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${userId}, source='my-logs')}"
+                            <a th:href="@{/health-logs/{id}(id=${log.id}, userId=${userId}, source='my-logs')}"
                                class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
                             <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
                                class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>

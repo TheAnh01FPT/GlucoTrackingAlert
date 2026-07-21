@@ -243,6 +243,31 @@
             font-weight: 600;
         }
 
+        .badge-pending {
+            background: #f39c12;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-rejected {
+            background: var(--danger);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .review-note {
+            margin-top: 0.5rem;
+            color: var(--danger);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
         /* Action buttons */
         .action-buttons {
             display: flex;
@@ -428,7 +453,7 @@
             <!-- Header -->
             <div class="manage-header">
                 <h1><i class="bi bi-newspaper"></i> Quản lý Bài viết</h1>
-                <a href="/articles/manage/new" class="btn-new">
+                <a th:if="${canCreateArticle}" href="/articles/manage/new" class="btn-new">
                     <i class="bi bi-plus-circle"></i> Bài viết mới
                 </a>
             </div>
@@ -446,6 +471,8 @@
                     <select name="status" class="form-select">
                         <option value="">-- Tất cả trạng thái --</option>
                         <option value="draft" th:selected="${status == 'draft'}">Nháp</option>
+                        <option value="pending_review" th:selected="${status == 'pending_review'}">Chờ duyệt</option>
+                        <option value="rejected" th:selected="${status == 'rejected'}">Bị từ chối</option>
                         <option value="published" th:selected="${status == 'published'}">Đã đăng</option>
                     </select>
                 </div>
@@ -480,6 +507,8 @@
                         </td>
                         <td>
                             <span th:if="${article.status != null and article.status.value == 'draft'}" class="badge-draft">Nháp</span>
+                            <span th:if="${article.status != null and article.status.value == 'pending_review'}" class="badge-pending">Chờ duyệt</span>
+                            <span th:if="${article.status != null and article.status.value == 'rejected'}" class="badge-rejected">Bị từ chối</span>
                             <span th:if="${article.status != null and article.status.value == 'published'}" class="badge-published">Đã đăng</span>
                         </td>
                         <td>
@@ -494,6 +523,29 @@
                                    th:href="'/articles/manage/' + ${article.id} + '/edit'" class="btn-icon btn-edit" title="Sửa bài viết">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <button th:if="${!isAdmin and article.status != null and article.status.value == 'rejected' and article.rejectionReason != null and !#strings.isEmpty(article.rejectionReason)}"
+                                        type="button"
+                                        class="btn-icon btn-delete"
+                                        title="Xem lý do từ chối"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#rejectionReasonModal"
+                                        th:attr="data-reason=${article.rejectionReason}">
+                                    <i class="bi bi-chat-square-text"></i>
+                                </button>
+                                <form th:if="${isAdmin and article.status != null and article.status.value == 'pending_review'}" method="post" th:action="'/articles/manage/' + ${article.id} + '/approve'" style="display: inline; margin: 0;">
+                                    <button type="submit" class="btn-icon btn-view" title="Duyệt bài viết">
+                                        <i class="bi bi-check2-circle"></i>
+                                    </button>
+                                </form>
+                                <button th:if="${isAdmin and article.status != null and article.status.value == 'pending_review'}"
+                                        type="button"
+                                        class="btn-icon btn-delete"
+                                        title="Từ chối bài viết"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#rejectModal"
+                                        th:attr="data-article-id=${article.id}">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
                                 <form th:if="${isAdmin} or ${article.createdBy.id} == ${currentUserId}"
                                       method="post" th:action="'/articles/manage/' + ${article.id} + '/delete'" 
                                       style="display: inline; margin: 0;" 
@@ -542,13 +594,87 @@
                 <i class="bi bi-inbox"></i>
             </div>
             <p class="empty-state-text">Không có bài viết nào.</p>
-            <a href="/articles/manage/new" class="empty-state-link">
+            <a th:if="${canCreateArticle}" href="/articles/manage/new" class="empty-state-link">
                 Tạo bài viết mới <i class="bi bi-arrow-right"></i>
             </a>
         </div>
         </div>
     </div>
 
+    <div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-labelledby="rejectionReasonModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectionReasonModalLabel">Lý do từ chối</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="rejectionReasonText" class="mb-0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">Từ chối bài viết</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="rejectForm" method="post">
+                    <div class="modal-body">
+                        <label class="form-label fw-600" for="rejectReason">Lý do từ chối <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="rejectReason" name="reason" rows="4" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Gửi từ chối</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rejectModal = document.getElementById('rejectModal');
+            const rejectionReasonModal = document.getElementById('rejectionReasonModal');
+            const form = document.getElementById('rejectForm');
+            const reasonInput = document.getElementById('rejectReason');
+            const rejectionReasonText = document.getElementById('rejectionReasonText');
+            const buttons = document.querySelectorAll('[data-bs-target="#rejectModal"]');
+            const reasonButtons = document.querySelectorAll('[data-bs-target="#rejectionReasonModal"]');
+            buttons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const articleId = button.getAttribute('data-article-id');
+                    form.action = '/articles/manage/' + articleId + '/reject';
+                    reasonInput.value = '';
+                });
+            });
+            reasonButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const reason = button.getAttribute('data-reason') || 'Không có lý do từ chối.';
+                    rejectionReasonText.textContent = reason;
+                });
+            });
+            form.addEventListener('submit', function (event) {
+                if (!reasonInput.value || reasonInput.value.trim() === '') {
+                    event.preventDefault();
+                    alert('Vui lòng nhập lý do từ chối.');
+                }
+            });
+            rejectModal.addEventListener('hidden.bs.modal', function () {
+                reasonInput.value = '';
+            });
+            rejectionReasonModal.addEventListener('hidden.bs.modal', function () {
+                rejectionReasonText.textContent = '';
+            });
+        });
+    </script>
 </body>
 </html>

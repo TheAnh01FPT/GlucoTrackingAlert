@@ -5,6 +5,8 @@ package fpt.swp391.GlucoTrackAlert.model.article;
  */
 public enum ArticleStatus {
     DRAFT("draft"),
+    PENDING_REVIEW("pending_review"),
+    REJECTED("rejected"),
     PUBLISHED("published");
 
     private final String value;

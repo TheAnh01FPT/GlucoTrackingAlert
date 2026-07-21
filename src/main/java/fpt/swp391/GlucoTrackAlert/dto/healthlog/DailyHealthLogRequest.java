@@ -17,31 +17,36 @@ public class DailyHealthLogRequest {
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Chỉ số đường huyết phải lớn hơn 0")
     @DecimalMax(value = "50.0", message = "Chỉ số đường huyết không hợp lệ")
-    @NotNull(message = "Chỉ số đường huyết là bắt buộc")
     private BigDecimal bloodSugar;
 
     @Min(value = 30, message = "Huyết áp tâm thu tối thiểu là 30 mmHg")
     @Max(value = 300, message = "Huyết áp tâm thu tối đa là 300 mmHg")
-    @NotNull(message = "Huyết áp tâm thu là bắt buộc")
     private Integer systolic;
 
     @Min(value = 20, message = "Huyết áp tâm trương tối thiểu là 20 mmHg")
     @Max(value = 200, message = "Huyết áp tâm trương tối đa là 200 mmHg")
-    @NotNull(message = "Huyết áp tâm trương là bắt buộc")
     private Integer diastolic;
 
     @DecimalMin(value = "0.0", message = "Giờ ngủ không thể âm")
     @DecimalMax(value = "24.0", message = "Giờ ngủ không thể vượt quá 24 giờ")
-    @NotNull(message = "Giờ ngủ là bắt buộc")
     private BigDecimal sleepHours;
 
     @Min(value = 0, message = "Lượng nước uống không thể âm")
     @Max(value = 10000, message = "Lượng nước uống không thể vượt quá 10000 ml")
-    @NotNull(message = "Lượng nước tiêu thụ là bắt buộc")
     private Integer waterMl;
 
     @Size(max = 20, message = "Mức độ tiêu thụ đường không vượt quá 20 ký tự")
     private String sugarConsumptionLevel;
+
+    @AssertTrue(message = "Huyết áp tâm thu và tâm trương phải được nhập cùng nhau")
+    public boolean isBloodPressurePairValid() {
+        return (systolic == null && diastolic == null) || (systolic != null && diastolic != null);
+    }
+
+    @AssertTrue(message = "Huyết áp tâm thu phải lớn hơn hoặc bằng huyết áp tâm trương")
+    public boolean isBloodPressureRangeValid() {
+        return systolic == null || diastolic == null || systolic >= diastolic;
+    }
 
     private String symptoms;
     private String note;

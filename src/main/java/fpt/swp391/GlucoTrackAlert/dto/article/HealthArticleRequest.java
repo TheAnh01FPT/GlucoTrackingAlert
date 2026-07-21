@@ -39,6 +39,6 @@ public class HealthArticleRequest {
     private String category;
 
     @NotBlank(message = "Trạng thái không được để trống")
-    @Pattern(regexp = "^(draft|published)$", message = "Trạng thái phải là draft hoặc published")
+    @Pattern(regexp = "^(draft|pending_review|rejected|published)$", message = "Trạng thái không hợp lệ")
     private String status;
 }

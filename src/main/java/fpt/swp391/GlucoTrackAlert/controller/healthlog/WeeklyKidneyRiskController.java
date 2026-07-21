@@ -97,10 +97,14 @@ public class WeeklyKidneyRiskController {
         }
 
         Long patientId = resolvePatientId(userId);
+        Patient patient = patientRepository.findByUserId(userId).orElse(null);
         // isDoctorView = true khi bác sĩ/admin xem userId khác với chính mình
         boolean isDoctorView = isDoctorOrAdmin
                 && userId != null
                 && !userId.equals(getCurrentUserId());
+
+        model.addAttribute("patient", patient);
+        model.addAttribute("patientName", patient != null ? patient.getFullName() : null);
 
         if (patientId == null) {
             model.addAttribute("reports", List.of());
@@ -118,6 +122,8 @@ public class WeeklyKidneyRiskController {
         model.addAttribute("patientId", patientId);
         if (!reports.isEmpty()) {
             model.addAttribute("latestAssessment", reports.get(0));
+            WeeklyHealthReport previous = reports.size() > 1 ? reports.get(1) : null;
+            model.addAttribute("previousAssessment", previous);
         }
         return "healthlog/weekly-kidney-risk";
     }
@@ -159,6 +165,7 @@ public class WeeklyKidneyRiskController {
         }
 
         Long patientId = resolvePatientId(userId);
+        Patient patient = patientRepository.findByUserId(userId).orElse(null);
         if (patientId == null) {
             redirectAttributes.addFlashAttribute("customRangeError", "Không tìm thấy hồ sơ bệnh nhân.");
             return "redirect:/health-logs/kidney-risk/weekly";
@@ -173,6 +180,8 @@ public class WeeklyKidneyRiskController {
                 && userId != null
                 && !userId.equals(getCurrentUserId());
 
+        model.addAttribute("patient", patient);
+        model.addAttribute("patientName", patient != null ? patient.getFullName() : null);
         model.addAttribute("customRangeResult", result);
         model.addAttribute("reports", reports);
         model.addAttribute("isDoctorView", isDoctorView);
@@ -180,6 +189,8 @@ public class WeeklyKidneyRiskController {
         model.addAttribute("patientId", patientId);
         if (!reports.isEmpty()) {
             model.addAttribute("latestAssessment", reports.get(0));
+            WeeklyHealthReport previous = reports.size() > 1 ? reports.get(1) : null;
+            model.addAttribute("previousAssessment", previous);
         }
         return "healthlog/weekly-kidney-risk";
     }
@@ -202,6 +213,8 @@ public class WeeklyKidneyRiskController {
 
         if (!reports.isEmpty()) {
             model.addAttribute("latestAssessment", reports.get(0));
+            WeeklyHealthReport previous = reports.size() > 1 ? reports.get(1) : null;
+            model.addAttribute("previousAssessment", previous);
         }
         return "healthlog/weekly-kidney-risk";
     }

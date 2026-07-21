@@ -421,11 +421,15 @@
                         <select class="form-select" id="status" name="status" th:field="*{status}" 
                                 th:classappend="${#fields.hasErrors('status')} ? ' is-invalid' : ''" required>
                             <option value="draft">Nháp (Chỉ bạn thấy)</option>
-                            <option value="published">Đã đăng (Công khai)</option>
+                            <option th:if="${isAdmin}" value="pending_review">Chờ duyệt</option>
+                            <option th:if="${isAdmin}" value="rejected">Bị từ chối</option>
+                            <option th:if="${isAdmin}" value="published">Đã đăng (Công khai)</option>
+                            <option th:unless="${isAdmin}" value="pending_review">Chờ duyệt</option>
                         </select>
                         <div class="form-text">
                             <strong>Nháp:</strong> Bài viết chỉ bạn thấy trong trang quản lý.<br>
-                            <strong>Đã đăng:</strong> Bài viết hiển thị công khai và có sẵn URL chia sẻ.
+                            <strong>Chờ duyệt:</strong> Bài viết sẽ được gửi cho Admin xem xét.<br>
+                            <strong th:if="${isAdmin}">Đã đăng:</strong><span th:if="${isAdmin}"> Bài viết hiển thị công khai và có sẵn URL chia sẻ.</span>
                         </div>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
                     </div>

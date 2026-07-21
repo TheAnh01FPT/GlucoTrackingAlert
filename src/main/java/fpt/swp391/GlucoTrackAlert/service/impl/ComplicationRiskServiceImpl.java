@@ -52,7 +52,20 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
 
         boolean lowConfidenceFlag = (patientAgeObj == null) || (diastolicObj == null) || (bloodSugarObj == null);
 
-        double riskPct = riskModelService.predictRiskPercentage(age, diastolic, bloodSugar, htn);
+        // Compute hypertension score for single-log assessment
+        double htnScore;
+        if (diastolicObj != null) {
+            double clamped = Math.max(50.0, Math.min(180.0, diastolic));
+            // normalize into 0..1 range roughly between 50 and 180
+            htnScore = (clamped - 50.0) / (180.0 - 50.0);
+            if (Boolean.TRUE.equals(patient.getHypertension())) {
+                htnScore = Math.max(htnScore, 0.3);
+            }
+        } else {
+            htnScore = Boolean.TRUE.equals(patient.getHypertension()) ? 0.6 : 0.0;
+        }
+
+        double riskPct = riskModelService.predictRiskPercentage(age, diastolic, bloodSugar, htnScore);
         RiskLevel level = riskModelService.mapToRiskLevel(riskPct);
         BigDecimal riskPercentage = BigDecimal.valueOf(riskPct).setScale(2, RoundingMode.HALF_UP);
 
@@ -65,6 +78,7 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
             .riskLevel(level.name())
             .riskPercentage(riskPercentage)
             .recommendation(recommendation)
+            .hypertensionScore(htnScore)
             .assessedAt(LocalDateTime.now());
         if (lowConfidenceFlag) assessmentBuilder.lowConfidence(true);
         RiskAssessment assessment = assessmentBuilder.build();
@@ -91,7 +105,7 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
                 .dailyHealthLogId(dailyHealthLogId)
                 .analysisType("CKD_LOGISTIC_REGRESSION_V1")
                 .inputData("{\"age\":" + age + ",\"diastolic\":" + diastolic +
-                        ",\"blood_sugar\":" + bloodSugar + ",\"hypertension\":" + htn + "}")
+                    ",\"blood_sugar\":" + bloodSugar + ",\"hypertension_score\":" + htnScore + "}")
                 .outputResult("{\"riskPercentage\":" + riskPct + ",\"riskLevel\":\"" + level.name() + "\"}")
                 .riskLevel(level.name())
                 .createdAt(LocalDateTime.now())

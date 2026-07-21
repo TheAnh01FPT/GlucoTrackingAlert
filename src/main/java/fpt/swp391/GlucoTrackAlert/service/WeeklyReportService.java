@@ -7,5 +7,6 @@ import java.time.LocalDate;
 public interface WeeklyReportService {
     WeeklyHealthReport generateWeeklyReport(Long patientId, LocalDate weekStart);
     void recalculateIfExists(Long patientId, LocalDate weekStart);
+    void syncWeeklyReport(Long patientId, LocalDate weekStart);
     CustomRangeResult computeCustomRange(Long patientId, LocalDate from, LocalDate to);
 }

@@ -6,6 +6,7 @@ import fpt.swp391.GlucoTrackAlert.model.article.ArticleStatus;
 import fpt.swp391.GlucoTrackAlert.model.article.HealthArticle;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.repository.article.HealthArticleRepository;
+import fpt.swp391.GlucoTrackAlert.service.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
@@ -18,15 +19,8 @@ import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * Service implementation xử lý logic nghiệp vụ bài viết kiến thức y khoa
@@ -36,9 +30,9 @@ import java.util.UUID;
 @Transactional
 public class HealthArticleServiceImpl implements HealthArticleService {
 
-    private static final Logger log = LoggerFactory.getLogger(HealthArticleServiceImpl.class);
     private final HealthArticleRepository articleRepository;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
 
     private static final PolicyFactory CONTENT_POLICY = new HtmlPolicyBuilder()
             .allowElements("p", "br", "strong", "b", "em", "i", "u", "s", "h2", "h3", "h4", "ul", "ol", "li", "blockquote", "a", "img")
@@ -60,12 +54,15 @@ public class HealthArticleServiceImpl implements HealthArticleService {
     }
 
     @Override
-    public Page<HealthArticle> getArticlesForManagement(String status, String keyword, Pageable pageable) {
+    public Page<HealthArticle> getArticlesForManagement(String status, String keyword, Pageable pageable, User currentUser, boolean isAdmin) {
         String searchKeyword = (keyword == null || keyword.isBlank()) ? "" : keyword.trim();
         ArticleStatus searchStatus = (status == null || status.isBlank())
                 ? null
                 : ArticleStatus.fromString(status.trim());
-        return articleRepository.findForManagement(searchStatus, searchKeyword, pageable);
+        if (isAdmin) {
+            return articleRepository.findForManagementForAdmin(searchStatus, searchKeyword, pageable);
+        }
+        return articleRepository.findForManagementForDoctor(searchStatus, searchKeyword, currentUser.getId(), pageable);
     }
 
     @Override
@@ -110,23 +107,9 @@ public class HealthArticleServiceImpl implements HealthArticleService {
             }
 
             try {
-                Path uploadDir = Paths.get("uploads", "articles");
-                if (!Files.exists(uploadDir)) {
-                    Files.createDirectories(uploadDir);
-                }
-
-                String originalFilename = thumbFile.getOriginalFilename();
-                String extension = "";
-                if (originalFilename != null && originalFilename.contains(".")) {
-                    extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-                }
-                String fileName = UUID.randomUUID().toString() + extension;
-                Path filePath = uploadDir.resolve(fileName);
-
-                Files.copy(thumbFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                savedThumbnailUrl = "/uploads/articles/" + fileName;
+                savedThumbnailUrl = cloudinaryService.uploadFile(thumbFile, "health_articles");
             } catch (IOException e) {
-                throw new Exception("Lỗi khi lưu ảnh đại diện: " + e.getMessage(), e);
+                throw new RuntimeException("Lỗi khi upload thumbnail lên Cloudinary: " + e.getMessage(), e);
             }
         }
 
@@ -141,6 +124,8 @@ public class HealthArticleServiceImpl implements HealthArticleService {
                 .status(status)
                 .createdBy(createdBy)
                 .build();
+
+        article.setRejectionReason(null);
 
         // Nếu publish, set publishedAt = now
         if (status == ArticleStatus.PUBLISHED) {
@@ -185,34 +170,10 @@ public class HealthArticleServiceImpl implements HealthArticleService {
                 throw new Exception("Kích thước ảnh không được vượt quá 5MB");
             }
 
-            String oldThumbnailUrl = article.getThumbnailUrl();
             try {
-                Path uploadDir = Paths.get("uploads", "articles");
-                if (!Files.exists(uploadDir)) {
-                    Files.createDirectories(uploadDir);
-                }
-
-                String originalFilename = thumbFile2.getOriginalFilename();
-                String extension = "";
-                if (originalFilename != null && originalFilename.contains(".")) {
-                    extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-                }
-                String fileName = UUID.randomUUID().toString() + extension;
-                Path filePath = uploadDir.resolve(fileName);
-
-                Files.copy(thumbFile2.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                article.setThumbnailUrl("/uploads/articles/" + fileName);
-
-                if (oldThumbnailUrl != null && !oldThumbnailUrl.isBlank() && oldThumbnailUrl.startsWith("/uploads/articles/")) {
-                    try {
-                        Path oldPath = Paths.get(".", oldThumbnailUrl);
-                        Files.deleteIfExists(oldPath);
-                    } catch (IOException deleteEx) {
-                        log.warn("Không thể xóa ảnh thumbnail cũ: {}", oldThumbnailUrl, deleteEx);
-                    }
-                }
+                article.setThumbnailUrl(cloudinaryService.uploadFile(thumbFile2, "health_articles"));
             } catch (IOException e) {
-                throw new Exception("Lỗi khi lưu ảnh đại diện: " + e.getMessage(), e);
+                throw new RuntimeException("Lỗi khi upload thumbnail lên Cloudinary: " + e.getMessage(), e);
             }
         }
 
@@ -222,10 +183,29 @@ public class HealthArticleServiceImpl implements HealthArticleService {
         ArticleStatus status = validateAndGetStatus(request.getStatus());
         ArticleStatus oldStatus = article.getStatus();
         article.setStatus(status);
+        article.setRejectionReason(status == ArticleStatus.REJECTED ? null : null);
 
         // Nếu chuyển từ draft → published, set publishedAt = now
         if (oldStatus != ArticleStatus.PUBLISHED && status == ArticleStatus.PUBLISHED) {
             article.setPublishedAt(LocalDateTime.now());
+        }
+
+        return articleRepository.save(article);
+    }
+
+    @Override
+    public HealthArticle updateArticleStatus(Long id, ArticleStatus status, String rejectionReason) throws Exception {
+        HealthArticle article = articleRepository.findById(id)
+                .orElseThrow(() -> new Exception("Bài viết không tồn tại"));
+
+        article.setStatus(status);
+        if (status == ArticleStatus.PUBLISHED) {
+            article.setPublishedAt(LocalDateTime.now());
+            article.setRejectionReason(null);
+        } else if (status == ArticleStatus.REJECTED) {
+            article.setRejectionReason(rejectionReason != null && !rejectionReason.isBlank() ? rejectionReason.trim() : null);
+        } else {
+            article.setRejectionReason(null);
         }
 
         return articleRepository.save(article);

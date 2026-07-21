@@ -1,6 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.controller.article;
 
 import fpt.swp391.GlucoTrackAlert.dto.article.HealthArticleRequest;
+import fpt.swp391.GlucoTrackAlert.model.article.ArticleStatus;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.model.article.HealthArticle;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
@@ -24,6 +25,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -78,6 +80,7 @@ public class HealthArticleManageController {
             model.addAttribute("id", id);
         }
         model.addAttribute("isEdit", isEdit);
+        model.addAttribute("isAdmin", hasRole("ROLE_ADMIN"));
     }
 
     @ExceptionHandler({MaxUploadSizeExceededException.class, MultipartException.class})
@@ -86,6 +89,7 @@ public class HealthArticleManageController {
         model.addAttribute("error", errorMessage);
         model.addAttribute("article", new HealthArticleRequest());
         model.addAttribute("categories", new String[]{"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"});
+        model.addAttribute("isAdmin", hasRole("ROLE_ADMIN"));
 
         String uri = request.getRequestURI();
         boolean isEdit = uri != null && uri.endsWith("/edit");
@@ -121,9 +125,6 @@ public class HealthArticleManageController {
             @RequestParam(defaultValue = "") String keyword,
             Model model) {
 
-        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
-        Page<HealthArticle> articles = articleService.getArticlesForManagement(status, keyword, pageable);
-
         User currentUser;
         try {
             currentUser = getLoggedInUser();
@@ -132,12 +133,17 @@ public class HealthArticleManageController {
             return "redirect:/login";
         }
 
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+        boolean isAdmin = hasRole("ROLE_ADMIN");
+        Page<HealthArticle> articles = articleService.getArticlesForManagement(status, keyword, pageable, currentUser, isAdmin);
+
         model.addAttribute("articles", articles);
         model.addAttribute("currentPage", page);
         model.addAttribute("status", status);
         model.addAttribute("keyword", keyword);
         model.addAttribute("currentUserId", currentUser.getId());
         model.addAttribute("isAdmin", hasRole("ROLE_ADMIN"));
+        model.addAttribute("canCreateArticle", !hasRole("ROLE_ADMIN"));
 
         return "article/manage-list";
     }
@@ -149,7 +155,7 @@ public class HealthArticleManageController {
     @GetMapping("/new")
     public String newArticleForm(Model model) {
         model.addAttribute("article", new HealthArticleRequest());
-        
+        model.addAttribute("isAdmin", hasRole("ROLE_ADMIN"));
         
         String[] categories = {"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"};
         model.addAttribute("categories", categories);
@@ -165,7 +171,8 @@ public class HealthArticleManageController {
     public String createArticle(
             @Valid @ModelAttribute("article") HealthArticleRequest request,
             BindingResult bindingResult,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
             populateArticleFormModel(model, request, null, false);
@@ -173,16 +180,12 @@ public class HealthArticleManageController {
         }
 
         try {
+            validateStatusForCurrentUser(request.getStatus());
             boolean hasUnsupportedEmbeddedContent = containsUnsupportedEmbeddedContent(request.getContent());
             User createdBy = getLoggedInUser();
-            HealthArticle savedArticle = articleService.createArticle(request, createdBy.getId());
-            request.setContent(savedArticle.getContent());
-            request.setThumbnailUrl(savedArticle.getThumbnailUrl());
-            if (hasUnsupportedEmbeddedContent) {
-                model.addAttribute("warning", "Video/nhúng không được hỗ trợ, đã bị loại bỏ khỏi nội dung");
-            }
-            populateArticleFormModel(model, request, null, false);
-            return "article/form";
+            articleService.createArticle(request, createdBy.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo bài viết thành công.");
+            return "redirect:/articles/manage";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             populateArticleFormModel(model, request, null, false);
@@ -226,6 +229,7 @@ public class HealthArticleManageController {
         model.addAttribute("article", request);
         model.addAttribute("id", id);
         model.addAttribute("isEdit", true);
+        model.addAttribute("isAdmin", hasRole("ROLE_ADMIN"));
         
         String[] categories = {"Dinh dưỡng", "Biến chứng", "Lối sống", "Thuốc điều trị", "Tin tức y khoa"};
         model.addAttribute("categories", categories);
@@ -242,7 +246,8 @@ public class HealthArticleManageController {
             @PathVariable Long id,
             @Valid @ModelAttribute("article") HealthArticleRequest request,
             BindingResult bindingResult,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         Optional<HealthArticle> existingArticle = articleService.getArticleById(id);
         if (existingArticle.isEmpty()) {
@@ -264,19 +269,54 @@ public class HealthArticleManageController {
         }
 
         try {
-            boolean hasUnsupportedEmbeddedContent = containsUnsupportedEmbeddedContent(request.getContent());
-            HealthArticle savedArticle = articleService.updateArticle(id, request);
-            request.setContent(savedArticle.getContent());
-            request.setThumbnailUrl(savedArticle.getThumbnailUrl());
-            if (hasUnsupportedEmbeddedContent) {
-                model.addAttribute("warning", "Video/nhúng không được hỗ trợ, đã bị loại bỏ khỏi nội dung");
-            }
-            populateArticleFormModel(model, request, id, true);
-            return "article/form";
+            validateStatusForCurrentUser(request.getStatus());
+            articleService.updateArticle(id, request);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật bài viết thành công.");
+            return "redirect:/articles/manage";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             populateArticleFormModel(model, request, id, true);
             return "article/form";
+        }
+    }
+
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String approveArticle(@PathVariable Long id) {
+        try {
+            articleService.updateArticleStatus(id, ArticleStatus.PUBLISHED, null);
+        } catch (Exception e) {
+            log.error("Duyệt bài viết thất bại, id={}", id, e);
+        }
+        return "redirect:/articles/manage";
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String rejectArticle(@PathVariable Long id, @RequestParam String reason) {
+        if (reason == null || reason.isBlank()) {
+            return "redirect:/articles/manage";
+        }
+        try {
+            articleService.updateArticleStatus(id, ArticleStatus.REJECTED, reason.trim());
+        } catch (Exception e) {
+            log.error("Từ chối bài viết thất bại, id={}", id, e);
+        }
+        return "redirect:/articles/manage";
+    }
+
+    private void validateStatusForCurrentUser(String status) throws Exception {
+        boolean isAdmin = hasRole("ROLE_ADMIN");
+        if (isAdmin) {
+            return;
+        }
+
+        ArticleStatus parsedStatus = ArticleStatus.fromString(status);
+        if (parsedStatus == ArticleStatus.PUBLISHED) {
+            throw new Exception("Bác sĩ chỉ có thể lưu bài viết ở trạng thái Nháp hoặc Chờ duyệt");
+        }
+        if (parsedStatus != ArticleStatus.DRAFT && parsedStatus != ArticleStatus.PENDING_REVIEW) {
+            throw new Exception("Bác sĩ chỉ có thể lưu bài viết ở trạng thái Nháp hoặc Chờ duyệt");
         }
     }
 

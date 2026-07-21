@@ -45,6 +45,9 @@ public class HealthArticle {
     @Builder.Default
     private ArticleStatus status = ArticleStatus.DRAFT;
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 

@@ -624,9 +624,6 @@
         <nav class="navbar-menu">
             <a href="/health-logs/doctor-view" class="navbar-link active">Xem Nhật Ký Bệnh Nhân</a>
             <a th:href="@{/health-logs/doctor-chart(userId=${selectedUserId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-                <a th:if="${selectedUserId != null}"
-                    th:href="@{/health-logs/ai-report(patientId=${selectedUserId})}"
-                    class="navbar-link">🤖 Báo Cáo AI</a>
             <a th:href="@{/doctor/home}" class="navbar-link">🏠 Trang Chủ</a>
         </nav>
     </header>
@@ -857,7 +854,7 @@
 
                             <td>
                                 <div class="action-links">
-                                    <a th:href="@{/health-logs/detail(logId=${log.id}, userId=${selectedUserId}, source='doctor-view')}"
+                                    <a th:href="@{/health-logs/{id}(id=${log.id}, userId=${selectedUserId}, source='doctor-view')}"
                                        class="btn-action btn-view"
                                        title="Xem Chi Tiết">🔴</a>
                                 </div>

@@ -55,9 +55,22 @@ public interface HealthArticleRepository extends JpaRepository<HealthArticle, Lo
            "(:status IS NULL OR a.status = :status) " +
            "AND (LOWER(a.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
            "     OR LOWER(a.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (a.status = 'PUBLISHED' OR a.status = 'REJECTED' OR a.status = 'PENDING_REVIEW') " +
            "ORDER BY a.updatedAt DESC")
-    Page<HealthArticle> findForManagement(
+    Page<HealthArticle> findForManagementForAdmin(
             @Param("status") ArticleStatus status,
             @Param("keyword") String keyword,
+            Pageable pageable);
+
+    @Query("SELECT a FROM HealthArticle a WHERE " +
+           "(:status IS NULL OR a.status = :status) " +
+           "AND (LOWER(a.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "     OR LOWER(a.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND a.createdBy.id = :userId " +
+           "ORDER BY a.updatedAt DESC")
+    Page<HealthArticle> findForManagementForDoctor(
+            @Param("status") ArticleStatus status,
+            @Param("keyword") String keyword,
+            @Param("userId") Long userId,
             Pageable pageable);
 }

@@ -1,7 +1,9 @@
 package fpt.swp391.GlucoTrackAlert.service.article;
 
 import fpt.swp391.GlucoTrackAlert.dto.article.HealthArticleRequest;
+import fpt.swp391.GlucoTrackAlert.model.article.ArticleStatus;
 import fpt.swp391.GlucoTrackAlert.model.article.HealthArticle;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,7 +27,7 @@ public interface HealthArticleService {
     /**
      * Lấy danh sách bài viết cho trang quản lý (tất cả trạng thái, cho Bác sĩ/Admin)
      */
-    Page<HealthArticle> getArticlesForManagement(String status, String keyword, Pageable pageable);
+    Page<HealthArticle> getArticlesForManagement(String status, String keyword, Pageable pageable, User currentUser, boolean isAdmin);
 
     /**
      * Lấy chi tiết bài viết theo ID (cho Bác sĩ/Admin quản lý)
@@ -43,6 +45,11 @@ public interface HealthArticleService {
      * Regenerate slug chỉ nếu tiêu đề thay đổi
      */
     HealthArticle updateArticle(Long id, HealthArticleRequest request) throws Exception;
+
+    /**
+     * Cập nhật trạng thái bài viết cho duyệt/từ chối
+     */
+    HealthArticle updateArticleStatus(Long id, ArticleStatus status, String rejectionReason) throws Exception;
 
     /**
      * Xóa bài viết
