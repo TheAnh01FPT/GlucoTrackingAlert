@@ -25,7 +25,11 @@ public class PatientProfileResponse {
     private BigDecimal bmi;
     private String status;
     private String identityCard;
+    private String identityCardImage;
+    private String identityCardStatus;
     private String insuranceNumber;
+    private String insuranceNumberImage;
+    private String insuranceCardStatus;
     private String patientType;
     private Boolean isPregnant;
     private Boolean hypertension;

@@ -33,7 +33,7 @@
         Hãy nhập các thông tin chính xác dưới đây. Các chỉ số động về Huyết áp và Đường huyết sẽ được theo dõi hằng ngày tại mục <b>Nhật ký hằng ngày (Daily Logs)</b>.
     </p>
 
-    <form th:action="@{/patient/profile/save}" th:object="${profileForm}" method="post">
+    <form th:action="@{/patient/profile/save}" th:object="${profileForm}" method="post" enctype="multipart/form-data">
         <input type="hidden" th:field="*{userId}">
         <input type="hidden" name="isNew" th:value="${isNew}">
 
@@ -89,12 +89,32 @@
                     <label class="form-label" for="identityCard">Căn cước công dân (CCCD)</label>
                     <input type="text" id="identityCard" th:field="*{identityCard}" class="form-input" placeholder="Nhập số CCCD">
                     <span class="error-text" th:if="${#fields.hasErrors('identityCard')}" th:errors="*{identityCard}">Lỗi CCCD</span>
+                    <div style="margin-top: 8px;">
+                        <label class="form-label" style="font-size: 13px; color: #4b5563;">📸 Ảnh chụp CCCD (Tùy chọn đính kèm)</label>
+                        <input type="file" id="identityCardFile" name="identityCardFile" accept="image/*" class="form-input" onchange="previewCardImage(this, 'idCardPreview')">
+                        <p style="font-size: 11px; color: #d97706; margin-top: 4px; font-style: italic;">
+                            📌 Lưu ý: Vui lòng đảm bảo số CCCD gõ tay trùng khớp 100% với thông tin trên ảnh chụp đính kèm.
+                        </p>
+                        <div id="idCardPreview" style="margin-top: 8px;">
+                            <img th:if="${profileForm.identityCardImage != null && !profileForm.identityCardImage.isEmpty()}" th:src="${profileForm.identityCardImage}" style="max-width: 150px; max-height: 100px; border-radius: 6px; border: 1px solid #ddd;">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="insuranceNumber">Mã bảo hiểm y tế (BHYT)</label>
                     <input type="text" id="insuranceNumber" th:field="*{insuranceNumber}" class="form-input" placeholder="Nhập mã số BHYT">
                     <span class="error-text" th:if="${#fields.hasErrors('insuranceNumber')}" th:errors="*{insuranceNumber}">Lỗi BHYT</span>
+                    <div style="margin-top: 8px;">
+                        <label class="form-label" style="font-size: 13px; color: #4b5563;">📸 Ảnh chụp thẻ BHYT (Tùy chọn đính kèm)</label>
+                        <input type="file" id="insuranceNumberFile" name="insuranceNumberFile" accept="image/*" class="form-input" onchange="previewCardImage(this, 'insCardPreview')">
+                        <p style="font-size: 11px; color: #d97706; margin-top: 4px; font-style: italic;">
+                            📌 Lưu ý: Vui lòng đảm bảo mã BHYT gõ tay trùng khớp 100% với thông tin trên ảnh chụp đính kèm.
+                        </p>
+                        <div id="insCardPreview" style="margin-top: 8px;">
+                            <img th:if="${profileForm.insuranceNumberImage != null && !profileForm.insuranceNumberImage.isEmpty()}" th:src="${profileForm.insuranceNumberImage}" style="max-width: 150px; max-height: 100px; border-radius: 6px; border: 1px solid #ddd;">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -223,6 +243,25 @@
 </div>
 
 <script>
+    function previewCardImage(input, previewId) {
+        var container = document.getElementById(previewId);
+        if (!container) return;
+        container.innerHTML = "";
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = document.createElement("img");
+                img.src = e.target.result;
+                img.style.maxWidth = "150px";
+                img.style.maxHeight = "100px";
+                img.style.borderRadius = "6px";
+                img.style.border = "1px solid #ddd";
+                container.appendChild(img);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         var genderSelect = document.getElementById("gender");
         var pregnancyGroup = document.getElementById("pregnancyGroup");

@@ -43,9 +43,17 @@ public class PatientProfileRequest {
     @Pattern(regexp = "^$|[0-9]{12}$", message = "Số căn cước công dân phải gồm đúng 12 chữ số")
     private String identityCard;
 
+    private String identityCardImage;
+
+    private String identityCardStatus;
+
     @Size(max = 50, message = "Mã bảo hiểm y tế không được vượt quá 50 ký tự")
     @Pattern(regexp = "^$|[0-9]{10}$", message = "Mã số bảo hiểm y tế phải gồm đúng 10 chữ số")
     private String insuranceNumber;
+
+    private String insuranceNumberImage;
+
+    private String insuranceCardStatus;
 
     private Boolean isPregnant;
 
