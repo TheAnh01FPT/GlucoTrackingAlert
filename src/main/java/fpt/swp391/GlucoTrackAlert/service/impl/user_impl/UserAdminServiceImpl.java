@@ -58,6 +58,22 @@ public class UserAdminServiceImpl implements UserAdminService {
     }
 
     @Override
+    public Page<User> searchAndFilterUsersPaged(String email, String roleName, String status, int page, int size) {
+        List<User> filtered = userRepository.searchAndFilterUsers(email, roleName, status).stream()
+                .filter(u -> u.getRole() != null &&
+                        (u.getRole().getName().equalsIgnoreCase("PATIENT") ||
+                                u.getRole().getName().equalsIgnoreCase("DOCTOR") ||
+                                u.getRole().getName().equalsIgnoreCase("ADMIN")))
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, filtered.size());
+        List<User> pageContent = (start >= filtered.size()) ? List.of() : filtered.subList(start, end);
+
+        return new PageImpl<>(pageContent, PageRequest.of(page, size), filtered.size());
+    }
+
+    @Override
     public long getDoctorCount() {
         return userRepository.countByRole_Name("DOCTOR");
     }

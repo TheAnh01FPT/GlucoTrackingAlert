@@ -71,6 +71,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/notifications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
                         // 9. Bảo vệ tài liệu/CCCD nhạy cảm trong uploads (Chỉ ADMIN, DOCTOR, PATIENT được xem)
+                        .requestMatchers("/uploads/banners/**").permitAll()
                         .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
 
                         .anyRequest().authenticated()
