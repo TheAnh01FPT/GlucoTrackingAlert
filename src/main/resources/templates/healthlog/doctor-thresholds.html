@@ -81,6 +81,14 @@
             margin-left: var(--sidebar-w);
             padding: 28px 32px;
         }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
         
         /* Patient header styling */
         .patient-card {
@@ -301,12 +309,17 @@
                                 <label class="form-label small text-secondary fw-semibold">Ghi chú / Lý do cài ngưỡng riêng</label>
                                 <input type="text" name="description" class="form-control" placeholder="Nhập ghi chú (ví dụ: BN đang mang thai kỳ đầu, hoặc bị cao huyết áp kinh niên...)" th:value="${custom != null ? custom.description : ''}" />
                             </div>
+                            <div class="col-12 mt-3">
+                                <label class="form-label small text-secondary fw-semibold">Ghi chú thay đổi</label>
+                                <textarea name="changeNote" class="form-control" rows="2" placeholder="Ghi chú tùy chọn để lưu lịch sử thay đổi"></textarea>
+                            </div>
                             
                             <!-- Action Buttons -->
                             <div class="col-12 d-flex gap-2 justify-content-end mt-4">
-                                <button type="submit" class="btn btn-threshold px-4">
-                                    <i class="bi bi-save"></i> Lưu ngưỡng riêng
-                                </button>
+                                        <button type="submit" class="btn btn-threshold px-4">
+                                            <i class="bi bi-save"></i> Lưu ngưỡng riêng
+                                        </button>
+                                        <a th:if="${custom != null}" th:href="@{/health-logs/doctor-view/thresholds/history(patientId=${patient.id}, metricType=${metric.name()})}" class="btn btn-outline-secondary">Lịch sử</a>
                             </div>
                         </div>
                     </form>

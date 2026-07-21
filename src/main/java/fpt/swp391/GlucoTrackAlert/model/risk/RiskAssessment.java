@@ -50,4 +50,8 @@ public class RiskAssessment {
     // Persisted flag to indicate inputs were incomplete/defaulted when assessment ran.
     @Column(name = "low_confidence")
     private Boolean lowConfidence = false;
+
+    // Continuous hypertension score used by model (0.0 - 1.0)
+    @Column(name = "hypertension_score")
+    private Double hypertensionScore;
 }

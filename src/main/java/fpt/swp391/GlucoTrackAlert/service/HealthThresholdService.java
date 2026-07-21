@@ -1,7 +1,10 @@
 package fpt.swp391.GlucoTrackAlert.service;
 
 import fpt.swp391.GlucoTrackAlert.model.HealthThreshold;
+import fpt.swp391.GlucoTrackAlert.model.HealthThresholdHistory;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.repository.HealthThresholdHistoryRepository;
 import fpt.swp391.GlucoTrackAlert.repository.HealthThresholdRepository;
 import fpt.swp391.GlucoTrackAlert.enums.MetricType;
 import org.springframework.cache.annotation.CacheEvict;
@@ -9,7 +12,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -17,6 +22,9 @@ public class HealthThresholdService {
 
     @Autowired
     private HealthThresholdRepository thresholdRepository;
+
+    @Autowired
+    private fpt.swp391.GlucoTrackAlert.repository.HealthThresholdHistoryRepository thresholdHistoryRepository;
 
     public String evaluate(BigDecimal value, Long patientId, String patientType, MetricType metricType) {
         if (value == null) return "unknown";
@@ -100,13 +108,40 @@ public class HealthThresholdService {
     public HealthThreshold savePatientThreshold(Long patientId, MetricType metricType,
             BigDecimal normalMin, BigDecimal normalMax,
             BigDecimal warningMin, BigDecimal warningMax,
-            String description, Patient patient) {
+            String description, Patient patient, User changedBy, String changeNote) {
 
         validateRange(normalMin, normalMax, warningMin, warningMax);
 
-        HealthThreshold threshold = thresholdRepository
+        HealthThreshold existing = thresholdRepository
             .findByPatientIdAndMetricType(patientId, metricType)
-            .orElse(new HealthThreshold());
+            .orElse(null);
+
+        boolean isNew = (existing == null);
+        HealthThreshold threshold = isNew ? new HealthThreshold() : existing;
+
+        BigDecimal oldNormalMin = null;
+        BigDecimal oldNormalMax = null;
+        BigDecimal oldWarningMin = null;
+        BigDecimal oldWarningMax = null;
+        String oldDescription = null;
+
+        if (isNew) {
+            Optional<HealthThreshold> defaultThreshold = resolveThreshold(patientId, patient != null ? patient.getPatientType() : null, metricType);
+            if (defaultThreshold.isPresent()) {
+                HealthThreshold oldDefault = defaultThreshold.get();
+                oldNormalMin = oldDefault.getNormalMin();
+                oldNormalMax = oldDefault.getNormalMax();
+                oldWarningMin = oldDefault.getWarningMin();
+                oldWarningMax = oldDefault.getWarningMax();
+                oldDescription = oldDefault.getDescription();
+            }
+        } else {
+            oldNormalMin = existing.getNormalMin();
+            oldNormalMax = existing.getNormalMax();
+            oldWarningMin = existing.getWarningMin();
+            oldWarningMax = existing.getWarningMax();
+            oldDescription = existing.getDescription();
+        }
 
         threshold.setPatient(patient);
         if (patient != null) {
@@ -118,13 +153,75 @@ public class HealthThresholdService {
         threshold.setWarningMin(warningMin);
         threshold.setWarningMax(warningMax);
         threshold.setDescription(description);
-        return thresholdRepository.save(threshold);
+        threshold.setUpdatedBy(changedBy);
+
+        HealthThreshold saved = thresholdRepository.save(threshold);
+
+        boolean changed = isNew || (
+            !Objects.equals(oldNormalMin, normalMin)
+            || !Objects.equals(oldNormalMax, normalMax)
+            || !Objects.equals(oldWarningMin, warningMin)
+            || !Objects.equals(oldWarningMax, warningMax)
+            || !Objects.equals(oldDescription, description)
+        );
+
+        if (changed) {
+            HealthThresholdHistory history = new HealthThresholdHistory();
+            history.setThreshold(saved);
+            history.setPatientType(saved.getPatientType());
+            history.setMetricType(saved.getMetricType());
+            history.setPatient(saved.getPatient());
+
+            history.setOldNormalMin(oldNormalMin);
+            history.setOldNormalMax(oldNormalMax);
+            history.setOldWarningMin(oldWarningMin);
+            history.setOldWarningMax(oldWarningMax);
+            history.setOldDescription(oldDescription);
+
+            history.setNewNormalMin(normalMin);
+            history.setNewNormalMax(normalMax);
+            history.setNewWarningMin(warningMin);
+            history.setNewWarningMax(warningMax);
+            history.setNewDescription(description);
+
+            history.setChangedBy(changedBy);
+            history.setChangedAt(LocalDateTime.now());
+            history.setChangeNote(changeNote);
+            thresholdHistoryRepository.save(history);
+        }
+
+        return saved;
     }
 
     // Xóa ngưỡng riêng — reset về dùng ngưỡng mặc định
-    public void deletePatientThreshold(Long patientId, MetricType metricType) {
+    public void deletePatientThreshold(Long patientId, MetricType metricType, User changedBy) {
         thresholdRepository.findByPatientIdAndMetricType(patientId, metricType)
-            .ifPresent(thresholdRepository::delete);
+            .ifPresent(threshold -> {
+                HealthThresholdHistory history = new HealthThresholdHistory();
+                history.setThreshold(threshold);
+                history.setPatientType(threshold.getPatientType());
+                history.setMetricType(threshold.getMetricType());
+                history.setPatient(threshold.getPatient());
+
+                history.setOldNormalMin(threshold.getNormalMin());
+                history.setOldNormalMax(threshold.getNormalMax());
+                history.setOldWarningMin(threshold.getWarningMin());
+                history.setOldWarningMax(threshold.getWarningMax());
+                history.setOldDescription(threshold.getDescription());
+
+                history.setNewNormalMin(null);
+                history.setNewNormalMax(null);
+                history.setNewWarningMin(null);
+                history.setNewWarningMax(null);
+                history.setNewDescription(null);
+
+                history.setChangedBy(changedBy);
+                history.setChangedAt(LocalDateTime.now());
+                history.setChangeNote("Reset về ngưỡng mặc định");
+                thresholdHistoryRepository.save(history);
+
+                thresholdRepository.delete(threshold);
+            });
     }
 
     public void validateRange(BigDecimal normalMin, BigDecimal normalMax, BigDecimal warningMin, BigDecimal warningMax) {

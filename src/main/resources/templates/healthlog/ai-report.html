@@ -339,27 +339,6 @@
         color: white;
       }
 
-      .btn-refresh-ai {
-        border: none;
-        border-radius: 999px;
-        padding: 0.8rem 1rem;
-        background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-        transition: var(--transition);
-      }
-
-      .btn-refresh-ai:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
-      }
-
-      .btn-refresh-ai:disabled {
-        opacity: 0.7;
-        cursor: wait;
-      }
-
       @media (max-width: 900px) {
         .monthly-overview {
           grid-template-columns: 1fr;
@@ -909,7 +888,7 @@
       <!-- Menu Navigation -->
       <nav class="navbar-menu">
         <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
-        <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
+        <a th:href="${isDoctorOrAdmin} ? @{/doctor/home} : @{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
       </nav>
     </header>
 
@@ -1037,13 +1016,6 @@
             </p>
           </div>
 
-          <button
-            type="button"
-            id="refresh-ai-evaluation"
-            class="btn-refresh-ai"
-          >
-            ✨ Cập nhật đánh giá AI
-          </button>
         </div>
       </section>
 

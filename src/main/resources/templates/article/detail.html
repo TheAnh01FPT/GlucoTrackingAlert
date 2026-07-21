@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${article.title} + ' - GlucoTrackAlert'"></title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1a6b5a;
+            --primary-light: #e8f5f1;
+            --primary-dark: #134d40;
+            --accent: #27ae60;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+            --gray-200: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, rgba(26, 107, 90, 0.95) 0%, rgba(19, 77, 64, 0.95) 100%);
+            box-shadow: 0 2px 8px rgba(26, 107, 90, 0.15);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white !important;
+        }
+
+        .nav-link {
+            color: white !important;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-link:hover {
+            opacity: 0.8;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-dark);
+            gap: 1rem;
+        }
+
+        /* Article header */
+        .article-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+        }
+
+        .article-title {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            color: #6c757d;
+            font-size: 0.95rem;
+            border-top: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 0;
+        }
+
+        .article-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .article-meta-item i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        /* Article thumbnail */
+        .article-thumbnail {
+            width: 100%;
+            max-height: 500px;
+            background: linear-gradient(135deg, var(--primary-light), #c8e6e0);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .article-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .article-thumbnail-placeholder {
+            font-size: 4rem;
+            color: var(--primary);
+        }
+
+        /* Article content */
+        .article-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .article-content h2,
+        .article-content h3,
+        .article-content h4 {
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-content h2 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.4rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.8rem;
+            line-height: 1.7;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            background: var(--primary-light);
+            border-radius: 4px;
+        }
+
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-content a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .article-content a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .article-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            border: 1px solid var(--gray-200);
+        }
+
+        .article-content table th {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid var(--gray-200);
+        }
+
+        .article-content table td {
+            padding: 1rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .article-content table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        /* Article summary */
+        .article-summary {
+            background: var(--primary-light);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        .article-summary-title {
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .article-summary-text {
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .article-title {
+                font-size: 1.6rem;
+            }
+
+            .article-header,
+            .article-content {
+                padding: 1.5rem;
+            }
+
+            .article-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-heart-pulse"></i> GlucoTrackAlert
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/articles">Tin tức</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Back Link -->
+        <a href="/articles" class="back-link">
+            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+        </a>
+
+        <!-- Article Header -->
+        <div class="article-header">
+            <span class="article-category" th:text="${article.category ?: 'Tin tức'}"></span>
+            <h1 class="article-title" th:text="${article.title}"></h1>
+            
+            <div class="article-meta">
+                <div class="article-meta-item">
+                    <i class="bi bi-calendar-event"></i>
+                    <span th:text="${#temporals.format(article.publishedAt, 'dd/MM/yyyy')}"></span>
+                </div>
+                <div class="article-meta-item">
+                    <i class="bi bi-clock"></i>
+                    <span>Cập nhật: <span th:text="${#temporals.format(article.updatedAt, 'dd/MM/yyyy HH:mm')}"></span></span>
+                </div>
+            </div>
+
+            <p style="margin: 1.5rem 0 0 0; color: #6c757d; font-style: italic;" th:text="${article.summary}"></p>
+        </div>
+
+        <!-- Article Thumbnail -->
+        <div class="article-thumbnail">
+            <img th:if="${article.thumbnailUrl}" th:src="${article.thumbnailUrl}" alt="Article thumbnail">
+            <div th:if="!${article.thumbnailUrl}" class="article-thumbnail-placeholder">
+                <i class="bi bi-newspaper"></i>
+            </div>
+        </div>
+
+        <!-- Article Content -->
+        <div class="article-content">
+            <!-- Render HTML content từ rich-text editor -->
+            <!-- QUAN TRỌNG: dùng th:utext để render HTML, KHÔNG dùng th:text (sẽ escape HTML) -->
+            <div th:utext="${article.content}"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 GlucoTrackAlert. Theo dõi sức khỏe của bạn mỗi ngày.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
