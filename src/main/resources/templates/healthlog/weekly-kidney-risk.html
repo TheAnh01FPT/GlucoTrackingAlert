@@ -681,7 +681,7 @@
                      th:text="${latestAssessment.riskPercentage} + '%'">45.89%</div>
               </div>
 
-              <div class="risk-trend-note" th:if="${previousAssessment != null}">
+              <div class="risk-trend-note" th:if="${previousAssessment != null && latestAssessment.riskPercentage != null && previousAssessment.riskPercentage != null}">
                 <span th:if="${latestAssessment.riskPercentage > previousAssessment.riskPercentage}">
                   ↑ Tăng <span th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage - previousAssessment.riskPercentage, 1, 1)}"></span> điểm % so với tuần trước
                 </span>
