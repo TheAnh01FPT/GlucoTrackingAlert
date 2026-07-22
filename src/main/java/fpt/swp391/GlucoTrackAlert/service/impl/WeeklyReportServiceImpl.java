@@ -16,6 +16,8 @@ import fpt.swp391.GlucoTrackAlert.repository.risk.AiAnalysisLogRepository;
 import fpt.swp391.GlucoTrackAlert.service.HealthThresholdService;
 import fpt.swp391.GlucoTrackAlert.service.RiskModelService;
 import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
+import fpt.swp391.GlucoTrackAlert.dto.CustomRangeResult;
+import fpt.swp391.GlucoTrackAlert.service.impl.ComplicationRiskServiceImpl;
 import fpt.swp391.GlucoTrackAlert.service.cardioai.WeeklyCardioAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +50,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     private final WeeklyCardioAiService weeklyCardioAiService;
 
     // Tạm thời giữ nguyên record Snapshot cho đồng bộ cấu trúc cũ của bạn
-    private record WeeklySnapshot(
+        private record WeeklySnapshot(
             BigDecimal avgBloodSugar,
             BigDecimal avgSystolic,
             BigDecimal avgDiastolic,
@@ -59,8 +61,11 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             double age,
             double avgDiaForModel,
             double avgBsForModel,
-            boolean htn
-    ) {}
+            boolean htn,
+            double htnScore
+            ) {
+
+        }
 
     private WeeklySnapshot computeSnapshot(Patient patient, Long patientId, LocalDate weekStart, LocalDate weekEnd) {
         List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, weekStart, weekEnd);
@@ -69,15 +74,35 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         BigDecimal avgSystolic = null;
         BigDecimal avgDiastolic = null;
 
-        double sumBs = 0; int cntBs = 0; double sumSys = 0; int cntSys = 0; double sumDia = 0; int cntDia = 0;
+        double sumBs = 0;
+        int cntBs = 0;
+        double sumSys = 0;
+        int cntSys = 0;
+        double sumDia = 0;
+        int cntDia = 0;
         for (DailyHealthLog l : logs) {
-            if (l.getBloodSugar() != null) { sumBs += l.getBloodSugar().doubleValue(); cntBs++; }
-            if (l.getSystolic() != null) { sumSys += l.getSystolic().doubleValue(); cntSys++; }
-            if (l.getDiastolic() != null) { sumDia += l.getDiastolic().doubleValue(); cntDia++; }
+            if (l.getBloodSugar() != null) {
+                sumBs += l.getBloodSugar().doubleValue();
+                cntBs++;
+            }
+            if (l.getSystolic() != null) {
+                sumSys += l.getSystolic().doubleValue();
+                cntSys++;
+            }
+            if (l.getDiastolic() != null) {
+                sumDia += l.getDiastolic().doubleValue();
+                cntDia++;
+            }
         }
-        if (cntBs>0) avgBloodSugar = BigDecimal.valueOf(sumBs / cntBs).setScale(2, RoundingMode.HALF_UP);
-        if (cntSys>0) avgSystolic = BigDecimal.valueOf(sumSys / cntSys).setScale(2, RoundingMode.HALF_UP);
-        if (cntDia>0) avgDiastolic = BigDecimal.valueOf(sumDia / cntDia).setScale(2, RoundingMode.HALF_UP);
+        if (cntBs > 0) {
+            avgBloodSugar = BigDecimal.valueOf(sumBs / cntBs).setScale(2, RoundingMode.HALF_UP);
+        }
+        if (cntSys > 0) {
+            avgSystolic = BigDecimal.valueOf(sumSys / cntSys).setScale(2, RoundingMode.HALF_UP);
+        }
+        if (cntDia > 0) {
+            avgDiastolic = BigDecimal.valueOf(sumDia / cntDia).setScale(2, RoundingMode.HALF_UP);
+        }
 
         Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> systolicThreshold = healthThresholdService.resolveThreshold(patientId, patient.getPatientType(), fpt.swp391.GlucoTrackAlert.enums.MetricType.SYSTOLIC);
         Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> diastolicThreshold = healthThresholdService.resolveThreshold(patientId, patient.getPatientType(), fpt.swp391.GlucoTrackAlert.enums.MetricType.DIASTOLIC);
@@ -88,17 +113,32 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             return sysHigh || diaHigh;
         }).count();
 
-        boolean htn = Boolean.TRUE.equals(patient.getHypertension()) || highBpDays >= 3;
+        boolean htnFromLogs = !logs.isEmpty() && (double) highBpDays / logs.size() >= 0.4;
+        boolean htn = Boolean.TRUE.equals(patient.getHypertension()) || htnFromLogs;
+
+        // Tính điểm hypertension liên tục 0.0 - 1.0 theo logs và tiền sử
+        double htnScore;
+        if (!logs.isEmpty() && logs.size() >= 4) {
+            // đủ dữ liệu tuần -> ưu tiên phản ánh mức kiểm soát thực tế
+            htnScore = (double) highBpDays / logs.size();
+            if (Boolean.TRUE.equals(patient.getHypertension())) {
+                // có tiền sử THA -> đặt sàn tối thiểu
+                htnScore = Math.max(htnScore, 0.3);
+            }
+        } else {
+            // không đủ log -> dựa vào tiền sử nhưng giảm độ tin cậy (0.6 thay vì 1.0)
+            htnScore = Boolean.TRUE.equals(patient.getHypertension()) ? 0.6 : 0.0;
+        }
 
         double age = patient.getAge() != null ? patient.getAge().doubleValue() : 50.0;
         double avgDiaForModel = avgDiastolic != null ? avgDiastolic.doubleValue() : 80.0;
         double avgBsForModel = avgBloodSugar != null ? avgBloodSugar.doubleValue() : 6.0;
 
-        double riskPct = riskModelService.predictRiskPercentage(age, avgDiaForModel, avgBsForModel, htn);
+        double riskPct = riskModelService.predictRiskPercentage(age, avgDiaForModel, avgBsForModel, htnScore);
         RiskLevel level = riskModelService.mapToRiskLevel(riskPct);
         BigDecimal riskPercentage = BigDecimal.valueOf(riskPct).setScale(2, RoundingMode.HALF_UP);
 
-        return new WeeklySnapshot(avgBloodSugar, avgSystolic, avgDiastolic, logs.size(), level, riskPct, riskPercentage, age, avgDiaForModel, avgBsForModel, htn);
+        return new WeeklySnapshot(avgBloodSugar, avgSystolic, avgDiastolic, logs.size(), level, riskPct, riskPercentage, age, avgDiaForModel, avgBsForModel, htn, htnScore);
     }
 
     private void applySnapshot(WeeklyHealthReport report, WeeklySnapshot s) {
@@ -107,7 +147,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         report.setAverageDiastolic(s.avgDiastolic());
         report.setHealthStatus(s.level().name());
         report.setRecommendation(ComplicationRiskServiceImpl.getRecommendation(s.level()));
-        report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar()!=null?s.avgBloodSugar():"null") + " mmol/L, huyết áp TB: " + (s.avgSystolic()!=null?s.avgSystolic():"null") + "/" + (s.avgDiastolic()!=null?s.avgDiastolic():"null"));
+        report.setAiSummary("Tổng hợp " + s.logCount() + " log, đường huyết TB: " + (s.avgBloodSugar() != null ? s.avgBloodSugar() : "null") + " mmol/L, huyết áp TB: " + (s.avgSystolic() != null ? s.avgSystolic() : "null") + "/" + (s.avgDiastolic() != null ? s.avgDiastolic() : "null"));
+        // set risk percentage and lowConfidence based on snapshot
         report.setRiskPercentage(s.riskPercentage());
         report.setLowConfidence(s.logCount() < 7);
     }
@@ -120,7 +161,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 .assessmentType("NEPHROPATHY_WEEKLY")
                 .riskLevel(s.level().name())
                 .riskPercentage(s.riskPercentage())
-                .lowConfidence(s.logCount() < 7)
+            .lowConfidence(s.logCount() < 7)
+            .hypertensionScore(s.htnScore())
                 .recommendation(report.getRecommendation())
                 .assessedAt(LocalDateTime.now())
                 .build();
@@ -150,8 +192,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 .dailyHealthLogId(null)
                 .weeklyReportId(report.getId())
                 .analysisType("CKD_WEEKLY_LOGISTIC_V1")
-                .inputData("{\"age\":"+s.age()+",\"avg_diastolic\":"+s.avgDiaForModel()+",\"avg_blood_sugar\":"+s.avgBsForModel()+",\"htn\":"+s.htn()+"}")
-                .outputResult("{\"riskPercentage\":"+s.riskPct()+",\"riskLevel\":\""+s.level().name()+"\"}")
+                .inputData("{\"age\":" + s.age() + ",\"avg_diastolic\":" + s.avgDiaForModel() + ",\"avg_blood_sugar\":" + s.avgBsForModel() + ",\"htn\":" + s.htn() + "}")
+                .outputResult("{\"riskPercentage\":" + s.riskPct() + ",\"riskLevel\":\"" + s.level().name() + "\"}")
                 .riskLevel(s.level().name())
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -162,7 +204,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     @Transactional
     public WeeklyHealthReport generateWeeklyReport(Long patientId, LocalDate weekStart) {
         Patient patient = patientRepository.findById(patientId).orElse(null);
-        if (patient == null) return null;
+        if (patient == null) {
+            return null;
+        }
 
         LocalDate weekEnd = weekStart.plusDays(6);
         WeeklySnapshot snapshot = computeSnapshot(patient, patientId, weekStart, weekEnd);
@@ -192,7 +236,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         weeklyHealthReportRepository.findByPatientIdAndWeekStart(patientId, weekStart).ifPresent(existing -> {
             try {
                 Patient patient = patientRepository.findById(patientId).orElse(null);
-                if (patient == null) return;
+                if (patient == null) {
+                    return;
+                }
                 LocalDate weekEnd = weekStart.plusDays(6);
                 WeeklySnapshot snapshot = computeSnapshot(patient, patientId, weekStart, weekEnd);
                 applySnapshot(existing, snapshot);
@@ -209,6 +255,43 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         });
     }
 
+    @Override
+    @Transactional
+    public void syncWeeklyReport(Long patientId, LocalDate weekStart) {
+        if (weeklyHealthReportRepository.existsByPatientIdAndWeekStart(patientId, weekStart)) {
+            recalculateIfExists(patientId, weekStart);
+            return;
+        }
+
+        long logCount = dailyHealthLogRepository.countByPatientIdAndLogDateBetween(patientId, weekStart, weekStart.plusDays(6));
+        if (logCount == 7) {
+            generateWeeklyReport(patientId, weekStart);
+        }
+    }
+
+    @Override
+    public CustomRangeResult computeCustomRange(Long patientId, LocalDate from, LocalDate to) {
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        if (patient == null) {
+            return null;
+        }
+
+        WeeklySnapshot s = computeSnapshot(patient, patientId, from, to);
+
+        return new CustomRangeResult(
+                from,
+                to,
+                s.logCount(),
+                s.avgBloodSugar(),
+                s.avgSystolic(),
+                s.avgDiastolic(),
+                s.riskPercentage(),
+                s.level().name(),
+                ComplicationRiskServiceImpl.getRecommendation(s.level()),
+                s.logCount() < 3
+        );
+    }
+
     /**
      * Hàm xử lý tự động tính toán trung bình cộng chỉ số tuần, kết hợp Profile tĩnh
      * và đồng bộ kết quả AI Tim mạch vào Database hệ thống.
@@ -216,7 +299,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     @Transactional
     public void processWeeklyEvaluation(Patient patient, LocalDate weekStart, LocalDate weekEnd, WeeklyHealthReport report) {
         try {
-            // Gọi sang file WeeklyCardioAiService để tính toán trung bình nhật ký tuần và giao tiếp Flask AI
             Map<String, Object> aiHeartResult = weeklyCardioAiService.calculateWeeklyHeartRisk(patient, weekStart, weekEnd);
 
             if (aiHeartResult != null && !aiHeartResult.isEmpty()) {
@@ -228,10 +310,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 List<String> adviceList = (List<String>) aiHeartResult.get("advice");
                 String adviceText = (adviceList != null) ? String.join("\n• ", adviceList) : "";
 
-                // Bước 1: Lưu kết quả phân tích AI tim mạch chi tiết vào bảng risk_assessments
                 RiskAssessment assessment = RiskAssessment.builder()
                         .patient(patient)
-                        .weeklyReportId(report.getId()) // Liên kết trực tiếp chặt chẽ với báo cáo tuần hiện tại
+                        .weeklyReportId(report.getId())
                         .assessmentType("WEEKLY_CARDIO_RISK")
                         .riskLevel(riskLevel)
                         .riskPercentage(BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP))
@@ -241,7 +322,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                         .build();
                 riskAssessmentRepository.save(assessment);
 
-                // Bước 2: Tạo cảnh báo đẩy về bảng risk_warnings nếu mức độ nguy cơ vượt ngưỡng an toàn (Khác LOW)
                 if (!"LOW".equalsIgnoreCase(riskLevel)) {
                     RiskWarning warning = RiskWarning.builder()
                             .patient(patient)
@@ -257,7 +337,6 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                     riskWarningRepository.save(warning);
                 }
 
-                // Bước 3: Đồng bộ cập nhật thêm tóm tắt tim mạch này vào thông tin chung của WeeklyHealthReport
                 String combinedSummary = report.getAiSummary() + " | [AI Tim Mạch]: " + summary;
                 report.setAiSummary(combinedSummary);
                 weeklyHealthReportRepository.save(report);

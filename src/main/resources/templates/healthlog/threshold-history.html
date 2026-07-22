@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lịch sử thay đổi ngưỡng - GlucoTrackAlert</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        :root{
+            --bg: #eef6ff;
+            --card: #ffffff;
+            --muted: #6b7280;
+            --accent-1: #e6f0ff;
+            --accent-start: #4da7ff;
+            --accent-end: #2b7dff;
+            --text-1: #0b2546;
+        }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background: linear-gradient(180deg,#f5f9ff 0%, #eef6ff 100%); color:var(--text-1); }
+        .main { max-width: 1220px; margin: 36px auto; padding: 18px; }
+        .history-card { background: var(--card); border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 12px 32px rgba(15,23,42,0.06); overflow: visible; }
+        .history-card-header { padding: 24px; }
+        .history-hero { display:flex; gap:18px; align-items:center; }
+        .app-icon{ width:72px; height:72px; border-radius:16px; background:linear-gradient(180deg,#ffffff,#f3f8ff); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(43,125,255,0.08); }
+        .app-icon svg{ width:44px; height:44px; }
+        h2.h4{ font-size:22px; margin:0; }
+        .metric-badge{ padding:8px 12px; border-radius:999px; color:var(--accent-end); font-weight:700; font-size:0.9rem; background:var(--accent-1); border:1px solid rgba(75,140,255,0.12); }
+        .metric-badge.prominent{ background: linear-gradient(90deg,var(--accent-start),var(--accent-end)); color: #fff; box-shadow: 0 8px 24px rgba(43,125,255,0.12); padding:10px 14px; font-size:0.95rem; }
+        .patient-name{ color: var(--accent-end); font-weight: 700; }
+        .history-card-body { padding: 24px; }
+        .empty-state { padding: 44px 20px; text-align: center; background: linear-gradient(180deg, #ffffff, #fbfdff); border-radius:12px; }
+        .empty-state .bi{ font-size:56px; color:var(--accent-end); opacity:0.9; }
+        pre { margin: 0; font-family: inherit; white-space: pre-wrap; word-break: break-word; color:var(--text-1); }
+        .timeline{ padding:0; }
+        .timeline-item{ display:flex; gap:24px; align-items:center; }
+        .timeline-left{ width:120px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:10px; }
+        .timeline-dot{ width:12px; height:12px; border-radius:50%; background:linear-gradient(180deg,var(--accent-start),var(--accent-end)); box-shadow:0 8px 18px rgba(43,125,255,0.18); }
+        .timeline-left .text-muted{ color:#6b7280 !important; font-size:0.825rem; line-height:1.4; }
+        .timeline-right{ flex:1; }
+        .timeline-entry-card{ background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; padding:24px; transition: transform .18s ease, box-shadow .18s ease; }
+        .timeline-entry-card:hover{ transform:translateY(-2px); box-shadow:0 18px 38px rgba(15,23,42,0.08); }
+        .entry-header{ gap:16px; }
+        .doctor-details .fw-semibold{ font-size:1rem; }
+        .doctor-details .text-muted{ font-size:0.85rem; color:#6b7280; margin-top:4px; }
+        .status-pill{ display:inline-flex; align-items:center; justify-content:center; padding:4px 10px; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-size:0.8rem; font-weight:600; border:1px solid rgba(59,130,246,0.16); }
+        .status-reset{ background:#f3f4f6; color:#6b7280; border-color:#e5e7eb; }
+        .metric-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:20px; }
+        .metric-column{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
+        .metric-column .label{ font-size:0.78rem; color:#6b7280; letter-spacing:0.04em; text-transform:uppercase; }
+        .value-box{ width:100%; min-height:48px; border-radius:12px; padding:14px 12px; display:flex; align-items:center; justify-content:center; }
+        .value-box.old{ background:#f3f4f6; color:#6b7280; font-weight:600; }
+        .value-box.new{ background:#3b82f6; color:#ffffff; font-weight:600; }
+        .value-box.new .bi{ color:#10b981; margin-left:6px; font-size:0.9rem; }
+        .description-block{ margin-top:24px; padding:18px; background:#f8fafc; border-radius:14px; border:1px solid #e5e7eb; }
+        .description-block .text-muted{ margin-bottom:10px; }
+        .change-legend{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:18px; }
+        .legend-pill{ border-radius:999px; padding:8px 14px; font-size:0.85rem; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+        .legend-pill.old{ background:#f3f4f6; color:#374151; }
+        .legend-pill.new{ background:#3b82f6; color:#ffffff; }
+        .legend-note{ font-size:0.88rem; color:#6b7280; }
+        .note-row{ display:flex; align-items:flex-start; gap:16px; margin-top:24px; padding-top:20px; border-top:1px solid #e5e7eb; }
+        .note-icon{ width:32px; height:32px; border-radius:12px; background:#eff6ff; display:flex; align-items:center; justify-content:center; color:#2563eb; }
+        .note-row .text-muted{ color:#6b7280; }
+        .note-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:12px; }
+        .note-column{ border-radius:12px; padding:14px; background:#f3f4f6; min-height:80px; }
+        .note-column.new{ background:#3b82f6; color:#ffffff; }
+        .note-column .label{ font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#6b7280; margin-bottom:8px; }
+        .note-column.new .label{ color:rgba(255,255,255,0.78); }
+        .note-column .content{ font-size:0.92rem; line-height:1.5; }
+        @media (max-width:991px){ .timeline-item{ flex-direction:column; align-items:stretch; } .timeline-left{ width:100%; flex-direction:row; justify-content:flex-start; text-align:left; } .timeline-left .text-muted{ text-align:left; } .metric-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .note-grid{ grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="history-card">
+            <div class="history-card-header d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start align-items-md-center">
+                <div class="history-hero">
+                    <div class="app-icon">
+                        <!-- Main blood-drop SVG icon -->
+                        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="mainG" x1="0" x2="1">
+                                    <stop offset="0" stop-color="#bfe9ff" />
+                                    <stop offset="1" stop-color="#7cc8ff" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="0" y="0" width="64" height="64" rx="12" fill="url(#mainG)"/>
+                            <path d="M32 10C32 10 20 24 20 36c0 7.732 6.268 14 14 14s14-6.268 14-14C48 24 36 10 32 10z" fill="#ff6b6b" opacity="0.95"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="h4 mb-1">Lịch sử thay đổi ngưỡng</h2>
+                        <p class="mb-0 text-secondary">Bệnh nhân: <strong class="patient-name" th:text="${patient != null ? patient.fullName : '-'}">Bệnh nhân</strong> · Chỉ số:</p>
+                    </div>
+                    <div class="ms-3">
+                        <span class="metric-badge prominent" th:text="${metricType != null ? metricType.name() : 'CHỈ SỐ'}">CHỈ SỐ</span>
+                    </div>
+                </div>
+                <a th:href="@{/health-logs/doctor-view/thresholds(patientId=${patient.id})}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+            <div class="history-card-body">
+                <div th:if="${history == null or #lists.isEmpty(history)}" class="empty-state border rounded-3 bg-white">
+                    <i class="bi bi-droplet-fill"></i>
+                    <h5 class="mt-3">Chưa có lịch sử thay đổi</h5>
+                    <p class="mb-0 text-secondary">Ngưỡng chỉ số của bệnh nhân này chưa từng được tạo hoặc cập nhật trước đây.</p>
+                </div>
+
+                <div th:if="${history != null and !#lists.isEmpty(history)}" class="timeline">
+                    <div class="legend d-flex gap-3 align-items-center mb-3 px-2">
+                        <div class="d-flex align-items-center gap-2"><span class="badge bg-white text-primary p-2 rounded-circle"><i class="bi bi-calendar-check-fill"></i></span><small class="text-muted">Thời gian đổi</small></div>
+                        <div class="d-flex align-items-center gap-2"><span class="badge bg-white text-primary p-2 rounded-circle"><i class="bi bi-person-circle"></i></span><small class="text-muted">Người đổi</small></div>
+                        <div class="d-flex align-items-center gap-2"><span class="badge bg-white text-primary p-2 rounded-circle"><i class="bi bi-droplet-fill"></i></span><small class="text-muted">Normal</small></div>
+                        <div class="d-flex align-items-center gap-2"><span class="badge bg-white text-warning p-2 rounded-circle"><i class="bi bi-exclamation-triangle-fill"></i></span><small class="text-muted">Warning</small></div>
+                        <div class="d-flex align-items-center gap-2 ms-auto"><span class="badge bg-white text-muted p-2 rounded-circle"><i class="bi bi-sticky"></i></span><small class="text-muted">Ghi chú</small></div>
+                    </div>
+
+                    <div th:each="entry,iter : ${history}" class="timeline-item mb-4" th:classappend="${iter.index == 0} ? 'most-recent' : ''">
+                        <div class="timeline-left">
+                            <div class="timeline-dot"></div>
+                            <div class="text-muted small" th:text="${entry.changedAt != null ? #temporals.format(entry.changedAt, 'dd/MM/yyyy') : '-'}">15/07/2026</div>
+                            <div class="text-muted small" th:text="${entry.changedAt != null ? #temporals.format(entry.changedAt, 'HH:mm') : '-'}">19:41</div>
+                        </div>
+                        <div class="timeline-right">
+                            <div class="timeline-entry-card">
+                                <div class="entry-header d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar">
+                                            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(180deg,#ffffff,#eef7ff);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(43,125,255,0.06);">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C12 2 6 8 6 12c0 2.761 2.239 5 5 5s5-2.239 5-5c0-4-6-10-6-10z" fill="#ff6b6b"/></svg>
+                                            </div>
+                                        </div>
+                                        <div class="doctor-details">
+                                            <div class="fw-semibold" th:text="${entry.changedBy != null ? (entry.changedBy.fullName != null && !entry.changedBy.fullName.isEmpty() ? entry.changedBy.fullName : entry.changedBy.email) : 'Hệ thống'}">BS Nguyen Van A</div>
+                                            <div class="text-muted small" th:text="${entry.changedBy != null && entry.changedBy.email != null ? entry.changedBy.email : ''}"></div>
+                                        </div>
+                                    </div>
+                                    <div class="status-pill-wrapper text-end">
+                                        <div th:if="${entry.newNormalMin != null}" class="status-pill">Đã cập nhật</div>
+                                        <div th:if="${entry.newNormalMin == null}" class="status-pill status-reset">Reset</div>
+                                    </div>
+                                </div>
+
+                                <div class="change-legend">
+                                    <div class="legend-pill old">Cũ</div>
+                                    <div class="legend-note">Giá trị trước khi thay đổi</div>
+                                    <div class="legend-pill new">Mới</div>
+                                    <div class="legend-note">Giá trị sau khi thay đổi</div>
+                                </div>
+
+                                <div class="metric-grid">
+                                    <div class="metric-column">
+                                        <div class="label">Normal Min</div>
+                                        <div class="value-box old" th:text="${entry.oldNormalMin != null ? entry.oldNormalMin : '-'}">4.40</div>
+                                        <div class="value-box new d-inline-flex align-items-center justify-content-center gap-1">
+                                            <span th:text="${entry.newNormalMin != null ? entry.newNormalMin : '-'}">4.40</span>
+                                            <i th:if="${entry.newNormalMin != null and entry.oldNormalMin != null and entry.newNormalMin > entry.oldNormalMin}" class="bi bi-arrow-up"></i>
+                                        </div>
+                                    </div>
+                                    <div class="metric-column">
+                                        <div class="label">Normal Max</div>
+                                        <div class="value-box old" th:text="${entry.oldNormalMax != null ? entry.oldNormalMax : '-'}">6.60</div>
+                                        <div class="value-box new d-inline-flex align-items-center justify-content-center gap-1">
+                                            <span th:text="${entry.newNormalMax != null ? entry.newNormalMax : '-'}">6.60</span>
+                                            <i th:if="${entry.newNormalMax != null and entry.oldNormalMax != null and entry.newNormalMax > entry.oldNormalMax}" class="bi bi-arrow-up"></i>
+                                        </div>
+                                    </div>
+                                    <div class="metric-column">
+                                        <div class="label">Warning Min</div>
+                                        <div class="value-box old" th:text="${entry.oldWarningMin != null ? entry.oldWarningMin : '-'}">3.20</div>
+                                        <div class="value-box new d-inline-flex align-items-center justify-content-center gap-1">
+                                            <span th:text="${entry.newWarningMin != null ? entry.newWarningMin : '-'}">3.40</span>
+                                            <i th:if="${entry.newWarningMin != null and entry.oldWarningMin != null and entry.newWarningMin > entry.oldWarningMin}" class="bi bi-arrow-up"></i>
+                                        </div>
+                                    </div>
+                                    <div class="metric-column">
+                                        <div class="label">Warning Max</div>
+                                        <div class="value-box old" th:text="${entry.oldWarningMax != null ? entry.oldWarningMax : '-'}">8.60</div>
+                                        <div class="value-box new d-inline-flex align-items-center justify-content-center gap-1">
+                                            <span th:text="${entry.newWarningMax != null ? entry.newWarningMax : '-'}">8.80</span>
+                                            <i th:if="${entry.newWarningMax != null and entry.oldWarningMax != null and entry.newWarningMax > entry.oldWarningMax}" class="bi bi-arrow-up"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="description-block">
+                                    <div class="text-muted small">Mô tả</div>
+                                    <div class="text-secondary" th:text="${entry.newDescription != null ? entry.newDescription : entry.oldDescription != null ? entry.oldDescription : '-'}">Điều chỉnh theo khuyến nghị bác sĩ</div>
+                                </div>
+
+                                <div class="note-row">
+                                    <div class="note-icon"><i class="bi bi-sticky"></i></div>
+                                    <div class="small text-muted"><span class="fw-semibold text-body">Ghi chú:</span> <span th:text="${entry.changeNote != null ? entry.changeNote : '-'}">Điều chỉnh theo khuyến nghị bác sĩ</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box mt-4 p-3 rounded-3 d-flex gap-3 align-items-start">
+                        <div class="icon bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;box-shadow:0 6px 18px rgba(75,140,255,0.06);"><i class="bi bi-info-lg"></i></div>
+                        <div>
+                            <div class="fw-semibold">Thông tin</div>
+                            <div class="small text-muted">Lịch sử thay đổi ngưỡng giúp bạn theo dõi các điều chỉnh của chỉ số theo thời gian. Các giá trị màu xanh là giá trị mới nhất sau khi cập nhật.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center mt-4">
+                    <nav th:if="${totalPages != null and totalPages > 1}" aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/health-logs/doctor-view/thresholds/history(patientId=${patient.id}, metricType=${metricType}, page=${currentPage - 1})}">Trước</a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active' : ''">
+                                <a class="page-link" th:href="@{/health-logs/doctor-view/thresholds/history(patientId=${patient.id}, metricType=${metricType}, page=${i})}" th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/health-logs/doctor-view/thresholds/history(patientId=${patient.id}, metricType=${metricType}, page=${currentPage + 1})}">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

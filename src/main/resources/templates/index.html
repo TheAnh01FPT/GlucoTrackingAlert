@@ -175,7 +175,7 @@
                     <li class="nav-item"><a class="nav-link active" href="#">Trang chủ</a></li>
                     <li class="nav-item"><a class="nav-link" href="#features">Dịch vụ</a></li>
                     <li class="nav-item"><a class="nav-link" href="#doctors">Đội ngũ bác sĩ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/blog">Tin tức</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/articles}">Tin tức</a></li>
                     <li class="nav-item"><a class="nav-link" href="#testimonials">Đánh giá</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contact">Liên hệ</a></li>
                 </ul>
@@ -192,6 +192,52 @@
             </div>
         </div>
     </nav>
+    <script>
+        (function () {
+            const authArea = document.getElementById('authArea');
+            if (!authArea) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            const role = (localStorage.getItem('role') || '').toUpperCase();
+            const email = localStorage.getItem('email');
+
+            if (!token || !role) {
+                return; // Chưa đăng nhập, giữ nguyên nút Đăng nhập/Đăng ký
+            }
+
+            const logout = () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('email');
+                localStorage.removeItem('role');
+                localStorage.removeItem('doctorId');
+                document.cookie = 'jwt=; path=/; max-age=0';
+                window.location.href = '/';
+            };
+
+            if (role === 'DOCTOR') {
+                authArea.innerHTML = `
+                    <a href="/doctor/home" class="btn btn-outline-custom">Trang bác sĩ</a>
+                    <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
+                `;
+            } else if (role === 'PATIENT') {
+                authArea.innerHTML = `
+                    <a href="/patient/home" class="btn btn-outline-custom">Trang bệnh nhân</a>
+                    <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
+                `;
+            } else if (role === 'ADMIN') {
+                authArea.innerHTML = `
+                    <a href="/admin/dashboard" class="btn btn-outline-custom">${email || 'Tài khoản'}</a>
+                    <button type="button" id="logoutBtn" class="btn btn-primary-custom">Đăng xuất</button>
+                `;
+            } else {
+                return;
+            }
+
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        })();
+    </script>
 
     <!-- Banner Slider (Thymeleaf Fragment Placeholder cho Trần Bình Minh) -->
     <div id="hero-slider-section">

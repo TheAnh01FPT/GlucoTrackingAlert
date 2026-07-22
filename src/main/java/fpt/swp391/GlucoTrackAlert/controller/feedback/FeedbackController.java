@@ -66,22 +66,14 @@ public class FeedbackController {
             return "redirect:/patient/profile";
         }
 
-        boolean hasReceivedAdvice = !recommendationRepository.findByPatientIdOrderByCreatedAtDesc(patient.getId())
-                .isEmpty();
-        List<Doctor> doctors = doctorRepository.findAll();
-        model.addAttribute("doctors", doctors);
-        model.addAttribute("canFeedback", hasReceivedAdvice);
-
         List<Feedback> feedbacks = feedbackRepository.findByPatientOrderByCreatedAtDesc(patient);
         model.addAttribute("feedbacks", feedbacks);
-
         return "feedback/patient-feedback";
     }
 
     // --- PATIENT: SUBMIT FEEDBACK ---
     @PostMapping("/patient/feedbacks/submit")
     public String submitFeedback(@RequestParam("content") String content,
-                                 @RequestParam("doctorId") Long doctorId,
                                  @RequestParam("rating") Integer rating,
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
@@ -98,23 +90,10 @@ public class FeedbackController {
             return "redirect:/patient/profile";
         }
 
-        if (recommendationRepository.findByPatientIdOrderByCreatedAtDesc(patient.getId()).isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "Bạn chỉ được gửi đánh giá sau khi nhận lời khuyên từ bác sĩ.");
-            return "redirect:/patient/feedbacks";
-        }
-
         String filteredContent = filterBadWords(content);
-
-        Doctor doctor = doctorRepository.findById(doctorId).orElse(null);
-        if (doctor == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bác sĩ không tồn tại.");
-            return "redirect:/patient/feedbacks";
-        }
 
         Feedback feedback = new Feedback();
         feedback.setPatient(patient);
-        feedback.setDoctor(doctor);
         feedback.setRating(rating);
         feedback.setContent(filteredContent);
         feedbackRepository.save(feedback);
@@ -172,9 +151,63 @@ public class FeedbackController {
 
     // --- ADMIN: VIEW FEEDBACKS ---
     @GetMapping("/admin/feedbacks")
-    public String adminFeedbacks(Model model) {
-        List<Feedback> feedbacks = feedbackRepository.findAllByOrderByCreatedAtDesc();
-        model.addAttribute("feedbacks", feedbacks);
+    public String adminFeedbacks(
+            @RequestParam(value = "rating", required = false) Integer rating,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            Model model) {
+        List<Feedback> allFeedbacks = feedbackRepository.findAllByOrderByCreatedAtDesc();
+        
+        long totalReviews = allFeedbacks.size();
+        double averageRating = 0.0;
+        long[] starCounts = new long[6]; // index 1-5 will be used
+        
+        if (totalReviews > 0) {
+            double totalStars = 0;
+            for (Feedback fb : allFeedbacks) {
+                if (fb.getRating() != null) {
+                    totalStars += fb.getRating();
+                    if (fb.getRating() >= 1 && fb.getRating() <= 5) {
+                        starCounts[fb.getRating()]++;
+                    }
+                }
+            }
+            averageRating = totalStars / totalReviews;
+        }
+
+        List<Feedback> feedbacksToDisplay = allFeedbacks;
+        if (rating != null) {
+            feedbacksToDisplay = allFeedbacks.stream()
+                .filter(fb -> rating.equals(fb.getRating()))
+                .collect(java.util.stream.Collectors.toList());
+        }
+
+        // Pagination Logic
+        int totalItems = feedbacksToDisplay.size();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        if (totalPages == 0) totalPages = 1;
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+
+        int startIndex = (page - 1) * size;
+        int endIndex = Math.min(startIndex + size, totalItems);
+        List<Feedback> pagedFeedbacks = feedbacksToDisplay.subList(startIndex, endIndex);
+
+        model.addAttribute("feedbacks", pagedFeedbacks);
+        model.addAttribute("currentFilter", rating);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalItems", totalItems);
+
+        model.addAttribute("totalReviews", totalReviews);
+        model.addAttribute("averageRating", String.format("%.1f", averageRating));
+        model.addAttribute("star5", starCounts[5]);
+        model.addAttribute("star4", starCounts[4]);
+        model.addAttribute("star3", starCounts[3]);
+        model.addAttribute("star2", starCounts[2]);
+        model.addAttribute("star1", starCounts[1]);
+
         return "feedback/admin-feedback";
     }
 

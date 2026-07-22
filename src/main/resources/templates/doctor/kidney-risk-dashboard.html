@@ -1,27 +1,80 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
-    <title>Kidney Risk Dashboard</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🫘 Dự Báo Nguy Cơ Biến Chứng Thận</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --primary: #4f46e5;
+            --border: #e2e8f0;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        .navbar { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; padding: 1rem 2rem; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .navbar-brand { color:white; text-decoration:none; font-weight:700; font-size:1.4rem; }
+        .navbar-link { color:#cbd5e1; text-decoration:none; font-weight:600; }
+        .main-container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem 2rem; }
+        .page-heading { font-size: 1.9rem; font-weight: 800; margin: 0 0 0.5rem; display:flex; align-items:center; gap:0.75rem; color:#1e1b4b; }
+        .page-subtitle { color: var(--muted); margin: 0 0 1.5rem; }
+        .dashboard-grid { display:grid; grid-template-columns: 320px 1fr; gap: 1.5rem; }
+        .profile-sidebar, .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow); padding: 1.5rem; }
+        .profile-header { text-align:center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem; }
+        .profile-avatar { width: 80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#eef2ff; font-size:2rem; margin:0 auto 0.75rem; }
+        .profile-name { margin:0; font-size:1.2rem; font-weight:800; }
+        .profile-type { display:inline-block; margin-top:0.4rem; padding:0.3rem 0.7rem; border-radius:999px; background:#e0f2fe; color:#0369a1; font-size:0.78rem; font-weight:700; }
+        .info-list { display:flex; flex-direction:column; gap:0.75rem; }
+        .info-item { display:flex; justify-content:space-between; align-items:center; font-size:0.92rem; }
+        .info-label { color: var(--muted); font-weight:600; }
+        .info-value { font-weight:700; color: var(--text); }
+        table { width:100%; border-collapse:collapse; } th, td { padding: 0.9rem 0.75rem; border-bottom: 1px solid var(--border); text-align:left; } th { color: var(--muted); font-size:0.85rem; text-transform: uppercase; letter-spacing:0.04em; } .status-pill { display:inline-flex; padding:0.4rem 0.8rem; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-weight:700; font-size:0.8rem; } .btn-view { display:inline-flex; align-items:center; justify-content:center; padding:0.55rem 0.9rem; border-radius:10px; background:var(--primary); color:white; text-decoration:none; font-weight:700; } .empty { padding: 2rem 1rem; color: var(--muted); text-align:center; } @media (max-width: 900px){ .dashboard-grid{grid-template-columns:1fr;} }
+    </style>
 </head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
-<div class="container">
-    <h2>Kidney Risk - Doctor Dashboard</h2>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Patient</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="p : ${patients}">
-            <td th:text="${p.fullName}"></td>
-            <td><a th:href="@{'/health-logs/kidney-risk/weekly/' + ${p.id}}">View Weekly Reports</a></td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(patients)}"><td colspan="2">No patients assigned.</td></tr>
-        </tbody>
-    </table>
-</div>
+<header class="navbar">
+    <a href="/doctor/home" class="navbar-brand">🩸 GlucoTrackAlert</a>
+    <a href="/doctor/home" class="navbar-link">🏠 Trang Chủ</a>
+</header>
+<main class="main-container">
+    <h1 class="page-heading">🫘 Dự Báo Nguy Cơ Biến Chứng Thận</h1>
+    <p class="page-subtitle">Danh sách bệnh nhân đang theo dõi nguy cơ thận tuần.</p>
+    <div class="dashboard-grid">
+        <aside class="profile-sidebar">
+            <div class="profile-header">
+                <div class="profile-avatar">🩺</div>
+                <h2 class="profile-name">Bảng điều khiển bác sĩ</h2>
+                <span class="profile-type">Kidney risk</span>
+            </div>
+            <div class="info-list">
+                <div class="info-item"><span class="info-label">Số bệnh nhân</span><span class="info-value" th:text="${#lists.size(patients)}">0</span></div>
+                <div class="info-item"><span class="info-label">Loại báo cáo</span><span class="info-value">Tuần</span></div>
+            </div>
+        </aside>
+        <section class="table-card">
+            <table>
+                <thead>
+                <tr>
+                    <th>Bệnh nhân</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${patients}">
+                    <td th:text="${p.fullName}"></td>
+                    <td><span class="status-pill">Đang theo dõi</span></td>
+                    <td><a class="btn-view" th:href="@{'/health-logs/kidney-risk/weekly/' + ${p.id}}">Xem báo cáo</a></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(patients)}"><td colspan="3" class="empty">Chưa có bệnh nhân được phân công.</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
 </body>
 </html>

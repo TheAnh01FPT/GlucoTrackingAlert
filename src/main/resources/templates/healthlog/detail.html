@@ -378,31 +378,6 @@
 
         <div class="detail-body">
           <!-- Smart Alert Banners -->
-          <!-- AI Stroke Risk Alert Banner -->
-          <div
-            th:if="${log.riskLevel != null && (log.riskLevel == 'High' || log.riskLevel == 'Critical')}"
-            class="alert-banner alert-banner-danger"
-            style="background-color: #fff1f2; border: 1px solid #fecdd3; color: #9f1239;"
-          >
-            <span>🤖</span>
-            <div>
-              <strong>Cảnh Báo Từ AI: Nguy Cơ Biến Chứng/Đột Quỵ Cao (<span th:text="${log.riskPercentage}">0.0</span>%)</strong>
-              <br />
-              <span th:text="${log.aiSummary}">Tóm tắt nhận xét của AI.</span>
-            </div>
-          </div>
-
-          <div
-            th:if="${log.riskLevel != null && log.riskLevel == 'Medium'}"
-            class="alert-banner alert-banner-warning"
-          >
-            <span>🤖</span>
-            <div>
-              <strong>Lưu Ý Từ AI: Nguy Cơ Biến Chứng Trung Bình (<span th:text="${log.riskPercentage}">0.0</span>%)</strong>
-              <br />
-              <span th:text="${log.aiSummary}">Tóm tắt nhận xét của AI.</span>
-            </div>
-          </div>
 
           <div
             th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER')}"
@@ -435,12 +410,28 @@
           </div>
 
           <div
-            th:if="${log.systolic != null && log.systolic > 130}"
+            th:if="${(log.systolicStatus != null and (log.systolicStatus == 'LOW_DANGER' or log.systolicStatus == 'HIGH_DANGER')) or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_DANGER' or log.diastolicStatus == 'HIGH_DANGER'))}"
+            class="alert-banner alert-banner-danger"
+          >
+            <span>⚠️</span>
+            <div>
+              <strong>Cảnh Báo: Huyết Áp Bất Thường</strong>
+              <br />
+              Huyết áp ghi nhận:
+              <span th:text="${log.systolic + '/' + log.diastolic}"
+                >135/85</span
+              >
+              mmHg — nằm ngoài ngưỡng an toàn. Vui lòng tham vấn bác sĩ.
+            </div>
+          </div>
+
+          <div
+            th:if="${((log.systolicStatus == null or log.systolicStatus != 'LOW_DANGER') and (log.systolicStatus == null or log.systolicStatus != 'HIGH_DANGER') and (log.diastolicStatus == null or log.diastolicStatus != 'LOW_DANGER') and (log.diastolicStatus == null or log.diastolicStatus != 'HIGH_DANGER')) and ((log.systolicStatus != null and (log.systolicStatus == 'LOW_WARNING' or log.systolicStatus == 'HIGH_WARNING')) or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_WARNING' or log.diastolicStatus == 'HIGH_WARNING')))}"
             class="alert-banner alert-banner-warning"
           >
             <span>⚠️</span>
             <div>
-              <strong>Lưu Ý: Huyết Áp Tâm Thu Cao</strong>
+              <strong>Lưu Ý: Huyết Áp Cần Theo Dõi</strong>
               <br />
               Huyết áp ghi nhận:
               <span th:text="${log.systolic + '/' + log.diastolic}"
@@ -451,7 +442,7 @@
           </div>
 
           <div
-            th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'NORMAL') && (log.systolic == null || log.systolic <= 130)}"
+            th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'NORMAL') && (log.systolicStatus == null || log.systolicStatus == 'NORMAL') && (log.diastolicStatus == null || log.diastolicStatus == 'NORMAL')}"
             class="alert-banner alert-banner-success"
           >
             <span>✔</span>
