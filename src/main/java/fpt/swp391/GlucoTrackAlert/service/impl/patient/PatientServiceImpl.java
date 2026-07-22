@@ -88,7 +88,11 @@ public class PatientServiceImpl implements PatientService {
                 .heightCm(request.getHeightCm())
                 .weightKg(request.getWeightKg())
                 .identityCard(request.getIdentityCard())
+                .identityCardImage(request.getIdentityCardImage())
+                .identityCardStatus(request.getIdentityCardStatus() != null ? request.getIdentityCardStatus() : "UNVERIFIED")
                 .insuranceNumber(request.getInsuranceNumber())
+                .insuranceNumberImage(request.getInsuranceNumberImage())
+                .insuranceCardStatus(request.getInsuranceCardStatus() != null ? request.getInsuranceCardStatus() : "UNVERIFIED")
                 .isPregnant(isPregnantVal)
                 .status("active")
                 .hypertension(request.getHypertension() != null ? request.getHypertension() : false)
@@ -124,7 +128,15 @@ public class PatientServiceImpl implements PatientService {
         patient.setHeightCm(request.getHeightCm());
         patient.setWeightKg(request.getWeightKg());
         patient.setIdentityCard(request.getIdentityCard());
+        if (request.getIdentityCardImage() != null && !request.getIdentityCardImage().isEmpty()) {
+            patient.setIdentityCardImage(request.getIdentityCardImage());
+            patient.setIdentityCardStatus("UNVERIFIED");
+        }
         patient.setInsuranceNumber(request.getInsuranceNumber());
+        if (request.getInsuranceNumberImage() != null && !request.getInsuranceNumberImage().isEmpty()) {
+            patient.setInsuranceNumberImage(request.getInsuranceNumberImage());
+            patient.setInsuranceCardStatus("UNVERIFIED");
+        }
 
         boolean isPregnantVal = false;
         if ("Nữ".equalsIgnoreCase(request.getGender()) && request.getIsPregnant() != null) {
@@ -418,7 +430,11 @@ public class PatientServiceImpl implements PatientService {
                 .bmi(patient.getBmi())
                 .status(patient.getStatus())
                 .identityCard(patient.getIdentityCard())
+                .identityCardImage(patient.getIdentityCardImage())
+                .identityCardStatus(patient.getIdentityCardStatus() != null ? patient.getIdentityCardStatus() : "UNVERIFIED")
                 .insuranceNumber(patient.getInsuranceNumber())
+                .insuranceNumberImage(patient.getInsuranceNumberImage())
+                .insuranceCardStatus(patient.getInsuranceCardStatus() != null ? patient.getInsuranceCardStatus() : "UNVERIFIED")
                 .patientType(patient.getPatientType())
                 .isPregnant(patient.getIsPregnant())
                 .hypertension(patient.getHypertension())
@@ -448,6 +464,26 @@ public class PatientServiceImpl implements PatientService {
                 .computedAvgSystolic(rawAvgSystolic)
                 .computedAvgDiastolic(rawAvgDiastolic)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public PatientProfileResponse verifyIdentityCard(Long patientId, String status) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin bệnh nhân với ID: " + patientId));
+        patient.setIdentityCardStatus(status);
+        Patient saved = patientRepository.save(patient);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public PatientProfileResponse verifyInsuranceCard(Long patientId, String status) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin bệnh nhân với ID: " + patientId));
+        patient.setInsuranceCardStatus(status);
+        Patient saved = patientRepository.save(patient);
+        return mapToResponse(saved);
     }
 
     private boolean rawAvgDiacholicIsNull(Double rawAvgDiastolic) {
