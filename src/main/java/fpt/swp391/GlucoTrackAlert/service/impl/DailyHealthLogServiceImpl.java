@@ -251,6 +251,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     public DailyHealthLogResponse updateLog(Long id, DailyHealthLogRequest request) {
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
+        if (log.getLogDate().isBefore(LocalDate.now().minusDays(3))) {
+            throw new RuntimeException("Không thể sửa/xoá nhật ký đã quá 3 ngày kể từ ngày ghi nhận");
+        }
         // Prevent duplicate date for the same patient (excluding this id)
         Long patientId = log.getPatient() != null ? log.getPatient().getId() : null;
         if (patientId != null && dailyHealthLogRepository.existsByPatientIdAndLogDateAndIdNot(patientId, request.getLogDate(), id)) {
@@ -289,6 +292,9 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     public void deleteLog(Long id) {
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
+        if (log.getLogDate().isBefore(LocalDate.now().minusDays(3))) {
+            throw new RuntimeException("Không thể sửa/xoá nhật ký đã quá 3 ngày kể từ ngày ghi nhận");
+        }
         Long patientId = log.getPatient() != null ? log.getPatient().getId() : null;
         java.time.LocalDate cycleStart = log.getLogDate() != null ? resolveCycleStart(patientId, log.getLogDate()) : null;
         try {

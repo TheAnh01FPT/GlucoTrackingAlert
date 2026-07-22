@@ -281,7 +281,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         }
 
         long logCount = dailyHealthLogRepository.countByPatientIdAndLogDateBetween(patientId, weekStart, weekStart.plusDays(6));
-        if (logCount == 7) {
+        if (logCount >= 3) {
             generateWeeklyReport(patientId, weekStart);
         }
     }

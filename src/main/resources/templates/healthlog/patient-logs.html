@@ -623,9 +623,11 @@
                         <div class="action-links">
                             <a th:href="@{/health-logs/{id}(id=${log.id}, userId=${userId}, source='my-logs')}"
                                class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
-                            <a th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
+                            <a th:if="${!log.logDate.isBefore(#temporals.createToday().minusDays(3))}"
+                               th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
                                class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
-                            <form th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
+                            <form th:if="${!log.logDate.isBefore(#temporals.createToday().minusDays(3))}"
+                                  th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
                                   method="POST" style="display: inline;"
                                   onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
                                 <button type="submit" class="btn-action btn-delete" title="Xóa Nhật Ký">🗑️</button>
