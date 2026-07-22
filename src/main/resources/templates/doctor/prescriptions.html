@@ -523,6 +523,28 @@
                         || localStorage.getItem('doctorId');
             }
 
+            // Nếu URL không có ?doctorId=, tin localStorage là rủi ro (có thể bị dính
+            // giá trị cũ/sai từ 1 session trước đó trên cùng trình duyệt). Trong trường
+            // hợp đó, xác thực lại với server qua JWT rồi đồng bộ lại localStorage.
+            async function resolveDoctorId() {
+                const fromUrl = new URLSearchParams(window.location.search).get('doctorId');
+                if (fromUrl) return fromUrl;
+                try {
+                    const me = await fetch('/api/doctors/me', {headers: authHeaders()});
+                    if (me.ok) {
+                        const doc = await me.json();
+                        if (doc && doc.id) {
+                            localStorage.setItem('doctorId', doc.id);
+                            return doc.id;
+                        }
+                    }
+                    handleAuthError(me.status);
+                } catch {
+                    // Server không phản hồi được -> tạm dùng localStorage cũ làm fallback
+                }
+                return localStorage.getItem('doctorId');
+            }
+
             async function loadDoctorName() {
                 try {
                     const doc = await fetch(`/api/doctors/${currentDoctorId}`, {headers: authHeaders()})
@@ -893,7 +915,7 @@
             // ==================== KẾT THÚC PHẦN CHỈ SỐ / DANH MỤC THUỐC ====================
 
             document.addEventListener('DOMContentLoaded', async function () {
-                currentDoctorId = getDoctorIdFromUrl();
+                currentDoctorId = await resolveDoctorId();
                 document.getElementById('prescribedDate').value = new Date().toISOString().slice(0, 10);
                 await loadMedicineCatalog();
                 addItemRow();
@@ -906,5 +928,7 @@
                 loadPatientOptions();
             });
         </script>
+    </body>
+</html>
     </body>
 </html>

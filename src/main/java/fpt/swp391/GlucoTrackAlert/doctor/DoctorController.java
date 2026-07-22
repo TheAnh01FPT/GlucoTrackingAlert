@@ -81,6 +81,23 @@ public class DoctorController {
     }
 
     /**
+     * [DOCTOR] Lấy hồ sơ + id của CHÍNH bác sĩ đang đăng nhập, dựa theo email
+     * trong JWT — không phụ thuộc localStorage.doctorId ở frontend (tránh
+     * trường hợp localStorage bị dính doctorId cũ/sai từ 1 session trước đó
+     * trên cùng trình duyệt, khiến các trang doctor/* gọi nhầm id).
+     */
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyDoctorProfile() {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Doctor doctor = doctorRepository.findByUserEmail(email).orElse(null);
+        if (doctor == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Không tìm thấy hồ sơ bác sĩ của bạn");
+        }
+        return ResponseEntity.ok(DoctorResponse.from(doctor));
+    }
+
+    /**
      * [ADMIN] Cập nhật thông tin bác sĩ. Admin có thể sửa mọi trường bao gồm:
      * fullName, phone, specialization, degree, workplace, introduction,
      * avatarUrl, status.

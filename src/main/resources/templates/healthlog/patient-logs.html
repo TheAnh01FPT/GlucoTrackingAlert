@@ -758,15 +758,45 @@
                         <span style="font-size:0.8rem; color:#cbd5e1;">👨‍⚕️ BS. ${r.doctorName}</span>
                     </div>`;
             }
+            const priorityMap = {HIGH: ['#dc2626', '#fee2e2', 'High'], MEDIUM: ['#b45309', '#fef3c7', 'Medium'], LOW: ['#16a34a', '#dcfce7', 'Low']};
+            const categoryMap = {DIET: 'Chế độ ăn', EXERCISE: 'Luyện tập', GLUCOSE_MONITORING: 'Theo dõi đường huyết', MEDICATION: 'Thuốc (nhắc nhở)', OTHER: 'Khác'};
+            const p = priorityMap[r.priority] || priorityMap.MEDIUM;
+            const priorityBadge = `<span style="font-size:0.75rem; color:${p[0]}; background:${p[1]}; padding:0.2rem 0.6rem; border-radius:6px; font-weight:600;">${p[2]}</span>`;
+            const categoryBadge = `<span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:0.2rem 0.6rem; border-radius:6px;">${categoryMap[r.category] || 'Khác'}</span>`;
+            const confirmArea = r.read
+                    ? `<span style="font-size:0.78rem; color:#0284c7; font-weight:600;">✓ Đã xác nhận đã đọc</span>`
+                    : `<button onclick="confirmRecRead(${r.id}, this)"
+                              style="background:#0ea5e9; color:#fff; border:none; padding:0.35rem 0.9rem; border-radius:7px; font-size:0.8rem; font-weight:600; cursor:pointer;">
+                          ✅ Tôi đã đọc
+                      </button>`;
             return `<div style="padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <strong style="font-size:0.95rem; color:#15803d;">${r.title}</strong>
                         <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
                     </div>
+                    <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center;">${priorityBadge}${categoryBadge}</div>
                     <p style="margin-top:0.5rem; font-size:0.88rem; color:#475569;">${r.recommendation}</p>
-                    <span style="font-size:0.8rem; color:#64748b;">👨‍⚕️ BS. ${r.doctorName}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; padding-top:0.6rem; border-top:1px solid #dcfce7;">
+                        <span style="font-size:0.8rem; color:#64748b;">👨‍⚕️ BS. ${r.doctorName}</span>
+                        ${confirmArea}
+                    </div>
                 </div>`;
         }).join("");
+    }
+
+    async function confirmRecRead(id, btn) {
+        const patientId = /*[[${patientId}]]*/ null;
+        btn.disabled = true;
+        btn.textContent = "Đang xác nhận...";
+        try {
+            const res = await fetch(`/api/recommendations/patient/${patientId}/${id}/read`, {method: 'PATCH'});
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            loadPatientRecommendations();
+        } catch (err) {
+            btn.disabled = false;
+            btn.textContent = "✅ Tôi đã đọc";
+            alert("Không thể xác nhận, vui lòng thử lại. Lỗi: " + err.message);
+        }
     }
 
     window.onload = () => loadPatientRecommendations();

@@ -118,41 +118,56 @@ public class DoctorPatientAssignmentService {
         if (a.getDoctor() == null || a.getPatient() == null) {
             return;
         }
-        String toEmail = a.getDoctor().getUser() != null ? a.getDoctor().getUser().getEmail() : null;
-        if (toEmail == null) {
-            return;
-        }
-
-        String subject = "[GlucoTrackAlert] Bạn có bệnh nhân mới được phân công";
-        String body = "Xin chào Bác sĩ " + a.getDoctor().getFullName() + ",\n\n"
-                + "Bệnh nhân mới được phân công cho bạn:\n"
-                + "  Bệnh nhân : " + a.getPatient().getFullName() + "\n"
-                + "  Thời điểm   : " + a.getAssignedAt() + "\n\n"
-                + "Vui lòng đăng nhập GlucoTrackAlert để xem thông tin chi tiết.\n\n"
-                + "Trân trọng,\nGlucoTrackAlert";
 
         LocalTime now = LocalTime.now();
         boolean inWorkHours = !now.isBefore(WORK_START) && now.isBefore(WORK_END);
 
+        // Email cho bác sĩ
+        String doctorEmail = a.getDoctor().getUser() != null ? a.getDoctor().getUser().getEmail() : null;
+        if (doctorEmail != null) {
+            String subject = "[GlucoTrackAlert] Bạn có bệnh nhân mới được phân công";
+            String body = "Xin chào Bác sĩ " + a.getDoctor().getFullName() + ",\n\n"
+                    + "Bệnh nhân mới được phân công cho bạn:\n"
+                    + "  Bệnh nhân : " + a.getPatient().getFullName() + "\n"
+                    + "  Thời điểm   : " + a.getAssignedAt() + "\n\n"
+                    + "Vui lòng đăng nhập GlucoTrackAlert để xem thông tin chi tiết.\n\n"
+                    + "Trân trọng,\nGlucoTrackAlert";
+            sendOrSchedule(doctorEmail, subject, body, inWorkHours, "phân công (báo bác sĩ)");
+        }
+
+        // Email cho bệnh nhân
+        String patientEmail = a.getPatient().getUser() != null ? a.getPatient().getUser().getEmail() : null;
+        if (patientEmail != null) {
+            String subject = "[GlucoTrackAlert] Bạn đã được phân công bác sĩ đồng hành";
+            String body = "Xin chào " + a.getPatient().getFullName() + ",\n\n"
+                    + "Bạn đã được phân công bác sĩ đồng hành:\n"
+                    + "  Bác sĩ    : " + a.getDoctor().getFullName() + "\n"
+                    + "  Thời điểm : " + a.getAssignedAt() + "\n\n"
+                    + "Vui lòng đăng nhập GlucoTrackAlert để xem thông tin chi tiết.\n\n"
+                    + "Trân trọng,\nGlucoTrackAlert";
+            sendOrSchedule(patientEmail, subject, body, inWorkHours, "phân công (báo bệnh nhân)");
+        }
+    }
+
+    private void sendOrSchedule(String toEmail, String subject, String body, boolean inWorkHours, String label) {
         try {
             if (inWorkHours) {
                 emailService.sendSimpleMessage(toEmail, subject, body);
             } else {
                 LocalDateTime next8am = LocalDate.now().plusDays(1).atTime(WORK_START);
                 long delaySec = java.time.Duration.between(LocalDateTime.now(), next8am).getSeconds();
-                final String dest = toEmail;
                 scheduler.schedule(() -> {
                     try {
-                        emailService.sendSimpleMessage(dest, subject, body);
+                        emailService.sendSimpleMessage(toEmail, subject, body);
                     } catch (Exception ex) {
-                        System.err.println("Gửi email thông báo phân công (hẹn giờ) thất bại: " + ex.getMessage());
+                        System.err.println("Gửi email thông báo " + label + " (hẹn giờ) thất bại: " + ex.getMessage());
                     }
                 }, delaySec, TimeUnit.SECONDS);
             }
         } catch (Exception ex) {
             // Không để lỗi gửi email (vd. sai/hết hạn SMTP app-password) làm fail
             // toàn bộ request thêm phân công — phân công đã lưu DB thành công rồi.
-            System.err.println("Gửi email thông báo phân công thất bại: " + ex.getMessage());
+            System.err.println("Gửi email thông báo " + label + " thất bại: " + ex.getMessage());
         }
     }
 

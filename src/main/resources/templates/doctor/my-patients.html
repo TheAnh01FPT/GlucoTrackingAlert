@@ -641,8 +641,28 @@
                             document.getElementById('btnTable').classList.toggle('active', v === 'table');
                         }
 
-                        document.addEventListener('DOMContentLoaded', function () {
-                            currentDoctorId = getDoctorIdFromUrl();
+                        // Xác thực lại doctorId với server qua JWT (không tin thẳng localStorage,
+                        // vì localStorage có thể đang giữ doctorId cũ/sai từ 1 session trước đó
+                        // trên cùng trình duyệt). Nếu lệch, cập nhật lại localStorage cho đúng.
+                        async function resolveDoctorId() {
+                            try {
+                                const me = await fetch('/api/doctors/me', {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                if (me.ok) {
+                                    const doc = await me.json();
+                                    if (doc && doc.id) {
+                                        localStorage.setItem('doctorId', doc.id);
+                                        return doc.id;
+                                    }
+                                }
+                                if (handleAuthError(me.status)) return null;
+                            } catch {
+                                // Server không phản hồi được -> tạm dùng giá trị cũ (URL/localStorage) làm fallback
+                            }
+                            return getDoctorIdFromUrl();
+                        }
+
+                        document.addEventListener('DOMContentLoaded', async function () {
+                            currentDoctorId = await resolveDoctorId();
                             if (currentDoctorId) {
                                 loadDoctor(currentDoctorId);
                                 loadPatients(currentDoctorId);

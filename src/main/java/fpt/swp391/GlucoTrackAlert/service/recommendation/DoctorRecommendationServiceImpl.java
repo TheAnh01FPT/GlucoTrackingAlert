@@ -40,6 +40,8 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
         rec.setPatient(patient);
         rec.setTitle(request.getTitle());
         rec.setRecommendation(request.getRecommendation());
+        rec.setPriority(request.getPriority());
+        rec.setCategory(request.getCategory());
         rec.setStatus("active");
 
         DoctorRecommendation saved = recommendationRepository.save(rec);
@@ -88,6 +90,9 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
         String oldTitle = rec.getTitle();
         rec.setTitle(request.getTitle());
         rec.setRecommendation(request.getRecommendation());
+        rec.setPriority(request.getPriority());
+        rec.setCategory(request.getCategory());
+        rec.setRead(false); // nội dung đã đổi, cần bệnh nhân xem lại
 
         DoctorRecommendation saved = recommendationRepository.save(rec);
 
@@ -132,6 +137,21 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public DoctorRecommendationResponse markAsRead(Long patientId, Long recommendationId) {
+        DoctorRecommendation rec = recommendationRepository
+                .findByIdAndPatientId(recommendationId, patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khuyến nghị"));
+
+        if (!rec.isRead()) {
+            rec.setRead(true);
+            rec = recommendationRepository.save(rec);
+        }
+
+        return toResponse(rec);
+    }
+
     // ========== PRIVATE HELPERS ==========
 
     private Doctor getDoctorByEmail(String email) {
@@ -168,6 +188,9 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
                 .title(rec.getTitle())
                 .recommendation(rec.getRecommendation())
                 .status(rec.getStatus())
+                .priority(rec.getPriority())
+                .category(rec.getCategory())
+                .isRead(rec.isRead())
                 .doctorId(rec.getDoctor().getId())
                 .doctorName(rec.getDoctor().getFullName())
                 .patientId(rec.getPatient().getId())

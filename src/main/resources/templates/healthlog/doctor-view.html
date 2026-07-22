@@ -950,12 +950,27 @@
             </div>
             <div style="padding:1.25rem 1.5rem;">
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
-                    <h3 style="font-size:0.95rem; font-weight:600; color:#1e293b; margin-bottom:1rem;">✏️ Tạo Khuyến Nghị Mới</h3>
+                    <div style="margin-bottom:0.75rem;">
+                        <select id="recCategory"
+                               style="width:100%; padding:0.65rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; outline:none;">
+                            <option value="" selected disabled>-- Chọn khuyến nghị --</option>
+                            <option value="DIET">🍽️ Chế độ ăn</option>
+                            <option value="EXERCISE">🏃 Luyện tập</option>
+                            <option value="GLUCOSE_MONITORING">🩸 Theo dõi đường huyết</option>
+                            <option value="MEDICATION">💊 Thuốc (nhắc nhở)</option>
+                            <option value="OTHER">📌 Khác</option>
+                        </select>
+                    </div>
                     <div style="display:flex; flex-direction:column; gap:0.75rem;">
-                        <input id="recTitle" type="text" placeholder="Tiêu đề khuyến nghị..."
-                               style="padding:0.65rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; outline:none;"/>
                         <textarea id="recContent" rows="4" placeholder="Nội dung khuyến nghị..."
                                   style="padding:0.65rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; resize:vertical; outline:none;"></textarea>
+                        <div style="display:flex; gap:0.75rem;">
+                            <select id="recPriority" style="flex:1; padding:0.65rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; outline:none;">
+                                <option value="HIGH">🔴 High</option>
+                                <option value="MEDIUM" selected>🟡 Medium</option>
+                                <option value="LOW">🟢 Low</option>
+                            </select>
+                        </div>
                         <div style="display:flex; justify-content:flex-end;">
                             <button onclick="saveRecommendation()"
                                     style="background:linear-gradient(135deg,#0ea5e9,#0284c7); color:white; border:none;
@@ -966,10 +981,6 @@
                     </div>
                     <div id="recMsg" style="display:none; margin-top:0.75rem; font-size:0.88rem;"></div>
                 </div>
-                <div style="margin-top: 1.5rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-                        <h3 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin:0;">📋 Danh Sách Khuyến Nghị</h3>
-
                 <div style="margin-top:1.5rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                         <h3 style="font-size:0.95rem; font-weight:600; color:#1e293b; margin:0;">📋 Danh Sách Khuyến Nghị</h3>
@@ -978,7 +989,26 @@
                             Hiển thị đã xóa
                         </label>
                     </div>
+                    <div style="display:flex; gap:0.75rem; margin-bottom:1rem;">
+                        <input type="text" id="recSearch" placeholder="🔍 Tìm theo nội dung..."
+                               oninput="filterRecommendations()"
+                               style="flex:2; padding:0.6rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.88rem; outline:none;"/>
+                        <select id="recCategoryFilter" onchange="filterRecommendations()"
+                                style="flex:1; padding:0.6rem 1rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.88rem; outline:none;">
+                            <option value="">Tất cả danh mục</option>
+                            <option value="DIET">🍽️ Chế độ ăn</option>
+                            <option value="EXERCISE">🏃 Luyện tập</option>
+                            <option value="GLUCOSE_MONITORING">🩸 Theo dõi đường huyết</option>
+                            <option value="MEDICATION">💊 Thuốc (nhắc nhở)</option>
+                            <option value="OTHER">📌 Khác</option>
+                        </select>
+                    </div>
                     <div id="recItems" style="display:flex; flex-direction:column; gap:0.75rem;"><p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p></div>
+                    <div id="recPagination" style="display:none; justify-content:center; align-items:center; gap:0.5rem; margin-top:1rem;">
+                        <button onclick="changeRecPage(-1)" style="padding:0.4rem 0.9rem; border:1px solid #cbd5e1; background:#fff; border-radius:6px; cursor:pointer; font-size:0.85rem;">‹ Trước</button>
+                        <span id="recPageInfo" style="font-size:0.85rem; color:#64748b;"></span>
+                        <button onclick="changeRecPage(1)" style="padding:0.4rem 0.9rem; border:1px solid #cbd5e1; background:#fff; border-radius:6px; cursor:pointer; font-size:0.85rem;">Sau ›</button>
+                    </div>
                 </div>
             </section>
         </main>
@@ -1059,6 +1089,11 @@
                     .replace(/'/g, '&#39;');
             }
 
+            let allRecommendations = [];
+            let recFiltered = [];
+            let recCurrentPage = 0;
+            const REC_PAGE_SIZE = 5;
+
             async function loadRecommendations() {
                 if (!patientIdForRec)
                     return;
@@ -1070,65 +1105,147 @@
                             ? `/api/recommendations/doctor/patient/${patientIdForRec}/all`
                             : `/api/recommendations/doctor/patient/${patientIdForRec}`;
                     const res = await fetch(url);
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    const list = await res.json();
-                    if (!list.length) {
-                        container.innerHTML = "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>";
-                        return;
+                    if (!res.ok) {
+                        let serverMsg = "";
+                        try { const err = await res.json(); serverMsg = err.message || ""; } catch (e) {}
+                        throw new Error(serverMsg || ('HTTP ' + res.status));
                     }
-                    container.innerHTML = list.map(r => {
-                        const isInactive = r.status === 'inactive';
-                        const cardStyle = isInactive
-                                ? 'background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:1rem 1.25rem; opacity:0.65;'
-                                : 'background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:1rem 1.25rem;';
-                        const titleStyle = isInactive
-                                ? 'font-size:0.95rem; color:#94a3b8; text-decoration:line-through;'
-                                : 'font-size:0.95rem; color:#1e293b;';
-                        const contentStyle = isInactive
-                                ? 'margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;'
-                                : 'margin-top:0.5rem; font-size:0.88rem; color:#475569;';
-                        const actionBtn = isInactive
-                                ? `<span style="font-size:0.78rem; background:#f1f5f9; color:#94a3b8; padding:0.25rem 0.7rem; border-radius:6px;">Đã xóa</span>`
-                                : `<button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer;">🗑 Xóa</button>`;
-                        // FIX 3: dùng escapeHtml() cho r.title và r.recommendation trước khi nhét vào innerHTML
-                        return `<div style="${cardStyle}">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <strong style="${titleStyle}">${escapeHtml(r.title)}</strong>
-                                <div style="display:flex; gap:0.5rem; align-items:center;">${actionBtn}</div>
-                            </div>
-                            <p style="${contentStyle}">${escapeHtml(r.recommendation)}</p>
-                            <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
-                        </div>`;
-                    }).join("");
+                    allRecommendations = await res.json();
+                    recCurrentPage = 0;
+                    filterRecommendations();
                 } catch (err) {
                     // FIX 4: hiện thông báo lỗi thay vì im lặng
-                    container.innerHTML = "<p style='color:#ef4444; font-size:0.9rem;'>❌ Không thể tải khuyến nghị. Vui lòng thử lại.</p>";
+                    container.innerHTML = `<p style='color:#ef4444; font-size:0.9rem;'>❌ Không thể tải khuyến nghị: ${escapeHtml(err.message)}</p>`;
+                    document.getElementById('recPagination').style.display = 'none';
                     console.error('loadRecommendations error:', err);
                 }
             }
 
-            async function saveRecommendation() {
-                const title = document.getElementById("recTitle").value.trim();
-                const content = document.getElementById("recContent").value.trim();
-                const msg = document.getElementById("recMsg");
-                if (!title || !content) {
-                    msg.style.display = "block";
-                    msg.style.color = "#dc2626";
-                    msg.textContent = "Vui lòng điền đầy đủ tiêu đề và nội dung!";
+            function filterRecommendations() {
+                const keyword = (document.getElementById('recSearch').value || '').trim().toLowerCase();
+                const category = document.getElementById('recCategoryFilter').value;
+                recFiltered = allRecommendations.filter(r =>
+                    (!keyword || (r.recommendation || '').toLowerCase().includes(keyword)) &&
+                    (!category || r.category === category)
+                );
+                recCurrentPage = 0;
+                renderRecPage();
+            }
+
+            function changeRecPage(delta) {
+                const totalPages = Math.max(1, Math.ceil(recFiltered.length / REC_PAGE_SIZE));
+                const newPage = recCurrentPage + delta;
+                if (newPage < 0 || newPage >= totalPages)
+                    return;
+                recCurrentPage = newPage;
+                renderRecPage();
+            }
+
+            function renderRecPage() {
+                const container = document.getElementById("recItems");
+                const pagination = document.getElementById("recPagination");
+
+                if (!recFiltered.length) {
+                    container.innerHTML = allRecommendations.length
+                            ? "<p style='color:#94a3b8; font-size:0.9rem;'>Không tìm thấy khuyến nghị nào.</p>"
+                            : "<p style='color:#94a3b8; font-size:0.9rem;'>Chưa có khuyến nghị nào.</p>";
+                    pagination.style.display = "none";
                     return;
                 }
-                const res = await fetch("/api/recommendations", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({title, recommendation: content, patientId: patientIdForRec})});
+
+                const totalPages = Math.max(1, Math.ceil(recFiltered.length / REC_PAGE_SIZE));
+                const start = recCurrentPage * REC_PAGE_SIZE;
+                const pageItems = recFiltered.slice(start, start + REC_PAGE_SIZE);
+
+                container.innerHTML = pageItems.map(r => {
+                        const isInactive = r.status === 'inactive';
+                        const priorityMap = {
+                            HIGH:   {color:'#dc2626', bg:'#fee2e2', label:'High',   dot:'🔴'},
+                            MEDIUM: {color:'#b45309', bg:'#fef3c7', label:'Medium', dot:'🟡'},
+                            LOW:    {color:'#16a34a', bg:'#dcfce7', label:'Low',    dot:'🟢'}
+                        };
+                        const categoryMap = {
+                            DIET:                {label:'Chế độ ăn',            icon:'🍽️'},
+                            EXERCISE:            {label:'Luyện tập',             icon:'🏃'},
+                            GLUCOSE_MONITORING:  {label:'Theo dõi đường huyết',  icon:'🩸'},
+                            MEDICATION:          {label:'Thuốc (nhắc nhở)',      icon:'💊'},
+                            OTHER:               {label:'Khác',                 icon:'📌'}
+                        };
+                        const p = priorityMap[r.priority] || priorityMap.MEDIUM;
+                        const c = categoryMap[r.category] || categoryMap.OTHER;
+
+                        const cardStyle = isInactive
+                                ? 'background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #cbd5e1; border-radius:10px; padding:1rem 1.25rem; opacity:0.6;'
+                                : `background:#fff; border:1px solid #e2e8f0; border-left:4px solid ${p.color}; border-radius:10px; padding:1rem 1.25rem; box-shadow:0 1px 3px rgba(15,23,42,0.06);`;
+                        const titleStyle = isInactive
+                                ? 'font-size:0.98rem; font-weight:600; color:#94a3b8; text-decoration:line-through;'
+                                : 'font-size:0.98rem; font-weight:600; color:#1e293b;';
+                        const contentStyle = isInactive
+                                ? 'margin-top:0.6rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through; line-height:1.5;'
+                                : 'margin-top:0.6rem; font-size:0.88rem; color:#475569; line-height:1.5;';
+                        const actionBtn = isInactive
+                                ? `<span style="font-size:0.78rem; background:#f1f5f9; color:#94a3b8; padding:0.25rem 0.7rem; border-radius:6px; white-space:nowrap;">Đã xóa</span>`
+                                : `<button onclick="deleteRecommendation(${r.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:0.35rem 0.85rem; border-radius:7px; font-size:0.82rem; cursor:pointer; white-space:nowrap;">🗑 Xóa</button>`;
+
+                        const priorityBadge = isInactive
+                                ? `<span style="font-size:0.75rem; color:#94a3b8; background:#f1f5f9; padding:0.22rem 0.65rem; border-radius:20px;">${p.label}</span>`
+                                : `<span style="font-size:0.75rem; color:${p.color}; background:${p.bg}; padding:0.22rem 0.65rem; border-radius:20px; font-weight:600;">${p.dot} ${p.label}</span>`;
+                        const categoryBadge = `<span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:0.22rem 0.65rem; border-radius:20px;">${c.icon} ${c.label}</span>`;
+                        const confirmBadge = isInactive
+                                ? ''
+                                : (r.read
+                                    ? `<span style="font-size:0.75rem; color:#0284c7; font-weight:600;">✓ Bệnh nhân đã xác nhận đọc</span>`
+                                    : `<span style="font-size:0.75rem; color:#94a3b8;">○ Chưa xác nhận đọc</span>`);
+
+                        // FIX 3: dùng escapeHtml() cho r.title và r.recommendation trước khi nhét vào innerHTML
+                        return `<div style="${cardStyle}">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem;">
+                                <strong style="${titleStyle}">${escapeHtml(r.title)}</strong>
+                                ${actionBtn}
+                            </div>
+                            <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.65rem; align-items:center;">${priorityBadge}${categoryBadge}${confirmBadge}</div>
+                            <p style="${contentStyle}">${escapeHtml(r.recommendation)}</p>
+                            <div style="margin-top:0.75rem; padding-top:0.6rem; border-top:1px solid #f1f5f9;">
+                                <span style="font-size:0.78rem; color:#94a3b8;">🗓️ ${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
+                            </div>
+                        </div>`;
+                    }).join("");
+
+                pagination.style.display = totalPages > 1 ? "flex" : "none";
+                document.getElementById("recPageInfo").textContent = `Trang ${recCurrentPage + 1} / ${totalPages} (${recFiltered.length} khuyến nghị)`;
+            }
+
+            async function saveRecommendation() {
+                const categorySelect = document.getElementById("recCategory");
+                const content = document.getElementById("recContent").value.trim();
+                const msg = document.getElementById("recMsg");
+                if (!categorySelect.value || !content) {
+                    msg.style.display = "block";
+                    msg.style.color = "#dc2626";
+                    msg.textContent = "Vui lòng chọn khuyến nghị và điền nội dung!";
+                    return;
+                }
+                const title = categorySelect.options[categorySelect.selectedIndex].text.replace(/^\S+\s/, "").trim();
+                const priority = document.getElementById("recPriority").value;
+                const category = categorySelect.value;
+                const res = await fetch("/api/recommendations", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({title, recommendation: content, patientId: patientIdForRec, priority, category})});
                 if (res.ok) {
                     msg.style.display = "block";
                     msg.style.color = "#16a34a";
                     msg.textContent = "✅ Lưu thành công!";
-                    document.getElementById("recTitle").value = "";
                     document.getElementById("recContent").value = "";
+                    document.getElementById("recPriority").value = "MEDIUM";
+                    document.getElementById("recCategory").value = "";
                     loadRecommendations();
                 } else {
                     msg.style.display = "block";
                     msg.style.color = "#dc2626";
-                    msg.textContent = "❌ Lưu thất bại, vui lòng thử lại.";
+                    let serverMsg = "";
+                    try {
+                        const err = await res.json();
+                        serverMsg = err.message || "";
+                    } catch (e) { /* body không phải JSON */ }
+                    msg.textContent = "❌ Lưu thất bại: " + (serverMsg || `Lỗi ${res.status}, vui lòng thử lại.`);
                 }
             }
 
