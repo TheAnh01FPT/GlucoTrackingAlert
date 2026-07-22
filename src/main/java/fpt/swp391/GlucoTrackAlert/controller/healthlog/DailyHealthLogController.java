@@ -735,6 +735,15 @@ public class DailyHealthLogController {
                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
                              Model model) {
+        // Prevent IDOR: non-admin/doctor users may only view their own chart,
+        // regardless of what userId is passed in the request.
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            Long cur = getCurrentUserId();
+            if (cur != null) {
+                userId = cur;
+            }
+        }
+
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             patientId = userId;
@@ -923,23 +932,6 @@ public class DailyHealthLogController {
         BigDecimal monthlyAvgSleep = calculateAverage(monthLogs, log -> log.getSleepHours());
         BigDecimal monthlyAvgWater = calculateAverage(monthLogs, log -> log.getWaterMl() != null ? BigDecimal.valueOf(log.getWaterMl()) : null);
 
-        YearMonth previousMonth = selectedMonth.minusMonths(1);
-        List<DailyHealthLog> previousMonthLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, previousMonth.atDay(1), previousMonth.atEndOfMonth());
-        BigDecimal previousAvgSugar = calculateAverage(previousMonthLogs, log -> log.getBloodSugar());
-
-        String monthlyProgressStatus = "STABLE";
-        String monthlyProgressLabel = "Đường huyết ổn định so với tháng trước.";
-        if (monthlyAvgSugar != null && previousAvgSugar != null) {
-            BigDecimal delta = monthlyAvgSugar.subtract(previousAvgSugar);
-            if (delta.compareTo(new BigDecimal("0.3")) <= -1) {
-                monthlyProgressStatus = "IMPROVING";
-                monthlyProgressLabel = "Đường huyết cải thiện rõ rệt so với tháng trước.";
-            } else if (delta.compareTo(new BigDecimal("0.3")) >= 1) {
-                monthlyProgressStatus = "WORSENING";
-                monthlyProgressLabel = "Đường huyết có xu hướng xấu đi so với tháng trước.";
-            }
-        }
-
         List<Map<String, Object>> monthOptions = new java.util.ArrayList<>();
         YearMonth currentMonth = YearMonth.now();
         for (int i = 5; i >= 0; i--) {
@@ -973,10 +965,7 @@ public class DailyHealthLogController {
         model.addAttribute("monthlyAvgDiastolic", formatMetricValue(monthlyAvgDiastolic));
         model.addAttribute("monthlyAvgSleep", formatMetricValue(monthlyAvgSleep));
         model.addAttribute("monthlyAvgWater", formatMetricValue(monthlyAvgWater));
-        model.addAttribute("monthlyProgressStatus", monthlyProgressStatus);
-        model.addAttribute("monthlyProgressLabel", monthlyProgressLabel);
         model.addAttribute("monthOptions", monthOptions);
-        model.addAttribute("monthlyAiEvaluation", null);
         model.addAttribute("monthlyLogCount", monthLogs.size());
 
         return "healthlog/ai-report";
@@ -1296,5 +1285,3 @@ public class DailyHealthLogController {
                 .body(new org.springframework.core.io.InputStreamResource(in));
     }
 }
-
-

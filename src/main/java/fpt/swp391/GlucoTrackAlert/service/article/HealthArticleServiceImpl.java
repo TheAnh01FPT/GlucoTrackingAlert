@@ -183,7 +183,7 @@ public class HealthArticleServiceImpl implements HealthArticleService {
         ArticleStatus status = validateAndGetStatus(request.getStatus());
         ArticleStatus oldStatus = article.getStatus();
         article.setStatus(status);
-        article.setRejectionReason(status == ArticleStatus.REJECTED ? null : null);
+        article.setRejectionReason(null);
 
         // Nếu chuyển từ draft → published, set publishedAt = now
         if (oldStatus != ArticleStatus.PUBLISHED && status == ArticleStatus.PUBLISHED) {
