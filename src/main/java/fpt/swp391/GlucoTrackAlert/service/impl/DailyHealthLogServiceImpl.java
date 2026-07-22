@@ -27,16 +27,18 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.time.LocalDate;
-import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
-import java.time.DayOfWeek;
-import java.time.temporal.TemporalAdjusters;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +84,23 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             }
         }
 
+        List<Long> logIds = page.getContent().stream()
+                .map(DailyHealthLog::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Map<String, Object>> latestRiskByLogId = new HashMap<>();
+        if (!logIds.isEmpty()) {
+            String placeholders = String.join(",", java.util.Collections.nCopies(logIds.size(), "?"));
+            String sql = "SELECT daily_health_log_id, risk_percentage, risk_level FROM risk_assessments WHERE daily_health_log_id IN (" + placeholders + ") ORDER BY daily_health_log_id, id DESC";
+            List<Map<String, Object>> riskRows = jdbcTemplate.queryForList(sql, logIds.toArray());
+            for (Map<String, Object> row : riskRows) {
+                Long logId = ((Number) row.get("daily_health_log_id")).longValue();
+                latestRiskByLogId.putIfAbsent(logId, row);
+            }
+        }
+
         List<DailyHealthLogResponse> mapped = page.getContent().stream().map(log -> {
             Long pId = log.getPatient() != null ? log.getPatient().getId() : null;
             String pType = log.getPatient() != null ? log.getPatient().getPatientType() : null;
@@ -116,18 +135,12 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             }
             BigDecimal riskPercentageVal = null;
             String riskLevelVal = null;
-            try {
-                List<Map<String, Object>> list = jdbcTemplate.queryForList(
-                        "SELECT risk_percentage, risk_level FROM risk_assessments WHERE daily_health_log_id = ? ORDER BY id DESC LIMIT 1",
-                        log.getId()
-                );
-                if (!list.isEmpty()) {
-                    Map<String, Object> map = list.get(0);
+            if (log.getId() != null) {
+                Map<String, Object> map = latestRiskByLogId.get(log.getId());
+                if (map != null) {
                     riskPercentageVal = (BigDecimal) map.get("risk_percentage");
                     riskLevelVal = (String) map.get("risk_level");
                 }
-            } catch (Exception e) {
-                // ignore
             }
 
             return DailyHealthLogResponse.builder()
@@ -150,7 +163,6 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     .bloodSugarStatus(bloodSugarStatus)
                     .systolicStatus(systolicStatus)
                     .diastolicStatus(diastolicStatus)
-                    .bloodSugarStatus(status)
                     .riskPercentage(riskPercentageVal)
                     .riskLevel(riskLevelVal)
                     .physicalActivity(log.getPhysicalActivity())
@@ -166,6 +178,17 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         return toResponse(log);
+    }
+
+    LocalDate resolveCycleStart(Long patientId, LocalDate logDate) {
+        if (logDate == null) {
+            return null;
+        }
+        DailyHealthLog firstLog = dailyHealthLogRepository.findFirstByPatientIdOrderByLogDateAsc(patientId);
+        LocalDate anchorDate = (firstLog != null && firstLog.getLogDate() != null) ? firstLog.getLogDate() : logDate;
+        long daysSinceAnchor = ChronoUnit.DAYS.between(anchorDate, logDate);
+        long cycleIndex = Math.floorDiv(daysSinceAnchor, 7);
+        return anchorDate.plusDays(cycleIndex * 7);
     }
 
     private String evaluateStatus(java.math.BigDecimal value, Optional<fpt.swp391.GlucoTrackAlert.model.HealthThreshold> opt) {
@@ -212,29 +235,13 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             logger.warn("[DangerAlert] Không thể kiểm tra cảnh báo cho log id={}: {}", savedLog.getId(), e.getMessage());
         }
 
-        java.time.LocalDate logDate = savedLog.getLogDate();
-        java.time.LocalDate weekStart = logDate.with(java.time.DayOfWeek.MONDAY);
-        java.time.LocalDate weekEnd = weekStart.plusDays(6);
+        LocalDate logDate = savedLog.getLogDate();
+        LocalDate cycleStart = resolveCycleStart(patientId, logDate);
         try {
-            // On create: when a full week is completed (Sunday), generate weekly report if not exists
-            java.time.DayOfWeek dow = logDate.getDayOfWeek();
-            if (dow == java.time.DayOfWeek.SUNDAY) {
-                java.util.List<DailyHealthLog> weekLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, weekStart, weekEnd);
-                if (weekLogs.size() == 7 && !weeklyHealthReportRepository.existsByPatientIdAndWeekStart(patientId, weekStart)) {
-                    weeklyReportService.generateWeeklyReport(patientId, weekStart);
-                }
-            }
-            // NOTE: daily assessment (complicationRiskService) was intentionally disabled to avoid
-            // running immediate per-day analysis when importing historical logs.
+            weeklyReportService.syncWeeklyReport(patientId, cycleStart);
+            complicationRiskService.assessPatient(patientId, savedLog.getId());
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Ensure weekly report metrics are recalculated if a report already exists for this week.
-        try {
-            weeklyReportService.recalculateIfExists(patientId, weekStart);
-        } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("[WeeklyReport] Đồng bộ báo cáo tuần thất bại cho patientId={}: {}", patientId, e.getMessage(), e);
         }
         return toResponse(savedLog);
     }
@@ -242,7 +249,6 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     @Override
     @Transactional
     public DailyHealthLogResponse updateLog(Long id, DailyHealthLogRequest request) {
-        System.out.println("======> CHECKBOX GỬI LÊN LÀ: " + request.getPhysicalActivity());
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         // Prevent duplicate date for the same patient (excluding this id)
@@ -263,8 +269,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         try {
             Long pid = updatedLog.getPatient() != null ? updatedLog.getPatient().getId() : null;
             if (pid != null) {
-                java.time.LocalDate weekStart = updatedLog.getLogDate().with(java.time.DayOfWeek.MONDAY);
-                weeklyReportService.recalculateIfExists(pid, weekStart);
+                LocalDate cycleStart = resolveCycleStart(pid, updatedLog.getLogDate());
+                weeklyReportService.syncWeeklyReport(pid, cycleStart);
                 // also re-run daily assessment
                 // NOTE: This daily assessment (`NEPHROPATHY`) is kept for internal/logging
                 // purposes only. The risk-warnings pages now show weekly assessments
@@ -272,7 +278,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 complicationRiskService.assessPatient(pid, updatedLog.getId());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Long pid = updatedLog.getPatient() != null ? updatedLog.getPatient().getId() : null;
+            logger.error("[WeeklyReport] Đồng bộ báo cáo tuần thất bại cho patientId={}: {}", pid, e.getMessage(), e);
         }
         return toResponse(updatedLog);
     }
@@ -283,7 +290,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         Long patientId = log.getPatient() != null ? log.getPatient().getId() : null;
-        java.time.LocalDate weekStart = log.getLogDate() != null ? log.getLogDate().with(java.time.DayOfWeek.MONDAY) : null;
+        java.time.LocalDate cycleStart = log.getLogDate() != null ? resolveCycleStart(patientId, log.getLogDate()) : null;
         try {
             jdbcTemplate.update("DELETE FROM ai_analysis_logs WHERE daily_health_log_id = ?", id);
             jdbcTemplate.update("DELETE FROM risk_warnings WHERE daily_health_log_id = ?", id);
@@ -300,11 +307,11 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         // Keep the weekly report (if one already exists for this week) in sync with the
         // remaining logs, otherwise it would keep showing stale averages/risk that still
         // include the log that was just deleted.
-        if (patientId != null && weekStart != null) {
+        if (patientId != null && cycleStart != null) {
             try {
-                weeklyReportService.recalculateIfExists(patientId, weekStart);
+                weeklyReportService.recalculateIfExists(patientId, cycleStart);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("[WeeklyReport] Tính toán lại báo cáo tuần thất bại cho patientId={}: {}", patientId, e.getMessage(), e);
             }
         }
     }
@@ -596,22 +603,41 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
 
     @Scheduled(cron = "0 50 23 * * SUN")
     public void generateWeeklyReportsForWeek() {
-        // Weekly scheduled job: generate weekly reports for patients who have logs in the week but missing a report
-        java.time.LocalDate today = java.time.LocalDate.now();
-        java.time.LocalDate weekStart = today.with(java.time.DayOfWeek.MONDAY);
-        java.time.LocalDate weekEnd = weekStart.plusDays(6);
+        // Weekly scheduled job: generate 7-day cycle reports anchored to each patient's first log.
+        LocalDate today = LocalDate.now();
         for (Patient patient : patientRepository.findAll()) {
             Long pid = patient.getId();
-            List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(pid, weekStart, weekEnd);
-            if (logs == null || logs.isEmpty()) {
+            if (pid == null) {
                 continue;
             }
-            if (!weeklyHealthReportRepository.existsByPatientIdAndWeekStart(pid, weekStart)) {
-                try {
-                    weeklyReportService.generateWeeklyReport(pid, weekStart);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+            DailyHealthLog firstLog = dailyHealthLogRepository.findFirstByPatientIdOrderByLogDateAsc(pid);
+            if (firstLog == null || firstLog.getLogDate() == null) {
+                continue;
+            }
+            LocalDate anchorDate = firstLog.getLogDate();
+            if (anchorDate.isAfter(today)) {
+                continue;
+            }
+
+            long daysSinceAnchor = ChronoUnit.DAYS.between(anchorDate, today);
+            long cycleIndex = Math.floorDiv(daysSinceAnchor, 7);
+            LocalDate cycleStart = anchorDate.plusDays(cycleIndex * 7);
+            if (today.isBefore(cycleStart.plusDays(6))) {
+                cycleStart = cycleStart.minusDays(7);
+            }
+
+            while (!cycleStart.isBefore(anchorDate)) {
+                if (!weeklyHealthReportRepository.existsByPatientIdAndWeekStart(pid, cycleStart)) {
+                    List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(pid, cycleStart, cycleStart.plusDays(6));
+                    if (logs != null && !logs.isEmpty()) {
+                        try {
+                            weeklyReportService.generateWeeklyReport(pid, cycleStart);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
                 }
+                cycleStart = cycleStart.minusDays(7);
             }
         }
     }
@@ -638,18 +664,25 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         }
 
         LocalDate today = LocalDate.now();
-        // Try current week first, fall back to previous week if no data
-        LocalDate startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        DailyHealthLog firstLog = dailyHealthLogRepository.findFirstByPatientIdOrderByLogDateAsc(patientId);
+        if (firstLog == null || firstLog.getLogDate() == null || firstLog.getLogDate().isAfter(today)) {
+            return;
+        }
+
+        LocalDate cycleStart = resolveCycleStart(patientId, today);
+        LocalDate cycleEnd = cycleStart.plusDays(6);
 
         List<DailyHealthLog> weeklyLogs = dailyHealthLogRepository
-                .findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, startOfWeek, endOfWeek);
+                .findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, cycleStart, cycleEnd);
         if (weeklyLogs == null || weeklyLogs.isEmpty()) {
-            // Fall back to previous week
-            startOfWeek = today.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            endOfWeek = today.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+            // Fall back to the previous patient-specific 7-day cycle
+            cycleStart = cycleStart.minusDays(7);
+            cycleEnd = cycleStart.plusDays(6);
+            if (cycleStart.isBefore(firstLog.getLogDate())) {
+                return;
+            }
             weeklyLogs = dailyHealthLogRepository
-                    .findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, startOfWeek, endOfWeek);
+                    .findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, cycleStart, cycleEnd);
             if (weeklyLogs == null || weeklyLogs.isEmpty()) {
                 return;
             }
@@ -685,8 +718,6 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 String sugarStatus = healthThresholdService.evaluate(sugarVal, patientId, patientType, MetricType.BLOOD_SUGAR);
                 if (!"NORMAL".equals(sugarStatus) && !"UNKNOWN".equalsIgnoreCase(sugarStatus) && !"unknown".equalsIgnoreCase(sugarStatus)) {
                     highSugarDays++;
-                }
-                if (!"NORMAL".equals(sugarStatus) && !"UNKNOWN".equalsIgnoreCase(sugarStatus) && !"unknown".equalsIgnoreCase(sugarStatus)) {
                     warningCount++;
                 }
             }
@@ -743,8 +774,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 + "WHERE ra.patient_id = ? AND ra.assessment_type = 'WEEKLY_AI_PREDICTION' "
                 + "AND dhl.log_date >= ? AND dhl.log_date <= ? ORDER BY ra.id DESC",
                 patientId,
-                startOfWeek,
-                endOfWeek
+                cycleStart,
+                cycleEnd
         );
 
         boolean needUpdate = true;
@@ -753,8 +784,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
         List<Map<String, Object>> existingReport = jdbcTemplate.queryForList(
                 "SELECT id FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
                 patientId,
-                startOfWeek,
-                endOfWeek
+                cycleStart,
+                cycleEnd
         );
 
         if (!existing.isEmpty() && !existingReport.isEmpty()) {
@@ -871,8 +902,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     );
 
                     // --- GENERATE & SAVE WEEKLY REPORT ---
-                    LocalDate prevStartOfWeek = startOfWeek.minusWeeks(1);
-                    LocalDate prevEndOfWeek = endOfWeek.minusWeeks(1);
+                    LocalDate prevStartOfWeek = cycleStart.minusDays(7);
+                    LocalDate prevEndOfWeek = cycleEnd.minusDays(7);
                     List<Map<String, Object>> prevReports = jdbcTemplate.queryForList(
                             "SELECT id, average_blood_sugar, average_systolic, average_diastolic, average_sleep_hours, average_water_ml "
                             + "FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
@@ -951,7 +982,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                     // Delete existing report
                     jdbcTemplate.update(
                             "DELETE FROM weekly_health_reports WHERE patient_id = ? AND week_start = ? AND week_end = ?",
-                            patientId, startOfWeek, endOfWeek
+                            patientId, cycleStart, cycleEnd
                     );
 
                     // Insert new report
@@ -966,8 +997,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                             patientId,
                             null,
                             prevReportId,
-                            startOfWeek,
-                            endOfWeek,
+                            cycleStart,
+                            cycleEnd,
                             avgSugarVal,
                             avgSystolicVal,
                             avgDiastolicVal,

@@ -24,17 +24,32 @@ public class WebViewController {
 
     @GetMapping("/dashboard")
     public String showDashboard(
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "roleName", required = false) String roleName,
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             Model model) {
 
-        Page<User> userPage = userAdminService.getUsersPaged(page, size);
+        Page<User> userPage;
+        if ((email != null && !email.isEmpty()) || 
+            (roleName != null && !roleName.isEmpty()) || 
+            (status != null && !status.isEmpty())) {
+            userPage = userAdminService.searchAndFilterUsersPaged(email, roleName, status, page, size);
+        } else {
+            userPage = userAdminService.getUsersPaged(page, size);
+        }
 
         model.addAttribute("users", userPage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", userPage.getTotalPages());
         model.addAttribute("totalItems", userPage.getTotalElements());
         model.addAttribute("pageSize", size);
+        
+        model.addAttribute("filterEmail", email);
+        model.addAttribute("filterRole", roleName);
+        model.addAttribute("filterStatus", status);
+
         model.addAttribute("roles", roleService.getAllRoles());
         // Add counts for doctors and patients
         model.addAttribute("doctorCount", userAdminService.getDoctorCount());

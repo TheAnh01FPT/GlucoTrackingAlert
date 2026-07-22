@@ -24,4 +24,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Dùng khi cho phép 1 tài khoản pending_verification cập nhật lại SĐT của chính nó
     boolean existsByPhoneAndEmailNot(String phone, String email);
+
+    @org.springframework.data.jpa.repository.Query("SELECT u FROM User u WHERE " +
+           "(:email IS NULL OR :email = '' OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
+           "(:roleName IS NULL OR :roleName = '' OR u.role.name = :roleName) AND " +
+           "(:status IS NULL OR :status = '' OR u.status = :status)")
+    List<User> searchAndFilterUsers(@org.springframework.data.repository.query.Param("email") String email, 
+                                    @org.springframework.data.repository.query.Param("roleName") String roleName, 
+                                    @org.springframework.data.repository.query.Param("status") String status);
 }

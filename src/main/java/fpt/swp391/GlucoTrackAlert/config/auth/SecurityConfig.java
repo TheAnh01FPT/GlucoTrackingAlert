@@ -3,6 +3,7 @@ package fpt.swp391.GlucoTrackAlert.config.auth;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,6 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -71,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/notifications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
                         // 9. Bảo vệ tài liệu/CCCD nhạy cảm trong uploads (Chỉ ADMIN, DOCTOR, PATIENT được xem)
+                        .requestMatchers("/uploads/banners/**").permitAll()
                         .requestMatchers("/uploads/**").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
 
                         .anyRequest().authenticated()

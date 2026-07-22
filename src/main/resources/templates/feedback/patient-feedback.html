@@ -273,15 +273,8 @@
     <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"></div>
     <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
-    <div th:if="${canFeedback}" class="feedback-form">
+    <div class="feedback-form">
         <form action="/patient/feedbacks/submit" method="post">
-            <div class="form-group">
-                <label>Bác sĩ đánh giá</label>
-                <select name="doctorId" class="form-control" required>
-                    <option value="" disabled selected>-- Chọn bác sĩ bạn muốn đánh giá --</option>
-                    <option th:each="doc : ${doctors}" th:value="${doc.id}" th:text="${doc.fullName}"></option>
-                </select>
-            </div>
 
             <div class="form-group">
                 <label>Đánh giá sao</label>
@@ -312,10 +305,7 @@
         </form>
     </div>
 
-    <div th:unless="${canFeedback}" class="alert-error">
-        <i class="fa-solid fa-circle-info"></i> Bạn cần phải nhận ít nhất một lời khuyên từ bác sĩ trước khi có thể gửi
-        ý kiến đánh giá.
-    </div>
+
 
     <h3 class="history-title"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử đánh giá của bạn</h3>
     <div th:if="${#lists.isEmpty(feedbacks)}"
@@ -327,10 +317,7 @@
     <div th:each="fb : ${feedbacks}" class="feedback-card">
         <div class="card-header">
             <div class="card-meta">
-                <div class="card-doctor" th:if="${fb.doctor != null}">
-                    <i class="fa-solid fa-user-doctor text-blue-500 mr-2"></i> BS. <span
-                        th:text="${fb.doctor.fullName}"></span>
-                </div>
+
                 <div class="card-date">
                     <i class="fa-regular fa-calendar-days"></i> <span
                         th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></span>

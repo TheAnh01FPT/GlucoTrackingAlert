@@ -31,6 +31,8 @@ public class DoctorThresholdController {
     private fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository doctorRepository;
     @Autowired
     private fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository assignmentRepository;
+    @Autowired
+    private fpt.swp391.GlucoTrackAlert.repository.HealthThresholdHistoryRepository thresholdHistoryRepository;
 
     private Long getCurrentUserId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
@@ -105,6 +107,7 @@ public class DoctorThresholdController {
             @RequestParam BigDecimal warningMin,
             @RequestParam BigDecimal warningMax,
             @RequestParam(required = false) String description,
+            @RequestParam(required = false) String changeNote,
             RedirectAttributes redirectAttributes) {
         try {
             if (!hasRole("ROLE_ADMIN")) {
@@ -119,9 +122,14 @@ public class DoctorThresholdController {
             MetricType mt = MetricType.from(metricType);
             if (mt == null) throw new IllegalArgumentException("metricType không hợp lệ: " + metricType);
 
+            // resolve current user and pass to service for history recording
+            Long currentUserId = getCurrentUserId();
+            fpt.swp391.GlucoTrackAlert.model.user.User changedBy = currentUserId != null ?
+                userRepository.findById(currentUserId).orElse(null) : null;
+
             healthThresholdService.savePatientThreshold(
                 patientId, mt, normalMin, normalMax,
-                warningMin, warningMax, description, patient);
+                warningMin, warningMax, description, patient, changedBy, changeNote);
 
             redirectAttributes.addFlashAttribute("successMessage",
                 "Đã cập nhật ngưỡng " + mt.name() + " cho bệnh nhân");
@@ -147,9 +155,40 @@ public class DoctorThresholdController {
                 return "redirect:/health-logs/doctor-view/thresholds?patientId=" + patientId;
             }
         }
-        healthThresholdService.deletePatientThreshold(patientId, mt);
+
+        Long currentUserId = getCurrentUserId();
+        fpt.swp391.GlucoTrackAlert.model.user.User changedBy = currentUserId != null ?
+            userRepository.findById(currentUserId).orElse(null) : null;
+
+        healthThresholdService.deletePatientThreshold(patientId, mt, changedBy);
         redirectAttributes.addFlashAttribute("successMessage",
             "Đã reset về ngưỡng mặc định");
         return "redirect:/health-logs/doctor-view/thresholds?patientId=" + patientId;
+    }
+
+    @GetMapping("/history")
+    public String viewHistory(@RequestParam Long patientId, @RequestParam String metricType,
+            @RequestParam(name = "page", required = false, defaultValue = "0") int page,
+            Model model, RedirectAttributes redirectAttributes) {
+        if (!hasRole("ROLE_ADMIN") && !isDoctorAssignedToPatient(patientId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn không được phân công cho bệnh nhân này");
+            return "redirect:/health-logs/doctor-view/thresholds?patientId=" + patientId;
+        }
+        MetricType mt = MetricType.from(metricType);
+        if (mt == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "metricType không hợp lệ");
+            return "redirect:/health-logs/doctor-view/thresholds?patientId=" + patientId;
+        }
+        Patient patient = patientRepository.findById(patientId).orElse(null);
+        org.springframework.data.domain.PageRequest pr = org.springframework.data.domain.PageRequest.of(Math.max(0, page), 4, org.springframework.data.domain.Sort.by("changedAt").descending());
+        org.springframework.data.domain.Page<fpt.swp391.GlucoTrackAlert.model.HealthThresholdHistory> historyPage = thresholdHistoryRepository.findByPatientIdAndMetricTypeOrderByChangedAtDesc(patientId, mt, pr);
+
+        model.addAttribute("patient", patient);
+        model.addAttribute("metricType", mt);
+        model.addAttribute("historyPage", historyPage);
+        model.addAttribute("history", historyPage.getContent());
+        model.addAttribute("currentPage", historyPage.getNumber());
+        model.addAttribute("totalPages", historyPage.getTotalPages());
+        return "healthlog/threshold-history";
     }
 }

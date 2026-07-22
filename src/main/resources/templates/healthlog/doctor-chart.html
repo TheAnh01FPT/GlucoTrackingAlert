@@ -254,7 +254,6 @@
         <nav class="navbar-menu">
             <a th:href="@{/health-logs/doctor-view(userId=${selectedUserId})}" class="navbar-link">Nhật Ký Bệnh Nhân</a>
             <a href="/health-logs/doctor-chart" class="navbar-link active">Biểu Đồ Xu Hướng</a>
-            <a th:if="${selectedUserId != null}" th:href="@{/health-logs/ai-report(patientId=${selectedUserId})}" class="navbar-link">🤖 Báo Cáo AI</a>
         </nav>
     </header>
 

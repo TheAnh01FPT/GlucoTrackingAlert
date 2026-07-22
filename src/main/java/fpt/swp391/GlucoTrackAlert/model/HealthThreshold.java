@@ -18,7 +18,7 @@ public class HealthThreshold {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(name = "patient_type", nullable = false)
     private String patientType;

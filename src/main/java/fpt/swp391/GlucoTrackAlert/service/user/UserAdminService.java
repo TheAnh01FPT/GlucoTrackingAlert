@@ -11,6 +11,8 @@ public interface UserAdminService {
 
     Page<User> getUsersPaged(int page, int size);
 
+    Page<User> searchAndFilterUsersPaged(String email, String roleName, String status, int page, int size);
+
     long getDoctorCount();
 
     long getPatientCount();

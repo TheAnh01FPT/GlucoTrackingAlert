@@ -157,15 +157,29 @@
                 <span class="detail-label">Địa chỉ</span>
                 <span class="detail-value" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Đà Nẵng</span>
             </div>
-            <div class="detail-item">
-                <span class="detail-label">Số CCCD</span>
-                <span class="detail-value"
-                      th:text="${profile.identityCard != null && !profile.identityCard.isEmpty() ? profile.identityCard : 'Chưa cập nhật'}">Chưa cập nhật</span>
+            <div class="detail-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span class="detail-label">Số CCCD</span>
+                    <span class="detail-value" th:text="${profile.identityCard != null && !profile.identityCard.isEmpty() ? profile.identityCard : 'Chưa cập nhật'}">Chưa cập nhật</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+                    <span th:if="${profile.identityCardStatus == 'VERIFIED'}" style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟢 Đã xác minh</span>
+                    <span th:if="${profile.identityCardStatus == 'UNVERIFIED' && profile.identityCardImage != null && !profile.identityCardImage.isEmpty()}" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟡 Chờ đối soát</span>
+                    <span th:if="${profile.identityCardStatus == 'REJECTED'}" style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🔴 Báo sai lệch</span>
+                    <a th:if="${profile.identityCardImage != null && !profile.identityCardImage.isEmpty()}" th:href="${profile.identityCardImage}" target="_blank" style="font-size: 12px; color: #2563eb; text-decoration: underline; font-weight: 500;">📸 Xem ảnh CCCD</a>
+                </div>
             </div>
-            <div class="detail-item">
-                <span class="detail-label">Mã BHYT</span>
-                <span class="detail-value"
-                      th:text="${profile.insuranceNumber != null && !profile.insuranceNumber.isEmpty() ? profile.insuranceNumber : 'Chưa cập nhật'}">Chưa cập nhật</span>
+            <div class="detail-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span class="detail-label">Mã BHYT</span>
+                    <span class="detail-value" th:text="${profile.insuranceNumber != null && !profile.insuranceNumber.isEmpty() ? profile.insuranceNumber : 'Chưa cập nhật'}">Chưa cập nhật</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+                    <span th:if="${profile.insuranceCardStatus == 'VERIFIED'}" style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟢 Đã xác minh</span>
+                    <span th:if="${profile.insuranceCardStatus == 'UNVERIFIED' && profile.insuranceNumberImage != null && !profile.insuranceNumberImage.isEmpty()}" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟡 Chờ đối soát</span>
+                    <span th:if="${profile.insuranceCardStatus == 'REJECTED'}" style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🔴 Báo sai lệch</span>
+                    <a th:if="${profile.insuranceNumberImage != null && !profile.insuranceNumberImage.isEmpty()}" th:href="${profile.insuranceNumberImage}" target="_blank" style="font-size: 12px; color: #2563eb; text-decoration: underline; font-weight: 500;">📸 Xem ảnh BHYT</a>
+                </div>
             </div>
             <div class="detail-item">
                 <span class="detail-label">Phân loại bệnh nhân</span>
@@ -458,6 +472,7 @@
             if (response.ok) {
                 showAlert(result.success || 'Đổi mật khẩu thành công!', true);
                 document.getElementById('ptChangePwdForm').reset();
+                contact_requests
 
                 // Đóng modal sau 2 giây cùng lúc thông báo ẩn
                 setTimeout(() => {
