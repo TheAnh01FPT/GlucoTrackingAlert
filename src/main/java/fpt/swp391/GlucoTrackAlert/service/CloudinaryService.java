@@ -21,8 +21,10 @@ public class CloudinaryService {
 
     /**
      * Upload a MultipartFile to Cloudinary into a specified folder
-     * @param file MultipartFile to upload
-     * @param folder Destination folder name on Cloudinary (e.g. "patient_evidences", "doctors")
+     * 
+     * @param file   MultipartFile to upload
+     * @param folder Destination folder name on Cloudinary (e.g.
+     *               "patient_evidences", "doctors")
      * @return Secure HTTPS URL of the uploaded image
      * @throws IOException if uploading fails
      */
@@ -33,8 +35,7 @@ public class CloudinaryService {
 
         Map<?, ?> params = ObjectUtils.asMap(
                 "folder", folder,
-                "resource_type", "auto"
-        );
+                "resource_type", "auto");
 
         Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), params);
         return (String) uploadResult.get("secure_url");
