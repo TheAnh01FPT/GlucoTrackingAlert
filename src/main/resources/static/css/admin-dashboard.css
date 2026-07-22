@@ -14,13 +14,21 @@
     --sidebar-width: 250px;
 }
 
-body { 
-    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif; 
-    background-color: var(--bg-color); 
-    margin: 0; 
-    padding: 0; 
-    color: var(--text-color); 
+html {
+    overflow-y: scroll;
+}
+
+body {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 0;
+    color: var(--text-color);
     display: flex;
+}
+
+.modal-open {
+    overflow: hidden;
 }
 
 /* --- SIDEBAR --- */
@@ -34,13 +42,13 @@ body {
     display: flex;
     flex-direction: column;
     color: #ffffff;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
     z-index: 100;
 }
 
 .sidebar-logo {
     padding: 24px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-logo h2 {
@@ -52,7 +60,7 @@ body {
 
 .sidebar-logo span {
     font-size: 13px;
-    color: rgba(255,255,255,0.6);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .sidebar-menu {
@@ -63,7 +71,7 @@ body {
 
 .menu-item {
     padding: 14px 24px;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
@@ -74,7 +82,7 @@ body {
 }
 
 .menu-item:hover, .menu-item.active {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     border-left-color: var(--accent);
 }
@@ -102,9 +110,12 @@ body {
     background: var(--card-bg);
     padding: 16px 24px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     margin-bottom: 24px;
     border: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .topbar-title {
@@ -144,13 +155,13 @@ body {
     padding: 24px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
     transition: all 0.25s ease-in-out;
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
 .stat-title {
@@ -169,29 +180,29 @@ body {
 }
 
 /* --- CONTAINER (TABLE & FORM) --- */
-.container { 
-    background: var(--card-bg); 
-    padding: 24px; 
-    border-radius: 16px; 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); 
-    margin-bottom: 35px; 
+.container {
+    background: var(--card-bg);
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    margin-bottom: 35px;
     border: 1px solid var(--border-color);
     transition: all 0.25s ease-in-out;
 }
 
 .container:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
-.container h2 { 
-    color: var(--primary); 
-    margin-top: 0; 
-    margin-bottom: 24px; 
-    font-size: 20px; 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
+.container h2 {
+    color: var(--primary);
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-weight: 700;
 }
 
@@ -206,10 +217,10 @@ body {
 
 #userForm:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
-.form-grid { 
+.form-grid {
     display: flex;
     flex-wrap: nowrap;
     align-items: flex-end;
@@ -217,27 +228,27 @@ body {
     padding: 16px;
 }
 
-.form-group { 
+.form-group {
     flex: 1;
-    display: flex; 
-    flex-direction: column; 
-    gap: 8px; 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.form-group label { 
-    font-size: 13px; 
-    font-weight: 600; 
-    color: #475569; 
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
     white-space: nowrap;
 }
 
-.form-control { 
+.form-control {
     height: 42px;
-    padding: 0 12px; 
-    border: 1px solid #cbd5e1; 
-    border-radius: 8px; 
-    font-size: 13px; 
-    background-color: #f8fafc; 
+    padding: 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    background-color: #f8fafc;
     color: #334155;
     transition: all 0.25s ease-in-out;
     box-sizing: border-box;
@@ -245,14 +256,14 @@ body {
 
 .form-control:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
 }
 
-.form-control:focus { 
+.form-control:focus {
     background-color: #ffffff;
-    border-color: var(--primary); 
-    outline: none; 
-    box-shadow: 0 0 0 4px rgba(26, 107, 90, 0.15); 
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(26, 107, 90, 0.15);
 }
 
 /* Khối Checkbox */
@@ -278,10 +289,10 @@ body {
     transform: translateY(-1px);
 }
 
-.form-checkbox input[type="checkbox"] { 
-    width: 16px; 
-    height: 16px; 
-    cursor: pointer; 
+.form-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
     accent-color: var(--primary);
     margin: 0;
 }
@@ -292,51 +303,51 @@ body {
 }
 
 /* Nút thao tác Form */
-.form-actions { 
-    display: flex; 
+.form-actions {
+    display: flex;
     gap: 8px;
     align-items: center;
 }
 
-.btn { 
+.btn {
     height: 42px;
-    padding: 0 20px; 
-    border: none; 
-    border-radius: 8px; 
-    font-weight: 600; 
-    cursor: pointer; 
-    font-size: 13px; 
-    display: inline-flex; 
-    align-items: center; 
-    justify-content: center; 
-    text-decoration: none; 
-    transition: all 0.25s ease-in-out; 
+    padding: 0 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.25s ease-in-out;
     white-space: nowrap;
 }
 
-.btn-blue { 
-    background-color: var(--primary); 
-    color: white; 
+.btn-blue {
+    background-color: var(--primary);
+    color: white;
     box-shadow: 0 4px 6px rgba(26, 107, 90, 0.15);
 }
 
-.btn-blue:hover { 
-    background-color: var(--primary-dark); 
+.btn-blue:hover {
+    background-color: var(--primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
-.cancel-edit { 
-    color: #475569; 
-    font-size: 13px; 
+.cancel-edit {
+    color: #475569;
+    font-size: 13px;
     font-weight: 600;
-    cursor: pointer; 
+    cursor: pointer;
     height: 42px;
     padding: 0 16px;
     border-radius: 8px;
     background-color: #f1f5f9;
     border: 1px solid #cbd5e1;
-    display: none; 
+    display: none;
     align-items: center;
     transition: all 0.25s ease-in-out;
     box-sizing: border-box;
@@ -346,7 +357,7 @@ body {
     background-color: #e2e8f0;
     color: #1e293b;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 /* --- ALERTS --- */
@@ -372,27 +383,27 @@ body {
 }
 
 /* --- BẢNG DỮ LIỆU --- */
-table { 
-    width: 100%; 
-    border-collapse: separate; 
-    border-spacing: 0 8px; 
-    margin-top: 10px; 
-    font-size: 14px; 
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    margin-top: 10px;
+    font-size: 14px;
 }
 
-th, td { 
-    padding: 16px 20px; 
-    text-align: left; 
-    vertical-align: middle; 
+th, td {
+    padding: 16px 20px;
+    text-align: left;
+    vertical-align: middle;
 }
 
-th { 
-    background-color: transparent; 
-    color: #64748b; 
-    font-weight: 600; 
-    text-transform: uppercase; 
-    font-size: 12px; 
-    letter-spacing: 0.05em; 
+th {
+    background-color: transparent;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.05em;
     border-bottom: 2px solid #e2e8f0;
 }
 
@@ -415,49 +426,68 @@ td:last-child {
     border-bottom-right-radius: 10px;
 }
 
-tr:hover td { 
-    background-color: #ffffff; 
+tr:hover td {
+    background-color: #ffffff;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
     border-color: transparent;
 }
 
 /* --- BADGES TRẠNG THÁI --- */
-.badge, .badge-doctor, .badge-patient { 
-    padding: 6px 14px; 
-    border-radius: 9999px; 
-    font-size: 12px; 
-    font-weight: 600; 
-    display: inline-block; 
+.badge, .badge-doctor, .badge-patient {
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
     letter-spacing: 0.2px;
 }
 
-.badge-active { background-color: var(--primary-light); color: var(--primary); }
-.badge-pending { background-color: #fef3c7; color: #d97706; }
-.badge-banned { background-color: var(--danger-light); color: var(--danger); }
-.badge-doctor { background-color: #e0e7ff; color: #4338ca; }
-.badge-patient { background-color: #f3e8ff; color: #7e22ce; }
+.badge-active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.badge-pending {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.badge-banned {
+    background-color: var(--danger-light);
+    color: var(--danger);
+}
+
+.badge-doctor {
+    background-color: #e0e7ff;
+    color: #4338ca;
+}
+
+.badge-patient {
+    background-color: #f3e8ff;
+    color: #7e22ce;
+}
 
 /* --- NÚT HÀNH ĐỘNG TABLE --- */
-.btn-sm { 
-    padding: 8px 16px; 
-    font-size: 13px; 
-    border-radius: 6px; 
-    margin-right: 8px; 
-    text-decoration: none; 
-    font-weight: 600; 
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 6px;
+    margin-right: 8px;
+    text-decoration: none;
+    font-weight: 600;
     transition: all 0.25s ease-in-out;
     display: inline-block;
 }
 
-.btn-edit { 
-    background-color: var(--primary-light); 
-    color: var(--primary); 
+.btn-edit {
+    background-color: var(--primary-light);
+    color: var(--primary);
 }
 
-.btn-edit:hover { 
-    background-color: var(--primary); 
+.btn-edit:hover {
+    background-color: var(--primary);
     color: #ffffff;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }

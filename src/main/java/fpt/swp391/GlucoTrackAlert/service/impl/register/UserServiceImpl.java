@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
     private String frontendUrl;
 
     public UserServiceImpl(UserRepository userRepository,
-                           RoleRepository roleRepository,
-                           EmailVerificationTokenRepository tokenRepository,
-                           PasswordResetTokenRepository passwordResetTokenRepository,
-                           EmailService emailService,
-                           BCryptPasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil,
-                           DoctorRepository doctorRepository) {
+            RoleRepository roleRepository,
+            EmailVerificationTokenRepository tokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailService emailService,
+            BCryptPasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil,
+            DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
@@ -209,7 +209,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginResponse login(LoginRequest request) throws Exception {
-        User user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail() == null ? "" : request.getEmail().trim();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Email hoặc mật khẩu không đúng."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
@@ -252,7 +253,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) throws Exception {
-        User user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail() == null ? "" : request.getEmail().trim();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
 
         if (!"active".equalsIgnoreCase(user.getStatus())) {

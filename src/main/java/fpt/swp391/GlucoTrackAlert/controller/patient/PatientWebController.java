@@ -87,36 +87,45 @@ public class PatientWebController {
     public String showEditForm(Model model) {
         User loggedInUser = getLoggedInUser();
         Long userId = loggedInUser.getId();
-        try {
-            PatientProfileResponse profile = patientService.getProfileByUserId(userId);
-            PatientProfileRequest request = PatientProfileRequest.builder()
-                    .userId(userId)
-                    .fullName(profile.getFullName())
-                    .dateOfBirth(profile.getDateOfBirth())
-                    .gender(profile.getGender())
-                    .phone(profile.getPhone())
-                    .address(profile.getAddress())
-                    .heightCm(profile.getHeightCm())
-                    .weightKg(profile.getWeightKg())
-                    .identityCard(profile.getIdentityCard())
-                    .insuranceNumber(profile.getInsuranceNumber())
-                    .isPregnant(profile.getIsPregnant())
-                    .hypertension(profile.getHypertension())
-                    .heartDisease(profile.getHeartDisease())
-                    .everMarried(profile.getEverMarried())
-                    .workType(profile.getWorkType())
-                    .residenceType(profile.getResidenceType())
-                    .smokingStatus(profile.getSmokingStatus())
-                    // GIỮ LẠI CHOLESTEROL ở Profile DTO
-                    .cholesterol(profile.getCholesterol())
-                    // Các trường lối sống sinh hoạt
-                    .smoke(profile.getSmoke())
-                    .alco(profile.getAlco())
-                    .active(profile.getActive())
-                    .build();
-            model.addAttribute("profileForm", request);
+        boolean exists = patientService.existsByUserId(userId);
+        if (exists) {
+            try {
+                PatientProfileResponse profile = patientService.getProfileByUserId(userId);
+                PatientProfileRequest request = PatientProfileRequest.builder()
+                        .userId(userId)
+                        .fullName(profile.getFullName())
+                        .dateOfBirth(profile.getDateOfBirth())
+                        .gender(profile.getGender())
+                        .phone(profile.getPhone())
+                        .address(profile.getAddress())
+                        .heightCm(profile.getHeightCm())
+                        .weightKg(profile.getWeightKg())
+                        .identityCard(profile.getIdentityCard())
+                        .insuranceNumber(profile.getInsuranceNumber())
+                        .isPregnant(profile.getIsPregnant())
+                        .hypertension(profile.getHypertension())
+                        .heartDisease(profile.getHeartDisease())
+                        .everMarried(profile.getEverMarried())
+                        .workType(profile.getWorkType())
+                        .residenceType(profile.getResidenceType())
+                        .smokingStatus(profile.getSmokingStatus())
+                        // GIỮ LẠI CHOLESTEROL ở Profile DTO
+                        .cholesterol(profile.getCholesterol())
+                        // Các trường lối sống sinh hoạt
+                        .smoke(profile.getSmoke())
+                        .alco(profile.getAlco())
+                        .active(profile.getActive())
+                        .build();
+                model.addAttribute("profileForm", request);
+            } catch (Exception e) {
+                PatientProfileRequest request = PatientProfileRequest.builder()
+                        .userId(userId)
+                        .build();
+                model.addAttribute("profileForm", request);
+                model.addAttribute("errorMessage", "Lỗi tải thông tin chi tiết: " + e.getMessage());
+            }
             model.addAttribute("isNew", false);
-        } catch (Exception e) {
+        } else {
             PatientProfileRequest request = PatientProfileRequest.builder()
                     .userId(userId)
                     .build();
@@ -130,18 +139,22 @@ public class PatientWebController {
     @PostMapping("/profile/save")
     public String saveProfile(@Valid @ModelAttribute("profileForm") PatientProfileRequest request,
                               BindingResult result,
-                              @RequestParam("isNew") boolean isNew,
+                              @RequestParam(name = "isNew", defaultValue = "false") boolean isNewParam,
                               Model model) {
         User loggedInUser = getLoggedInUser();
-        request.setUserId(loggedInUser.getId());
+        Long userId = loggedInUser.getId();
+        request.setUserId(userId);
 
         if (request.getSmoke() == null) request.setSmoke(0);
         if (request.getAlco() == null) request.setAlco(0);
         if (request.getActive() == null) request.setActive(0);
 
-        if (!isNew) {
+        boolean exists = patientService.existsByUserId(userId);
+        boolean isNew = !exists;
+
+        if (exists) {
             try {
-                PatientProfileResponse currentProfile = patientService.getProfileByUserId(loggedInUser.getId());
+                PatientProfileResponse currentProfile = patientService.getProfileByUserId(userId);
                 if (Boolean.TRUE.equals(currentProfile.getHypertension())) {
                     request.setHypertension(true);
                 }
@@ -153,7 +166,7 @@ public class PatientWebController {
 
         if (result.hasErrors()) {
             model.addAttribute("isNew", isNew);
-            model.addAttribute("userId", loggedInUser.getId());
+            model.addAttribute("userId", userId);
             return "patient/edit";
         }
 
@@ -161,12 +174,12 @@ public class PatientWebController {
             if (isNew) {
                 patientService.createProfile(request);
             } else {
-                patientService.updateProfile(loggedInUser.getId(), request);
+                patientService.updateProfile(userId, request);
             }
             return "redirect:/patient/profile";
         } catch (Exception e) {
             model.addAttribute("isNew", isNew);
-            model.addAttribute("userId", loggedInUser.getId());
+            model.addAttribute("userId", userId);
             model.addAttribute("errorMessage", e.getMessage());
             return "patient/edit";
         }

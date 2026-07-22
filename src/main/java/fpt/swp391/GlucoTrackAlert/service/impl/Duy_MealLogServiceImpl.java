@@ -40,6 +40,9 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
                     if (log.getMealType() != null) {
                         existing.setMealType(log.getMealType());
                     }
+                    if (log.getQuantityText() != null) {
+                        existing.setQuantityText(log.getQuantityText());
+                    }
                     if (log.getSugarEstimation() != null) {
                         existing.setSugarEstimation(log.getSugarEstimation());
                     }

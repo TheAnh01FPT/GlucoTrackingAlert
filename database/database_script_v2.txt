@@ -3,11 +3,12 @@
 -- 
 -- CHÚ THÍCH CÁC PHẦN ĐÃ CẬP NHẬT SO VỚI BẢN V1 GỐC:
 -- 1. Cập nhật bảng `patients`:
---    - Thêm các cột: `hypertension`, `heart_disease`, `ever_married`, `work_type`, `residence_type`, `smoking_status`.
+--    - Thêm các cột: `hypertension`, `heart_disease`, `ever_married`, `work_type`, `residence_type`, `smoking_status`, `cholesterol`, `smoke`, `alco`, `active`.
 -- 2. Cập nhật bảng `health_thresholds`:
 --    - Cột `patient_type` chuyển thành NOT NULL (đồng bộ với Java: nullable = false).
 -- 3. Thêm bảng mới `profile_change_requests` (Yêu cầu thay đổi thông tin bệnh lý nhạy cảm).
 -- 4. Thêm các bảng mới của Medication:
+--    - Bảng `medicines` (Danh mục thuốc cố định)
 --    - Bảng `prescriptions` (Đơn thuốc)
 --    - Bảng `prescription_items` (Chi tiết từng thuốc trong đơn)
 --    - Bảng `medication_logs` (Nhật ký uống thuốc)
@@ -85,6 +86,10 @@ CREATE TABLE patients (
   work_type VARCHAR(50) COMMENT 'Loại hình công việc (Private, Self-employed, Govt_job, children, Never_worked)',
   residence_type VARCHAR(20) COMMENT 'Loại hình cư trú (Urban, Rural)',
   smoking_status VARCHAR(50) DEFAULT 'Unknown' COMMENT 'Tình trạng hút thuốc (formerly smoked, never smoked, smokes, Unknown)',
+  cholesterol INT DEFAULT 1 COMMENT 'Mức Cholesterol (1: Bình thường, 2: Trên chuẩn, 3: Cao)',
+  smoke INT DEFAULT 0 COMMENT 'Có hút thuốc không (0: Không, 1: Có)',
+  alco INT DEFAULT 0 COMMENT 'Có dùng rượu bia không (0: Không, 1: Có)',
+  active INT DEFAULT 1 COMMENT 'Có vận động thể chất không (0: Không, 1: Có)',
   created_at DATETIME,
   updated_at DATETIME
 ) COMMENT = 'Lưu hồ sơ bệnh nhân. Dùng cho chức năng nhập profile cá nhân, tính BMI, theo dõi chỉ số và hiển thị cho bác sĩ.';
@@ -146,6 +151,7 @@ CREATE TABLE daily_health_logs (
   sugar_consumption_level VARCHAR(20),
   symptoms TEXT,
   note TEXT,
+  physical_activity INT DEFAULT 0,
   created_at DATETIME,
   updated_at DATETIME,
   UNIQUE KEY idx_patient_log_date (patient_id, log_date)
@@ -297,6 +303,7 @@ CREATE TABLE health_reminders (
   google_calendar_event_id VARCHAR(255),
   google_sync_status VARCHAR(30),
   last_sync_at DATETIME,
+  prescription_item_id BIGINT NULL COMMENT 'ID chi tiết đơn thuốc liên kết với nhắc nhở',
   -- UPDATE V2.1: Thêm cột ngày kết thúc nhắc nhở
   end_date DATETIME NULL COMMENT 'Ngày kết thúc nhắc nhở (Cập nhật V2.1)',
   created_at DATETIME,
@@ -522,6 +529,35 @@ CREATE TABLE medication_logs (
   CONSTRAINT fk_medication_logs_prescription_item_id FOREIGN KEY (prescription_item_id) REFERENCES prescription_items(id),
   CONSTRAINT fk_medication_logs_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id)
 ) COMMENT = 'Lịch uống thuốc theo từng mốc giờ và trạng thái đã uống/bỏ lỡ.';
+
+-- Table: medicines
+-- Danh mục thuốc cố định để bác sĩ chọn qua dropdown khi kê đơn
+-- (thay cho tính năng "Gợi ý AI" đã bị loại bỏ). Đây chỉ là dữ liệu
+-- mặc định để auto-fill form; PrescriptionItem vẫn lưu text tự do
+-- (medicine_name, dosage, ...) nên bác sĩ luôn sửa được trước khi lưu.
+CREATE TABLE medicines (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200) NOT NULL UNIQUE,
+  default_dosage VARCHAR(100),
+  default_frequency VARCHAR(50),
+  default_time_of_day VARCHAR(100) COMMENT 'VD: 07:00,19:00 — phân cách bằng dấu phẩy',
+  default_duration_days INT,
+  default_instructions TEXT,
+  contraindications TEXT,
+  active BOOLEAN NOT NULL DEFAULT TRUE
+) COMMENT = 'Danh mục thuốc cố định dùng để bác sĩ chọn qua dropdown khi kê đơn.';
+
+INSERT INTO medicines (name, default_dosage, default_frequency, default_time_of_day, default_duration_days, default_instructions, contraindications, active) VALUES
+('Metformin 500mg', '1 viên / lần', '2 lần/ngày', '07:00,19:00', 30, 'Uống sau ăn để giảm rối loạn tiêu hoá.', 'Chống chỉ định với bệnh nhân suy thận nặng.', TRUE),
+('Metformin 1000mg', '1 viên / lần', '2 lần/ngày', '07:00,19:00', 30, 'Uống sau ăn để giảm rối loạn tiêu hoá.', 'Chống chỉ định với bệnh nhân suy thận nặng.', TRUE),
+('Glipizide 5mg', '1 viên / lần', '1 lần/ngày', '07:00', 30, 'Uống trước bữa sáng 30 phút.', 'Thận trọng nguy cơ hạ đường huyết, đặc biệt ở người cao tuổi.', TRUE),
+('Sitagliptin (Januvia) 50mg', '1 viên / lần', '1 lần/ngày', '07:00', 30, 'Có thể uống cùng hoặc không cùng bữa ăn.', 'Thận trọng với bệnh nhân viêm tuỵ.', TRUE),
+('Empagliflozin (Jardiance) 10mg', '1 viên / lần', '1 lần/ngày', '07:00', 30, 'Uống buổi sáng, uống đủ nước.', 'Chống chỉ định với bệnh nhân suy thận nặng, nguy cơ nhiễm toan ceton.', TRUE),
+('Dapagliflozin (Forxiga) 10mg', '1 viên / lần', '1 lần/ngày', '07:00', 30, 'Uống buổi sáng, uống đủ nước.', 'Chống chỉ định với bệnh nhân suy thận nặng, nguy cơ nhiễm toan ceton.', TRUE),
+('Semaglutide (Ozempic) 0.25mg', '0.25mg / lần', '1 lần/tuần', '07:00', 28, 'Tiêm dưới da, cùng một ngày trong tuần.', 'Chống chỉ định với tiền sử ung thư tuyến giáp thể tuỷ.', TRUE),
+('Tirzepatide (Mounjaro) 2.5mg', '2.5mg / lần', '1 lần/tuần', '07:00', 28, 'Tiêm dưới da, cùng một ngày trong tuần.', 'Chống chỉ định với tiền sử ung thư tuyến giáp thể tuỷ.', TRUE),
+('Insulin Aspart (NovoRapid) 100 IU/mL', '4-6 IU / lần', '3 lần/ngày', '07:00,12:00,19:00', 30, 'Tiêm dưới da trước ăn 5-10 phút. Điều chỉnh liều theo chỉ định bác sĩ.', 'Thận trọng nguy cơ hạ đường huyết nếu liều không phù hợp.', TRUE),
+('Insulin Glargine (Lantus) 100 IU/mL', '10 IU / lần', '1 lần/ngày', '22:00', 30, 'Tiêm dưới da trước ngủ. Không pha trộn với insulin khác.', 'Thận trọng nguy cơ hạ đường huyết nếu liều không phù hợp.', TRUE);
 
 
 -- --- FOREIGN KEY CONSTRAINTS (Relationships) ---
