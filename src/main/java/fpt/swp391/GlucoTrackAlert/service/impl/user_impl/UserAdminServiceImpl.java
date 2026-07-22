@@ -46,8 +46,22 @@ public class UserAdminServiceImpl implements UserAdminService {
     public Page<User> getUsersPaged(int page, int size) {
         List<User> filtered = userRepository.findAll().stream()
                 .filter(u -> u.getRole() != null &&
+                        u.getRole().getName().equalsIgnoreCase("PATIENT"))
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, filtered.size());
+        List<User> pageContent = (start >= filtered.size()) ? List.of() : filtered.subList(start, end);
+
+        return new PageImpl<>(pageContent, PageRequest.of(page, size), filtered.size());
+    }
+
+    @Override
+    public Page<User> searchAndFilterUsersPaged(String email, String roleName, String status, int page, int size) {
+        List<User> filtered = userRepository.searchAndFilterUsers(email, roleName, status).stream()
+                .filter(u -> u.getRole() != null &&
                         (u.getRole().getName().equalsIgnoreCase("PATIENT") ||
-                                u.getRole().getName().equalsIgnoreCase("DOCTOR")))
+                                u.getRole().getName().equalsIgnoreCase("ADMIN")))
                 .collect(Collectors.toList());
 
         int start = page * size;
@@ -93,10 +107,7 @@ public class UserAdminServiceImpl implements UserAdminService {
             throw new Exception("Tài khoản email '" + email + "' đã tồn tại trên hệ thống.");
         }
 
-        String inputRole = request.getRoleName().toUpperCase().trim();
-        if (!inputRole.equals("PATIENT") && !inputRole.equals("DOCTOR")) {
-            throw new Exception("Hệ thống quản trị chỉ cho phép tạo tài khoản với vai trò PATIENT hoặc DOCTOR.");
-        }
+        String inputRole = "PATIENT";
 
         Role role = roleRepository.findByName(inputRole)
                 .orElseThrow(() -> new Exception("Không tìm thấy cấu hình vai trò: " + inputRole));
@@ -124,15 +135,7 @@ public class UserAdminServiceImpl implements UserAdminService {
 
         User savedUser = userRepository.save(user);
 
-        if (inputRole.equals("DOCTOR")) {
-            if (!doctorRepository.existsByUserEmail(savedUser.getEmail())) {
-                Doctor doctor = new Doctor();
-                doctor.setUser(savedUser);
-                doctor.setFullName(savedUser.getFullName() != null ? savedUser.getFullName() : savedUser.getEmail());
-                doctor.setStatus("active");
-                doctorRepository.save(doctor);
-            }
-        }
+
 
         return savedUser;
     }
@@ -156,10 +159,7 @@ public class UserAdminServiceImpl implements UserAdminService {
             throw new Exception("Email mới '" + email + "' đã được sử dụng bởi một tài khoản khác.");
         }
 
-        String inputRole = request.getRoleName().toUpperCase().trim();
-        if (!inputRole.equals("PATIENT") && !inputRole.equals("DOCTOR")) {
-            throw new Exception("Hệ thống quản trị chỉ cho phép cập nhật vai trò sang PATIENT hoặc DOCTOR.");
-        }
+        String inputRole = "PATIENT";
 
         Role role = roleRepository.findByName(inputRole)
                 .orElseThrow(() -> new Exception("Không tồn tại quyền vai trò hệ thống: " + inputRole));
@@ -185,16 +185,7 @@ public class UserAdminServiceImpl implements UserAdminService {
 
         User savedUser = userRepository.save(user);
 
-        // Nếu đổi sang DOCTOR và chưa có record trong bảng doctors thì tự tạo
-        if (inputRole.equals("DOCTOR") && !oldRole.equalsIgnoreCase("DOCTOR")) {
-            if (!doctorRepository.existsByUserEmail(savedUser.getEmail())) {
-                Doctor doctor = new Doctor();
-                doctor.setUser(savedUser);
-                doctor.setFullName(savedUser.getFullName() != null ? savedUser.getFullName() : savedUser.getEmail());
-                doctor.setStatus("active");
-                doctorRepository.save(doctor);
-            }
-        }
+
 
         return savedUser;
     }

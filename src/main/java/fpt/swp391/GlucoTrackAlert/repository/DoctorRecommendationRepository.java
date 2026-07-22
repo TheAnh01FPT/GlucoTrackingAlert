@@ -29,4 +29,7 @@ public interface DoctorRecommendationRepository extends JpaRepository<DoctorReco
 
     // Bệnh nhân xem tất cả kể cả inactive
     List<DoctorRecommendation> findByPatientIdOrderByCreatedAtDesc(Long patientId);
+
+    // Kiểm tra khuyến nghị có thuộc về bệnh nhân này không (dùng để đánh dấu đã đọc)
+    Optional<DoctorRecommendation> findByIdAndPatientId(Long id, Long patientId);
 }

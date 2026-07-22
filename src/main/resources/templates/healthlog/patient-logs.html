@@ -473,19 +473,6 @@
         <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
         <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
         <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang Chủ</a>
-        <div style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
-            <span style="font-size:1.3rem;">🔔</span>
-            <span id="notiCount"
-                  style="display:none; position:absolute; top:-6px; right:-8px; background:#ef4444; color:white; border-radius:50%; font-size:0.65rem; font-weight:700; min-width:18px; height:18px; line-height:18px; text-align:center; padding:0 3px;"></span>
-        </div>
-        <div id="notiDropdown"
-             style="display:none; position:absolute; top:60px; right:20px; width:340px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:999;">
-            <div style="padding:0.75rem 1rem; border-bottom:1px solid #e2e8f0; font-weight:600; font-size:0.9rem; color:#1e293b;">
-                🔔 Thông Báo
-            </div>
-            <div id="notiList" style="max-height:320px; overflow-y:auto; padding:0.5rem 0;"><p
-                    style="padding:1rem; color:#94a3b8; font-size:0.88rem;">Đang tải...</p></div>
-        </div>
     </nav>
 </header>
 
@@ -697,8 +684,12 @@
             </label>
         </div>
         <div id="patientRecItems"
-             style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.75rem; padding: 0 1.5rem 1.5rem;">
+             style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.75rem; padding: 0 1.5rem;">
             <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
+        </div>
+        <div id="recPaginationContainer" class="pagination-container" style="display:none;">
+            <div class="pagination-info" id="recPaginationInfo"></div>
+            <div class="pagination-buttons" id="recPaginationButtons"></div>
         </div>
     </section>
 
@@ -742,55 +733,15 @@
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    async function loadNotifications() {
-        const userId = /*[[${userId}]]*/ null;
-        if (!userId) return;
-        try {
-            const res = await fetch(`/api/notifications?userId=${userId}`);
-            const list = await res.json();
-            const count = list.filter(n => !n.isRead).length;
-            const badge = document.getElementById("notiCount");
-            if (count > 0) {
-                badge.style.display = "block";
-                badge.textContent = count > 99 ? "99+" : count;
-            }
-            const notiList = document.getElementById("notiList");
-            if (!list.length) {
-                notiList.innerHTML = "<p style='padding:1rem; color:#94a3b8; font-size:0.88rem;'>Chưa có thông báo nào.</p>";
-                return;
-            }
-            notiList.innerHTML = list.map(n => `<div onclick="markRead(${n.id}, this)" style="padding:0.75rem 1rem; border-bottom:1px solid #f1f5f9; cursor:pointer; background:${n.isRead ? '#fff' : '#f0f9ff'}"><div style="font-size:0.88rem; font-weight:${n.isRead ? 400 : 600}; color:#1e293b;">${n.title}</div><div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">${n.message}</div><div style="font-size:0.75rem; color:#94a3b8; margin-top:0.25rem;">${new Date(n.createdAt).toLocaleString("vi-VN")}</div></div>`).join("");
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    function toggleNotifications() {
-        const dd = document.getElementById("notiDropdown");
-        dd.style.display = dd.style.display === "none" ? "block" : "none";
-        if (dd.style.display === "block") loadNotifications();
-    }
-
-    async function markRead(id, el) {
-        await fetch(`/api/notifications/${id}/read`, {method: "POST"});
-        el.style.background = "#fff";
-        const badge = document.getElementById("notiCount");
-        const count = parseInt(badge.textContent || "0") - 1;
-        if (count <= 0) badge.style.display = "none";
-        else badge.textContent = count;
-    }
-
-    document.addEventListener("click", function (e) {
-        if (!e.target.closest("#notiDropdown") && !e.target.closest("div[onclick]")) {
-            const dd = document.getElementById("notiDropdown");
-            if (dd) dd.style.display = "none";
-        }
-    });
+    const REC_PAGE_SIZE = 5;
+    let patientRecList = [];
+    let recCurrentPage = 0;
 
     async function loadPatientRecommendations() {
         const patientId = /*[[${patientId}]]*/ null;
         if (!patientId) {
             document.getElementById("patientRecItems").innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Không xác định được bệnh nhân.</p>";
+            document.getElementById("recPaginationContainer").style.display = "none";
             return;
         }
         const showInactive = document.getElementById('showInactiveRec') && document.getElementById('showInactiveRec').checked;
@@ -798,13 +749,31 @@
             ? `/api/recommendations/patient/${patientId}/all`
             : `/api/recommendations/patient/${patientId}`;
         const res = await fetch(url);
-        const list = await res.json();
+        patientRecList = await res.json();
+        recCurrentPage = 0;
+        renderRecPage();
+    }
+
+    function renderRecPage() {
         const container = document.getElementById("patientRecItems");
+        const paginationContainer = document.getElementById("recPaginationContainer");
+        const list = patientRecList;
+
         if (!list.length) {
             container.innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Chưa có khuyến nghị nào từ bác sĩ.</p>";
+            paginationContainer.style.display = "none";
             return;
         }
-        container.innerHTML = list.map(r => {
+
+        const totalElements = list.length;
+        const totalPages = Math.max(1, Math.ceil(totalElements / REC_PAGE_SIZE));
+        if (recCurrentPage >= totalPages) recCurrentPage = totalPages - 1;
+        if (recCurrentPage < 0) recCurrentPage = 0;
+
+        const start = recCurrentPage * REC_PAGE_SIZE;
+        const pageItems = list.slice(start, start + REC_PAGE_SIZE);
+
+        container.innerHTML = pageItems.map(r => {
             const isInactive = r.status === 'inactive';
             if (isInactive) {
                 return `<div style="padding:1rem 1.25rem; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; opacity:0.6;">
@@ -816,15 +785,71 @@
                         <span style="font-size:0.8rem; color:#cbd5e1;">👨‍⚕️ BS. ${r.doctorName}</span>
                     </div>`;
             }
+            const priorityMap = {HIGH: ['#dc2626', '#fee2e2', 'High'], MEDIUM: ['#b45309', '#fef3c7', 'Medium'], LOW: ['#16a34a', '#dcfce7', 'Low']};
+            const categoryMap = {DIET: 'Chế độ ăn', EXERCISE: 'Luyện tập', GLUCOSE_MONITORING: 'Theo dõi đường huyết', MEDICATION: 'Thuốc (nhắc nhở)', OTHER: 'Khác'};
+            const p = priorityMap[r.priority] || priorityMap.MEDIUM;
+            const priorityBadge = `<span style="font-size:0.75rem; color:${p[0]}; background:${p[1]}; padding:0.2rem 0.6rem; border-radius:6px; font-weight:600;">${p[2]}</span>`;
+            const categoryBadge = `<span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:0.2rem 0.6rem; border-radius:6px;">${categoryMap[r.category] || 'Khác'}</span>`;
+            const confirmArea = r.read
+                    ? `<span style="font-size:0.78rem; color:#0284c7; font-weight:600;">✓ Đã xác nhận đã đọc</span>`
+                    : `<button onclick="confirmRecRead(${r.id}, this)"
+                              style="background:#0ea5e9; color:#fff; border:none; padding:0.35rem 0.9rem; border-radius:7px; font-size:0.8rem; font-weight:600; cursor:pointer;">
+                          ✅ Tôi đã đọc
+                      </button>`;
             return `<div style="padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <strong style="font-size:0.95rem; color:#15803d;">${r.title}</strong>
                         <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
                     </div>
+                    <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center;">${priorityBadge}${categoryBadge}</div>
                     <p style="margin-top:0.5rem; font-size:0.88rem; color:#475569;">${r.recommendation}</p>
-                    <span style="font-size:0.8rem; color:#64748b;">👨‍⚕️ BS. ${r.doctorName}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; padding-top:0.6rem; border-top:1px solid #dcfce7;">
+                        <span style="font-size:0.8rem; color:#64748b;">👨‍⚕️ BS. ${r.doctorName}</span>
+                        ${confirmArea}
+                    </div>
                 </div>`;
         }).join("");
+
+        paginationContainer.style.display = "flex";
+        const from = start + 1;
+        const to = Math.min(start + REC_PAGE_SIZE, totalElements);
+        document.getElementById("recPaginationInfo").innerHTML =
+            `Hiển thị <strong>${from}</strong>-<strong>${to}</strong> trong tổng <strong>${totalElements}</strong> khuyến nghị`;
+
+        const buttonsEl = document.getElementById("recPaginationButtons");
+        if (totalPages <= 1) {
+            buttonsEl.innerHTML = "";
+            return;
+        }
+        let btnsHtml = `<button type="button" class="pagination-btn${recCurrentPage === 0 ? ' disabled' : ''}"
+                onclick="goToRecPage(${recCurrentPage - 1})">&laquo; Trước</button>`;
+        for (let i = 0; i < totalPages; i++) {
+            btnsHtml += `<button type="button" class="pagination-btn${recCurrentPage === i ? ' active' : ''}"
+                    onclick="goToRecPage(${i})">${i + 1}</button>`;
+        }
+        btnsHtml += `<button type="button" class="pagination-btn${recCurrentPage === totalPages - 1 ? ' disabled' : ''}"
+                onclick="goToRecPage(${recCurrentPage + 1})">Sau &raquo;</button>`;
+        buttonsEl.innerHTML = btnsHtml;
+    }
+
+    function goToRecPage(page) {
+        recCurrentPage = page;
+        renderRecPage();
+    }
+
+    async function confirmRecRead(id, btn) {
+        const patientId = /*[[${patientId}]]*/ null;
+        btn.disabled = true;
+        btn.textContent = "Đang xác nhận...";
+        try {
+            const res = await fetch(`/api/recommendations/patient/${patientId}/${id}/read`, {method: 'PATCH'});
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            loadPatientRecommendations();
+        } catch (err) {
+            btn.disabled = false;
+            btn.textContent = "✅ Tôi đã đọc";
+            alert("Không thể xác nhận, vui lòng thử lại. Lỗi: " + err.message);
+        }
     }
 
     window.onload = () => loadPatientRecommendations();

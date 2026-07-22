@@ -31,6 +31,12 @@ public class DoctorResponse {
     private String nationalIdImageUrl;
     private String practiceLicenseImageUrl;
 
+    // Bản xác minh mới đang chờ duyệt (chỉ có giá trị khi bác sĩ ĐANG active
+    // và vừa gửi lại CCCD/chứng chỉ mới — xem uploadVerificationImages). Raw JSON
+    // dạng {"nationalId":"...","nationalIdImageUrl":"...","practiceLicense":"...",
+    // "practiceLicenseImageUrl":"...","submittedAt":"..."} — null nếu không có gì đang chờ.
+    private String pendingVerificationJson;
+
 
     // Giờ làm việc cố định – mọi bác sĩ đều giống nhau, không lưu DB
     private final String workingHours = WorkShift.DISPLAY;
@@ -57,6 +63,7 @@ public class DoctorResponse {
         r.setPracticeLicense(d.getPracticeLicense());
         r.setNationalIdImageUrl(d.getNationalIdImageUrl());
         r.setPracticeLicenseImageUrl(d.getPracticeLicenseImageUrl());
+        r.setPendingVerificationJson(d.getPendingVerificationJson());
         return r;
     }
 }

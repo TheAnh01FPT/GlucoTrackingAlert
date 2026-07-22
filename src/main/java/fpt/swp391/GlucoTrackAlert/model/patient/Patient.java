@@ -62,8 +62,22 @@ public class Patient {
     @Column(name = "identity_card", length = 20)
     private String identityCard;
 
+    @Column(name = "identity_card_image", length = 500)
+    private String identityCardImage;
+
+    @Column(name = "identity_card_status", length = 20)
+    @Builder.Default
+    private String identityCardStatus = "UNVERIFIED";
+
     @Column(name = "insurance_number", length = 50)
     private String insuranceNumber;
+
+    @Column(name = "insurance_number_image", length = 500)
+    private String insuranceNumberImage;
+
+    @Column(name = "insurance_card_status", length = 20)
+    @Builder.Default
+    private String insuranceCardStatus = "UNVERIFIED";
 
     @Column(name = "is_pregnant")
     @Builder.Default
