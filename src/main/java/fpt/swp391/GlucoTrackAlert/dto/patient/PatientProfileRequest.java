@@ -25,7 +25,7 @@ public class PatientProfileRequest {
     @Size(max = 20, message = "Giới tính không vượt quá 20 ký tự")
     private String gender;
 
-    @Pattern(regexp = "^$|[0-9]{10,11}$", message = "Số điện thoại phải gồm 10 hoặc 11 chữ số")
+    @Pattern(regexp = "^$|^0[0-9]{9}$", message = "Số điện thoại phải bắt đầu bằng số 0 và gồm đúng 10 chữ số")
     private String phone;
 
     @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự")
