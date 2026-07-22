@@ -713,12 +713,17 @@
                 </div>
               </div>
 
+<<<<<<< HEAD
               <div class="disclaimer-compact">
                 ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
                 <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
                 <div class="disclaimer-full" hidden>
                   Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
                 </div>
+=======
+              <div class="disclaimer-note" style="background: #fff8e6; border-left: 3px solid #f0ad4e; padding: 10px 14px; margin-top: 12px; font-size: 12.5px; color: #7a5c00; border-radius: 0 6px 6px 0;">
+                Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
+>>>>>>> f5d2fde (fix UI/UX)
               </div>
               <div class="assessed-at">
                 <i class="ti ti-clock clock-icon" style="color:#94a3b8;"></i>
@@ -738,6 +743,10 @@
                   <p class="card-subtitle">Lịch sử các đánh giá tuần gần đây.</p>
                 </div>
                 <i class="ti ti-chevron-down toggle-icon"></i>
+          <section class="card">
+            <div class="card-header">
+              <div class="card-icon card-icon-blue">
+                <i class="ti ti-history" style="font-size:26px; color:#0284c7;"></i>
               </div>
             </summary>
             <div class="card-collapsible-body">
@@ -851,6 +860,64 @@
                 <div class="disclaimer-full" hidden>
                   Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-header">
+              <div class="card-icon card-icon-blue">
+                <i class="ti ti-calendar-stats" style="font-size:26px; color:#0284c7;"></i>
+              </div>
+              <div>
+                <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
+                <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI. <em>Kết quả chỉ mang tính tham khảo tạm thời, không được lưu vào lịch sử.</em></p>
+              </div>
+            </div>
+            <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
+
+            <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" class="range-form">
+              <div>
+                <label for="fromDate" class="meta-label">Từ ngày</label><br />
+                <input id="fromDate" name="fromDate" type="date" required />
+              </div>
+              <div>
+                <label for="toDate" class="meta-label">Đến ngày</label><br />
+                <input id="toDate" name="toDate" type="date" required />
+              </div>
+              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
+              <button type="submit">Tính</button>
+            </form>
+
+            <div th:if="${customRangeError}" class="error-message">
+              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
+            </div>
+
+            <div th:if="${customRangeResult != null}" class="result-block">
+              <div class="meta-row">
+                <span class="meta-label">Kết quả từ</span>
+                <span th:text="${customRangeResult.fromDate}">2026-06-01</span>
+                <span class="meta-label">đến</span>
+                <span th:text="${customRangeResult.toDate}">2026-06-14</span>
+              </div>
+              <span class="progress-label">Điểm sàng lọc</span>
+              <div class="progress-wrap">
+                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
+                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
+                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
+              </div>
+              <div class="meta-row meta-row-inline">
+                <span class="meta-label">Mức độ:</span>
+                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
+                <span class="meta-label">Số log:</span>
+                <span th:text="${customRangeResult.logCount}">5</span>
+                <span class="meta-label">Độ tin cậy:</span>
+                <span th:if="${customRangeResult.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đủ</span>
+                <span th:unless="${customRangeResult.lowConfidence}" class="badge badge-status badge-yes">Đủ dữ liệu</span>
+              </div>
+              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
+              <div class="disclaimer-note" style="background: #fff8e6; border-left: 3px solid #f0ad4e; padding: 10px 14px; margin-top: 12px; font-size: 12.5px; color: #7a5c00; border-radius: 0 6px 6px 0;">
+                Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
               </div>
             </div>
           </section>
