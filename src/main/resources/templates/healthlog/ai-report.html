@@ -303,6 +303,7 @@
         display: grid;
         grid-template-columns: 350px 1fr;
         gap: 2rem;
+        align-items: stretch;
       }
 
       /* Profile Sidebar Card */
@@ -594,18 +595,21 @@
       .disease-card {
         background-color: var(--card-bg);
         border-radius: 16px;
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
         box-shadow: var(--shadow);
-        border: 1px solid var(--border);
+        border: 1.5px solid var(--border);
         display: flex;
         align-items: center;
         gap: 1rem;
-        opacity: 0.75;
+        text-decoration: none;
         transition: var(--transition);
       }
 
       .disease-card:hover {
-        opacity: 0.9;
+        transform: translateY(-3px);
+        box-shadow:
+          0 12px 20px -6px rgba(0, 0, 0, 0.1),
+          0 4px 8px -4px rgba(0, 0, 0, 0.06);
       }
 
       .disease-icon {
@@ -613,10 +617,23 @@
         background-color: #f1f5f9;
         width: 50px;
         height: 50px;
-        border-radius: 10px;
+        min-width: 50px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .disease-arrow {
+        margin-left: auto;
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        transition: var(--transition);
+      }
+
+      .disease-card:hover .disease-arrow {
+        color: var(--primary);
+        transform: translateX(3px);
       }
 
       .disease-info {
@@ -839,102 +856,6 @@
     <main class="main-container">
       <h1 class="page-heading">🤖 Dashboard Cảnh Báo Sức Khỏe AI</h1>
 
-      <section class="monthly-overview">
-        <div class="monthly-chart-card">
-          <div class="monthly-card-header">
-            <div>
-              <p class="section-kicker">Theo dõi tháng</p>
-              <h3>Biểu đồ sức khỏe theo tháng</h3>
-            </div>
-            <form
-              class="month-selector"
-              th:action="@{/health-logs/ai-report}"
-              method="get"
-            >
-              <input type="hidden" name="patientId" th:value="${patientId}" />
-              <span>📅</span>
-              <select name="chartMonth" onchange="this.form.submit()">
-                <option
-                  th:each="option : ${monthOptions}"
-                  th:value="${option.value}"
-                  th:text="${option.label}"
-                  th:selected="${option.selected}"
-                ></option>
-              </select>
-            </form>
-          </div>
-
-          <div class="chart-tabs">
-            <button type="button" class="chart-tab active" data-metric="sugar">
-              Đường Huyết
-            </button>
-            <button type="button" class="chart-tab" data-metric="systolic">
-              Huyết Áp
-            </button>
-            <button type="button" class="chart-tab" data-metric="sleep">
-              Giấc Ngủ
-            </button>
-            <button type="button" class="chart-tab" data-metric="water">
-              Nước Uống
-            </button>
-          </div>
-
-          <canvas id="monthlyHealthChart"></canvas>
-
-          <div class="stats-row">
-            <div class="stat-pill">
-              <span>TB</span><strong id="stat-avg">--</strong>
-            </div>
-            <div class="stat-pill">
-              <span>Cao nhất</span><strong id="stat-max">--</strong>
-            </div>
-            <div class="stat-pill">
-              <span>Thấp nhất</span><strong id="stat-min">--</strong>
-            </div>
-            <div class="stat-pill">
-              <span>Số ngày đo</span><strong id="stat-count">--</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="monthly-ai-card">
-            <p class="section-kicker">THEO DÕI THÁNG</p>
-            <h3>Trung bình chỉ số tháng</h3>
-
-          <div class="monthly-metrics-grid">
-            <div class="metric-box">
-              <span>Đường huyết</span>
-              <strong
-                th:text="${monthlyAvgSugar != null ? monthlyAvgSugar + ' mmol/L' : '--'}"
-                >--</strong
-              >
-            </div>
-            <div class="metric-box">
-              <span>Huyết áp</span>
-              <strong
-                th:text="${monthlyAvgSystolic != null ? monthlyAvgSystolic + '/' + monthlyAvgDiastolic + ' mmHg' : '--'}"
-                >--</strong
-              >
-            </div>
-            <div class="metric-box">
-              <span>Giấc ngủ</span>
-              <strong
-                th:text="${monthlyAvgSleep != null ? monthlyAvgSleep + ' giờ' : '--'}"
-                >--</strong
-              >
-            </div>
-            <div class="metric-box">
-              <span>Nước uống</span>
-              <strong
-                th:text="${monthlyAvgWater != null ? monthlyAvgWater + ' ml' : '--'}"
-                >--</strong
-              >
-            </div>
-          </div>
-          <p class="monthly-footnote" th:text="'Dựa trên ' + ${monthlyLogCount} + ' ngày có nhật ký trong tháng.'">Dựa trên 7 ngày có nhật ký trong tháng.</p>
-        </div>
-      </section>
-
       <div class="dashboard-grid">
         <!-- Sidebar: Patient Info -->
         <section class="profile-sidebar">
@@ -1025,55 +946,146 @@
           >
         </section>
 
-            <!-- Report Area -->
-            <!-- Report Area -->
-            <div class="report-area">
+        <!-- Right column: Monthly chart + Monthly average, same row as patient info -->
+        <section class="monthly-overview" style="margin-bottom: 0">
+          <div class="monthly-chart-card">
+            <div class="monthly-card-header">
+              <div>
+                <p class="section-kicker">Theo dõi tháng</p>
+                <h3>Biểu đồ sức khỏe theo tháng</h3>
+              </div>
+              <form
+                class="month-selector"
+                th:action="@{/health-logs/ai-report}"
+                method="get"
+              >
+                <input type="hidden" name="patientId" th:value="${patientId}" />
+                <span>📅</span>
+                <select name="chartMonth" onchange="this.form.submit()">
+                  <option
+                    th:each="option : ${monthOptions}"
+                    th:value="${option.value}"
+                    th:text="${option.label}"
+                    th:selected="${option.selected}"
+                  ></option>
+                </select>
+              </form>
+            </div>
 
-            <!-- Report Area -->
-            <!-- Report Area -->
-            <div class="report-area">
+            <div class="chart-tabs">
+              <button type="button" class="chart-tab active" data-metric="sugar">
+                Đường Huyết
+              </button>
+              <button type="button" class="chart-tab" data-metric="systolic">
+                Huyết Áp
+              </button>
+              <button type="button" class="chart-tab" data-metric="sleep">
+                Giấc Ngủ
+              </button>
+              <button type="button" class="chart-tab" data-metric="water">
+                Nước Uống
+              </button>
+            </div>
 
-          <!-- 2. Disease Modules Section -->
-                <section style="margin-top: 0">
-                    <h2 class="ai-card-title" style="margin-bottom: 1rem; font-size: 1.25rem">
-                        🩺 Các Module Bệnh Lý Phân Tích
-                    </h2>
-                    <div class="other-diseases-grid">
+            <canvas id="monthlyHealthChart"></canvas>
 
-                        <a th:href="${isDoctorOrAdmin} ? @{/health-logs/stroke-risk(patientId=${patientId})} : @{/health-logs/stroke-risk}"
-                           class="disease-card active"
-                           style="border-color: #10b981; background-color: #ecfdf5; text-decoration: none; opacity: 1;">
-                            <div class="disease-icon">🧠</div>
-                            <div class="disease-info">
-                                <span class="disease-name" style="font-weight: 700">Biến Chứng Đột Quỵ</span>
-                                <span class="disease-status" style="background-color: #d1fae5; color: #065f46; font-weight: 700;">Đang hoạt động</span>
-                            </div>
-                        </a>
+            <div class="stats-row">
+              <div class="stat-pill">
+                <span>TB</span><strong id="stat-avg">--</strong>
+              </div>
+              <div class="stat-pill">
+                <span>Cao nhất</span><strong id="stat-max">--</strong>
+              </div>
+              <div class="stat-pill">
+                <span>Thấp nhất</span><strong id="stat-min">--</strong>
+              </div>
+              <div class="stat-pill">
+                <span>Số ngày đo</span><strong id="stat-count">--</strong>
+              </div>
+            </div>
+          </div>
 
-                        <a th:href="${isDoctorOrAdmin} ? @{/health-logs/heart-risk(patientId=${patientId})} : @{/health-logs/heart-risk}"
-                           class="disease-card active"
-                           style="border-color: #f43f5e; background-color: #fff1f2; text-decoration: none; opacity: 1;">
-                            <div class="disease-icon">🫀</div>
-                            <div class="disease-info">
-                                <span class="disease-name" style="font-weight: 700">Suy Tim & Mạch Vành</span>
-                                <span class="disease-status" style="background-color: #ffe4e6; color: #9f1239; font-weight: 700;">Đang hoạt động</span>
-                            </div>
-                        </a>
+          <div class="monthly-ai-card">
+              <p class="section-kicker">THEO DÕI THÁNG</p>
+              <h3>Trung bình chỉ số tháng</h3>
 
-                        <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}"
-                           class="disease-card active"
-                           style="border-color: #6366f1; background-color: #eef2ff; text-decoration: none; opacity: 1;">
-                            <div class="disease-icon">🧪</div>
-                            <div class="disease-info">
-                                <span class="disease-name">Biến Chứng Suy Thận</span>
-                                <span class="disease-status" style="background: #e0e7ff; color: #3730a3; font-weight: 700;">Đang hoạt động</span>
-                            </div>
-                        </a>
-
-                    </div>
-                </section>
-        </div>
+            <div class="monthly-metrics-grid">
+              <div class="metric-box">
+                <span>Đường huyết</span>
+                <strong
+                  th:text="${monthlyAvgSugar != null ? monthlyAvgSugar + ' mmol/L' : '--'}"
+                  >--</strong
+                >
+              </div>
+              <div class="metric-box">
+                <span>Huyết áp</span>
+                <strong
+                  th:text="${monthlyAvgSystolic != null ? monthlyAvgSystolic + '/' + monthlyAvgDiastolic + ' mmHg' : '--'}"
+                  >--</strong
+                >
+              </div>
+              <div class="metric-box">
+                <span>Giấc ngủ</span>
+                <strong
+                  th:text="${monthlyAvgSleep != null ? monthlyAvgSleep + ' giờ' : '--'}"
+                  >--</strong
+                >
+              </div>
+              <div class="metric-box">
+                <span>Nước uống</span>
+                <strong
+                  th:text="${monthlyAvgWater != null ? monthlyAvgWater + ' ml' : '--'}"
+                  >--</strong
+                >
+              </div>
+            </div>
+            <p class="monthly-footnote" th:text="'Dựa trên ' + ${monthlyLogCount} + ' ngày có nhật ký trong tháng.'">Dựa trên 7 ngày có nhật ký trong tháng.</p>
+          </div>
+        </section>
       </div>
+
+      <!-- Disease Modules Section: hàng ngang, full width -->
+      <section class="ai-card" style="margin-top: 2rem">
+        <div class="ai-card-header" style="margin-bottom: 1.5rem">
+          <h2 class="ai-card-title">🩺 Các Module Bệnh Lý Phân Tích</h2>
+        </div>
+        <div class="other-diseases-grid">
+
+          <a th:href="${isDoctorOrAdmin} ? @{/health-logs/stroke-risk(patientId=${patientId})} : @{/health-logs/stroke-risk}"
+             class="disease-card"
+             style="border-color: #a7f3d0;">
+            <div class="disease-icon" style="background-color: #ecfdf5;">🧠</div>
+            <div class="disease-info">
+              <span class="disease-name">Biến Chứng Đột Quỵ</span>
+              <span class="disease-status" style="background-color: #d1fae5; color: #065f46;">Đang hoạt động</span>
+            </div>
+            <span class="disease-arrow">→</span>
+          </a>
+
+          <a th:href="${isDoctorOrAdmin} ? @{/health-logs/heart-risk(patientId=${patientId})} : @{/health-logs/heart-risk}"
+             class="disease-card"
+             style="border-color: #fecdd3;">
+            <div class="disease-icon" style="background-color: #fff1f2;">🫀</div>
+            <div class="disease-info">
+              <span class="disease-name">Suy Tim &amp; Mạch Vành</span>
+              <span class="disease-status" style="background-color: #ffe4e6; color: #9f1239;">Đang hoạt động</span>
+            </div>
+            <span class="disease-arrow">→</span>
+          </a>
+
+          <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}"
+             class="disease-card"
+             style="border-color: #c7d2fe;">
+            <div class="disease-icon" style="background-color: #eef2ff;">🧪</div>
+            <div class="disease-info">
+              <span class="disease-name">Biến Chứng Suy Thận</span>
+              <span class="disease-status" style="background-color: #e0e7ff; color: #3730a3;">Đang hoạt động</span>
+            </div>
+            <span class="disease-arrow">→</span>
+          </a>
+
+        </div>
+      </section>
     </main>
     <script th:inline="javascript">
       const chartDays = /*[[${chartDays}]]*/ [];
@@ -1138,7 +1150,16 @@
           options: {
             responsive: true,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: false } },
+            scales: {
+              x: {
+                ticks: {
+                  maxRotation: 0,
+                  minRotation: 0,
+                  autoSkip: true,
+                },
+              },
+              y: { beginAtZero: false },
+            },
           },
         });
         updateStats(ds.data);
