@@ -23,19 +23,9 @@
             <div class="stat-title">Tổng Tài Khoản</div>
             <div class="stat-value" th:text="${totalItems != null ? totalItems : 0}">0</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-title">Bác Sĩ</div>
-            <div class="stat-value" th:text="${doctorCount != null ? doctorCount : 0}">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-title">Bệnh Nhân</div>
-            <div class="stat-value" th:text="${patientCount != null ? patientCount : 0}">0</div>
-        </div>
-    </div>
-
     <!-- MAIN CONTAINER -->
     <div class="container">
-        <h2>👤 Tạo Tài Khoản (Bệnh Nhân & Bác Sĩ)</h2>
+        <h2>👤 Quản Lý Tài Khoản (Bệnh Nhân)</h2>
 
         <!-- Alert Banners -->
         <div id="successAlert" th:if="${successMessage}" class="alert-success">
@@ -68,13 +58,7 @@
                         <option value="banned">Banned</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="userRole">Vai trò:</label>
-                    <select id="userRole" name="roleName" class="form-control">
-                        <option value="PATIENT">PATIENT</option>
-                        <option value="DOCTOR">DOCTOR</option>
-                    </select>
-                </div>
+                <input type="hidden" id="userRole" name="roleName" value="PATIENT">
                 <div class="form-group form-checkbox" style="flex: 0.5;">
                     <input type="checkbox" id="userEmailVerified" name="emailVerified" value="true" checked>
                     <label for="userEmailVerified">Đã xác thực</label>
@@ -102,7 +86,6 @@
                     <select name="roleName" class="form-control" style="margin: 0;">
                         <option value="">-- Tất cả vai trò --</option>
                         <option value="PATIENT" th:selected="${filterRole == 'PATIENT'}">Bệnh nhân (PATIENT)</option>
-                        <option value="DOCTOR" th:selected="${filterRole == 'DOCTOR'}">Bác sĩ (DOCTOR)</option>
                         <option value="ADMIN" th:selected="${filterRole == 'ADMIN'}">Quản trị (ADMIN)</option>
                     </select>
                 </div>
@@ -163,7 +146,7 @@
             <tr th:if="${#lists.isEmpty(users)}">
                 <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có tài
                     khoản Bệnh
-                    nhân hoặc Bác sĩ nào.
+                    nhân nào.
                 </td>
             </tr>
             </tbody>
@@ -277,7 +260,7 @@
             document.getElementById('userPassword').placeholder = "Nhập mật khẩu";
             document.getElementById('passwordLabel').innerText = "Mật khẩu khởi tạo:";
             document.getElementById('userStatus').selectedIndex = 0;
-            document.getElementById('userRole').selectedIndex = 0;
+            document.getElementById('userRole').value = 'PATIENT';
             document.getElementById('userEmailVerified').checked = true;
             document.getElementById('btnSubmitUser').innerText = "💾 Lưu Thông Tin";
             document.getElementById('cancelUserEdit').style.display = "none";

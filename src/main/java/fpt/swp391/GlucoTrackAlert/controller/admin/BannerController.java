@@ -33,8 +33,8 @@ public class BannerController {
     // 1. Hiển thị trang danh sách tích hợp Modal (Có phân trang)
     @GetMapping
     public String listBanners(@RequestParam(value = "page", defaultValue = "0") int page,
-                              @RequestParam(value = "size", defaultValue = "10") int size,
-                              Model model) {
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            Model model) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Banner> bannerPage = bannerRepository.findAllByOrderByDisplayOrderAsc(pageable);
 
@@ -44,7 +44,8 @@ public class BannerController {
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
 
-        // Cung cấp một đối tượng Banner trống để Form Thêm mới trong Modal binding dữ liệu
+        // Cung cấp một đối tượng Banner trống để Form Thêm mới trong Modal binding dữ
+        // liệu
         if (!model.containsAttribute("banner")) {
             model.addAttribute("banner", new Banner());
         }
@@ -52,7 +53,8 @@ public class BannerController {
         return "admin/banner/list";
     }
 
-    // 2. API bổ sung quan trọng: Lấy dữ liệu Banner dưới dạng JSON khi bấm nút "Sửa" để đổ vào Modal via JS
+    // 2. API bổ sung quan trọng: Lấy dữ liệu Banner dưới dạng JSON khi bấm nút
+    // "Sửa" để đổ vào Modal via JS
     @GetMapping("/api/{id}")
     @ResponseBody
     public ResponseEntity<Banner> getBannerJson(@PathVariable Long id) {
@@ -64,10 +66,11 @@ public class BannerController {
     // 3. Xử lý Lưu (Thêm mới hoặc Cập nhật) từ Modal
     @PostMapping("/save")
     public String saveBanner(@ModelAttribute Banner banner,
-                             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-                             RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            RedirectAttributes redirectAttributes) {
 
-        // Validate dữ liệu đầu vào, nếu lỗi trả về trang danh sách kèm thông báo lỗi hiển thị trên Modal/Toast
+        // Validate dữ liệu đầu vào, nếu lỗi trả về trang danh sách kèm thông báo lỗi
+        // hiển thị trên Modal/Toast
         if (banner.getTitle() == null || banner.getTitle().trim().isEmpty() || banner.getTitle().length() > 150) {
             redirectAttributes.addFlashAttribute("errorMessage", "Tiêu đề không được để trống và tối đa 150 ký tự!");
             return "redirect:/admin/banners";
@@ -79,7 +82,8 @@ public class BannerController {
         if (banner.getRedirectUrl() != null && !banner.getRedirectUrl().trim().isEmpty()) {
             String url = banner.getRedirectUrl().trim();
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Đường dẫn (URL) phải bắt đầu bằng http:// hoặc https://");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Đường dẫn (URL) phải bắt đầu bằng http:// hoặc https://");
                 return "redirect:/admin/banners";
             }
             if (url.length() > 2048) {
@@ -94,10 +98,13 @@ public class BannerController {
 
         try {
             if (imageFile != null && !imageFile.isEmpty()) {
-                String originalFilename = imageFile.getOriginalFilename() != null ? imageFile.getOriginalFilename().toLowerCase() : "";
+                String originalFilename = imageFile.getOriginalFilename() != null
+                        ? imageFile.getOriginalFilename().toLowerCase()
+                        : "";
                 if (!originalFilename.endsWith(".jpg") && !originalFilename.endsWith(".jpeg") &&
                         !originalFilename.endsWith(".png") && !originalFilename.endsWith(".webp")) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Chỉ cho phép upload file ảnh định dạng .jpg, .jpeg, .png, .webp!");
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "Chỉ cho phép upload file ảnh định dạng .jpg, .jpeg, .png, .webp!");
                     return "redirect:/admin/banners";
                 }
                 if (imageFile.getSize() > 5 * 1024 * 1024) {
