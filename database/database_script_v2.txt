@@ -139,6 +139,8 @@ CREATE TABLE doctor_patient_assignments (
   assigned_at DATETIME,
   status VARCHAR(30) DEFAULT 'active',
   note TEXT,
+  reject_reason TEXT NULL,
+  cancel_reason TEXT NULL,
   UNIQUE KEY idx_doctor_patient (doctor_id, patient_id)
 ) COMMENT = 'Bảng trung gian thể hiện quan hệ nhiều-nhiều giữa bác sĩ và bệnh nhân. Dùng để giới hạn bác sĩ chỉ xem bệnh nhân được phân công.';
 
@@ -241,6 +243,7 @@ CREATE TABLE risk_assessments (
   recommendation TEXT,
   -- UPDATE V2.1: Thêm cột độ tin cậy thấp
   low_confidence BOOLEAN NULL COMMENT 'Độ tin cậy thấp (Cập nhật V2.1)',
+  hypertension_score DOUBLE NULL,
   assessed_at DATETIME
 ) COMMENT = 'Lưu kết quả đánh giá nguy cơ sau khi AI hoặc hệ thống phân tích dữ liệu. Không lưu dữ liệu gốc bệnh nhân nhập, mà lưu kết quả như Low/Medium/High/Critical, phần chậm nguy cơ, tóm tắt AI và khuyến nghị.';
 
@@ -414,6 +417,7 @@ CREATE TABLE health_articles (
   thumbnail_url VARCHAR(255),
   category VARCHAR(100),
   status VARCHAR(30) DEFAULT 'draft',
+  rejection_reason TEXT NULL COMMENT 'Lý do từ chối (nếu có)',
   published_at DATETIME,
   created_by INT,
   created_at DATETIME,
@@ -769,3 +773,12 @@ ALTER TABLE health_thresholds
 -- Ref: health_thresholds.updated_by > users.id
 ALTER TABLE health_thresholds
   ADD CONSTRAINT fk_health_thresholds_updated_by FOREIGN KEY (updated_by) REFERENCES users(id);
+
+-- ========================================================
+-- ALTER TABLE STATEMENTS (Dành cho CSDL đã tạo từ trước)
+-- ========================================================
+-- ALTER TABLE health_articles ADD COLUMN rejection_reason TEXT NULL COMMENT 'Lý do từ chối (nếu có)';
+-- ALTER TABLE risk_assessments ADD COLUMN hypertension_score DOUBLE NULL;
+-- ALTER TABLE doctor_patient_assignments ADD COLUMN reject_reason TEXT NULL, ADD COLUMN cancel_reason TEXT NULL;
+
+
