@@ -51,8 +51,6 @@ public class WebViewController {
         model.addAttribute("filterStatus", status);
 
         model.addAttribute("roles", roleService.getAllRoles());
-        // Add counts for doctors and patients
-        model.addAttribute("doctorCount", userAdminService.getDoctorCount());
         model.addAttribute("patientCount", userAdminService.getPatientCount());
 
         return "user/user-management";
