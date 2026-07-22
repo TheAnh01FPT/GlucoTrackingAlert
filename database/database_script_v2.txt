@@ -113,6 +113,7 @@ CREATE TABLE doctors (
   status VARCHAR(30) DEFAULT 'active',
   national_id VARCHAR(255) UNIQUE,
   practice_license VARCHAR(255),
+  pending_verification_json TEXT NULL COMMENT 'Lưu trữ thông tin chờ xác thực dưới dạng JSON',
   created_at DATETIME,
   updated_at DATETIME
 ) COMMENT = 'Lưu hồ sơ bác sĩ trong hệ thống. Doctor dùng để xem bệnh nhân được phân công và đưa khuyến nghị theo dõi, không dùng để chẩn đoán chính thức.';
