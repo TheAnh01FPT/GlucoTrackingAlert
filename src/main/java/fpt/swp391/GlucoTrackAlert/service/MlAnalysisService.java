@@ -82,6 +82,21 @@ public class MlAnalysisService {
                 return buildAnalysisText(patient, logs, bloodSugar, response.getBody(), mealsByDate);
             }
 
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            // Flask trả 4xx (ví dụ 400 do thiếu field bắt buộc) — hiện đúng lý do,
+            // không gộp chung với lỗi "không kết nối được service".
+            log.error("ML service từ chối request {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            String reason = e.getResponseBodyAsString();
+            try {
+                Map<?, ?> body = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .readValue(reason, Map.class);
+                if (body.get("error") != null) {
+                    reason = String.valueOf(body.get("error"));
+                }
+            } catch (Exception ignored) {
+                // body không phải JSON hợp lệ -> giữ nguyên chuỗi thô
+            }
+            return "❌ ML Service từ chối yêu cầu: " + reason;
         } catch (Exception e) {
             log.error("Không thể kết nối ML service: {}", e.getMessage());
             return "❌ Không thể kết nối ML Service. Vui lòng đảm bảo service đang chạy tại localhost:5000";

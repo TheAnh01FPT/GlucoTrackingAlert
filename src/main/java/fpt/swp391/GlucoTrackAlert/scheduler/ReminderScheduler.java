@@ -100,12 +100,29 @@ public class ReminderScheduler {
      */
     private LocalDateTime nextReminderTime(Duy_HealthReminder reminder) {
         LocalDateTime current = reminder.getReminderTime();
-        return switch (reminder.getRepeatType()) {
+        LocalDateTime now = LocalDateTime.now();
+        String repeatType = reminder.getRepeatType();
+
+        LocalDateTime next = switch (repeatType) {
             case "DAILY"   -> current.plusDays(1);
             case "WEEKLY"  -> current.plusWeeks(1);
             case "MONTHLY" -> current.plusMonths(1);
             default        -> current;
         };
+
+        // Nếu reminder bị trễ nhiều hơn 1 chu kỳ (server down, data cũ...),
+        // next vẫn có thể <= now → nhảy tiếp tới lần kế tiếp SAU thời điểm hiện tại
+        // để tránh gửi email dồn dập mỗi lần scheduler chạy (mỗi phút).
+        while (!next.isAfter(now)) {
+            next = switch (repeatType) {
+                case "DAILY"   -> next.plusDays(1);
+                case "WEEKLY"  -> next.plusWeeks(1);
+                case "MONTHLY" -> next.plusMonths(1);
+                default        -> next.plusMinutes(1); // an toàn, tránh vòng lặp vô hạn
+            };
+        }
+
+        return next;
     }
 
     private String buildSubject(Duy_HealthReminder reminder) {

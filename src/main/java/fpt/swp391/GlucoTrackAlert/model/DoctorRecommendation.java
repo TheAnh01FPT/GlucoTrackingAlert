@@ -1,6 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.model;
 
 import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.enums.RecommendationCategory;
+import fpt.swp391.GlucoTrackAlert.enums.RecommendationPriority;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -33,6 +35,18 @@ public class DoctorRecommendation {
 
     // active / inactive (soft delete)
     private String status = "active";
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private RecommendationPriority priority = RecommendationPriority.MEDIUM;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private RecommendationCategory category = RecommendationCategory.OTHER;
+
+    // Bệnh nhân đã xem khuyến nghị này chưa
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead = false;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

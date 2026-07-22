@@ -639,13 +639,13 @@
                                     <label class="form-label">Nơi công tác</label>
                                     <input type="text" class="form-control" id="workplace" placeholder="VD: Bệnh viện Bạch Mai"/>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Số CCCD <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="nationalId" placeholder="VD: 001234567890" maxlength="12"/>
+                                <div class="col-md-6" id="licenseFieldsWrap" style="display:none">
+                                    <label class="form-label">Số CCCD</label>
+                                    <input type="text" class="form-control" id="nationalId" readonly disabled style="background:#e9ecef;cursor:not-allowed"/>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Số chứng chỉ hành nghề <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="practiceLicense" placeholder="VD: 027552/BYT-CCHN"/>
+                                <div class="col-md-6" id="licenseFieldsWrap2" style="display:none">
+                                    <label class="form-label">Số chứng chỉ hành nghề</label>
+                                    <input type="text" class="form-control" id="practiceLicense" readonly disabled style="background:#e9ecef;cursor:not-allowed"/>
                                 </div>
                         <div class="col-md-6" id="statusField" style="display:none">
                                     <label class="form-label">Trạng thái</label>
@@ -779,23 +779,11 @@
                             <button type="button" class="btn btn-danger" onclick="confirmReject()">
                                 <i class="bi bi-send me-1"></i>Xác nhận từ chối
                             </button>
-            <!-- Modal Xác nhận Xóa vĩnh viễn -->
-            <div class="modal fade" id="hardDeleteModal" tabindex="-1">
-                <div class="modal-dialog modal-sm">
-                    <div class="modal-content border-0 shadow">
-                        <div class="modal-body text-center py-4">
-                            <div style="font-size:2.5rem; color:var(--danger)"><i class="bi bi-trash3-fill"></i></div>
-                            <h6 class="fw-700 mt-2">Xóa vĩnh viễn bác sĩ</h6>
-                            <p class="text-muted small mb-0">Hành động này <strong>không thể hoàn tác</strong>.</p>
-                            <p class="text-danger small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Toàn bộ hồ sơ bác sĩ, tài khoản đăng nhập và lịch sử phân công sẽ bị xóa vĩnh viễn khỏi hệ thống.</p>
-                        </div>
-                        <div class="modal-footer border-0 justify-content-center gap-2">
-                            <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                            <button class="btn btn-danger" onclick="confirmHardDelete()">Xóa vĩnh viễn</button>
                         </div>
                     </div>
                 </div>
             </div>
+
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
             <script>
                                 // ── State ─────────────────────────────────────────────
@@ -803,8 +791,7 @@
                                 let allShifts = [];
                                 let filteredDoctors = [];
                                 let deactivateTargetId = null;
-                                let hardDeleteTargetId = null;
-                                let doctorModal, deactivateModal, hardDeleteModal, toastEl;
+                                let doctorModal, deactivateModal, toastEl;
                                 const PAGE_SIZE = 10;
                                 let docPage = 1;
 
@@ -812,7 +799,6 @@
                                 document.addEventListener('DOMContentLoaded', function () {
                                     doctorModal = new bootstrap.Modal(document.getElementById('doctorModal'));
                                     deactivateModal = new bootstrap.Modal(document.getElementById('deactivateModal'));
-                                    hardDeleteModal = new bootstrap.Modal(document.getElementById('hardDeleteModal'));
                                     toastEl = new bootstrap.Toast(document.getElementById('toast'), {delay: 3000});
                                     loadWorkingHours();
                                     loadDoctors();
@@ -948,14 +934,11 @@
                         <td>${d.experienceYears != null ? d.experienceYears + ' năm' : '–'}</td>
                         <td>${d.workplace || '–'}</td>
                         <td>${d.phone || '–'}</td>
-                        <td><span class="badge-status ${d.status === 'inactive' ? 'badge-inactive' : 'badge-active'}">
-                            ${d.status === 'inactive' ? 'Ngừng HĐ' : 'Hoạt động'}
-                        </span></td>
+                        <td>${statusBadgeForRow(d)}</td>
                         <td>
                             <button class="action-btn edit" onclick='openEdit(${JSON.stringify(d)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
-                            ${(d.status === 'pending_approval') ? `<button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt"><i class="bi bi-shield-check"></i></button>` : ''}
+                            ${(d.status === 'pending_approval' || parsePending(d)) ? `<button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt"><i class="bi bi-shield-check"></i></button>` : ''}
                             <button class="action-btn delete" onclick="openDeactivate(${d.id})" title="Ngừng hoạt động" ${d.status === 'inactive' ? 'disabled' : ''}><i class="bi bi-slash-circle"></i></button>
-                            <button class="action-btn" style="color:var(--danger);opacity:${d.status === 'inactive' ? '1' : '0.3'};cursor:${d.status === 'inactive' ? 'pointer' : 'not-allowed'}" onclick="${d.status === 'inactive' ? 'openHardDelete(' + d.id + ')' : 'void(0)'}" title="${d.status === 'inactive' ? 'Xóa vĩnh viễn' : 'Phải ngừng hoạt động trước'}"><i class="bi bi-trash3"></i></button>
                         </td>
                     </tr>
                 `).join('');
@@ -998,6 +981,8 @@
                                     document.getElementById('practiceLicense').value = '';
                                     document.getElementById('introduction').value = '';
                                     document.getElementById('statusField').style.display = 'none';
+                                    document.getElementById('licenseFieldsWrap').style.display = 'none';
+                                    document.getElementById('licenseFieldsWrap2').style.display = 'none';
                                     doctorModal.show();
                                 }
 
@@ -1017,6 +1002,8 @@
                                     document.getElementById('introduction').value = d.introduction || '';
                                     document.getElementById('status').value = d.status || 'active';
                                     document.getElementById('statusField').style.display = 'block';
+                                    document.getElementById('licenseFieldsWrap').style.display = 'block';
+                                    document.getElementById('licenseFieldsWrap2').style.display = 'block';
                                     doctorModal.show();
                                 }
 
@@ -1045,8 +1032,6 @@
                                             experienceYears: parseInt(document.getElementById('experienceYears').value) || null,
                                             phone: document.getElementById('phone').value.trim(),
                                             workplace: document.getElementById('workplace').value.trim(),
-                                            nationalId: document.getElementById('nationalId').value.trim(),
-                                            practiceLicense: document.getElementById('practiceLicense').value.trim(),
                                             introduction: document.getElementById('introduction').value.trim()
                                         };
                                         try {
@@ -1074,8 +1059,6 @@
                                             experienceYears: parseInt(document.getElementById('experienceYears').value) || null,
                                             phone: document.getElementById('phone').value.trim(),
                                             workplace: document.getElementById('workplace').value.trim(),
-                                            nationalId: document.getElementById('nationalId').value.trim(),
-                                            practiceLicense: document.getElementById('practiceLicense').value.trim(),
                                             introduction: document.getElementById('introduction').value.trim(),
                                             status: document.getElementById('status').value
                                         };
@@ -1117,25 +1100,6 @@
                                     }
                                 }
 
-                                function openHardDelete(id) {
-                                    hardDeleteTargetId = id;
-                                    hardDeleteModal.show();
-                                }
-
-                                async function confirmHardDelete() {
-                                    try {
-                                        const res = await fetch(`/api/doctors/${hardDeleteTargetId}/permanent`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}, method: 'DELETE'});
-                                        const msg = await res.text();
-                                        if (!res.ok)
-                                            throw new Error(msg);
-                                        hardDeleteModal.hide();
-                                        showToast('Đã xóa vĩnh viễn bác sĩ khỏi hệ thống!', 'success');
-                                        loadDoctors();
-                                    } catch (e) {
-                                        showToast('Lỗi: ' + (e.message || 'Vui lòng thử lại!'), 'danger');
-                                    }
-                                }
-
                                 // ── Invite ─────────────────────────────────────────────
 
                                 // ── Tab switching ──────────────────────────────────────
@@ -1164,6 +1128,22 @@
                                     };
                                     const [cls, label] = map[status] || ['badge-pending', status || '–'];
                                     return `<span class="badge-status ${cls}">${label}</span>`;
+                                }
+
+                                // Parse JSON staging (pendingVerificationJson) → object hoặc null.
+                                // Đây là bản CCCD/chứng chỉ MỚI mà bác sĩ (đang active) vừa gửi lại,
+                                // chưa được admin duyệt nên chưa áp vào field chính (nationalIdImageUrl...).
+                                function parsePending(d) {
+                                    if (!d.pendingVerificationJson) return null;
+                                    try { return JSON.parse(d.pendingVerificationJson); } catch { return null; }
+                                }
+
+                                // Badge riêng cho case bác sĩ đang active nhưng có bản cập nhật đang chờ duyệt
+                                function statusBadgeForRow(d) {
+                                    if (d.status === 'active' && parsePending(d)) {
+                                        return '<span class="badge-status badge-pending">🔄 Có cập nhật chờ duyệt</span>';
+                                    }
+                                    return statusBadge(d.status);
                                 }
 
                                 // ── Pending Tab ─────────────────────────────────────────
@@ -1195,7 +1175,15 @@
                                         return;
                                     }
 
-                                    tbody.innerHTML = pageData.map((d, i) => `
+                                    tbody.innerHTML = pageData.map((d, i) => {
+                                        const pending = parsePending(d);
+                                        // Nếu có bản staging → ưu tiên hiện ảnh MỚI (đang chờ duyệt).
+                                        // Nếu không → hiện ảnh hiện tại như bình thường (case chưa từng active).
+                                        const cccdUrl = pending?.nationalIdImageUrl || d.nationalIdImageUrl;
+                                        const licUrl = pending?.practiceLicenseImageUrl || d.practiceLicenseImageUrl;
+                                        const cccdTag = pending?.nationalIdImageUrl ? '<div style="font-size:.65rem;color:#1565c0">● Mới</div>' : '';
+                                        const licTag = pending?.practiceLicenseImageUrl ? '<div style="font-size:.65rem;color:#1565c0">● Mới</div>' : '';
+                                        return `
                     <tr>
                         <td class="text-muted">${globalOffset + i + 1}</td>
                         <td>
@@ -1206,13 +1194,13 @@
                         <td>${d.specialization || '–'}</td>
                         <td><span class="badge bg-light text-dark">${d.degree || '–'}</span></td>
                         <td>${d.phone || '–'}</td>
-                        <td style="text-align:center">${d.nationalIdImageUrl
-                            ? `<a href="${d.nationalIdImageUrl}" target="_blank"><img src="${d.nationalIdImageUrl}" style="height:40px;border-radius:4px;border:1px solid #dee2e6;cursor:pointer" title="Xem CCCD"></a>`
+                        <td style="text-align:center">${cccdUrl
+                            ? `<a href="${cccdUrl}" target="_blank"><img src="${cccdUrl}" style="height:40px;border-radius:4px;border:1px solid #dee2e6;cursor:pointer" title="Xem CCCD"></a>${cccdTag}`
                             : '<span class="text-muted small">Chưa upload</span>'}</td>
-                        <td style="text-align:center">${d.practiceLicenseImageUrl
-                            ? `<a href="${d.practiceLicenseImageUrl}" target="_blank"><img src="${d.practiceLicenseImageUrl}" style="height:40px;border-radius:4px;border:1px solid #dee2e6;cursor:pointer" title="Xem chứng chỉ"></a>`
+                        <td style="text-align:center">${licUrl
+                            ? `<a href="${licUrl}" target="_blank"><img src="${licUrl}" style="height:40px;border-radius:4px;border:1px solid #dee2e6;cursor:pointer" title="Xem chứng chỉ"></a>${licTag}`
                             : '<span class="text-muted small">Chưa upload</span>'}</td>
-                        <td>${statusBadge(d.status)}</td>
+                        <td>${statusBadgeForRow(d)}</td>
                         <td>
                             <button class="action-btn approve" onclick="openVerify(${d.id})" title="Xem & Duyệt">
                                 <i class="bi bi-shield-check"></i>
@@ -1222,7 +1210,8 @@
                             </button>
                         </td>
                     </tr>
-                `).join('');
+                `;
+                                    }).join('');
                                     buildPagination('pendingPagBtns', 'pendingPagInfo', pendingPage, total, 'gotoPendingPage');
                                 }
 
@@ -1247,22 +1236,29 @@
 
                                 async function openVerify(id) {
                                     verifyTargetId = id;
-                                    let d = allDoctors.find(x => x.id === id) || allPending.find(x => x.id === id);
-                                    if (!d) {
-                                        try {
-                                            const res = await fetch(`/api/doctors/${id}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
-                                            d = await res.json();
-                                        } catch { showToast('Không thể tải thông tin bác sĩ', 'danger'); return; }
+                                    // Luôn fetch bản mới nhất từ server (không dùng allDoctors/allPending
+                                    // vì 2 mảng đó là cache client-side, có thể đang giữ ảnh CCCD/chứng chỉ
+                                    // CŨ nếu bác sĩ vừa upload lại ảnh mới sau khi trang admin đã load).
+                                    let d;
+                                    try {
+                                        const res = await fetch(`/api/doctors/${id}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
+                                        d = await res.json();
+                                    } catch {
+                                        // Fallback nếu mất mạng: dùng cache, ưu tiên allPending (mới hơn allDoctors)
+                                        d = allPending.find(x => x.id === id) || allDoctors.find(x => x.id === id);
+                                        if (!d) { showToast('Không thể tải thông tin bác sĩ', 'danger'); return; }
                                     }
+
+                                    const pending = parsePending(d); // null nếu không có bản staging đang chờ
 
                                     // Thông tin cơ bản
                                     document.getElementById('vfName').textContent = d.fullName || '–';
                                     document.getElementById('vfSpec').textContent = d.specialization || '–';
                                     document.getElementById('vfEmail').textContent = d.userEmail || '–';
 
-                                    // Số CCCD + số chứng chỉ
-                                    document.getElementById('vfNationalId').textContent = d.nationalId || 'Chưa nhập';
-                                    document.getElementById('vfPracticeLicense').textContent = d.practiceLicense || 'Chưa nhập';
+                                    // Số CCCD + số chứng chỉ — nếu có bản mới đang chờ thì hiện cả cũ lẫn mới
+                                    document.getElementById('vfNationalId').innerHTML = numberCompareHtml(d.nationalId, pending?.nationalId);
+                                    document.getElementById('vfPracticeLicense').innerHTML = numberCompareHtml(d.practiceLicense, pending?.practiceLicense);
 
                                     // Avatar
                                     const avatarWrap = document.getElementById('vfAvatarWrap');
@@ -1272,21 +1268,51 @@
                                     } else {
                                         avatarWrap.innerHTML = `<div style="width:72px;height:72px;border-radius:50%;background:#e8f5f1;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;color:var(--primary);">${getInitials(d.fullName)}</div>`;
                                     }
-                                    // Ảnh CCCD
-                                    const cccdWrap = document.getElementById('vfNationalIdWrap');
-                                    if (d.nationalIdImageUrl) {
-                                        cccdWrap.innerHTML = `<a href="${d.nationalIdImageUrl}" target="_blank"><img src="${d.nationalIdImageUrl}" class="img-preview" alt="CCCD" style="width:100%;border-radius:8px;border:1px solid #dee2e6;"></a>`;
-                                    } else {
-                                        cccdWrap.innerHTML = `<div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:8px;padding:40px;text-align:center;color:#aaa;"><i class="bi bi-image" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Chưa upload</div>`;
-                                    }
-                                    // Ảnh chứng chỉ
-                                    const licWrap = document.getElementById('vfLicenseWrap');
-                                    if (d.practiceLicenseImageUrl) {
-                                        licWrap.innerHTML = `<a href="${d.practiceLicenseImageUrl}" target="_blank"><img src="${d.practiceLicenseImageUrl}" class="img-preview" alt="Chứng chỉ HN"></a>`;
-                                    } else {
-                                        licWrap.innerHTML = `<div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:8px;padding:40px;text-align:center;color:#aaa;"><i class="bi bi-image" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Chưa upload</div>`;
-                                    }
+                                    // Ảnh CCCD (có staging → hiện song song cũ/mới)
+                                    document.getElementById('vfNationalIdWrap').innerHTML
+                                        = imageCompareHtml(d.nationalIdImageUrl, pending?.nationalIdImageUrl, 'CCCD');
+                                    // Ảnh chứng chỉ (có staging → hiện song song cũ/mới)
+                                    document.getElementById('vfLicenseWrap').innerHTML
+                                        = imageCompareHtml(d.practiceLicenseImageUrl, pending?.practiceLicenseImageUrl, 'Chứng chỉ HN');
+
                                     verifyModal.show();
+                                }
+
+                                // Ô trống hiển thị mặc định
+                                function emptyImageBox() {
+                                    return `<div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:8px;padding:40px;text-align:center;color:#aaa;"><i class="bi bi-image" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Chưa upload</div>`;
+                                }
+
+                                // Hiện 1 ảnh (case bình thường) hoặc 2 ảnh song song cũ/mới (case bác sĩ active gửi lại)
+                                function imageCompareHtml(currentUrl, newUrl, altLabel) {
+                                    if (newUrl) {
+                                        const oldBox = currentUrl
+                                            ? `<a href="${currentUrl}" target="_blank"><img src="${currentUrl}" class="img-preview" alt="${altLabel} cũ" style="width:100%;border-radius:8px;border:1px solid #dee2e6;"></a>`
+                                            : emptyImageBox();
+                                        return `
+                                            <div style="display:flex;gap:10px">
+                                                <div style="flex:1">
+                                                    <div style="font-size:.7rem;color:#888;margin-bottom:4px">Đang dùng</div>
+                                                    ${oldBox}
+                                                </div>
+                                                <div style="flex:1">
+                                                    <div style="font-size:.7rem;color:#1565c0;font-weight:600;margin-bottom:4px">🔄 Mới gửi — chờ duyệt</div>
+                                                    <a href="${newUrl}" target="_blank"><img src="${newUrl}" class="img-preview" alt="${altLabel} mới" style="width:100%;border-radius:8px;border:2px solid #1565c0;"></a>
+                                                </div>
+                                            </div>`;
+                                    }
+                                    if (currentUrl) {
+                                        return `<a href="${currentUrl}" target="_blank"><img src="${currentUrl}" class="img-preview" alt="${altLabel}" style="width:100%;border-radius:8px;border:1px solid #dee2e6;"></a>`;
+                                    }
+                                    return emptyImageBox();
+                                }
+
+                                // Hiện số cũ/mới tương tự (nếu khác nhau)
+                                function numberCompareHtml(currentVal, newVal) {
+                                    if (newVal && newVal !== currentVal) {
+                                        return `<span style="text-decoration:line-through;color:#aaa">${currentVal || 'Chưa nhập'}</span> → <span style="color:#1565c0;font-weight:700">${newVal}</span>`;
+                                    }
+                                    return currentVal || 'Chưa nhập';
                                 }
 
                                 function openRejectReason() {

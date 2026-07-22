@@ -1,5 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.dto.recommendation;
 
+import fpt.swp391.GlucoTrackAlert.enums.RecommendationCategory;
+import fpt.swp391.GlucoTrackAlert.enums.RecommendationPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -17,4 +19,10 @@ public class DoctorRecommendationRequest {
 
     @NotNull(message = "Bệnh nhân không được để trống")
     private Long patientId;
+
+    @NotNull(message = "Mức độ ưu tiên không được để trống")
+    private RecommendationPriority priority;
+
+    @NotNull(message = "Phân loại không được để trống")
+    private RecommendationCategory category;
 }
