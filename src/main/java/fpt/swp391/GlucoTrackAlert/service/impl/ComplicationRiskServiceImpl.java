@@ -206,10 +206,8 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> body = response.getBody();
-                Double strokePct = null;
-                if (body.get("risk_percentage") != null) {
-                    strokePct = Double.parseDouble(body.get("risk_percentage").toString());
-                }
+                Object riskObj = body.containsKey("risk_percentage") ? body.get("risk_percentage") : body.get("riskPercentage");
+                Double strokePct = riskObj != null ? Double.parseDouble(riskObj.toString()) : null;
                 String rawRiskLevel = (String) body.get("risk_level");
 
                 // Quy đổi mức độ nguy cơ và đưa ra lời khuyên phù hợp

@@ -320,10 +320,10 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             Map<String, Object> aiHeartResult = weeklyCardioAiService.calculateWeeklyHeartRisk(patient, weekStart, weekEnd);
 
             if (aiHeartResult != null && !aiHeartResult.isEmpty()) {
-                Double riskPercentage = (Double) aiHeartResult.get("cardio_risk_percentage");
-                String riskLevel = (String) aiHeartResult.get("risk_level");
-                String summary = (String) aiHeartResult.get("summary");
-
+                    Object heartRiskObj = aiHeartResult.containsKey("risk_percentage") ? aiHeartResult.get("risk_percentage") : aiHeartResult.get("riskPercentage");
+                    Double riskPercentage = heartRiskObj != null ? Double.parseDouble(heartRiskObj.toString()) : null;
+                    String riskLevel = (String) aiHeartResult.get("risk_level");
+                    String summary = (String) aiHeartResult.get("summary");
                 @SuppressWarnings("unchecked")
                 List<String> adviceList = (List<String>) aiHeartResult.get("advice");
                 String adviceText = (adviceList != null) ? String.join("\n• ", adviceList) : "";
@@ -385,10 +385,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             Map<String, Object> aiStrokeResult = weeklyStrokeAiService.calculateWeeklyStrokeRisk(patient, weekStart, weekEnd);
 
             if (aiStrokeResult != null && !aiStrokeResult.isEmpty()) {
-                Double riskPercentage = null;
-                if (aiStrokeResult.get("risk_percentage") != null) {
-                    riskPercentage = Double.parseDouble(aiStrokeResult.get("risk_percentage").toString());
-                }
+                Object strokeRiskObj = aiStrokeResult.containsKey("risk_percentage") ? aiStrokeResult.get("risk_percentage") : aiStrokeResult.get("riskPercentage");
+                Double riskPercentage = strokeRiskObj != null ? Double.parseDouble(strokeRiskObj.toString()) : null;
                 String rawRiskLevel = (String) aiStrokeResult.get("risk_level");
 
                 // Mức độ mặc định
