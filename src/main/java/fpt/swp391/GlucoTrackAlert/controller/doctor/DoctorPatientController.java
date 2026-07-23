@@ -1,10 +1,10 @@
-package fpt.swp391.GlucoTrackAlert.controller;
+package fpt.swp391.GlucoTrackAlert.controller.doctor;
 
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
-import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
-import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;
+import fpt.swp391.GlucoTrackAlert.service.impl.doctor.DoctorPatientAssignmentService;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,7 @@ package fpt.swp391.GlucoTrackAlert.controller.healthlog;
 import fpt.swp391.GlucoTrackAlert.dto.CustomRangeResult;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.model.risk.WeeklyHealthReport;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorPatientAssignmentRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
@@ -33,7 +33,7 @@ public class WeeklyKidneyRiskController {
     private final UserRepository userRepository;
     private final WeeklyHealthReportRepository weeklyHealthReportRepository;
     private final DoctorPatientAssignmentRepository assignmentRepository;
-    private final fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository doctorRepository;
+    private final fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository doctorRepository;
     private final WeeklyReportService weeklyReportService;
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

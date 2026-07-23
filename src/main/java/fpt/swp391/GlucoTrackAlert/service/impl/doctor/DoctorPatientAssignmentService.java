@@ -1,16 +1,15 @@
-package fpt.swp391.GlucoTrackAlert.service.impl;
+package fpt.swp391.GlucoTrackAlert.service.impl.doctor;
 
-import fpt.swp391.GlucoTrackAlert.dto.AssignmentRequest;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.AssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.enums.WorkShift;
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
-import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import java.util.Map;
 import java.util.HashMap;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
-import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorPatientAssignmentRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
-import fpt.swp391.GlucoTrackAlert.service.NotificationService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import jakarta.annotation.PreDestroy;
 
@@ -32,7 +31,6 @@ public class DoctorPatientAssignmentService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final EmailService emailService;
-    private final NotificationService notificationService;
 
     private static final LocalTime WORK_START = WorkShift.START;
     private static final LocalTime WORK_END = WorkShift.END;
@@ -171,16 +169,28 @@ public class DoctorPatientAssignmentService {
         }
     }
 
-    // Gửi thông báo in-app cho bệnh nhân khi phân công của họ bị hủy/từ chối
+    // Gửi email cho bệnh nhân khi phân công của họ bị hủy/từ chối
     private void notifyPatientCancelled(DoctorPatientAssignment a, String title, String reason) {
         if (a.getPatient() == null || a.getPatient().getUser() == null) {
             return;
         }
-        Long userId = a.getPatient().getUser().getId();
+        String patientEmail = a.getPatient().getUser().getEmail();
+        if (patientEmail == null) {
+            return;
+        }
         String doctorName = a.getDoctor() != null ? a.getDoctor().getFullName() : "bác sĩ";
         String message = "Đề xuất/phân công với " + doctorName
                 + (reason != null && !reason.isBlank() ? " đã bị hủy. Lý do: " + reason : " đã bị hủy.");
-        notificationService.createNotification(userId, title, message, "ASSIGNMENT_CANCELLED");
+
+        LocalTime now = LocalTime.now();
+        boolean inWorkHours = !now.isBefore(WORK_START) && now.isBefore(WORK_END);
+
+        String subject = "[GlucoTrackAlert] " + title;
+        String body = "Xin chào " + a.getPatient().getFullName() + ",\n\n"
+                + message + "\n\n"
+                + "Vui lòng đăng nhập GlucoTrackAlert để biết thêm chi tiết.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert";
+        sendOrSchedule(patientEmail, subject, body, inWorkHours, "hủy phân công (báo bệnh nhân)");
     }
 
     public List<DoctorPatientAssignment> getAllAssignments() {
