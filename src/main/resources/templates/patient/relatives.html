@@ -22,25 +22,25 @@
                     <a th:href="@{/patient/profile}" class="action-btn btn-secondary">
                         👤 Hồ sơ của tôi
                     </a>
-                    <a th:if="${#lists.isEmpty(relatives)}" th:href="@{/patient/relatives/new}" class="action-btn btn-primary">
+                    <a th:href="@{/patient/relatives/new}" class="action-btn btn-primary">
                         ➕ Thêm người giám hộ
                     </a>
                 </div>
             </div>
 
-            <h2 class="panel-title" th:text="'👪 Người giám hộ chính của bệnh nhân: ' + ${patient.fullName}">
-                👪 Người giám hộ chính
+            <h2 class="panel-title" th:text="'👪 Người giám hộ của bệnh nhân: ' + ${patient.fullName}">
+                👪 Người giám hộ
             </h2>
 
             <!-- Empty State (No relatives added yet) -->
             <div class="empty-state" th:if="${#lists.isEmpty(relatives)}">
                 <div class="empty-icon">👥</div>
-                <div class="empty-title">Chưa khai báo người giám hộ chính</div>
+                <div class="empty-title">Chưa khai báo người giám hộ</div>
                 <div class="empty-desc">
-                    Hãy thêm thông tin người giám hộ chính (bố, mẹ, vợ, chồng, con...) để hệ thống tự động gửi email cảnh báo khẩn cấp khi chỉ số đường huyết hoặc huyết áp của bạn vượt ngưỡng an toàn. Mỗi bệnh nhân chỉ khai báo được 1 người giám hộ chính.
+                    Hãy thêm thông tin người giám hộ (bố, mẹ, vợ, chồng, con...) để hệ thống tự động gửi email cảnh báo khẩn cấp khi chỉ số đường huyết hoặc huyết áp của bạn vượt ngưỡng an toàn. Bạn có thể khai báo nhiều người giám hộ.
                 </div>
                 <a th:href="@{/patient/relatives/new}" class="action-btn btn-primary">
-                    ➕ Thêm người giám hộ chính
+                    ➕ Thêm người giám hộ
                 </a>
             </div>
 

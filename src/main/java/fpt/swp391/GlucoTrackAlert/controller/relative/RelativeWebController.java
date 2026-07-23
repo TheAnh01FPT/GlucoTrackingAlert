@@ -64,14 +64,6 @@ public class RelativeWebController {
             User loggedInUser = getLoggedInUser();
             PatientProfileResponse patient = patientService.getProfileByUserId(loggedInUser.getId());
 
-            // Mỗi bệnh nhân chỉ được có 1 người giám hộ chính: nếu đã có, đưa thẳng
-            // sang trang chỉnh sửa thay vì cho điền lại form thêm mới rồi mới báo lỗi.
-            List<RelativeResponse> existing = relativeService.getRelativesByPatientId(patient.getId());
-            if (!existing.isEmpty()) {
-                return "redirect:/patient/relatives/edit/" + existing.get(0).getId()
-                        + "?error=Bạn chỉ có thể khai báo 1 người giám hộ chính. Đây là thông tin hiện có, hãy chỉnh sửa nếu cần.";
-            }
-
             RelativeRequest request = RelativeRequest.builder()
                     .patientId(patient.getId())
                     .notifyEnabled(true)
