@@ -398,13 +398,13 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 // Phân loại mức độ nguy cơ dựa trên nhãn trả về và xác suất tính toán được
                 if (rawRiskLevel != null) {
                     String lowerLevel = rawRiskLevel.toLowerCase();
-                    if (lowerLevel.contains("critical") || (riskPercentage != null && riskPercentage >= 70)) {
+                    if (lowerLevel.contains("critical") || (riskPercentage != null && riskPercentage >= 75)) {
                         mappedLevel = "CRITICAL";
                         strokeAdvice = "🚨 Nguy cơ đột quỵ rất cao (Nguy hiểm)! Cần tham vấn bác sĩ ngay để kiểm soát huyết áp và các chỉ số sức khỏe.";
                     } else if (lowerLevel.contains("high") || (riskPercentage != null && riskPercentage >= 50)) {
                         mappedLevel = "HIGH";
                         strokeAdvice = "⚠️ Nguy cơ đột quỵ cao! Bạn nên điều chỉnh chế độ sinh hoạt, hạn chế các chất kích thích và theo dõi huyết áp thường xuyên.";
-                    } else if (lowerLevel.contains("medium") || lowerLevel.contains("moderate") || (riskPercentage != null && riskPercentage >= 30)) {
+                    } else if (lowerLevel.contains("medium") || lowerLevel.contains("moderate") || (riskPercentage != null && riskPercentage >= 25)) {
                         mappedLevel = "MEDIUM";
                         strokeAdvice = "⚡ Nguy cơ đột quỵ ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
                     }
