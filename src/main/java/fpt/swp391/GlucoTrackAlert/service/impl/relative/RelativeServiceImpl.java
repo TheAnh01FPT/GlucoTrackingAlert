@@ -48,6 +48,11 @@ public class RelativeServiceImpl implements RelativeService {
         Patient patient = patientRepository.findById(request.getPatientId())
                 .orElseThrow(() -> new RuntimeException("Patient profile not found with ID: " + request.getPatientId()));
 
+        // Mỗi bệnh nhân chỉ được có 1 người giám hộ chính (relative) duy nhất.
+        if (!relativeRepository.findByPatientId(patient.getId()).isEmpty()) {
+            throw new RuntimeException("Bạn chỉ có thể khai báo 1 người giám hộ chính. Vui lòng chỉnh sửa thông tin người giám hộ hiện có thay vì thêm mới.");
+        }
+
         Relative relative = Relative.builder()
                 .patient(patient)
                 .fullName(request.getFullName())

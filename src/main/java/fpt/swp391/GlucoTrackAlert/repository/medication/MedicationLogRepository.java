@@ -11,23 +11,29 @@ import java.util.List;
 
 @Repository
 public interface MedicationLogRepository extends JpaRepository<MedicationLog, Long> {
+
     List<MedicationLog> findByPatientIdOrderByScheduledTimeAsc(Long patientId);
 
     // Chỉ lấy log của các đơn thuốc CHƯA bị huỷ (CANCELLED)
     // để bệnh nhân không thấy lịch uống của đơn mà bác sĩ đã cancel
-    @Query("SELECT m FROM MedicationLog m " +
-           "JOIN m.prescriptionItem pi " +
-           "JOIN pi.prescription p " +
-           "WHERE m.patient.id = :patientId " +
-           "AND m.scheduledTime BETWEEN :start AND :end " +
-           "AND p.status <> 'CANCELLED' " +
-           "ORDER BY m.scheduledTime ASC")
+    @Query("SELECT m FROM MedicationLog m "
+            + "JOIN m.prescriptionItem pi "
+            + "JOIN pi.prescription p "
+            + "WHERE m.patient.id = :patientId "
+            + "AND m.scheduledTime BETWEEN :start AND :end "
+            + "AND p.status <> 'CANCELLED' "
+            + "ORDER BY m.scheduledTime ASC")
     List<MedicationLog> findByPatientAndDateRange(
             @Param("patientId") Long patientId,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
 
     long countByPatientIdAndStatus(Long patientId, String status);
+
     long countByPatientId(Long patientId);
+
     List<MedicationLog> findByPrescriptionItemIdOrderByScheduledTimeAsc(Long prescriptionItemId);
+
+    // Dùng cho job tự động đánh dấu MISSED: log còn PENDING nhưng giờ uống đã trôi qua từ lâu
+    List<MedicationLog> findByStatusAndScheduledTimeBefore(String status, LocalDateTime cutoff);
 }

@@ -59,4 +59,19 @@ public interface NotificationLogRepository extends JpaRepository<NotificationLog
      */
     Optional<NotificationLog> findTopByRelative_Patient_IdAndNotificationTypeAndSuccessTrueOrderBySentAtDesc(
             Long patientId, String notificationType);
+
+    /**
+     * Đếm tổng số cảnh báo thành công/thất bại của 1 bệnh nhân (toàn bộ dữ
+     * liệu, không chỉ trang hiện tại) — dùng cho hàng thống kê trên trang "Lịch
+     * sử cảnh báo của tôi".
+     */
+    long countByRelative_Patient_IdAndNotificationTypeAndSuccess(
+            Long patientId, String notificationType, Boolean success);
+
+    /**
+     * Như trên, có thêm lọc theo khoảng thời gian gửi (khớp với bộ lọc ngày
+     * trên trang lịch sử cảnh báo).
+     */
+    long countByRelative_Patient_IdAndNotificationTypeAndSuccessAndSentAtBetween(
+            Long patientId, String notificationType, Boolean success, LocalDateTime from, LocalDateTime to);
 }

@@ -22,6 +22,7 @@ import fpt.swp391.GlucoTrackAlert.service.cardioai.WeeklyCardioAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -50,7 +51,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     private final WeeklyCardioAiService weeklyCardioAiService;
 
     // Tạm thời giữ nguyên record Snapshot cho đồng bộ cấu trúc cũ của bạn
-        private record WeeklySnapshot(
+    private record WeeklySnapshot(
             BigDecimal avgBloodSugar,
             BigDecimal avgSystolic,
             BigDecimal avgDiastolic,
@@ -62,10 +63,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             double avgDiaForModel,
             double avgBsForModel,
             boolean htn,
-            double htnScore
-            ) {
+            double htnScore) {
 
-        }
+    }
 
     private WeeklySnapshot computeSnapshot(Patient patient, Long patientId, LocalDate weekStart, LocalDate weekEnd) {
         List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, weekStart, weekEnd);
@@ -161,8 +161,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 .assessmentType("NEPHROPATHY_WEEKLY")
                 .riskLevel(s.level().name())
                 .riskPercentage(s.riskPercentage())
-            .lowConfidence(s.logCount() < 7)
-            .hypertensionScore(s.htnScore())
+                .lowConfidence(s.logCount() < 7)
+                .hypertensionScore(s.htnScore())
                 .recommendation(report.getRecommendation())
                 .assessedAt(LocalDateTime.now())
                 .build();
@@ -255,8 +255,13 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         });
     }
 
+    // REQUIRES_NEW: đây là entry point được DailyHealthLogServiceImpl.createLog()/
+    // updateLog() gọi trong try/catch. Nếu để mặc định (tham gia transaction của
+    // caller) thì bất kỳ lỗi nào ở đây (thiếu cột DB, lỗi tính toán báo cáo tuần...)
+    // sẽ đánh dấu rollback-only cho cả transaction lưu DailyHealthLog, gây
+    // UnexpectedRollbackException dù exception đã được catch ở tầng trên.
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void syncWeeklyReport(Long patientId, LocalDate weekStart) {
         if (weeklyHealthReportRepository.existsByPatientIdAndWeekStart(patientId, weekStart)) {
             recalculateIfExists(patientId, weekStart);
@@ -293,8 +298,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     }
 
     /**
-     * Hàm xử lý tự động tính toán trung bình cộng chỉ số tuần, kết hợp Profile tĩnh
-     * và đồng bộ kết quả AI Tim mạch vào Database hệ thống.
+     * Hàm xử lý tự động tính toán trung bình cộng chỉ số tuần, kết hợp Profile
+     * tĩnh và đồng bộ kết quả AI Tim mạch vào Database hệ thống.
      */
     @Transactional
     public void processWeeklyEvaluation(Patient patient, LocalDate weekStart, LocalDate weekEnd, WeeklyHealthReport report) {

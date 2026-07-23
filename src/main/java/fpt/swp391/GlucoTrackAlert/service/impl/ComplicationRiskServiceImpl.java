@@ -16,6 +16,8 @@ import fpt.swp391.GlucoTrackAlert.service.RiskModelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,13 +35,22 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
     private final RiskWarningRepository riskWarningRepository;
     private final AiAnalysisLogRepository aiAnalysisLogRepository;
 
+    // Chạy trong transaction RIÊNG (REQUIRES_NEW): nếu bước đánh giá rủi ro
+    // này lỗi (vd. thiếu cột DB như 'hypertension_score' từng gặp), nó chỉ
+    // tự rollback phần của nó, không kéo theo rollback transaction chính đang
+    // lưu DailyHealthLog ở DailyHealthLogServiceImpl.createLog()/updateLog().
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void assessPatient(Long patientId, Long dailyHealthLogId) {
         Patient patient = patientRepository.findById(patientId).orElse(null);
-        if (patient == null) return;
+        if (patient == null) {
+            return;
+        }
 
         DailyHealthLog log = dailyHealthLogRepository.findById(dailyHealthLogId).orElse(null);
-        if (log == null) return;
+        if (log == null) {
+            return;
+        }
 
         Double patientAgeObj = patient.getAge() != null ? patient.getAge().doubleValue() : null;
         double age = patientAgeObj != null ? patientAgeObj : 50.0;
@@ -72,15 +83,17 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
         String recommendation = getRecommendation(level);
 
         RiskAssessment.RiskAssessmentBuilder assessmentBuilder = RiskAssessment.builder()
-            .patient(patient)
-            .dailyHealthLogId(dailyHealthLogId)
-            .assessmentType("NEPHROPATHY")
-            .riskLevel(level.name())
-            .riskPercentage(riskPercentage)
-            .recommendation(recommendation)
-            .hypertensionScore(htnScore)
-            .assessedAt(LocalDateTime.now());
-        if (lowConfidenceFlag) assessmentBuilder.lowConfidence(true);
+                .patient(patient)
+                .dailyHealthLogId(dailyHealthLogId)
+                .assessmentType("NEPHROPATHY")
+                .riskLevel(level.name())
+                .riskPercentage(riskPercentage)
+                .recommendation(recommendation)
+                .hypertensionScore(htnScore)
+                .assessedAt(LocalDateTime.now());
+        if (lowConfidenceFlag) {
+            assessmentBuilder.lowConfidence(true);
+        }
         RiskAssessment assessment = assessmentBuilder.build();
         RiskAssessment savedAssessment = riskAssessmentRepository.save(assessment);
 
@@ -104,8 +117,8 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
                 .patientId(patientId)
                 .dailyHealthLogId(dailyHealthLogId)
                 .analysisType("CKD_LOGISTIC_REGRESSION_V1")
-                .inputData("{\"age\":" + age + ",\"diastolic\":" + diastolic +
-                    ",\"blood_sugar\":" + bloodSugar + ",\"hypertension_score\":" + htnScore + "}")
+                .inputData("{\"age\":" + age + ",\"diastolic\":" + diastolic
+                        + ",\"blood_sugar\":" + bloodSugar + ",\"hypertension_score\":" + htnScore + "}")
                 .outputResult("{\"riskPercentage\":" + riskPct + ",\"riskLevel\":\"" + level.name() + "\"}")
                 .riskLevel(level.name())
                 .createdAt(LocalDateTime.now())
@@ -115,10 +128,14 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
 
     public static String getRecommendation(RiskLevel level) {
         return switch (level) {
-            case LOW -> "Nguy cơ thấp. Duy trì lối sống lành mạnh, kiểm tra định kỳ 6 tháng/lần.";
-            case MEDIUM -> "Nguy cơ trung bình. Kiểm soát đường huyết và huyết áp, tái khám 3 tháng/lần.";
-            case HIGH -> "Nguy cơ cao. Cần tư vấn bác sĩ chuyên khoa thận sớm, tái khám 1 tháng/lần.";
-            case CRITICAL -> "Nguy cơ rất cao. Cần đến cơ sở y tế ngay để được đánh giá chức năng thận.";
+            case LOW ->
+                "Nguy cơ thấp. Duy trì lối sống lành mạnh, kiểm tra định kỳ 6 tháng/lần.";
+            case MEDIUM ->
+                "Nguy cơ trung bình. Kiểm soát đường huyết và huyết áp, tái khám 3 tháng/lần.";
+            case HIGH ->
+                "Nguy cơ cao. Cần tư vấn bác sĩ chuyên khoa thận sớm, tái khám 1 tháng/lần.";
+            case CRITICAL ->
+                "Nguy cơ rất cao. Cần đến cơ sở y tế ngay để được đánh giá chức năng thận.";
         };
     }
 }
