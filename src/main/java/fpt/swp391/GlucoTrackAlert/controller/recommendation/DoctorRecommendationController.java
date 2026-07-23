@@ -75,4 +75,12 @@ public class DoctorRecommendationController {
             @PathVariable Long patientId) {
         return ResponseEntity.ok(recommendationService.getAllByPatient(patientId));
     }
+
+    // Bệnh nhân đánh dấu đã đọc khuyến nghị
+    @PatchMapping("/patient/{patientId}/{id}/read")
+    public ResponseEntity<DoctorRecommendationResponse> markAsRead(
+            @PathVariable Long patientId,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(recommendationService.markAsRead(patientId, id));
+    }
 }

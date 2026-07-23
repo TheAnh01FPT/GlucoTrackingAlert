@@ -3,9 +3,12 @@ package fpt.swp391.GlucoTrackAlert.repository.risk;
 import fpt.swp391.GlucoTrackAlert.model.risk.AiAnalysisLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 @Repository
 public interface AiAnalysisLogRepository extends JpaRepository<AiAnalysisLog, Long> {
+
+	Optional<AiAnalysisLog> findByWeeklyReportIdAndAnalysisType(Long weeklyReportId, String analysisType);
 	/**
 	 * Move references from an old weekly report id to a new one.
 	 * Deprecated: kept for rollback scripts only. Prefer service-level migration.

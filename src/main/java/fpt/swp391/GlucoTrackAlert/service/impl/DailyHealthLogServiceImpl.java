@@ -241,7 +241,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             weeklyReportService.syncWeeklyReport(patientId, cycleStart);
             complicationRiskService.assessPatient(patientId, savedLog.getId());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("[WeeklyReport] Đồng bộ báo cáo tuần thất bại cho patientId={}: {}", patientId, e.getMessage(), e);
         }
         return toResponse(savedLog);
     }
@@ -249,7 +249,6 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
     @Override
     @Transactional
     public DailyHealthLogResponse updateLog(Long id, DailyHealthLogRequest request) {
-        System.out.println("======> CHECKBOX GỬI LÊN LÀ: " + request.getPhysicalActivity());
         DailyHealthLog log = dailyHealthLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhật ký sức khỏe có mã số ID: " + id));
         // Prevent duplicate date for the same patient (excluding this id)
@@ -279,7 +278,8 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
                 complicationRiskService.assessPatient(pid, updatedLog.getId());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Long pid = updatedLog.getPatient() != null ? updatedLog.getPatient().getId() : null;
+            logger.error("[WeeklyReport] Đồng bộ báo cáo tuần thất bại cho patientId={}: {}", pid, e.getMessage(), e);
         }
         return toResponse(updatedLog);
     }
@@ -311,7 +311,7 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             try {
                 weeklyReportService.recalculateIfExists(patientId, cycleStart);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("[WeeklyReport] Tính toán lại báo cáo tuần thất bại cho patientId={}: {}", patientId, e.getMessage(), e);
             }
         }
     }

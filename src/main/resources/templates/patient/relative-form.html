@@ -88,7 +88,7 @@
 
                     <div class="form-group">
                         <label class="form-label" for="phone">Số điện thoại liên lạc</label>
-                        <input type="tel" id="phone" th:field="*{phone}" class="form-input" placeholder="Nhập 10-11 chữ số">
+                        <input type="tel" id="phone" th:field="*{phone}" class="form-input" placeholder="Nhập số điện thoại">
                         <span class="error-text" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Lỗi số điện thoại</span>
                     </div>
 

@@ -56,11 +56,7 @@ public class AdminCreateDoctorRequest {
 
     private String avatarUrl;
 
-    /** Số căn cước công dân */
-    @Pattern(regexp = "^$|^\\d{12}$", message = "Số CCCD phải gồm đúng 12 chữ số")
-    private String nationalId;
-
-    /** Số chứng chỉ hành nghề */
-    @Size(max = 50, message = "Số chứng chỉ hành nghề không được vượt quá 50 ký tự")
-    private String practiceLicense;
+    // Không có nationalId / practiceLicense ở đây: CCCD và chứng chỉ hành nghề
+    // do chính bác sĩ tự nhập + upload ảnh sau khi đăng nhập lần đầu
+    // (xem DoctorServiceImp#uploadVerificationImages), admin không nhập hộ.
 }

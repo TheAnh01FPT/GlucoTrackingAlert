@@ -25,12 +25,6 @@ public interface DoctorService {
     void deactivateDoctor(Long id);
 
     /**
-     * Hard-delete: xóa vĩnh viễn Doctor + User liên kết khỏi DB. Chỉ thực hiện
-     * được khi bác sĩ đang ở trạng thái inactive.
-     */
-    void hardDeleteDoctor(Long id);
-
-    /**
      * Bác sĩ upload ảnh CCCD, chứng chỉ hành nghề, avatar + nhập số CCCD & số
      * chứng chỉ. Status chuyển sang pending_approval để admin duyệt.
      */

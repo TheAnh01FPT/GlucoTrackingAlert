@@ -18,6 +18,10 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     // Lấy danh sách bác sĩ theo status (vd: pending_approval, active, rejected)
     List<Doctor> findByStatus(String status);
 
+    // Lấy bác sĩ có status = statusParam HOẶC đang có bản xác minh staging chờ duyệt
+    // (bác sĩ active gửi lại CCCD/chứng chỉ mới — xem uploadVerificationImages)
+    List<Doctor> findByStatusOrPendingVerificationJsonIsNotNull(String status);
+
     Optional<Doctor> findByUserId(Long userId);
 
     // Tìm theo số CCCD — dùng để check trùng
@@ -25,4 +29,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     // Tìm theo số chứng chỉ hành nghề — dùng để check trùng
     Optional<Doctor> findByPracticeLicense(String practiceLicense);
+    
+    //Tìm theo số điện thoại - dùng để check trùng
+    Optional<Doctor> findByPhone(String phone);
 }

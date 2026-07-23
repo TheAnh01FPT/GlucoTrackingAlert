@@ -137,16 +137,8 @@ public class UserServiceImpl implements UserService {
                 .build();
         tokenRepository.save(verificationToken);
 
+        // Gửi email OTP bất đồng bộ để không chặn luồng đăng ký (trả response nhanh)
         sendOtpEmail(email, request.getFullName().trim(), otp);
-
-        try {
-            sendOtpEmail(request.getEmail().trim(), request.getFullName().trim(), otp);
-        } catch (Exception ex) {
-            // Không lộ message kỹ thuật (vd. SMTP "Authentication failed") ra ngoài.
-            // @Transactional sẽ rollback user + token vừa tạo do đây là RuntimeException.
-            throw new RuntimeException(
-                    "Không thể gửi email xác nhận lúc này. Vui lòng thử lại sau ít phút.");
-        }
 
         return user;
     }
@@ -333,7 +325,8 @@ public class UserServiceImpl implements UserService {
     private void sendOtpEmail(String toEmail, String fullName, String otp) {
         String subject = "Mã xác nhận đăng ký tài khoản GlucoTrackAlert";
         String htmlContent = buildOtpEmail(fullName, otp);
-        emailService.sendHtmlMessage(toEmail, subject, htmlContent);
+        // Gửi bất đồng bộ để tránh delay khi người dùng submit form
+        emailService.sendHtmlMessageAsync(toEmail, subject, htmlContent);
     }
 
     private String buildOtpEmail(String fullName, String otp) {

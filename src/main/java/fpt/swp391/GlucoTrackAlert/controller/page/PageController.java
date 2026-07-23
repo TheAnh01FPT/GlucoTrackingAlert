@@ -162,7 +162,7 @@ public class PageController {
 
     @GetMapping("/doctor/settings")
     public String doctorSettings() {
-        return "settings";
+        return "/doctor/settings";
     }
 
     @GetMapping("/doctor/prescriptions")

@@ -9,5 +9,7 @@ public interface PatientService {
     boolean existsByUserId(Long userId);
     PatientProfileResponse createProfile(PatientProfileRequest request);
     PatientProfileResponse updateProfile(Long userId, PatientProfileRequest request);
-     List<PatientProfileResponse> getAllPatients();
+    List<PatientProfileResponse> getAllPatients();
+    PatientProfileResponse verifyIdentityCard(Long patientId, String status);
+    PatientProfileResponse verifyInsuranceCard(Long patientId, String status);
 }

@@ -290,9 +290,8 @@
                 z-index:9999;
             }
             .link-icon {
-                display:flex;
-                align-items:center;
-                justify-content:center;
+                text-align:center;
+                vertical-align:middle;
                 color:#aaa;
                 font-size:1.1rem;
             }
@@ -371,12 +370,12 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Bệnh nhân</th>
-                            <th style="width:30px"></th>
                             <th>Bác sĩ đề xuất</th>
+                            <th style="width:30px"></th>
+                            <th>Bệnh nhân</th>
                             <th>Thời gian đề xuất</th>
                             <th>Ghi chú</th>
-                            <th style="width:170px">Thao tác</th>
+                            <th style="width:230px">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="pendingTable">
@@ -660,12 +659,12 @@
                                 tbody.innerHTML = list.map((a, i) => `
                 <tr>
                     <td class="text-muted">${i + 1}</td>
-                    <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${a.patientName || 'N/A'}</span></td>
-                    <td class="link-icon"><i class="bi bi-arrow-right"></i></td>
                     <td><span class="pill-doctor"><i class="bi bi-person-badge me-1"></i>${a.doctorName || 'N/A'}</span></td>
+                    <td class="link-icon"><i class="bi bi-arrow-right"></i></td>
+                    <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${a.patientName || 'N/A'}</span></td>
                     <td style="font-size:.82rem; color:#666">${fmtDate(a.assignedAt)}</td>
                     <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${a.note || ''}">${a.note || '<span class="text-muted">–</span>'}</td>
-                    <td>
+                    <td style="white-space:nowrap">
                         <button class="btn btn-sm btn-success me-1" onclick="approveAssignment(${a.id})"><i class="bi bi-check-lg"></i> Duyệt</button>
                         <button class="btn btn-sm btn-outline-danger" onclick="openReject(${a.id})"><i class="bi bi-x-lg"></i> Từ chối</button>
                     </td>
@@ -915,13 +914,16 @@
                             async function confirmDelete() {
                                 try {
                                     const res = await fetch(`/api/assignments/${deleteTargetId}`, {method: 'DELETE', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
-                                    if (!res.ok)
-                                        throw new Error();
+                                    if (!res.ok) {
+                                        const err = await res.text();
+                                        showToast('❌ ' + (err || 'Hủy phân công thất bại, vui lòng thử lại!'), 'danger');
+                                        return;
+                                    }
                                     deleteModal.hide();
                                     showToast('Đã hủy phân công!', 'success');
                                     loadAll();
                                 } catch {
-                                    showToast('Lỗi khi thực hiện thao tác!', 'danger');
+                                    showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
                                 }
                             }
 
@@ -932,13 +934,16 @@
                             async function confirmHardDelete() {
                                 try {
                                     const res = await fetch(`/api/assignments/${hardDeleteTargetId}/permanent`, {method: 'DELETE', headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}});
-                                    if (!res.ok)
-                                        throw new Error();
+                                    if (!res.ok) {
+                                        const err = await res.text();
+                                        showToast('❌ ' + (err || 'Xóa thất bại, vui lòng thử lại!'), 'danger');
+                                        return;
+                                    }
                                     hardDeleteModal.hide();
                                     showToast('Đã xóa khỏi nhật ký!', 'success');
                                     loadAll();
                                 } catch {
-                                    showToast('Lỗi khi thực hiện thao tác!', 'danger');
+                                    showToast('❌ Lỗi kết nối. Vui lòng thử lại!', 'danger');
                                 }
                             }
 

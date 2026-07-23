@@ -27,4 +27,7 @@ public interface DoctorRecommendationService {
 
     // Bệnh nhân xem tất cả kể cả đã xóa
     List<DoctorRecommendationResponse> getAllByPatient(Long patientId);
+
+    // Bệnh nhân đánh dấu đã đọc một khuyến nghị
+    DoctorRecommendationResponse markAsRead(Long patientId, Long recommendationId);
 }

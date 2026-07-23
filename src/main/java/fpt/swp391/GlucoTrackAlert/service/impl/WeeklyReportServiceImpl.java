@@ -19,6 +19,7 @@ import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
 import fpt.swp391.GlucoTrackAlert.dto.CustomRangeResult;
 import fpt.swp391.GlucoTrackAlert.service.impl.ComplicationRiskServiceImpl;
 import fpt.swp391.GlucoTrackAlert.service.cardioai.WeeklyCardioAiService;
+import fpt.swp391.GlucoTrackAlert.service.strokeai.WeeklyStrokeAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,8 +48,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     private final RiskWarningRepository riskWarningRepository;
     private final AiAnalysisLogRepository aiAnalysisLogRepository;
 
-    // Đã tiêm thêm Service tim mạch tuần vào đây để giải quyết lỗi "Cannot resolve symbol"
     private final WeeklyCardioAiService weeklyCardioAiService;
+    private final WeeklyStrokeAiService weeklyStrokeAiService;
 
     // Tạm thời giữ nguyên record Snapshot cho đồng bộ cấu trúc cũ của bạn
     private record WeeklySnapshot(
@@ -154,49 +155,66 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     }
 
     private void recordAssessment(Patient patient, Long patientId, WeeklyHealthReport report, WeeklySnapshot s) {
-        RiskAssessment assessment = RiskAssessment.builder()
+        // Update the existing assessment for this weekly report instead of always
+        // inserting a new one, otherwise every recalculation (triggered on every
+        // daily log create/edit/delete) creates a duplicate RiskAssessment row.
+        RiskAssessment assessment = riskAssessmentRepository
+                .findByWeeklyReportIdAndAssessmentType(report.getId(), "NEPHROPATHY_WEEKLY")
+                .orElseGet(() -> RiskAssessment.builder()
                 .patient(patient)
                 .weeklyReportId(report.getId())
                 .dailyHealthLogId(null)
                 .assessmentType("NEPHROPATHY_WEEKLY")
-                .riskLevel(s.level().name())
-                .riskPercentage(s.riskPercentage())
-                .lowConfidence(s.logCount() < 7)
-                .hypertensionScore(s.htnScore())
-                .recommendation(report.getRecommendation())
-                .assessedAt(LocalDateTime.now())
-                .build();
-        assessment = riskAssessmentRepository.save(assessment);
+                .build());
 
-        report.setRiskAssessmentId(assessment.getId());
+        assessment.setRiskLevel(s.level().name());
+        assessment.setRiskPercentage(s.riskPercentage());
+        assessment.setLowConfidence(s.logCount() < 7);
+        assessment.setHypertensionScore(s.htnScore());
+        assessment.setRecommendation(report.getRecommendation());
+        assessment.setAssessedAt(LocalDateTime.now());
+        final RiskAssessment savedAssessment = riskAssessmentRepository.save(assessment);
+
+        report.setRiskAssessmentId(savedAssessment.getId());
         weeklyHealthReportRepository.save(report);
 
+        // Same idea for the warning: update the existing one tied to this
+        // assessment rather than spamming a new warning on every recalculation.
+        Optional<RiskWarning> existingWarning = riskWarningRepository
+                .findByRiskAssessmentIdAndRiskType(savedAssessment.getId(), "NEPHROPATHY_WEEKLY");
+
         if (s.level() != RiskLevel.LOW) {
-            RiskWarning warning = RiskWarning.builder()
+            RiskWarning warning = existingWarning.orElseGet(() -> RiskWarning.builder()
                     .patient(patient)
-                    .riskAssessmentId(assessment.getId())
+                    .riskAssessmentId(savedAssessment.getId())
                     .dailyHealthLogId(null)
                     .riskType("NEPHROPATHY_WEEKLY")
-                    .riskLevel(s.level().name())
-                    .riskPercentage(s.riskPercentage())
-                    .message(report.getRecommendation())
                     .status("new")
                     .notified(false)
                     .createdAt(LocalDateTime.now())
-                    .build();
+                    .build());
+            warning.setRiskLevel(s.level().name());
+            warning.setRiskPercentage(s.riskPercentage());
+            warning.setMessage(report.getRecommendation());
             riskWarningRepository.save(warning);
+        } else {
+            // Risk dropped back to LOW: remove any stale warning instead of
+            // leaving it around or creating a fresh redundant one.
+            existingWarning.ifPresent(riskWarningRepository::delete);
         }
 
-        AiAnalysisLog aiLog = AiAnalysisLog.builder()
+        AiAnalysisLog aiLog = aiAnalysisLogRepository
+                .findByWeeklyReportIdAndAnalysisType(report.getId(), "CKD_WEEKLY_LOGISTIC_V1")
+                .orElseGet(() -> AiAnalysisLog.builder()
                 .patientId(patientId)
                 .dailyHealthLogId(null)
                 .weeklyReportId(report.getId())
                 .analysisType("CKD_WEEKLY_LOGISTIC_V1")
-                .inputData("{\"age\":" + s.age() + ",\"avg_diastolic\":" + s.avgDiaForModel() + ",\"avg_blood_sugar\":" + s.avgBsForModel() + ",\"htn\":" + s.htn() + "}")
-                .outputResult("{\"riskPercentage\":" + s.riskPct() + ",\"riskLevel\":\"" + s.level().name() + "\"}")
-                .riskLevel(s.level().name())
-                .createdAt(LocalDateTime.now())
-                .build();
+                .build());
+        aiLog.setInputData("{\"age\":" + s.age() + ",\"avg_diastolic\":" + s.avgDiaForModel() + ",\"avg_blood_sugar\":" + s.avgBsForModel() + ",\"htn\":" + s.htn() + "}");
+        aiLog.setOutputResult("{\"riskPercentage\":" + s.riskPct() + ",\"riskLevel\":\"" + s.level().name() + "\"}");
+        aiLog.setRiskLevel(s.level().name());
+        aiLog.setCreatedAt(LocalDateTime.now());
         aiAnalysisLogRepository.save(aiLog);
     }
 
@@ -315,34 +333,47 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 List<String> adviceList = (List<String>) aiHeartResult.get("advice");
                 String adviceText = (adviceList != null) ? String.join("\n• ", adviceList) : "";
 
-                RiskAssessment assessment = RiskAssessment.builder()
+                // Update the existing cardio assessment for this weekly report instead
+                // of always inserting a new one (avoids duplicate rows on every
+                // recalculation triggered by daily log create/edit/delete).
+                RiskAssessment assessment = riskAssessmentRepository
+                        .findByWeeklyReportIdAndAssessmentType(report.getId(), "WEEKLY_CARDIO_RISK")
+                        .orElseGet(() -> RiskAssessment.builder()
                         .patient(patient)
                         .weeklyReportId(report.getId())
                         .assessmentType("WEEKLY_CARDIO_RISK")
-                        .riskLevel(riskLevel)
-                        .riskPercentage(BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP))
-                        .aiSummary(summary)
-                        .recommendation(adviceText)
-                        .assessedAt(LocalDateTime.now())
-                        .build();
+                        .build());
+                assessment.setRiskLevel(riskLevel);
+                assessment.setRiskPercentage(BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP));
+                assessment.setAiSummary(summary);
+                assessment.setRecommendation(adviceText);
+                assessment.setAssessedAt(LocalDateTime.now());
                 riskAssessmentRepository.save(assessment);
 
+                Optional<RiskWarning> existingWarning = riskWarningRepository
+                        .findByRiskAssessmentIdAndRiskType(assessment.getId(), "WEEKLY_CARDIO_RISK");
+
                 if (!"LOW".equalsIgnoreCase(riskLevel)) {
-                    RiskWarning warning = RiskWarning.builder()
+                    RiskWarning warning = existingWarning.orElseGet(() -> RiskWarning.builder()
                             .patient(patient)
                             .riskAssessmentId(assessment.getId())
                             .riskType("WEEKLY_CARDIO_RISK")
-                            .riskLevel(riskLevel)
-                            .riskPercentage(assessment.getRiskPercentage())
-                            .message("Cảnh báo nguy cơ tim mạch tuần: " + summary + "\nKhuyến nghị:\n• " + adviceText)
                             .status("new")
                             .notified(false)
                             .createdAt(LocalDateTime.now())
-                            .build();
+                            .build());
+                    warning.setRiskLevel(riskLevel);
+                    warning.setRiskPercentage(assessment.getRiskPercentage());
+                    warning.setMessage("Cảnh báo nguy cơ tim mạch tuần: " + summary + "\nKhuyến nghị:\n• " + adviceText);
                     riskWarningRepository.save(warning);
+                } else {
+                    existingWarning.ifPresent(riskWarningRepository::delete);
                 }
 
-                String combinedSummary = report.getAiSummary() + " | [AI Tim Mạch]: " + summary;
+                String baseSummary = report.getAiSummary() != null && report.getAiSummary().contains(" | [AI Tim Mạch]: ")
+                        ? report.getAiSummary().substring(0, report.getAiSummary().indexOf(" | [AI Tim Mạch]: "))
+                        : report.getAiSummary();
+                String combinedSummary = baseSummary + " | [AI Tim Mạch]: " + summary;
                 report.setAiSummary(combinedSummary);
                 weeklyHealthReportRepository.save(report);
 
@@ -350,6 +381,97 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             }
         } catch (Exception e) {
             log.error("Gặp lỗi trong tiến trình xử lý và đồng bộ kết quả AI tim mạch tuần: ", e);
+        }
+
+        // --- ĐỒNG BỘ ĐÁNH GIÁ AI ĐỘT QUỴ TUẦN (WEEKLY STROKE RISK ASSESSMENT) ---
+        // Tổng hợp dữ liệu trong tuần để chạy đánh giá AI và đồng bộ kết quả nguy cơ đột quỵ tuần.
+        try {
+            // Gọi service AI để tính toán trung bình cộng chỉ số tuần và lấy kết quả dự đoán đột quỵ
+            Map<String, Object> aiStrokeResult = weeklyStrokeAiService.calculateWeeklyStrokeRisk(patient, weekStart, weekEnd);
+
+            if (aiStrokeResult != null && !aiStrokeResult.isEmpty()) {
+                Double riskPercentage = null;
+                if (aiStrokeResult.get("risk_percentage") != null) {
+                    riskPercentage = Double.parseDouble(aiStrokeResult.get("risk_percentage").toString());
+                }
+                String rawRiskLevel = (String) aiStrokeResult.get("risk_level");
+
+                // Mức độ mặc định
+                String mappedLevel = "LOW";
+                String strokeAdvice = "Chỉ số sức khỏe của bạn ở mức an toàn, nguy cơ đột quỵ thấp.";
+
+                // Phân loại mức độ nguy cơ dựa trên nhãn trả về và xác suất tính toán được
+                if (rawRiskLevel != null) {
+                    String lowerLevel = rawRiskLevel.toLowerCase();
+                    if (lowerLevel.contains("critical") || (riskPercentage != null && riskPercentage >= 75)) {
+                        mappedLevel = "CRITICAL";
+                        strokeAdvice = "🚨 Nguy cơ đột quỵ rất cao (Nguy hiểm)! Cần tham vấn bác sĩ ngay để kiểm soát huyết áp và các chỉ số sức khỏe.";
+                    } else if (lowerLevel.contains("high") || (riskPercentage != null && riskPercentage >= 50)) {
+                        mappedLevel = "HIGH";
+                        strokeAdvice = "⚠️ Nguy cơ đột quỵ cao! Bạn nên điều chỉnh chế độ sinh hoạt, hạn chế các chất kích thích và theo dõi huyết áp thường xuyên.";
+                    } else if (lowerLevel.contains("medium") || lowerLevel.contains("moderate") || (riskPercentage != null && riskPercentage >= 25)) {
+                        mappedLevel = "MEDIUM";
+                        strokeAdvice = "⚡ Nguy cơ đột quỵ ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
+                    }
+                }
+
+                // Cập nhật kết quả đánh giá nguy cơ đột quỵ tuần cho báo cáo tuần này (tránh tạo trùng lặp dòng mới)
+                RiskAssessment assessment = riskAssessmentRepository
+                        .findByWeeklyReportIdAndAssessmentType(report.getId(), "WEEKLY_STROKE_RISK")
+                        .orElseGet(() -> RiskAssessment.builder()
+                        .patient(patient)
+                        .weeklyReportId(report.getId())
+                        .assessmentType("WEEKLY_STROKE_RISK")
+                        .build());
+                assessment.setRiskLevel(mappedLevel);
+                BigDecimal finalPct = BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP);
+                assessment.setRiskPercentage(finalPct);
+                assessment.setRecommendation(strokeAdvice);
+                assessment.setAssessedAt(LocalDateTime.now());
+                riskAssessmentRepository.save(assessment);
+
+                // Đồng bộ hóa cảnh báo khẩn cấp nếu mức nguy cơ không phải mức AN TOÀN (LOW)
+                Optional<RiskWarning> existingWarning = riskWarningRepository
+                        .findByRiskAssessmentIdAndRiskType(assessment.getId(), "WEEKLY_STROKE_RISK");
+
+                if (!"LOW".equalsIgnoreCase(mappedLevel)) {
+                    RiskWarning warning = existingWarning.orElseGet(() -> RiskWarning.builder()
+                            .patient(patient)
+                            .riskAssessmentId(assessment.getId())
+                            .riskType("WEEKLY_STROKE_RISK")
+                            .status("new")
+                            .notified(false)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                    warning.setRiskLevel(mappedLevel);
+                    warning.setRiskPercentage(finalPct);
+                    warning.setMessage("Cảnh báo nguy cơ đột quỵ tuần: " + mappedLevel + "\nKhuyến nghị:\n• " + strokeAdvice);
+                    riskWarningRepository.save(warning);
+                } else {
+                    // Nếu sau khi cập nhật dữ liệu, mức nguy cơ giảm về LOW -> xóa cảnh báo cũ
+                    existingWarning.ifPresent(riskWarningRepository::delete);
+                }
+
+                // Lưu nhật ký phân tích AI thô phục vụ kiểm tra hệ thống
+                AiAnalysisLog strokeAiLog = AiAnalysisLog.builder()
+                        .patientId(patient.getId())
+                        .weeklyReportId(report.getId())
+                        .analysisType("STROKE_WEEKLY_V1")
+                        .inputData("{"
+                                + "\"patientId\":" + patient.getId()
+                                + ",\"weekStart\":\"" + weekStart + "\""
+                                + ",\"weekEnd\":\"" + weekEnd + "\""
+                                + "}")
+                        .outputResult(aiStrokeResult.toString())
+                        .riskLevel(mappedLevel)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                aiAnalysisLogRepository.save(strokeAiLog);
+
+                log.info("Đã đồng bộ đánh giá AI đột quỵ tuần hoàn tất cho bệnh nhân id: {}", patient.getId());
+            }
+        } catch (Exception e) {
+            log.error("Gặp lỗi trong tiến trình xử lý và đồng bộ kết quả AI đột quỵ tuần: ", e);
         }
     }
 }

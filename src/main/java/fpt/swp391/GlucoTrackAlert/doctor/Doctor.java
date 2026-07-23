@@ -61,4 +61,7 @@ public class Doctor {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+    
+    @Column(name = "pending_verification_json" , columnDefinition = "TEXT")
+    private String pendingVerificationJson;
 }

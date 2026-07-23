@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🫘 Dự Báo Nguy Cơ Biến Chứng Thận</title>
+    <title>🫘 Sàng Lọc Yếu Tố Liên Quan Đến Thận</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <style>
@@ -127,11 +127,23 @@
       }
 
       .progress-wrap {
+        display: block;
+        width: 100%;
         background: #e2e8f0;
         border-radius: 9999px;
-        height: 38px;
         overflow: hidden;
-        margin-bottom: 1.25rem;
+        margin: 0 0 1rem 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box;
+        height: 38px;
+      }
+
+      .progress-label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 0.45rem;
       }
 
       .risk-trend-note {
@@ -140,17 +152,19 @@
         margin-top: 8px;
       }
       .progress-bar {
-        height: 100%;
-        display: flex;
+        height: 100% !important;
+        display: inline-flex;
         align-items: center;
-        justify-content: flex-end;
-        padding-right: 1.1rem;
+        justify-content: center;
+        padding: 0 1rem !important;
         color: #fff;
         font-weight: 800;
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         border-radius: 9999px;
         min-width: 70px;
         transition: width 0.3s ease;
+        white-space: nowrap;
+        box-sizing: border-box;
       }
       .risk-LOW { background: linear-gradient(90deg, #10b981, #059669); }
       .risk-MEDIUM { background: linear-gradient(90deg, #fbbf24, var(--orange)); }
@@ -158,13 +172,19 @@
       .risk-CRITICAL { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
       .progress-wrap-sm {
-        height: 32px;
         max-width: 230px;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        height: 32px;
       }
       .progress-bar-sm {
-        font-size: 0.82rem;
-        padding-right: 0.65rem;
+        height: 100% !important;
+        font-size: 0.78rem;
+        padding: 0 0.75rem !important;
         min-width: 72px;
+        justify-content: center;
+        box-sizing: border-box;
       }
 
       .recommendation-text {
@@ -514,7 +534,7 @@
       <a class="btn-back" th:if="${isDoctorView}" href="/doctor/home">← Quay lại trang bác sĩ</a>
       <a class="btn-back" th:unless="${isDoctorView}" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
 
-      <h1 class="page-heading">🫘 Theo Dõi Yếu Tố Nguy Cơ Biến Chứng Thận</h1>
+      <h1 class="page-heading">🫘 Sàng Lọc Yếu Tố Liên Quan Đến Thận</h1>
       <p class="page-subtitle" th:if="${patientName}" th:text="'Bệnh nhân: ' + ${patientName}">Bệnh nhân</p>
 
       <div class="dashboard-grid">
@@ -567,7 +587,7 @@
           <div class="risk-summary" th:if="${latestAssessment != null}">
             <div class="risk-summary-label">Đánh giá mới nhất</div>
             <div class="badge" th:classappend="' badge-' + ${latestAssessment.healthStatus}">
-              <span th:text="${latestAssessment.healthStatus}">MEDIUM</span>
+              <span th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
             </div>
             <p class="risk-summary-text" th:text="${latestAssessment.recommendation}">Khuyến nghị</p>
           </div>
@@ -584,6 +604,7 @@
                 <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI.</p>
               </div>
             </div>
+            <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
 
             <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" class="range-form">
               <div>
@@ -609,6 +630,9 @@
                 <span class="meta-label">đến</span>
                 <span th:text="${customRangeResult.toDate}">2026-06-14</span>
               </div>
+              <div class="meta-row">
+                <span class="meta-label">Điểm sàng lọc</span>
+              </div>
               <div class="progress-wrap">
                 <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
                      th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
@@ -616,7 +640,7 @@
               </div>
               <div class="meta-row meta-row-inline">
                 <span class="meta-label">Mức độ:</span>
-                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel}">MEDIUM</span>
+                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
                 <span class="meta-label">Số log:</span>
                 <span th:text="${customRangeResult.logCount}">5</span>
                 <span class="meta-label">Độ tin cậy:</span>
@@ -644,17 +668,20 @@
             <div th:if="${latestAssessment != null}">
               <div class="meta-row">
                 <span class="meta-label">Mức độ (sàng lọc):</span>
-                <span th:class="'badge badge-' + ${latestAssessment.healthStatus}" th:text="${latestAssessment.healthStatus}">MEDIUM</span>
+                <span th:class="'badge badge-' + ${latestAssessment.healthStatus}" th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
                 <span th:if="${latestAssessment.lowConfidence}" class="badge badge-MEDIUM">⚠️ Dữ liệu chưa đầy đủ</span>
               </div>
 
+              <div class="meta-row">
+                <span class="meta-label">Điểm sàng lọc</span>
+              </div>
               <div class="progress-wrap">
                 <div th:class="'progress-bar risk-' + ${latestAssessment.healthStatus}"
                      th:style="'width:' + ${latestAssessment.riskPercentage} + '%'"
                      th:text="${latestAssessment.riskPercentage} + '%'">45.89%</div>
               </div>
 
-              <div class="risk-trend-note" th:if="${previousAssessment != null}">
+              <div class="risk-trend-note" th:if="${previousAssessment != null && latestAssessment.riskPercentage != null && previousAssessment.riskPercentage != null}">
                 <span th:if="${latestAssessment.riskPercentage > previousAssessment.riskPercentage}">
                   ↑ Tăng <span th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage - previousAssessment.riskPercentage, 1, 1)}"></span> điểm % so với tuần trước
                 </span>
@@ -670,17 +697,22 @@
 
               <div class="risk-factor-note" style="background: var(--surface-1, #f5f5f5); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px;">
                 <div style="font-weight: 500; margin-bottom: 6px;">Yếu tố góp phần chính</div>
-                <div th:if="${patient != null and patient.hypertension != null and patient.hypertension}">
-                  ⚠️ Tiền sử tăng huyết áp trong hồ sơ
+                <div th:if="${patient != null and patient.age != null}">
+                  • Tuổi: <strong th:text="${patient.age}">--</strong> tuổi
                 </div>
-                <div th:unless="${patient != null and patient.hypertension != null and patient.hypertension}">
-                  ✅ Không có tiền sử tăng huyết áp trong hồ sơ
+                <div th:if="${latestAssessment != null and latestAssessment.averageDiastolic != null}">
+                  • Huyết áp tâm trương trung bình: <strong th:text="${latestAssessment.averageDiastolic}">--</strong> mmHg
+                </div>
+                <div th:if="${latestAssessment != null and latestAssessment.averageBloodSugar != null}">
+                  • Đường huyết trung bình: <strong th:text="${latestAssessment.averageBloodSugar}">--</strong> mmol/L
+                </div>
+                <div>
+                  • Tăng huyết áp: <strong th:text="${patient != null and patient.hypertension} ? 'Có' : 'Không'">--</strong>
                 </div>
               </div>
 
               <div class="disclaimer-note" style="background: #fff8e6; border-left: 3px solid #f0ad4e; padding: 10px 14px; margin-top: 12px; font-size: 12.5px; color: #7a5c00; border-radius: 0 6px 6px 0;">
-                Đây là công cụ sàng lọc yếu tố nguy cơ dựa trên dữ liệu tự theo dõi, không thay thế xét nghiệm y khoa. 
-                Nếu điểm số duy trì ở mức cao, hãy trao đổi với bác sĩ.
+                Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham khảo quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham khảo — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
               </div>
 
               <div class="assessed-at">
@@ -696,7 +728,7 @@
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><polyline points="9 14 11 16 15 11"/></svg>
               </div>
               <div>
-                <h2 class="card-title">Sàng lọc nguy cơ thận hàng tuần</h2>
+                <h2 class="card-title">Sàng lọc yếu tố thận hàng tuần</h2>
                 <p class="card-subtitle">Lịch sử các đánh giá tuần gần đây.</p>
               </div>
             </div>
@@ -709,11 +741,11 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Week Start</th>
-                    <th>Week End</th>
-                    <th>Risk %</th>
-                    <th>Risk Level</th>
-                    <th>Recommendation</th>
+                    <th>Từ ngày</th>
+                    <th>Đến ngày</th>
+                    <th>Điểm sàng lọc</th>
+                    <th>Mức độ</th>
+                    <th>Khuyến nghị</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -721,13 +753,13 @@
                     <td>
                       <span class="date-cell">
                         <span class="date-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                        <span th:text="${r.weekStart}">2026-06-15</span>
+                        <span th:text="${#temporals.format(r.weekStart, 'dd/MM/yyyy')}">2026-06-15</span>
                       </span>
                     </td>
                     <td>
                       <span class="date-cell">
                         <span class="date-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                        <span th:text="${r.weekEnd}">2026-06-21</span>
+                        <span th:text="${#temporals.format(r.weekEnd, 'dd/MM/yyyy')}">2026-06-21</span>
                       </span>
                     </td>
                     <td>
@@ -738,7 +770,7 @@
                       </div>
                     </td>
                     <td>
-                      <span th:class="'badge badge-sm badge-' + ${r.healthStatus}" th:text="${r.healthStatus}">MEDIUM</span>
+                      <span th:class="'badge badge-sm badge-' + ${r.healthStatus}" th:text="${r.healthStatus == 'LOW'} ? 'Thấp' : (${r.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${r.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
                     </td>
                     <td class="recommendation-cell" th:text="${r.recommendation}">Nguy cơ trung bình. Kiểm soát đường huyết và huyết áp, tái khám 3 tháng/lần.</td>
                   </tr>

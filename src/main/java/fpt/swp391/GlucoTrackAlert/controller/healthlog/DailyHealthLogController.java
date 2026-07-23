@@ -45,6 +45,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import fpt.swp391.GlucoTrackAlert.service.export.ExportService;
+import fpt.swp391.GlucoTrackAlert.repository.risk.WeeklyHealthReportRepository;
+import fpt.swp391.GlucoTrackAlert.repository.risk.RiskAssessmentRepository;
+import fpt.swp391.GlucoTrackAlert.repository.risk.RiskWarningRepository;
+import fpt.swp391.GlucoTrackAlert.model.risk.WeeklyHealthReport;
+import fpt.swp391.GlucoTrackAlert.model.risk.RiskAssessment;
+import fpt.swp391.GlucoTrackAlert.model.risk.RiskWarning;
+import fpt.swp391.GlucoTrackAlert.service.strokeai.WeeklyStrokeAiService;
 
 @Controller
 @RequestMapping("/health-logs")
@@ -60,6 +67,10 @@ public class DailyHealthLogController {
     private final DailyHealthLogRepository dailyHealthLogRepository;
     private final JdbcTemplate jdbcTemplate;
     private final ExportService exportService;
+    private final WeeklyHealthReportRepository weeklyHealthReportRepository;
+    private final RiskAssessmentRepository riskAssessmentRepository;
+    private final RiskWarningRepository riskWarningRepository;
+    private final WeeklyStrokeAiService weeklyStrokeAiService;
 
     private Long resolvePatientId(Long userId) {
         if (userId == null) {
@@ -735,6 +746,15 @@ public class DailyHealthLogController {
                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
                              Model model) {
+        // Prevent IDOR: non-admin/doctor users may only view their own chart,
+        // regardless of what userId is passed in the request.
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+            Long cur = getCurrentUserId();
+            if (cur != null) {
+                userId = cur;
+            }
+        }
+
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             patientId = userId;
@@ -923,23 +943,6 @@ public class DailyHealthLogController {
         BigDecimal monthlyAvgSleep = calculateAverage(monthLogs, log -> log.getSleepHours());
         BigDecimal monthlyAvgWater = calculateAverage(monthLogs, log -> log.getWaterMl() != null ? BigDecimal.valueOf(log.getWaterMl()) : null);
 
-        YearMonth previousMonth = selectedMonth.minusMonths(1);
-        List<DailyHealthLog> previousMonthLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, previousMonth.atDay(1), previousMonth.atEndOfMonth());
-        BigDecimal previousAvgSugar = calculateAverage(previousMonthLogs, log -> log.getBloodSugar());
-
-        String monthlyProgressStatus = "STABLE";
-        String monthlyProgressLabel = "Đường huyết ổn định so với tháng trước.";
-        if (monthlyAvgSugar != null && previousAvgSugar != null) {
-            BigDecimal delta = monthlyAvgSugar.subtract(previousAvgSugar);
-            if (delta.compareTo(new BigDecimal("0.3")) <= -1) {
-                monthlyProgressStatus = "IMPROVING";
-                monthlyProgressLabel = "Đường huyết cải thiện rõ rệt so với tháng trước.";
-            } else if (delta.compareTo(new BigDecimal("0.3")) >= 1) {
-                monthlyProgressStatus = "WORSENING";
-                monthlyProgressLabel = "Đường huyết có xu hướng xấu đi so với tháng trước.";
-            }
-        }
-
         List<Map<String, Object>> monthOptions = new java.util.ArrayList<>();
         YearMonth currentMonth = YearMonth.now();
         for (int i = 5; i >= 0; i--) {
@@ -973,10 +976,7 @@ public class DailyHealthLogController {
         model.addAttribute("monthlyAvgDiastolic", formatMetricValue(monthlyAvgDiastolic));
         model.addAttribute("monthlyAvgSleep", formatMetricValue(monthlyAvgSleep));
         model.addAttribute("monthlyAvgWater", formatMetricValue(monthlyAvgWater));
-        model.addAttribute("monthlyProgressStatus", monthlyProgressStatus);
-        model.addAttribute("monthlyProgressLabel", monthlyProgressLabel);
         model.addAttribute("monthOptions", monthOptions);
-        model.addAttribute("monthlyAiEvaluation", null);
         model.addAttribute("monthlyLogCount", monthLogs.size());
 
         return "healthlog/ai-report";
@@ -1038,42 +1038,168 @@ public class DailyHealthLogController {
             }
         }
 
-        // Dynamic AI prediction calculation
-        LocalDate toDate = to;
-        LocalDate fromDate = from;
-        if (toDate == null || fromDate == null) {
-            Page<DailyHealthLogResponse> latestLogs = dailyHealthLogService.getLogs(patientId, PageRequest.of(0, 1));
-            if (latestLogs != null && latestLogs.hasContent()) {
-                toDate = latestLogs.getContent().get(0).getLogDate();
+        boolean isDoctorView = isDoctorOrAdminCaller
+                && userId != null
+                && !userId.equals(curUserId);
+
+        List<WeeklyHealthReport> dbReports = weeklyHealthReportRepository.findByPatientIdOrderByWeekStartDesc(patientId);
+        List<Map<String, Object>> reports = dbReports.stream().map(r -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", r.getId());
+            map.put("weekStart", r.getWeekStart());
+            map.put("weekEnd", r.getWeekEnd());
+            map.put("averageBloodSugar", r.getAverageBloodSugar());
+            map.put("averageSystolic", r.getAverageSystolic());
+            map.put("averageDiastolic", r.getAverageDiastolic());
+            map.put("createdAt", r.getCreatedAt());
+
+            Optional<RiskAssessment> strokeAss = riskAssessmentRepository.findByWeeklyReportIdAndAssessmentType(r.getId(), "WEEKLY_STROKE_RISK");
+            if (strokeAss.isPresent()) {
+                RiskAssessment ass = strokeAss.get();
+                map.put("healthStatus", ass.getRiskLevel());
+                map.put("riskPercentage", ass.getRiskPercentage());
+                map.put("recommendation", ass.getRecommendation());
+                map.put("lowConfidence", ass.getLowConfidence());
+                map.put("aiSummary", ass.getAiSummary());
             } else {
-                toDate = LocalDate.now();
+                try {
+                    Map<String, Object> aiStrokeResult = weeklyStrokeAiService.calculateWeeklyStrokeRisk(patient, r.getWeekStart(), r.getWeekEnd());
+                    if (aiStrokeResult != null && !aiStrokeResult.isEmpty()) {
+                        Double riskPercentage = null;
+                        if (aiStrokeResult.get("risk_percentage") != null) {
+                            riskPercentage = Double.parseDouble(aiStrokeResult.get("risk_percentage").toString());
+                        }
+                        String rawRiskLevel = (String) aiStrokeResult.get("risk_level");
+
+                        String mappedLevel = "LOW";
+                        String strokeAdvice = "Chỉ số sức khỏe của bạn ở mức an toàn, nguy cơ đột quỵ thấp.";
+
+                        if (rawRiskLevel != null) {
+                            String lowerLevel = rawRiskLevel.toLowerCase();
+                            if (lowerLevel.contains("critical") || (riskPercentage != null && riskPercentage >= 75)) {
+                                mappedLevel = "CRITICAL";
+                                strokeAdvice = "🚨 Nguy cơ đột quỵ rất cao (Nguy hiểm)! Cần tham vấn bác sĩ ngay để kiểm soát huyết áp và các chỉ số sức khỏe.";
+                            } else if (lowerLevel.contains("high") || (riskPercentage != null && riskPercentage >= 50)) {
+                                mappedLevel = "HIGH";
+                                strokeAdvice = "⚠️ Nguy cơ đột quỵ cao! Bạn nên điều chỉnh chế độ sinh hoạt, hạn chế các chất kích thích và theo dõi huyết áp thường xuyên.";
+                            } else if (lowerLevel.contains("medium") || lowerLevel.contains("moderate") || (riskPercentage != null && riskPercentage >= 25)) {
+                                mappedLevel = "MEDIUM";
+                                strokeAdvice = "⚡ Nguy cơ đột quỵ ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
+                            }
+                        }
+
+                        BigDecimal finalPct = BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP);
+                        
+                        RiskAssessment newAss = RiskAssessment.builder()
+                                .patient(patient)
+                                .weeklyReportId(r.getId())
+                                .assessmentType("WEEKLY_STROKE_RISK")
+                                .riskLevel(mappedLevel)
+                                .riskPercentage(finalPct)
+                                .recommendation(strokeAdvice)
+                                .assessedAt(LocalDateTime.now())
+                                .lowConfidence(r.getAverageBloodSugar() == null)
+                                .build();
+                        newAss = riskAssessmentRepository.save(newAss);
+
+                        if (!"LOW".equalsIgnoreCase(mappedLevel)) {
+                            RiskWarning warning = RiskWarning.builder()
+                                    .patient(patient)
+                                    .riskAssessmentId(newAss.getId())
+                                    .riskType("WEEKLY_STROKE_RISK")
+                                    .status("new")
+                                    .notified(false)
+                                    .createdAt(LocalDateTime.now())
+                                    .riskLevel(mappedLevel)
+                                    .riskPercentage(finalPct)
+                                    .message("Cảnh báo nguy cơ đột quỵ tuần: " + mappedLevel + "\nKhuyến nghị:\n• " + strokeAdvice)
+                                    .build();
+                            riskWarningRepository.save(warning);
+                        }
+
+                        map.put("healthStatus", mappedLevel);
+                        map.put("riskPercentage", finalPct);
+                        map.put("recommendation", strokeAdvice);
+                        map.put("lowConfidence", newAss.getLowConfidence());
+                        map.put("aiSummary", "");
+                    } else {
+                        map.put("healthStatus", "LOW");
+                        map.put("riskPercentage", BigDecimal.ZERO);
+                        map.put("recommendation", "Chưa có dữ liệu đánh giá đột quỵ cho tuần này.");
+                        map.put("lowConfidence", true);
+                        map.put("aiSummary", "");
+                    }
+                } catch (Exception ex) {
+                    map.put("healthStatus", "LOW");
+                    map.put("riskPercentage", BigDecimal.ZERO);
+                    map.put("recommendation", "Chưa có dữ liệu đánh giá đột quỵ cho tuần này.");
+                    map.put("lowConfidence", true);
+                    map.put("aiSummary", "");
+                }
             }
-            fromDate = toDate.minusDays(6);
-        }
+            return map;
+        }).collect(Collectors.toList());
 
-        if (fromDate.isAfter(toDate)) {
-            LocalDate temp = fromDate;
-            fromDate = toDate;
-            toDate = temp;
-        }
-
-        Map<String, Object> latestRisk = dailyHealthLogService.calculateDynamicRisk(patientId, fromDate, toDate);
-
-        // Fetch detailed logs in the range to display on the explanation table
-        List<DailyHealthLog> rangeLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, fromDate, toDate);
-        rangeLogs.sort(java.util.Comparator.comparing(DailyHealthLog::getLogDate).reversed());
-
-        boolean isDocOrAdmin = hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN");
-        model.addAttribute("isDoctorOrAdmin", isDocOrAdmin);
+        model.addAttribute("reports", reports);
+        model.addAttribute("isDoctorView", isDoctorView);
         model.addAttribute("patient", patient);
         Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;
         model.addAttribute("userId", targetUserId != null ? targetUserId : curUserId);
         model.addAttribute("patientId", patientId);
-        model.addAttribute("latestRisk", latestRisk);
-        model.addAttribute("hasRiskData", latestRisk != null);
-        model.addAttribute("from", fromDate);
-        model.addAttribute("to", toDate);
-        model.addAttribute("rangeLogs", rangeLogs);
+        model.addAttribute("patientName", patient.getFullName());
+
+        if (!reports.isEmpty()) {
+            model.addAttribute("latestAssessment", reports.get(0));
+            Map<String, Object> previous = reports.size() > 1 ? reports.get(1) : null;
+            model.addAttribute("previousAssessment", previous);
+        }
+
+        // Custom range calculation
+        if (from != null && to != null) {
+            LocalDate fromDate = from;
+            LocalDate toDate = to;
+            if (fromDate.isAfter(toDate)) {
+                LocalDate temp = fromDate;
+                fromDate = toDate;
+                toDate = temp;
+            }
+
+            Map<String, Object> latestRisk = dailyHealthLogService.calculateDynamicRisk(patientId, fromDate, toDate);
+            List<DailyHealthLog> rangeLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, fromDate, toDate);
+
+            if (latestRisk != null) {
+                Map<String, Object> customRangeResult = new HashMap<>();
+                customRangeResult.put("fromDate", fromDate);
+                customRangeResult.put("toDate", toDate);
+                customRangeResult.put("logCount", rangeLogs.size());
+
+                String rawLevel = (String) latestRisk.get("riskLevel");
+                String mappedLevel = "LOW";
+                String strokeAdvice = "Chỉ số sức khỏe của bạn ở mức an toàn, nguy cơ đột quỵ thấp.";
+                if (rawLevel != null) {
+                    String lower = rawLevel.toLowerCase();
+                    if (lower.contains("critical")) {
+                        mappedLevel = "CRITICAL";
+                        strokeAdvice = "🚨 Nguy cơ đột quỵ rất cao (Nguy hiểm)! Cần tham vấn bác sĩ ngay để kiểm soát huyết áp và các chỉ số sức khỏe.";
+                    } else if (lower.contains("high")) {
+                        mappedLevel = "HIGH";
+                        strokeAdvice = "⚠️ Nguy cơ đột quỵ cao! Bạn nên điều chỉnh chế độ sinh hoạt, hạn chế các chất kích thích và theo dõi huyết áp thường xuyên.";
+                    } else if (lower.contains("medium") || lower.contains("moderate")) {
+                        mappedLevel = "MEDIUM";
+                        strokeAdvice = "⚡ Nguy cơ đột quỵ ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
+                    }
+                }
+
+                customRangeResult.put("riskLevel", mappedLevel);
+                customRangeResult.put("riskPercentage", latestRisk.get("riskPercentage"));
+                customRangeResult.put("lowConfidence", rangeLogs.size() < 7);
+                customRangeResult.put("recommendation", strokeAdvice);
+
+                model.addAttribute("customRangeResult", customRangeResult);
+            }
+            model.addAttribute("from", fromDate);
+            model.addAttribute("to", toDate);
+        }
 
         return "healthlog/stroke-risk";
     }
@@ -1296,5 +1422,3 @@ public class DailyHealthLogController {
                 .body(new org.springframework.core.io.InputStreamResource(in));
     }
 }
-
-
