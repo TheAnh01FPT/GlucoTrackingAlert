@@ -262,6 +262,13 @@ public class DoctorPatientAssignmentService {
     }
 
     public List<Map<String, Object>> getPatientsByDoctor(Long doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ ID " + doctorId));
+        if (!"active".equals(doctor.getStatus())) {
+            throw new RuntimeException(
+                    "Bác sĩ chưa được xác minh/kích hoạt, không thể xem danh sách bệnh nhân.");
+        }
+
         return assignmentRepository
                 .findByDoctorIdAndStatus(doctorId, "active")
                 .stream()
