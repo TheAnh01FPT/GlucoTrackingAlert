@@ -45,11 +45,11 @@ def predict_risk(data: PatientData):
     risk_percentage = round(prob * 100, 2)
     
     # Determine risk level based on threshold
-    if risk_percentage > 70.0:
+    if risk_percentage >= 75.0:
         risk_level = "Critical"
-    elif risk_percentage > 50.0:
+    elif risk_percentage >= 50.0:
         risk_level = "High"
-    elif risk_percentage > 30.0:
+    elif risk_percentage >= 25.0:
         risk_level = "Medium"
     else:
         risk_level = "Low"
