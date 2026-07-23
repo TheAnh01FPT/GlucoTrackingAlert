@@ -1,610 +1,838 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dự Báo Nguy Cơ Bệnh Tim AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <title>🫀 Dự Báo Nguy Cơ Biến Chứng Tim Mạch</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <style>
-        :root {
-            --bg-primary: #f8fafc;
-            --card-bg: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --primary: #ef4444; /* Đổi sang màu Đỏ đại diện cho Tim mạch */
-            --primary-hover: #dc2626;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: #e2e8f0;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --low-bg: #d1fae5;
-            --low-color: #047857;
-            --medium-bg: #fef3c7;
-            --medium-color: #b45309;
-            --high-bg: #ffedd5;
-            --high-color: #9a3412;
-            --critical-bg: #fee2e2;
-            --critical-color: #991b1b;
-        }
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --primary: #6366f1;
+        --border: #e2e8f0;
+        --shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+        
+        /* Risk level colors */
+        --low-bg: #d1fae5;
+        --low-text: #065f46;
+        --low-bar: #10b981;
+        
+        --medium-bg: #fef3c7;
+        --medium-text: #92400e;
+        --medium-bar: #f59e0b;
+        
+        --high-bg: #ffedd5;
+        --high-text: #9a3412;
+        --high-bar: #ea580c;
+        
+        --critical-bg: #fee2e2;
+        --critical-text: #991b1b;
+        --critical-bar: #ef4444;
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: 'Inter', Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 0;
+      }
+      .main-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1.5rem 2rem;
+      }
+      .page-title {
+        font-size: 1.85rem;
+        font-weight: 800;
+        margin: 0 0 1.5rem;
+        color: var(--text);
+      }
+      .patient-name {
+        margin: -0.5rem 0 1.5rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
 
-        body {
-            font-family: "Inter", sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
+      .card {
+        background: var(--card);
+        border-radius: 24px;
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.75rem;
+        box-shadow: var(--shadow);
+        border: 1px solid #f1f5f9;
+      }
 
-        /* Navbar Layout */
-        .navbar {
-            background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); /* Thay đổi gradient tone tim mạch */
-            padding: 1rem 2rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+      .card-collapsible {
+        padding: 1rem 1.25rem;
+      }
+      .card-collapsible summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .card-collapsible summary::-webkit-details-marker {
+        display: none;
+      }
+      .card-collapsible .card-header {
+        margin-bottom: 0;
+      }
+      .card-collapsible[open] .card-header {
+        margin-bottom: 1.25rem;
+      }
+      .card-collapsible .toggle-icon {
+        margin-left: auto;
+        transition: transform 0.15s;
+      }
+      .card-collapsible[open] .toggle-icon {
+        transform: rotate(180deg);
+      }
 
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+      .card-icon {
+        flex-shrink: 0;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+      }
+      .card-icon-purple { background: #f5f3ff; color: #7c3aed; }
+      .card-icon-blue { background: #e0f2fe; color: #0284c7; }
+      .card-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0.4rem 0 0;
+        color: var(--text);
+      }
 
-        .navbar-menu {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
+      .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+      }
+      .meta-label {
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 1rem;
+      }
 
-        .navbar-link {
-            color: #cbd5e1;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-        }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 1rem;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        letter-spacing: 0.02em;
+      }
+      .badge-LOW { background: #d1fae5; color: #047857; }
+      .badge-MEDIUM { background: #fef3c7; color: #b45309; }
+      .badge-HIGH { background: #ffedd5; color: #9a3412; }
+      .badge-CRITICAL { background: #fee2e2; color: #991b1b; }
+      .badge-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
 
-        .navbar-link:hover {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+      .progress-wrap {
+        display: block;
+        width: 100%;
+        background: #e2e8f0;
+        border-radius: 9999px;
+        overflow: hidden;
+        margin: 0 0 1rem 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box;
+        height: 38px;
+      }
+      .progress-wrap-sm {
+        max-width: 230px;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        height: 32px;
+      }
+      .progress-bar {
+        height: 100% !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 1rem !important;
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.95rem;
+        border-radius: 9999px;
+        min-width: 70px;
+        transition: width 0.3s ease;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+      .progress-bar-sm {
+        height: 100% !important;
+        font-size: 0.78rem;
+        padding: 0 0.75rem !important;
+        min-width: 72px;
+        justify-content: center;
+        box-sizing: border-box;
+      }
+      .risk-LOW { background: linear-gradient(90deg, #10b981, #059669); }
+      .risk-MEDIUM { background: linear-gradient(90deg, #fbbf24, #d97706); }
+      .risk-HIGH { background: linear-gradient(90deg, #f97316, #ea580c); }
+      .risk-CRITICAL { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
-        /* Container */
-        .main-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-            animation: fadeIn 0.5s ease;
-        }
+      .recommendation-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #334155;
+        font-weight: 500;
+        margin: 1.25rem 0 0;
+        background: #f8fafc;
+        padding: 1.25rem 1.5rem;
+        border-radius: 16px;
+        border-left: 5px solid var(--primary);
+      }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      /* Navbar Layout */
+      .navbar {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        padding: 1rem 2rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .navbar-menu {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+      .navbar-link {
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+      }
+      .navbar-link:hover {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+      .navbar-link.active {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 1px solid #818cf8;
+      }
 
-        .page-heading {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #450a0a;
-        }
+      /* Sidebar & Content Layout */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(320px, 360px) 1fr;
+        gap: 1.5rem;
+      }
+      @media (max-width: 900px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+      }
+      
+      .profile-sidebar {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 1.75rem;
+        box-shadow: var(--shadow);
+        height: fit-content;
+      }
+      .profile-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .profile-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        background: #f5f3ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+      .profile-name {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin: 0;
+        color: var(--text);
+      }
+      .profile-type {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--primary);
+        background: #f5f3ff;
+        padding: 0.3rem 0.8rem;
+        border-radius: 9999px;
+        margin-top: 0.5rem;
+      }
 
-        .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            transition: var(--transition);
-        }
+      .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+      .info-label {
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .info-value {
+        font-weight: 700;
+        color: var(--text);
+      }
+      .badge-status {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+      }
+      .badge-yes { background: #fee2e2; color: #ef4444; }
+      .badge-no { background: #d1fae5; color: #10b981; }
 
-        .btn-back:hover {
-            color: var(--primary);
-        }
+      .risk-summary {
+        margin-top: 1.75rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+      }
+      .risk-summary-label {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+      }
+      .risk-summary-text {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #475569;
+        margin: 0.75rem 0 0;
+      }
 
-        /* Grid Layout */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 1.5rem;
-        }
+      .content-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1.75rem;
+      }
 
-        @media (max-width: 900px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+      /* Buttons & Forms */
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: color 0.2s;
+        margin-bottom: 1.5rem;
+      }
+      .btn-back:hover { color: var(--primary); }
 
-        /* Profile Card Styling */
-        .profile-sidebar {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            height: fit-content;
-        }
+      .range-form {
+        display: flex;
+        align-items: flex-end;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+      }
+      .range-form div {
+        flex: 1;
+        min-width: 180px;
+      }
+      .range-form input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        outline: none;
+      }
+      .range-form input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      }
+      .range-form button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.75rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        height: 46px;
+      }
+      .range-form button:hover {
+        background: #4f46e5;
+      }
 
-        .profile-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.25rem;
-            margin-bottom: 1.25rem;
-        }
+      .error-message {
+        background: #fee2e2;
+        color: #ef4444;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
 
-        .profile-avatar {
-            font-size: 3rem;
-            background-color: #f1f5f9;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0.75rem;
-        }
+      .result-block {
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+      }
+      .meta-row-inline {
+        margin: 1rem 0;
+      }
+      .meta-row-inline span {
+        margin-right: 1.5rem;
+      }
 
-        .profile-name {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #450a0a;
-        }
+      .empty {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--muted);
+        font-weight: 500;
+        font-size: 1rem;
+        border: 2px dashed var(--border);
+        border-radius: 16px;
+      }
 
-        .profile-type {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #ef4444;
-            background-color: #fee2e2;
-            padding: 0.15rem 0.5rem;
-            border-radius: 9999px;
-            margin-top: 0.35rem;
-        }
+      .assessed-at {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-weight: 500;
+      }
 
-        .info-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.9rem;
-        }
+      /* Tables */
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead th {
+        text-align: left;
+        padding: 0 0.75rem 0.9rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        border-bottom: 1px solid var(--border);
+      }
+      tbody td {
+        padding: 1.1rem 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 0.98rem;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .date-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .date-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #e0f2fe;
+        color: #0284c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+      }
+      .recommendation-cell {
+        color: var(--muted);
+        line-height: 1.5;
+        max-width: 320px;
+      }
 
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
+      @media (max-width: 768px) {
+        table, thead, tbody, th, td, tr { display: block; }
+        thead { display: none; }
+        tbody tr {
+          margin-bottom: 1.25rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid var(--border);
         }
-
-        .info-label {
-            color: var(--text-secondary);
-            font-weight: 500;
+        tbody td {
+          border-bottom: none;
+          padding: 0.35rem 0;
         }
-
-        .info-value {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .badge-status {
-            padding: 0.15rem 0.5rem;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.75rem;
-        }
-
-        .badge-yes {
-            background-color: #fee2e2;
-            color: #ef4444;
-        }
-
-        .badge-no {
-            background-color: #d1fae5;
-            color: #10b981;
-        }
-
-        /* Main Content Card */
-        .card-prediction {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .selector-card {
-            background-color: var(--bg-primary);
-            border-radius: 15px;
-            padding: 1.25rem 2rem;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        /* Risk Circle colors */
-        .risk-circle {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 800;
-            font-size: 1.05rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            flex-shrink: 0;
-        }
-
-        .risk-circle-low {
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-        }
-        .risk-circle-medium {
-            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-        }
-        .risk-circle-high {
-            background: linear-gradient(135deg, #f97316 0%, #ca8a04 100%);
-        }
-        .risk-circle-critical {
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-        }
-
-        .color-low { color: var(--low-color); }
-        .color-medium { color: var(--medium-color); }
-        .color-high { color: var(--high-color); }
-        .color-critical { color: var(--critical-color); }
-
-        /* Table Styles */
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.9rem;
-        }
-
-        thead {
-            background-color: #f1f5f9;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        thead th, tbody td {
-            padding: 0.85rem 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        tbody tr:hover {
-            background-color: #f8fafc;
-        }
-
-        /* Other diseases grid */
-        .other-diseases-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .disease-card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            opacity: 0.75;
-            transition: var(--transition);
-        }
-
-        .disease-card:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-        .disease-icon {
-            font-size: 2.25rem;
-            background-color: #f1f5f9;
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .disease-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .disease-name {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-        }
-
-        .disease-status {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #64748b;
-            background-color: #f1f5f9;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 0.25rem;
-            width: fit-content;
-        }
+      }
     </style>
-</head>
-<body>
-<header class="navbar">
-    <a th:if="${isDoctorOrAdmin}" th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-brand">
-        🩸 GlucoTrackAlert
-    </a>
-    <a th:unless="${isDoctorOrAdmin}" th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
-        🩸 GlucoTrackAlert
-    </a>
+  </head>
+  <body>
+    <header class="navbar">
+      <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand">🩸 GlucoTrackAlert</a>
+      <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand">🩸 GlucoTrackAlert</a>
 
-    <nav class="navbar-menu">
-        <a th:href="${isDoctorOrAdmin} ? @{/health-logs/ai-report(patientId=${patient.id})} : @{/health-logs/ai-report}" class="navbar-link">🤖 Báo Cáo AI</a>
-        <a th:href="${isDoctorOrAdmin} ? @{/doctor/home} : @{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
-    </nav>
-</header>
+      <nav class="navbar-menu">
+        <th:block th:if="${isDoctorView}">
+          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link">🤖 Báo Cáo AI</a>
+          <a href="#" class="navbar-link active">📊 Lịch Sử Tim Mạch Tuần</a>
+          <a href="/doctor/home" class="navbar-link">🏠 Trang Chủ</a>
+        </th:block>
 
-<main class="main-container">
-    <a th:href="${isDoctorOrAdmin} ? @{/health-logs/ai-report(patientId=${patientId})} : @{/health-logs/ai-report}" class="btn-back">
-        ⬅️ Quay lại Dashboard Báo Cáo AI
-    </a>
+        <th:block th:unless="${isDoctorView}">
+          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link">🤖 Báo Cáo AI</a>
+          <a href="#" class="navbar-link active">📊 Lịch Sử Tim Mạch Tuần</a>
+          <a href="/patient/homepage" class="navbar-link">🏠 Trang chủ</a>
+        </th:block>
+      </nav>
+    </header>
 
-    <h1 class="page-heading">❤️ Dự Báo Nguy Cơ Biến Chứng Tim Mạch</h1>
+    <main class="main-container">
+      <a class="btn-back" th:if="${isDoctorView}" href="/doctor/home">← Quay lại trang bác sĩ</a>
+      <a class="btn-back" th:unless="${isDoctorView}" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
 
-    <div class="dashboard-grid">
-        <section class="profile-sidebar">
-            <div class="profile-header">
-                <span class="profile-avatar">👤</span>
-                <h2 class="profile-name" th:text="${patient.fullName}">Nguyễn Văn A</h2>
-                <span class="profile-type" th:text="${patient.patientType != null ? 'Loại: ' + patient.patientType.toUpperCase() : 'Bệnh nhân'}">Loại: Adult</span>
+      <h1 class="page-title">🫀 Dự Báo Nguy Cơ Biến Chứng Tim Mạch</h1>
+      <p class="patient-name" th:if="${patientName}" th:text="'Bệnh nhân: ' + ${patientName}">Bệnh nhân</p>
+
+      <div class="dashboard-grid">
+        <aside class="profile-sidebar">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              <i class="ti ti-heart-broken" style="font-size: 36px; color: var(--primary);"></i>
+            </div>
+            <h2 class="profile-name" th:text="${patientName != null ? patientName : 'Bệnh nhân'}">Bệnh nhân</h2>
+            <span class="profile-type">Theo dõi tim mạch</span>
+          </div>
+
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Tuổi</span>
+              <span class="info-value" th:text="${patient != null && patient.age != null ? patient.age + ' tuổi' : '--'}">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Giới tính</span>
+              <span class="info-value" th:text="${patient != null && patient.gender != null ? patient.gender : '--'}">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">BMI</span>
+              <span class="info-value" th:text="${patient != null && patient.bmi != null ? patient.bmi : '--'}">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Tăng huyết áp</span>
+              <span th:if="${patient != null}" th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" th:text="${patient.hypertension == true ? 'Có' : 'Không'}">--</span>
+              <span th:unless="${patient != null}" class="info-value">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Bệnh tim mạch</span>
+              <span th:if="${patient != null}" th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" th:text="${patient.heartDisease == true ? 'Có' : 'Không'}">--</span>
+              <span th:unless="${patient != null}" class="info-value">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Hút thuốc</span>
+              <span class="info-value" th:text="${patient != null && patient.smokingStatus != null ? patient.smokingStatus : '--'}">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Công việc</span>
+              <span class="info-value" th:text="${patient != null && patient.workType != null ? patient.workType : '--'}">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Nơi ở</span>
+              <span class="info-value" th:text="${patient != null && patient.residenceType != null ? patient.residenceType : '--'}">--</span>
+            </div>
+          </div>
+
+          <div class="risk-summary" th:if="${latestAssessment != null}">
+            <div class="risk-summary-label">Đánh giá tuần này</div>
+            <div class="badge" th:classappend="' badge-' + ${latestAssessment.healthStatus}">
+              <span th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
+            </div>
+            <p class="risk-summary-text" th:text="${latestAssessment.recommendation}">Khuyến nghị</p>
+          </div>
+        </aside>
+
+        <div class="content-stack">
+          <!-- Latest Weekly Assessment Card -->
+          <section class="card">
+            <div class="card-header">
+              <div class="card-icon card-icon-purple">
+                <i class="ti ti-heart-rate-monitor" style="font-size: 28px;"></i>
+              </div>
+              <div>
+                <h2 class="card-title">Đánh giá tuần gần nhất</h2>
+                <p class="card-subtitle">Kết quả chẩn đoán nguy cơ tim mạch từ hệ thống AI của tuần gần đây nhất.</p>
+              </div>
             </div>
 
-            <div class="info-list">
-                <div class="info-item">
-                    <span class="info-label">Tuổi</span>
-                    <span class="info-value" th:text="${patient.age != null ? patient.age + ' tuổi' : '--'}">72 tuổi</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Giới tính</span>
-                    <span class="info-value" th:text="${patient.gender != null ? patient.gender : '--'}">Nam</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">BMI</span>
-                    <span class="info-value" th:text="${patient.bmi != null ? patient.bmi : '--'}">28.4</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tăng huyết áp</span>
-                    <span th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
-                          th:text="${patient.hypertension == true ? 'Có' : 'Không'}">Có</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Bệnh tim nền</span>
-                    <span th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
-                          th:text="${patient.heartDisease == true ? 'Có' : 'Không'}">Có</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Hút thuốc</span>
-                    <span class="info-value" th:text="${patient.smokingStatus != null ? patient.smokingStatus : '--'}">smokes</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Cholesterol</span>
-                    <span class="info-value" th:text="${patient.cholesterol != null ? 'Mức ' + patient.cholesterol : '--'}">Mức 1</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Vận động tuần này</span>
-                    <span th:class="${patient.active == 1 ? 'badge-status badge-no' : 'badge-status badge-yes'}"
-                          th:text="${patient.active == 1 ? 'Tốt (≥50%)' : 'Ít vận động'}">Tốt</span>
-                </div>
+            <div th:if="${latestAssessment == null}" class="empty">
+              Chưa có dữ liệu đánh giá tuần. Vui lòng ghi chép nhật ký sức khỏe đầy đủ để nhận đánh giá.
             </div>
-        </section>
 
-        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-            <section class="card-prediction">
-                <div class="selector-card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; width: 100%;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-size: 1.5rem;">📅</span>
-                            <div>
-                                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #450a0a;">Chọn khoảng thời gian theo dõi</h3>
-                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Chọn khoảng ngày để phân tích chỉ số huyết áp, đường huyết sinh bệnh tim</p>
-                            </div>
-                        </div>
-                        <form id="dateFilterForm" th:action="@{/health-logs/heart-risk}" method="get" style="margin: 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                            <input th:if="${isDoctorOrAdmin}" type="hidden" name="patientId" th:value="${patientId}" />
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Từ ngày:</label>
-                                <input type="date" id="from" name="from" th:value="${from}" style="font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px; background-color: #f8fafc; outline: none; color: var(--text-primary);" required />
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Đến ngày:</label>
-                                <input type="date" id="to" name="to" th:value="${to}" style="font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px; background-color: #f8fafc; outline: none; color: var(--text-primary);" required />
-                            </div>
-                            <button type="submit" style="font-family: inherit; font-size: 0.9rem; font-weight: 600; color: white; background: linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%); border: none; padding: 0.55rem 1.25rem; border-radius: 8px; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 6px rgba(239, 68, 68, 0.15);">Xem phân tích</button>
-                        </form>
-                    </div>
+            <div th:if="${latestAssessment != null}">
+              <div class="meta-row">
+                <span class="meta-label">Mức độ nguy cơ:</span>
+                <span th:class="'badge badge-' + ${latestAssessment.healthStatus}" th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
+                <span th:if="${latestAssessment.lowConfidence}" class="badge badge-MEDIUM">⚠️ Dữ liệu tuần chưa đủ</span>
+              </div>
 
-                    <div th:if="${hasRiskData}" style="background-color: #fef2f2; border-radius: 18px; padding: 1.5rem; border: 1px solid #fca5a5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; width: 100%; box-sizing: border-box; box-shadow: var(--shadow);">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-size: 1.75rem;">🤖</span>
-                            <div>
-                                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #450a0a; display: flex; align-items: center; gap: 0.5rem;">
-                                    Kết quả dự báo suy tim & mạch vành AI
-                                </h3>
-                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Đánh giá lúc: <span th:text="${latestRisk.assessedAtStr}">--</span></p>
-                            </div>
-                        </div>
+              <div class="meta-row">
+                <span class="meta-label">Xác suất nguy cơ</span>
+              </div>
+              <div class="progress-wrap">
+                <div th:class="'progress-bar risk-' + ${latestAssessment.healthStatus}"
+                     th:style="'width:' + ${#numbers.formatDecimal(latestAssessment.riskPercentage, 1, 2)} + '%'"
+                     th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage, 1, 2)} + '%'">45.89%</div>
+              </div>
 
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <div th:class="${latestRisk.riskLevel == 'Low' ? 'risk-circle risk-circle-low' : (latestRisk.riskLevel == 'Medium' ? 'risk-circle risk-circle-medium' : (latestRisk.riskLevel == 'High' ? 'risk-circle risk-circle-high' : 'risk-circle risk-circle-critical'))}">
-                                <span th:text="${#numbers.formatDecimal(latestRisk.riskPercentage, 1, 2)} + '%'">12%</span>
-                            </div>
-                            <div>
-                    <span th:class="${latestRisk.riskLevel == 'Low' ? 'color-low' : (latestRisk.riskLevel == 'Medium' ? 'color-medium' : (latestRisk.riskLevel == 'High' ? 'color-high' : 'color-critical'))}"
-                          style="font-weight: 800; font-size: 1.05rem; display: block;"
-                          th:text="${latestRisk.riskLevel}">Low</span>
-                                <span style="font-size: 0.75rem; color: var(--text-secondary);">Mức độ nguy cơ</span>
-                            </div>
-                        </div>
-                    </div>
+              <div class="risk-summary-text" th:if="${previousAssessment != null && latestAssessment.riskPercentage != null && previousAssessment.riskPercentage != null}" style="font-size: 0.9rem; color: var(--muted); font-weight: 500; margin-bottom: 1rem;">
+                <span th:if="${latestAssessment.riskPercentage > previousAssessment.riskPercentage}">
+                  ↑ Tăng <span th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage - previousAssessment.riskPercentage, 1, 2)}"></span>% so với tuần trước
+                </span>
+                <span th:if="${latestAssessment.riskPercentage < previousAssessment.riskPercentage}">
+                  ↓ Giảm <span th:text="${#numbers.formatDecimal(previousAssessment.riskPercentage - latestAssessment.riskPercentage, 1, 2)}"></span>% so với tuần trước
+                </span>
+                <span th:if="${latestAssessment.riskPercentage == previousAssessment.riskPercentage}">
+                  → Không đổi so với tuần trước
+                </span>
+              </div>
 
-                    <div th:if="${!hasRiskData}" style="background-color: #fff7ed; border-radius: 10px; padding: 0.75rem 1.25rem; border: 1px solid #ffedd5; display: flex; align-items: flex-start; gap: 0.75rem; width: 100%; box-sizing: border-box;">
-                        <span style="font-size: 1.25rem; color: #ea580c; line-height: 1.2;">💡</span>
-                        <div style="flex: 1;">
-                            <p style="margin: 0; font-size: 0.825rem; color: #c2410c; font-weight: 500; line-height: 1.4;">
-                                <strong>Thông báo:</strong> Không tìm thấy bản ghi chỉ số đo nào phục vụ chẩn đoán bệnh tim trong khoảng thời gian đã chọn.
-                            </p>
-                        </div>
-                    </div>
+              <p class="recommendation-text" th:text="${latestAssessment.recommendation}">Nguy cơ trung bình. Hãy duy trì lối sống lành mạnh.</p>
+
+              <div class="risk-factor-note" style="background: #f8fafc; border-radius: 12px; padding: 16px; margin: 1.5rem 0; font-size: 0.9rem; border: 1px solid var(--border);">
+                <div style="font-weight: 700; margin-bottom: 8px; color: var(--text);">Các trường đầu vào đóng góp cho mô hình dự báo tim mạch:</div>
+                <div th:if="${patient != null and patient.age != null}">
+                  • Tuổi: <strong th:text="${patient.age}">--</strong> tuổi
                 </div>
-
-                <div th:if="${hasRiskData}">
-                    <h3 style="margin-top: 0.5rem; margin-bottom: 0.75rem; font-size: 1.1rem; color: #450a0a;">📊 Nhật ký đo tim mạch & huyết áp trong khoảng thời gian phân tích</h3>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th>Ngày đo</th>
-                                <th>Đường huyết (mmol/L)</th>
-                                <th>Huyết áp (mmHg)</th>
-                                <th>Vận động</th>
-                                <th>Giấc ngủ (giờ)</th>
-                                <th>Nước uống (ml)</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="log : ${rangeLogs}">
-                                <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">20/06/2026</td>
-                                <td th:text="${log.bloodSugar != null ? log.bloodSugar : '--'}">6.2</td>
-                                <td th:text="${log.systolic != null && log.diastolic != null ? log.systolic + '/' + log.diastolic : '--'}">120/80</td>
-                                <td>
-                                    <span th:if="${log.physicalActivity == 1}" class="badge-status badge-no" style="font-size: 0.8rem;">🏋️‍♂️ Có</span>
-                                    <span th:if="${log.physicalActivity == 0 || log.physicalActivity == null}" class="badge-status badge-yes" style="font-size: 0.8rem;">❌ Không</span>
-                                </td>
-                                <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">7.5</td>
-                                <td th:text="${log.waterMl != null ? log.waterMl : '--'}">2000</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div th:if="${patient != null and patient.gender != null}">
+                  • Giới tính: <strong th:text="${patient.gender}">--</strong>
                 </div>
-            </section>
-
-            <section style="margin-top: 1.5rem">
-                <h2 style="margin-bottom: 1rem; font-size: 1.25rem; color: #450a0a; font-weight: 700;">🩺 Các Module Bệnh Lý Phân Tích Khác</h2>
-                <div class="other-diseases-grid">
-                    <a th:href="${isDoctorOrAdmin} ? @{/health-logs/stroke-risk(patientId=${patientId})} : @{/health-logs/stroke-risk}" class="disease-card" style="text-decoration: none;">
-                        <div class="disease-icon">🧠</div>
-                        <div class="disease-info">
-                            <span class="disease-name">Biến Chứng Đột Quỵ</span>
-                            <span class="disease-status" style="background-color: #e2e8f0; color: #475569;">Đang hoạt động</span>
-                        </div>
-                    </a>
-
-                    <a th:href="${isDoctorOrAdmin} ? @{/health-logs/heart-risk(patientId=${patientId})} : @{/health-logs/heart-risk}" class="disease-card active" style="border-color: #ef4444; background-color: #fef2f2; text-decoration: none; opacity: 1;">
-                        <div class="disease-icon">🫀</div>
-                        <div class="disease-info">
-                            <span class="disease-name" style="font-weight: 700">Suy Tim & Mạch Vành</span>
-                            <span class="disease-status" style="background-color: #fee2e2; color: #991b1b; font-weight: 700;">Đang xem</span>
-                        </div>
-                    </a>
-
-                    <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}" class="disease-card" style="text-decoration: none;">
-                        <div class="disease-icon">🧪</div>
-                        <div class="disease-info">
-                            <span class="disease-name">Biến Chứng Suy Thận</span>
-                            <span class="disease-status" style="background: #e2e8f0; color: #475569;">Đang hoạt động</span>
-                        </div>
-                    </a>
+                <div th:if="${patient != null and patient.heightCm != null}">
+                  • Chiều cao: <strong th:text="${#numbers.formatDecimal(patient.heightCm, 0, 2)}">--</strong> cm
                 </div>
-            </section>
+                <div th:if="${patient != null and patient.weightKg != null}">
+                  • Cân nặng: <strong th:text="${#numbers.formatDecimal(patient.weightKg, 0, 2)}">--</strong> kg
+                </div>
+                <div th:if="${patient != null and patient.bmi != null}">
+                  • Chỉ số khối cơ thể (BMI): <strong th:text="${#numbers.formatDecimal(patient.bmi, 0, 2)}">--</strong>
+                </div>
+                <div th:if="${latestAssessment != null and latestAssessment.averageSystolic != null}">
+                  • Huyết áp tâm thu trung bình tuần: <strong th:text="${latestAssessment.averageSystolic}">--</strong> mmHg
+                </div>
+                <div th:if="${latestAssessment != null and latestAssessment.averageDiastolic != null}">
+                  • Huyết áp tâm trương trung bình tuần: <strong th:text="${latestAssessment.averageDiastolic}">--</strong> mmHg
+                </div>
+                <div th:if="${latestAssessment != null and latestAssessment.averageBloodSugar != null}">
+                  • Đường huyết trung bình tuần: <strong th:text="${latestAssessment.averageBloodSugar}">--</strong> mmol/L
+                </div>
+                <div th:if="${patient != null and patient.cholesterol != null}">
+                  • Cholesterol (hệ thống): <strong th:text="${patient.cholesterol}">--</strong>
+                </div>
+                <div th:if="${patient != null}">
+                  • Hút thuốc: <strong th:text="${patient.smoke != null ? (patient.smoke == 1 ? 'Có' : 'Không') : (patient.smokingStatus != null ? patient.smokingStatus : '--')}">--</strong>
+                </div>
+                <div th:if="${patient != null}">
+                  • Uống rượu: <strong th:text="${patient.alco != null ? (patient.alco == 1 ? 'Có' : 'Không') : '--'}">--</strong>
+                </div>
+                <div th:if="${latestAssessment != null and latestAssessment['activeDays'] != null}">
+                  • Hoạt động (tuần): <strong th:text="${latestAssessment['activeWeek']}">--</strong>
+                  <span style="color:var(--muted); font-size:0.85rem; margin-left:8px;" th:text="'(' + ${latestAssessment['activeDays']} + '/' + ${latestAssessment['totalDays']} + ' ngày)'"></span>
+                </div>
+                <div th:if="${patient == null}">
+                  — Không có dữ liệu bệnh nhân để hiển thị các trường đầu vào.
+                </div>
+              </div>
+
+              <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; font-size: 0.85rem; color: #b45309; border-radius: 8px; line-height: 1.6; margin-top: 1.5rem;">
+                <strong>Lưu ý quan trọng:</strong> Đây là công cụ sàng lọc sơ bộ dựa trên mô hình AI Rừng ngẫu nhiên (Random Forest) được huấn luyện để ước tính mối liên quan lâm sàng. Kết quả mang tính chất tham khảo, giúp cảnh báo sớm nguy cơ để điều chỉnh sinh hoạt — hoàn toàn không có giá trị thay thế chẩn đoán y khoa chuyên sâu từ bác sĩ chuyên khoa hoặc các chẩn đoán hình ảnh như đo điện tâm đồ (ECG) / siêu âm tim.
+              </div>
+
+              <div class="assessed-at">
+                <i class="ti ti-clock" style="font-size: 16px;"></i>
+                <span th:text="'Thời gian đánh giá: ' + ${#temporals.format(latestAssessment.createdAt,'dd/MM/yyyy HH:mm')}">Thời gian đánh giá: 22/08/2026 23:42</span>
+              </div>
+            </div>
+          </section>
+
+
+
+          <!-- History Table Card -->
+          <details class="card card-collapsible">
+            <summary>
+              <div class="card-header">
+                <div class="card-icon card-icon-blue">
+                  <i class="ti ti-history" style="font-size: 26px; color: #0284c7;"></i>
+                </div>
+                <div>
+                  <h2 class="card-title">Lịch sử sàng lọc tim mạch tuần</h2>
+                  <p class="card-subtitle">Lịch sử đánh giá nguy cơ tim mạch tuần của bệnh nhân.</p>
+                </div>
+                <i class="ti ti-chevron-down toggle-icon"></i>
+              </div>
+            </summary>
+            <div class="card-collapsible-body">
+              <div th:if="${#lists.isEmpty(reports)}" class="empty">
+              Chưa có dữ liệu lịch sử báo cáo tuần nào.
+            </div>
+
+            <div th:if="${!#lists.isEmpty(reports)}" class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Từ ngày</th>
+                    <th>Đến ngày</th>
+                    <th>Điểm sàng lọc</th>
+                    <th>Mức độ</th>
+                    <th>Khuyến nghị</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="r : ${reports}">
+                    <td>
+                      <span class="date-cell">
+                        <span class="date-icon"><i class="ti ti-calendar-event"></i></span>
+                        <span th:text="${#temporals.format(r.weekStart, 'dd/MM/yyyy')}">01/06/2026</span>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="date-cell">
+                        <span class="date-icon"><i class="ti ti-calendar-event"></i></span>
+                        <span th:text="${#temporals.format(r.weekEnd, 'dd/MM/yyyy')}">07/06/2026</span>
+                      </span>
+                    </td>
+                    <td>
+                      <div class="progress-wrap progress-wrap-sm">
+                        <div th:class="'progress-bar progress-bar-sm risk-' + ${r.healthStatus}"
+                             th:style="'width:' + ${r.riskPercentage} + '%'"
+                             th:text="${r.riskPercentage} + '%'">45.89%</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span th:class="'badge badge-sm badge-' + ${r.healthStatus}" th:text="${r.healthStatus == 'LOW'} ? 'Thấp' : (${r.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${r.healthStatus == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
+                    </td>
+                    <td class="recommendation-cell" th:text="${r.recommendation}">Nguy cơ trung bình. Hãy giữ sức khỏe tốt.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            </div>
+          </details>
+
+          <!-- Custom Range Card -->
+          <details class="card card-collapsible">
+            <summary>
+              <div class="card-header">
+                <div class="card-icon card-icon-purple">
+                  <i class="ti ti-calendar-stats" style="font-size: 26px; color: #7c3aed;"></i>
+                </div>
+                <div>
+                  <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
+                  <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả đánh giá nguy cơ tim mạch từ AI.</p>
+                </div>
+                <i class="ti ti-chevron-down toggle-icon"></i>
+              </div>
+            </summary>
+            <div class="card-collapsible-body">
+              <form th:action="@{/health-logs/heart-risk}" method="get" class="range-form">
+              <div>
+                <label for="from" class="meta-label">Từ ngày</label><br />
+                <input id="from" name="from" type="date" th:value="${from}" required />
+              </div>
+              <div>
+                <label for="to" class="meta-label">Đến ngày</label><br />
+                <input id="to" name="to" type="date" th:value="${to}" required />
+              </div>
+              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
+              <input th:if="${patientId != null}" type="hidden" name="patientId" th:value="${patientId}" />
+              <button type="submit">Tính toán</button>
+            </form>
+
+            <div th:if="${customRangeError}" class="error-message">
+              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
+            </div>
+
+            <div th:if="${customRangeResult != null}" class="result-block">
+              <div class="meta-row">
+                <span class="meta-label">Kết quả từ</span>
+                <span th:text="${#temporals.format(customRangeResult.fromDate, 'dd/MM/yyyy')}">01/06/2026</span>
+                <span class="meta-label">đến</span>
+                <span th:text="${#temporals.format(customRangeResult.toDate, 'dd/MM/yyyy')}">14/06/2026</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Xác suất nguy cơ tim mạch</span>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
+                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
+                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
+              </div>
+              <div class="meta-row meta-row-inline">
+                <span class="meta-label">Mức độ:</span>
+                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
+                <span class="meta-label">Số ngày ghi nhật ký:</span>
+                <span th:text="${customRangeResult.logCount}">5</span>
+                <span class="meta-label">Độ tin cậy:</span>
+                <span th:text="${customRangeResult.lowConfidence} ? 'Dữ liệu chưa đủ' : 'Đủ dữ liệu'">Đủ dữ liệu</span>
+              </div>
+              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
+            </div>
+          </details>
+
+
         </div>
-    </div>
-</main>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const fromInput = document.getElementById("from");
-        const toInput = document.getElementById("to");
-        const filterForm = document.getElementById("dateFilterForm");
-
-        const todayStr = new Date().toISOString().split("T")[0];
-        fromInput.setAttribute("max", todayStr);
-        toInput.setAttribute("max", todayStr);
-
-        function updateDateConstraints() {
-            if (fromInput.value) { toInput.setAttribute("min", fromInput.value); }
-            if (toInput.value) { fromInput.setAttribute("max", toInput.value); }
-            else { fromInput.setAttribute("max", todayStr); }
-        }
-
-        fromInput.addEventListener("change", updateDateConstraints);
-        toInput.addEventListener("change", updateDateConstraints);
-        updateDateConstraints();
-
-        filterForm.addEventListener("submit", function(event) {
-            const fromDate = new Date(fromInput.value);
-            const toDate = new Date(toInput.value);
-            const today = new Date(todayStr);
-
-            if (fromDate > toDate) {
-                event.preventDefault();
-                alert("⚠️ Ngày bắt đầu không thể sau Ngày kết thúc!");
-            } else if (fromDate > today || toDate > today) {
-                event.preventDefault();
-                alert("⚠️ Không được chọn ngày trong tương lai!");
-            }
-        });
-    });
-</script>
-</body>
+      </div>
+    </main>
+  </body>
 </html>

@@ -389,8 +389,9 @@ public class PatientServiceImpl implements PatientService {
                     String strokeApiUrl = "http://127.0.0.1:8000/predict";
                     Map<String, Object> strokeResponse = restTemplate.postForObject(strokeApiUrl, strokeRequest, Map.class);
 
-                    if (strokeResponse != null && strokeResponse.containsKey("risk_percentage")) {
-                        strokeRiskPercent = Double.parseDouble(strokeResponse.get("risk_percentage").toString());
+                    if (strokeResponse != null && (strokeResponse.containsKey("risk_percentage") || strokeResponse.containsKey("riskPercentage"))) {
+                        Object strokeRiskObj = strokeResponse.containsKey("risk_percentage") ? strokeResponse.get("risk_percentage") : strokeResponse.get("riskPercentage");
+                        strokeRiskPercent = strokeRiskObj != null ? Double.parseDouble(strokeRiskObj.toString()) : 0.0;
                         String responseRiskLevel = strokeResponse.get("risk_level").toString();
 
                         if ("Critical".equalsIgnoreCase(responseRiskLevel)) {
