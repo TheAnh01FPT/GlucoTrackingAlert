@@ -49,10 +49,34 @@
       .card {
         background: var(--card);
         border-radius: 24px;
-        padding: 2rem 2.25rem;
+        padding: 1.5rem 1.75rem;
         margin-bottom: 1.75rem;
         box-shadow: var(--shadow);
         border: 1px solid #f1f5f9;
+      }
+
+      .card-collapsible {
+        padding: 1rem 1.25rem;
+      }
+      .card-collapsible summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .card-collapsible summary::-webkit-details-marker {
+        display: none;
+      }
+      .card-collapsible .card-header {
+        margin-bottom: 0;
+      }
+      .card-collapsible[open] .card-header {
+        margin-bottom: 1.25rem;
+      }
+      .card-collapsible .toggle-icon {
+        margin-left: auto;
+        transition: transform 0.15s;
+      }
+      .card-collapsible[open] .toggle-icon {
+        transform: rotate(180deg);
       }
 
       .card-header {
@@ -73,6 +97,7 @@
       }
       .card-icon-orange { background: #fef3e2; }
       .card-icon-blue { background: #e0f2fe; }
+      .card-icon-purple { background: #f5f3ff; color: #7c3aed; }
       .card-title {
         font-size: 1.4rem;
         font-weight: 800;
@@ -116,6 +141,18 @@
         font-weight: 700;
         font-size: 0.82rem;
         letter-spacing: 0.01em;
+      }
+      .badge-data-warning {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 1rem;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        letter-spacing: 0.02em;
+        background: #fef9c3;
+        color: #854d0e;
+        border: 1px dashed #eab308;
       }
       .badge-yes {
         background: #dcfce7;
@@ -192,6 +229,30 @@
         font-size: 1.02rem;
         line-height: 1.55;
         margin: 0 0 1rem;
+      }
+
+      .disclaimer-compact {
+        background: #fff8e6;
+        border-left: 4px solid #f0ad4e;
+        padding: 0.9rem 1rem;
+        margin-top: 1rem;
+        border-radius: 0 8px 8px 0;
+        color: #7a5c00;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .disclaimer-compact .disclaimer-toggle-link {
+        margin-left: 0.5rem;
+        color: #1d4ed8;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .disclaimer-compact .disclaimer-toggle-link:hover {
+        text-decoration: underline;
+      }
+      .disclaimer-full {
+        margin-top: 0.75rem;
+        font-size: 0.92rem;
       }
 
       .assessed-at {
@@ -438,7 +499,7 @@
       .content-stack {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.85rem;
       }
 
       .card-subtitle {
@@ -512,20 +573,20 @@
   </head>
   <body>
     <header class="navbar">
-      <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand">🩸 GlucoTrackAlert</a>
-      <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand">🩸 GlucoTrackAlert</a>
+      <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
+      <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
 
       <nav class="navbar-menu">
         <th:block th:if="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link">🤖 Báo Cáo AI</a>
-          <a href="#" class="navbar-link active">📊 Lịch Sử Sàng Lọc Thận Tuần</a>
-          <a href="/doctor/home" class="navbar-link">🏠 Trang Chủ</a>
+          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
+          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
+          <a href="/doctor/home" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
         </th:block>
 
         <th:block th:unless="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link">🤖 Báo Cáo AI</a>
-          <a href="#" class="navbar-link active">📊 Lịch Sử Sàng Lọc Thận Tuần</a>
-          <a href="/patient/homepage" class="navbar-link">🏠 Trang chủ</a>
+          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
+          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
+          <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
         </th:block>
       </nav>
     </header>
@@ -534,8 +595,7 @@
       <a class="btn-back" th:if="${isDoctorView}" href="/doctor/home">← Quay lại trang bác sĩ</a>
       <a class="btn-back" th:unless="${isDoctorView}" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
 
-      <h1 class="page-heading">🫘 Sàng Lọc Yếu Tố Liên Quan Đến Thận</h1>
-      <p class="page-subtitle" th:if="${patientName}" th:text="'Bệnh nhân: ' + ${patientName}">Bệnh nhân</p>
+      <h1 class="page-heading"><i class="ti ti-droplet"></i> Sàng Lọc Yếu Tố Liên Quan Đến Thận</h1>
 
       <div class="dashboard-grid">
         <aside class="profile-sidebar">
@@ -596,64 +656,8 @@
         <div class="content-stack">
           <section class="card">
             <div class="card-header">
-              <div class="card-icon card-icon-blue">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M7 7v12"/><path d="M17 7v12"/><path d="M5 19h14"/></svg>
-              </div>
-              <div>
-                <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
-                <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI.</p>
-              </div>
-            </div>
-            <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
-
-            <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" class="range-form">
-              <div>
-                <label for="fromDate" class="meta-label">Từ ngày</label><br />
-                <input id="fromDate" name="fromDate" type="date" required />
-              </div>
-              <div>
-                <label for="toDate" class="meta-label">Đến ngày</label><br />
-                <input id="toDate" name="toDate" type="date" required />
-              </div>
-              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
-              <button type="submit">Tính</button>
-            </form>
-
-            <div th:if="${customRangeError}" class="error-message">
-              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
-            </div>
-
-            <div th:if="${customRangeResult != null}" class="result-block">
-              <div class="meta-row">
-                <span class="meta-label">Kết quả từ</span>
-                <span th:text="${customRangeResult.fromDate}">2026-06-01</span>
-                <span class="meta-label">đến</span>
-                <span th:text="${customRangeResult.toDate}">2026-06-14</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Điểm sàng lọc</span>
-              </div>
-              <div class="progress-wrap">
-                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
-                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
-                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
-              </div>
-              <div class="meta-row meta-row-inline">
-                <span class="meta-label">Mức độ:</span>
-                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
-                <span class="meta-label">Số log:</span>
-                <span th:text="${customRangeResult.logCount}">5</span>
-                <span class="meta-label">Độ tin cậy:</span>
-                <span th:text="${customRangeResult.lowConfidence} ? 'Dữ liệu chưa đủ' : 'Đủ dữ liệu'">Đủ dữ liệu</span>
-              </div>
-              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-header">
               <div class="card-icon card-icon-orange">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16.01"/></svg>
+                <i class="ti ti-activity-heartbeat" style="font-size:26px; color:#d97706;"></i>
               </div>
               <div>
                 <h2 class="card-title">Đánh giá gần nhất</h2>
@@ -669,12 +673,10 @@
               <div class="meta-row">
                 <span class="meta-label">Mức độ (sàng lọc):</span>
                 <span th:class="'badge badge-' + ${latestAssessment.healthStatus}" th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
-                <span th:if="${latestAssessment.lowConfidence}" class="badge badge-MEDIUM">⚠️ Dữ liệu chưa đầy đủ</span>
+                <span th:if="${latestAssessment.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đầy đủ</span>
               </div>
 
-              <div class="meta-row">
-                <span class="meta-label">Điểm sàng lọc</span>
-              </div>
+              <span class="progress-label">Điểm sàng lọc</span>
               <div class="progress-wrap">
                 <div th:class="'progress-bar risk-' + ${latestAssessment.healthStatus}"
                      th:style="'width:' + ${latestAssessment.riskPercentage} + '%'"
@@ -711,33 +713,41 @@
                 </div>
               </div>
 
-              <div class="disclaimer-note" style="background: #fff8e6; border-left: 3px solid #f0ad4e; padding: 10px 14px; margin-top: 12px; font-size: 12.5px; color: #7a5c00; border-radius: 0 6px 6px 0;">
-                Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham khảo quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham khảo — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
+              <div class="disclaimer-compact">
+                ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
+                <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
+                <div class="disclaimer-full" hidden>
+                  Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
+                </div>
               </div>
-
               <div class="assessed-at">
-                <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <i class="ti ti-clock clock-icon" style="color:#94a3b8;"></i>
                 <span th:text="'Thời gian đánh giá: ' + ${#temporals.format(latestAssessment.createdAt,'dd/MM/yyyy HH:mm')}">Thời gian đánh giá: 22/08/2026 23:42</span>
               </div>
             </div>
           </section>
 
-          <section class="card">
-            <div class="card-header">
-              <div class="card-icon card-icon-blue">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><polyline points="9 14 11 16 15 11"/></svg>
+          <details class="card card-collapsible">
+            <summary>
+              <div class="card-header">
+                <div class="card-icon card-icon-blue">
+                  <i class="ti ti-history" style="font-size:26px; color:#0284c7;"></i>
+                </div>
+                <div>
+                  <h2 class="card-title">Sàng lọc yếu tố thận hàng tuần</h2>
+                  <p class="card-subtitle">Lịch sử các đánh giá tuần gần đây.</p>
+                </div>
+                <i class="ti ti-chevron-down toggle-icon"></i>
               </div>
-              <div>
-                <h2 class="card-title">Sàng lọc yếu tố thận hàng tuần</h2>
-                <p class="card-subtitle">Lịch sử các đánh giá tuần gần đây.</p>
-              </div>
-            </div>
+            </summary>
+            <div class="card-collapsible-body">
 
             <div th:if="${#lists.isEmpty(reports)}" class="empty">
               Chưa có báo cáo tuần nào được ghi nhận.
             </div>
 
             <div th:if="${!#lists.isEmpty(reports)}" class="table-wrap">
+              <p style="color: var(--muted); font-size: 0.85rem; margin: 0 0 0.75rem;">Sắp xếp: tuần gần nhất hiển thị trước</p>
               <table>
                 <thead>
                   <tr>
@@ -752,13 +762,13 @@
                   <tr th:each="r : ${reports}">
                     <td>
                       <span class="date-cell">
-                        <span class="date-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                        <span class="date-icon"><i class="ti ti-calendar"></i></span>
                         <span th:text="${#temporals.format(r.weekStart, 'dd/MM/yyyy')}">2026-06-15</span>
                       </span>
                     </td>
                     <td>
                       <span class="date-cell">
-                        <span class="date-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                        <span class="date-icon"><i class="ti ti-calendar"></i></span>
                         <span th:text="${#temporals.format(r.weekEnd, 'dd/MM/yyyy')}">2026-06-21</span>
                       </span>
                     </td>
@@ -777,9 +787,90 @@
                 </tbody>
               </table>
             </div>
+          </details>
+
+          <details class="card card-collapsible">
+            <summary>
+              <div class="card-header">
+                <div class="card-icon card-icon-purple">
+                  <i class="ti ti-calendar-stats" style="font-size:26px; color:#7c3aed;"></i>
+                </div>
+                <div>
+                  <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
+                  <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI. <em>Kết quả chỉ mang tính tham khảo tạm thời, không được lưu vào lịch sử.</em></p>
+                </div>
+                <i class="ti ti-chevron-down toggle-icon"></i>
+              </div>
+            </summary>
+            <div class="card-collapsible-body">
+              <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
+
+            <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" class="range-form">
+              <div>
+                <label for="fromDate" class="meta-label">Từ ngày</label><br />
+                <input id="fromDate" name="fromDate" type="date" required />
+              </div>
+              <div>
+                <label for="toDate" class="meta-label">Đến ngày</label><br />
+                <input id="toDate" name="toDate" type="date" required />
+              </div>
+              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
+              <button type="submit">Tính</button>
+            </form>
+
+            <div th:if="${customRangeError}" class="error-message">
+              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
+            </div>
+
+            <div th:if="${customRangeResult != null}" class="result-block">
+              <div class="meta-row">
+                <span class="meta-label">Kết quả từ</span>
+                <span th:text="${customRangeResult.fromDate}">2026-06-01</span>
+                <span class="meta-label">đến</span>
+                <span th:text="${customRangeResult.toDate}">2026-06-14</span>
+              </div>
+              <span class="progress-label">Điểm sàng lọc</span>
+              <div class="progress-wrap">
+                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
+                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
+                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
+              </div>
+              <div class="meta-row meta-row-inline">
+                <span class="meta-label">Mức độ:</span>
+                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
+                <span class="meta-label">Số log:</span>
+                <span th:text="${customRangeResult.logCount}">5</span>
+                <span class="meta-label">Độ tin cậy:</span>
+                <span th:if="${customRangeResult.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đủ</span>
+                <span th:unless="${customRangeResult.lowConfidence}" class="badge badge-status badge-yes">Đủ dữ liệu</span>
+              </div>
+              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
+              <div class="disclaimer-compact">
+                ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
+                <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
+                <div class="disclaimer-full" hidden>
+                  Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
+                </div>
+              </div>
+            </div>
           </section>
         </div>
       </div>
     </main>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.disclaimer-toggle-link').forEach(function(link) {
+          link.addEventListener('click', function(event) {
+            event.preventDefault();
+            var container = link.closest('.disclaimer-compact');
+            if (!container) return;
+            var full = container.querySelector('.disclaimer-full');
+            if (!full) return;
+            full.hidden = !full.hidden;
+            link.textContent = full.hidden ? 'Chi tiết' : 'Thu gọn';
+          });
+        });
+      });
+    </script>
   </body>
 </html>

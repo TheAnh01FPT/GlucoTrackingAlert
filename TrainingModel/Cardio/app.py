@@ -1,21 +1,27 @@
 from flask import Flask, request, jsonify
 import joblib
 import numpy as np
+import os
 
 app = Flask(__name__)
 
-# 1. Nạp mô hình AI và bộ chuẩn hóa đã train từ Colab vào bộ nhớ
-model = joblib.load('cardio_xgb_model.pkl')
-scaler = joblib.load('cardio_scaler.pkl')
+# Lấy đường dẫn thư mục hiện tại chứa app.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# 1. Nạp mô hình AI và bộ chuẩn hóa từ thư mục models/
+model_path = os.path.join(BASE_DIR, 'models', 'cardio_xgb_model.pkl')
+scaler_path = os.path.join(BASE_DIR, 'models', 'cardio_scaler.pkl')
+
+model = joblib.load(model_path)
+scaler = joblib.load(scaler_path)
 
 @app.route('/predict-cardio', methods=['POST'])
 def predict_cardio():
     try:
         # Lấy dữ liệu JSON từ Spring Boot gửi sang
         data = request.json
-        
+
         # Sắp xếp các trường dữ liệu đầu vào theo đúng thứ tự lúc huấn luyện mô hình
-        # Đã map lại key theo dữ liệu thực tế từ hồ sơ nền + nhật ký sức khỏe mới nhất
         features = np.array([[
             float(data['age_days']),
             float(data['gender']),
@@ -29,14 +35,14 @@ def predict_cardio():
             float(data['alco']),
             float(data['active'])
         ]])
-        
+
         # 2. Thực hiện chuẩn hóa dữ liệu đầu vào
         features_scaled = scaler.transform(features)
-        
+
         # 3. Dự đoán xác suất nguy cơ mắc bệnh (%)
         prediction_prob = model.predict_proba(features_scaled)[0][1]
         risk_percentage = float(round(prediction_prob * 100, 2))
-        
+
         # 4. Tự động phân cấp nguy cơ (riskLevel) và sinh lời khuyên (advice) phù hợp
         if risk_percentage < 20.0:
             risk_level = "LOW"
@@ -60,7 +66,7 @@ def predict_cardio():
             'summary': summary,
             'advice': advice
         })
-        
+
     except Exception as e:
         # Trả về chi tiết lỗi giúp bạn dễ Debug ở console của Spring Boot
         return jsonify({'status': 'error', 'message': f"Lỗi tiền xử lý dữ liệu AI: {str(e)}"}), 400

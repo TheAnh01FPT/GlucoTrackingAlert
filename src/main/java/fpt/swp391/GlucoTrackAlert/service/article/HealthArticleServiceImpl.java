@@ -148,8 +148,8 @@ public class HealthArticleServiceImpl implements HealthArticleService {
         HealthArticle article = articleRepository.findById(id)
                 .orElseThrow(() -> new Exception("Bài viết không tồn tại"));
 
-        // Regenerate slug chỉ nếu tiêu đề thay đổi
-        if (!article.getTitle().equals(request.getTitle())) {
+        // Regenerate slug chỉ nếu bài chưa được publish lần nào và tiêu đề thay đổi
+        if (article.getPublishedAt() == null && !article.getTitle().equals(request.getTitle())) {
             String newSlug = generateSlug(request.getTitle());
             article.setSlug(newSlug);
         }
