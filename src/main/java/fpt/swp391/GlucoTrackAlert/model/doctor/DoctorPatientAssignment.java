@@ -1,6 +1,6 @@
-package fpt.swp391.GlucoTrackAlert.model;
+package fpt.swp391.GlucoTrackAlert.model.doctor;
 
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

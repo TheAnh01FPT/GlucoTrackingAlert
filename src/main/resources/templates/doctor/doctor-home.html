@@ -431,14 +431,6 @@
                 color: #555;
                 line-height: 1.5;
             }
-            /* Notification bell */
-            .hero-bell-wrap {
-                position: relative;
-                margin-left: auto;
-                margin-right: 16px;
-                align-self: flex-start;
-                padding-top: 4px;
-            }
         </style>
     </head>
     <body>
@@ -474,7 +466,6 @@
                     <div class="hero-name" id="heroName">Bác sĩ</div>
                     <div class="hero-meta" id="heroMeta">–</div>
                 </div>
-                <div class="hero-bell-wrap" id="notif-bell-container"></div>
                 <div class="hero-right">
                     <div class="hero-date" id="heroDate">–</div>
                     <div class="hero-time" id="heroTime">–</div>
@@ -545,6 +536,15 @@
                                 <div>
                                     <div class="quick-title">Quản lý tin tức</div>
                                     <div class="quick-desc">Đăng và quản lý bài viết sức khỏe</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/doctor/prescriptions" class="quick-card">
+                                <div class="quick-icon" style="background:#fdecea; color:#c62828"><i class="bi bi-capsule"></i></div>
+                                <div>
+                                    <div class="quick-title">Kê đơn thuốc</div>
+                                    <div class="quick-desc">Tạo và quản lý đơn thuốc cho bệnh nhân</div>
                                 </div>
                             </a>
                         </div>
@@ -728,28 +728,6 @@
             loadDoctorInfo();
             loadPatients();
 
-            // ── Notification bell: chỉ hiển thị thông báo trong giờ làm việc (08:00–17:00, T2–T6) ──
-            // WorkingHoursUtils đã được load từ /js/WorkingHoursUtils.js
-            // Dữ liệu alerts thật sẽ được fetch từ API; hiện dùng mock để demo.
-            async function loadAndRenderAlerts() {
-                // TODO: thay bằng fetch('/api/doctor/' + DOCTOR_ID + '/alerts') khi có endpoint
-                const mockAlerts = [
-                    {id: 1, title: 'BN Nguyễn Văn A vượt 320 mg/dL', createdAt: new Date().toISOString()},
-                    {id: 2, title: 'BN Trần Thị B: đường huyết 48 mg/dL', createdAt: new Date().toISOString()},
-                    {id: 3, title: 'BN Lê Văn C: thiếu đo sáng nay', createdAt: new Date(Date.now() - 3600000).toISOString()},
-                ];
-
-                WorkingHoursUtils.renderBell(
-                        'notif-bell-container',
-                        mockAlerts,
-                        item => item.createdAt,
-                        {
-                            getTitle: item => item.title,
-                            emptyText: 'Không có cảnh báo trong giờ làm việc',
-                        }
-                );
-            }
-            loadAndRenderAlerts();
 
             function handleAuthError(status) {
                 if (status === 401 || status === 403) {

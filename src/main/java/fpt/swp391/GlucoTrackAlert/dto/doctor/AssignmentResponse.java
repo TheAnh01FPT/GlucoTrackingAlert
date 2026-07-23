@@ -1,6 +1,6 @@
-package fpt.swp391.GlucoTrackAlert.dto;
+package fpt.swp391.GlucoTrackAlert.dto.doctor;
 
-import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
+import fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
