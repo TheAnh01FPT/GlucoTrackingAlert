@@ -62,10 +62,34 @@
       .card {
         background: var(--card);
         border-radius: 24px;
-        padding: 2rem 2.25rem;
+        padding: 1.5rem 1.75rem;
         margin-bottom: 1.75rem;
         box-shadow: var(--shadow);
         border: 1px solid #f1f5f9;
+      }
+
+      .card-collapsible {
+        padding: 1rem 1.25rem;
+      }
+      .card-collapsible summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .card-collapsible summary::-webkit-details-marker {
+        display: none;
+      }
+      .card-collapsible .card-header {
+        margin-bottom: 0;
+      }
+      .card-collapsible[open] .card-header {
+        margin-bottom: 1.25rem;
+      }
+      .card-collapsible .toggle-icon {
+        margin-left: auto;
+        transition: transform 0.15s;
+      }
+      .card-collapsible[open] .toggle-icon {
+        transform: rotate(180deg);
       }
 
       .card-header {
@@ -581,63 +605,6 @@
         </aside>
 
         <div class="content-stack">
-          <!-- Custom Range Card -->
-          <section class="card">
-            <div class="card-header">
-              <div class="card-icon card-icon-blue">
-                <i class="ti ti-calendar-stats" style="font-size: 28px;"></i>
-              </div>
-              <div>
-                <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
-                <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả đánh giá nguy cơ đột quỵ từ AI.</p>
-              </div>
-            </div>
-
-            <form th:action="@{/health-logs/stroke-risk}" method="get" class="range-form">
-              <div>
-                <label for="from" class="meta-label">Từ ngày</label><br />
-                <input id="from" name="from" type="date" th:value="${from}" required />
-              </div>
-              <div>
-                <label for="to" class="meta-label">Đến ngày</label><br />
-                <input id="to" name="to" type="date" th:value="${to}" required />
-              </div>
-              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
-              <input th:if="${patientId != null}" type="hidden" name="patientId" th:value="${patientId}" />
-              <button type="submit">Tính toán</button>
-            </form>
-
-            <div th:if="${customRangeError}" class="error-message">
-              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
-            </div>
-
-            <div th:if="${customRangeResult != null}" class="result-block">
-              <div class="meta-row">
-                <span class="meta-label">Kết quả từ</span>
-                <span th:text="${#temporals.format(customRangeResult.fromDate, 'dd/MM/yyyy')}">01/06/2026</span>
-                <span class="meta-label">đến</span>
-                <span th:text="${#temporals.format(customRangeResult.toDate, 'dd/MM/yyyy')}">14/06/2026</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Xác suất nguy cơ đột quỵ</span>
-              </div>
-              <div class="progress-wrap">
-                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
-                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
-                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
-              </div>
-              <div class="meta-row meta-row-inline">
-                <span class="meta-label">Mức độ:</span>
-                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
-                <span class="meta-label">Số ngày ghi nhật ký:</span>
-                <span th:text="${customRangeResult.logCount}">5</span>
-                <span class="meta-label">Độ tin cậy:</span>
-                <span th:text="${customRangeResult.lowConfidence} ? 'Dữ liệu chưa đủ' : 'Đủ dữ liệu'">Đủ dữ liệu</span>
-              </div>
-              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
-            </div>
-          </section>
-
           <!-- Latest Weekly Assessment Card -->
           <section class="card">
             <div class="card-header">
@@ -717,19 +684,24 @@
             </div>
           </section>
 
-          <!-- History Table Card -->
-          <section class="card">
-            <div class="card-header">
-              <div class="card-icon card-icon-blue">
-                <i class="ti ti-history" style="font-size: 28px;"></i>
-              </div>
-              <div>
-                <h2 class="card-title">Lịch sử sàng lọc đột quỵ tuần</h2>
-                <p class="card-subtitle">Lịch sử đánh giá nguy cơ đột quỵ tuần của bệnh nhân.</p>
-              </div>
-            </div>
 
-            <div th:if="${#lists.isEmpty(reports)}" class="empty">
+
+          <!-- History Table Card -->
+          <details class="card card-collapsible">
+            <summary>
+              <div class="card-header">
+                <div class="card-icon card-icon-blue">
+                  <i class="ti ti-history" style="font-size: 26px; color: #0284c7;"></i>
+                </div>
+                <div>
+                  <h2 class="card-title">Lịch sử sàng lọc đột quỵ tuần</h2>
+                  <p class="card-subtitle">Lịch sử đánh giá nguy cơ đột quỵ tuần của bệnh nhân.</p>
+                </div>
+                <i class="ti ti-chevron-down toggle-icon"></i>
+              </div>
+            </summary>
+            <div class="card-collapsible-body">
+              <div th:if="${#lists.isEmpty(reports)}" class="empty">
               Chưa có dữ liệu lịch sử báo cáo tuần nào.
             </div>
 
@@ -773,7 +745,70 @@
                 </tbody>
               </table>
             </div>
-          </section>
+            </div>
+          </details>
+
+          <!-- Custom Range Card -->
+          <details class="card card-collapsible">
+            <summary>
+              <div class="card-header">
+                <div class="card-icon card-icon-purple">
+                  <i class="ti ti-calendar-stats" style="font-size: 26px; color: #7c3aed;"></i>
+                </div>
+                <div>
+                  <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
+                  <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả đánh giá nguy cơ đột quỵ từ AI.</p>
+                </div>
+                <i class="ti ti-chevron-down toggle-icon"></i>
+              </div>
+            </summary>
+            <div class="card-collapsible-body">
+              <form th:action="@{/health-logs/stroke-risk}" method="get" class="range-form">
+              <div>
+                <label for="from" class="meta-label">Từ ngày</label><br />
+                <input id="from" name="from" type="date" th:value="${from}" required />
+              </div>
+              <div>
+                <label for="to" class="meta-label">Đến ngày</label><br />
+                <input id="to" name="to" type="date" th:value="${to}" required />
+              </div>
+              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
+              <input th:if="${patientId != null}" type="hidden" name="patientId" th:value="${patientId}" />
+              <button type="submit">Tính toán</button>
+            </form>
+
+            <div th:if="${customRangeError}" class="error-message">
+              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
+            </div>
+
+            <div th:if="${customRangeResult != null}" class="result-block">
+              <div class="meta-row">
+                <span class="meta-label">Kết quả từ</span>
+                <span th:text="${#temporals.format(customRangeResult.fromDate, 'dd/MM/yyyy')}">01/06/2026</span>
+                <span class="meta-label">đến</span>
+                <span th:text="${#temporals.format(customRangeResult.toDate, 'dd/MM/yyyy')}">14/06/2026</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Xác suất nguy cơ đột quỵ</span>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
+                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
+                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
+              </div>
+              <div class="meta-row meta-row-inline">
+                <span class="meta-label">Mức độ:</span>
+                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
+                <span class="meta-label">Số ngày ghi nhật ký:</span>
+                <span th:text="${customRangeResult.logCount}">5</span>
+                <span class="meta-label">Độ tin cậy:</span>
+                <span th:text="${customRangeResult.lowConfidence} ? 'Dữ liệu chưa đủ' : 'Đủ dữ liệu'">Đủ dữ liệu</span>
+              </div>
+              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
+            </div>
+          </details>
+
+
         </div>
       </div>
     </main>

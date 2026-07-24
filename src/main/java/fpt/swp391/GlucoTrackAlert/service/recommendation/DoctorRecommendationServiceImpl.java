@@ -3,14 +3,14 @@ package fpt.swp391.GlucoTrackAlert.service.recommendation;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationRequest;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationResponse;
 
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
-import fpt.swp391.GlucoTrackAlert.model.DoctorRecommendation;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.doctor.DoctorRecommendation;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorRecommendationRepository;
-import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorPatientAssignmentRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRecommendationRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
-import fpt.swp391.GlucoTrackAlert.service.NotificationService;
+import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +26,7 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final DoctorPatientAssignmentRepository assignmentRepository;
-    private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -46,11 +46,14 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
 
         DoctorRecommendation saved = recommendationRepository.save(rec);
 
-        notificationService.createNotification(
-            patient.getUser().getId(),
-            "Khuyến nghị mới từ bác sĩ",
-            "BS. " + doctor.getFullName() + " vừa gửi khuyến nghị mới: " + request.getTitle(),
-            "RECOMMENDATION_CREATED"
+        sendRecommendationEmail(
+            patient,
+            "[GlucoTrackAlert] Khuyến nghị mới từ bác sĩ",
+            "Xin chào " + patient.getFullName() + ",\n\n"
+                + "BS. " + doctor.getFullName() + " vừa gửi khuyến nghị mới cho bạn:\n"
+                + "  Tiêu đề: " + request.getTitle() + "\n\n"
+                + "Vui lòng đăng nhập GlucoTrackAlert để xem chi tiết.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert"
         );
 
         return toResponse(saved);
@@ -96,11 +99,13 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
 
         DoctorRecommendation saved = recommendationRepository.save(rec);
 
-        notificationService.createNotification(
-            rec.getPatient().getUser().getId(),
-            "Khuyến nghị được cập nhật",
-            "BS. " + doctor.getFullName() + " vừa cập nhật khuyến nghị: \"" + oldTitle + "\"",
-            "RECOMMENDATION_UPDATED"
+        sendRecommendationEmail(
+            rec.getPatient(),
+            "[GlucoTrackAlert] Khuyến nghị được cập nhật",
+            "Xin chào " + rec.getPatient().getFullName() + ",\n\n"
+                + "BS. " + doctor.getFullName() + " vừa cập nhật khuyến nghị: \"" + oldTitle + "\"\n\n"
+                + "Vui lòng đăng nhập GlucoTrackAlert để xem nội dung mới.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert"
         );
 
         return toResponse(saved);
@@ -150,6 +155,19 @@ public class DoctorRecommendationServiceImpl implements DoctorRecommendationServ
         }
 
         return toResponse(rec);
+    }
+
+    private void sendRecommendationEmail(Patient patient, String subject, String body) {
+        if (patient.getUser() == null || patient.getUser().getEmail() == null) {
+            return;
+        }
+        try {
+            emailService.sendSimpleMessageAsync(patient.getUser().getEmail(), subject, body);
+        } catch (Exception ex) {
+            // Không để lỗi gửi email làm fail request tạo/sửa khuyến nghị —
+            // dữ liệu đã lưu DB thành công rồi.
+            System.err.println("Gửi email khuyến nghị thất bại: " + ex.getMessage());
+        }
     }
 
     // ========== PRIVATE HELPERS ==========

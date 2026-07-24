@@ -5,6 +5,7 @@ import fpt.swp391.GlucoTrackAlert.model.article.ArticleStatus;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.model.article.HealthArticle;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
+import fpt.swp391.GlucoTrackAlert.repository.article.HealthArticleRepository;
 import fpt.swp391.GlucoTrackAlert.service.article.HealthArticleService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -43,6 +44,7 @@ public class HealthArticleManageController {
     private static final Logger log = LoggerFactory.getLogger(HealthArticleManageController.class);
     private final HealthArticleService articleService;
     private final UserRepository userRepository;
+    private final HealthArticleRepository articleRepository;
     private static final int PAGE_SIZE = 5;
     private static final Pattern UNSUPPORTED_EMBED_PATTERN = Pattern.compile("(?i)<\\s*(iframe|video|embed)\\b[^>]*>");
 
@@ -180,9 +182,10 @@ public class HealthArticleManageController {
         }
 
         try {
-            validateStatusForCurrentUser(request.getStatus());
-            boolean hasUnsupportedEmbeddedContent = containsUnsupportedEmbeddedContent(request.getContent());
             User createdBy = getLoggedInUser();
+            ArticleStatus parsedStatus = ArticleStatus.fromString(request.getStatus());
+            validateStatusForCurrentUser(parsedStatus, null, createdBy);
+            boolean hasUnsupportedEmbeddedContent = containsUnsupportedEmbeddedContent(request.getContent());
             articleService.createArticle(request, createdBy.getId());
             redirectAttributes.addFlashAttribute("successMessage", "Tạo bài viết thành công.");
             return "redirect:/articles/manage";
@@ -269,7 +272,10 @@ public class HealthArticleManageController {
         }
 
         try {
-            validateStatusForCurrentUser(request.getStatus());
+            HealthArticle existing = articleRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
+            ArticleStatus parsedStatus = ArticleStatus.fromString(request.getStatus());
+            validateStatusForCurrentUser(parsedStatus, existing.getStatus(), currentUser);
             articleService.updateArticle(id, request);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật bài viết thành công.");
             return "redirect:/articles/manage";
@@ -305,18 +311,13 @@ public class HealthArticleManageController {
         return "redirect:/articles/manage";
     }
 
-    private void validateStatusForCurrentUser(String status) throws Exception {
-        boolean isAdmin = hasRole("ROLE_ADMIN");
-        if (isAdmin) {
-            return;
-        }
-
-        ArticleStatus parsedStatus = ArticleStatus.fromString(status);
-        if (parsedStatus == ArticleStatus.PUBLISHED) {
-            throw new Exception("Bác sĩ chỉ có thể lưu bài viết ở trạng thái Nháp hoặc Chờ duyệt");
-        }
-        if (parsedStatus != ArticleStatus.DRAFT && parsedStatus != ArticleStatus.PENDING_REVIEW) {
-            throw new Exception("Bác sĩ chỉ có thể lưu bài viết ở trạng thái Nháp hoặc Chờ duyệt");
+    private void validateStatusForCurrentUser(ArticleStatus parsedStatus, ArticleStatus currentStatus, User currentUser) throws Exception {
+        boolean isAdmin = currentUser.getRole().getName().equals("ROLE_ADMIN");
+        if (!isAdmin && parsedStatus == ArticleStatus.PUBLISHED) {
+            boolean alreadyPublished = (currentStatus == ArticleStatus.PUBLISHED);
+            if (!alreadyPublished) {
+                throw new Exception("Bác sĩ chỉ có thể lưu bài viết ở trạng thái Nháp hoặc Chờ duyệt");
+            }
         }
     }
 

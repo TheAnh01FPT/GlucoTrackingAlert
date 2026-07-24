@@ -380,12 +380,12 @@
           <!-- Smart Alert Banners -->
 
           <div
-            th:if="${log.bloodSugar != null && (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER')}"
+            th:if="${log.bloodSugar != null && log.bloodSugarStatus == 'HIGH_DANGER'}"
             class="alert-banner alert-banner-danger"
           >
             <span>⚠️</span>
             <div>
-              <strong>Cảnh Báo: Chỉ Số Đường Huyết Cao</strong>
+              <strong>Cảnh Báo: Chỉ Số Đường Huyết Cao Nguy Hiểm</strong>
               <br />
               Đường huyết ghi nhận đạt
               <span th:text="${log.bloodSugar}">7.50</span> mmol/L. Vui lòng
@@ -394,14 +394,12 @@
           </div>
 
           <div
-            th:if="${log.bloodSugar != null && log.bloodSugar < 3.9}"
+            th:if="${log.bloodSugar != null && log.bloodSugarStatus == 'LOW_DANGER'}"
             class="alert-banner alert-banner-danger"
           >
             <span>⚠️</span>
             <div>
-              <strong
-                >Cảnh Báo: Chỉ Số Đường Huyết Thấp (Hạ Đường Huyết)</strong
-              >
+              <strong>Cảnh Báo: Hạ Đường Huyết Nguy Hiểm</strong>
               <br />
               Đường huyết ở mức nguy hiểm:
               <span th:text="${log.bloodSugar}">3.50</span> mmol/L. Hãy bổ sung
@@ -463,7 +461,7 @@
                 <span
                   class="metric-value"
                   th:text="${log.bloodSugar != null ? log.bloodSugar + ' mmol/L' : '--'}"
-                  th:title="${log.patientType == 'adult' ? 'Ngưỡng (adult): <5.6 normal | 5.6-7.0 warning | >7.0 danger' : (log.patientType == 'elderly' ? 'Ngưỡng (elderly): <6.0 normal | 6.0-8.0 warning | >8.0 danger' : (log.patientType == 'pregnant' ? 'Ngưỡng (pregnant): <5.1 normal | 5.1-6.7 warning | >6.7 danger' : (log.patientType == 'child' ? 'Ngưỡng (child): <5.6 normal | 5.6-7.8 warning | >7.8 danger' : 'Ngưỡng không xác định'))) }"
+                  th:title="${log.bloodSugarNormalMin != null ? 'Ngưỡng: normal ' + log.bloodSugarNormalMin + ' - ' + log.bloodSugarNormalMax + ' | warning ' + log.bloodSugarWarningMin + ' - ' + log.bloodSugarWarningMax : 'Ngưỡng không xác định'}"
                 >
                 </span>
               </div>
@@ -576,21 +574,17 @@
 
           <!-- Actions Footer -->
           <div class="detail-actions">
-            <a th:if="${source != 'doctor-view'}"
+            <a th:if="${source != 'doctor-view' && !log.logDate.isBefore(T(java.time.LocalDate).now().minusDays(3))}"
               th:href="${source == 'doctor-view' ? '/health-logs/' + log.id + '/edit?userId=' + log.patientId + '&source=doctor-view' : '/health-logs/' + log.id + '/edit?userId=' + log.userId + '&source=my-logs'}"
               class="btn btn-edit"
               >✏️ Chỉnh Sửa Chỉ Số</a
             >
 
-            <form
-              th:action="${source == 'doctor-view' ? '/health-logs/' + log.id + '/delete?userId=' + log.patientId + '&source=doctor-view' : '/health-logs/' + log.id + '/delete?userId=' + log.userId + '&source=my-logs'}"
-              method="POST"
-              onsubmit="
-                return confirm(
-                  'Bạn có chắc chắn muốn xóa nhật ký sức khỏe này?',
-                );
-              "
-              
+            <form th:if="${!log.logDate.isBefore(T(java.time.LocalDate).now().minusDays(3))}"
+                  th:action="${source == 'doctor-view' ? '/health-logs/' + log.id + '/delete?userId=' + log.patientId + '&source=doctor-view' : '/health-logs/' + log.id + '/delete?userId=' + log.userId + '&source=my-logs'}"
+                  method="POST"
+                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký sức khỏe này?');">
+                <button type="submit" class="btn btn-delete">🗑️ Xóa Nhật Ký</button>
             </form>
           </div>
         </div>

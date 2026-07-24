@@ -1,10 +1,10 @@
-package fpt.swp391.GlucoTrackAlert.controller;
+package fpt.swp391.GlucoTrackAlert.controller.doctor;
 
-import fpt.swp391.GlucoTrackAlert.dto.AssignmentRequest;
-import fpt.swp391.GlucoTrackAlert.dto.AssignmentResponse;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.AssignmentRequest;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.AssignmentResponse;
 import fpt.swp391.GlucoTrackAlert.dto.ReasonRequest;
-import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
-import fpt.swp391.GlucoTrackAlert.service.impl.DoctorPatientAssignmentService;
+import fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment;
+import fpt.swp391.GlucoTrackAlert.service.impl.doctor.DoctorPatientAssignmentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

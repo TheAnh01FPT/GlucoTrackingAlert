@@ -10,8 +10,8 @@ import fpt.swp391.GlucoTrackAlert.repository.register.EmailVerificationTokenRepo
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.PasswordResetTokenRepository;
-import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.service.register.UserService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.model.user.PasswordResetToken;
