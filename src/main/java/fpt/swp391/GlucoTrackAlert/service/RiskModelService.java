@@ -21,7 +21,7 @@ public class RiskModelService {
     public void loadModel() {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(new ClassPathResource("ai-model/ckd-risk-model.json").getInputStream());
+            JsonNode root = mapper.readTree(new ClassPathResource("ai-CKD-model/ckd-risk-model.json").getInputStream());
             scalerMean = toDoubleArray(root.get("scaler_mean"));
             scalerScale = toDoubleArray(root.get("scaler_scale"));
             coefficients = toDoubleArray(root.get("coefficients"));

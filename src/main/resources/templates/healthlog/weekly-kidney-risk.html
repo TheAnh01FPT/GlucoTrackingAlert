@@ -1,749 +1,863 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🫘 Sàng Lọc Yếu Tố Liên Quan Đến Thận</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-    <style>
-      :root {
-        --bg: #f1f5f9;
-        --card: #ffffff;
-        --text: #0f172a;
-        --muted: #64748b;
-        --primary: #4f46e5;
-        --border: #e2e8f0;
-        --orange: #f59e0b;
-        --orange-dark: #d97706;
-        --orange-bg: #fef3c7;
-        --orange-text: #b45309;
-        --shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🫘 Sàng Lọc Yếu Tố Liên Quan Đến Thận</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #4f46e5;
+      --border: #e2e8f0;
+      --orange: #f59e0b;
+      --orange-dark: #d97706;
+      --orange-bg: #fef3c7;
+      --orange-text: #b45309;
+      --shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    .page-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin: 0 0 1.5rem;
+      color: var(--text);
+    }
+
+    .patient-name {
+      margin: -0.5rem 0 1.5rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.75rem;
+      box-shadow: var(--shadow);
+      border: 1px solid #f1f5f9;
+    }
+
+    .card-collapsible {
+      padding: 1rem 1.25rem;
+    }
+
+    .card-collapsible summary {
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .card-collapsible summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .card-collapsible .card-header {
+      margin-bottom: 0;
+    }
+
+    .card-collapsible[open] .card-header {
+      margin-bottom: 1.25rem;
+    }
+
+    .card-collapsible .toggle-icon {
+      margin-left: auto;
+      transition: transform 0.15s;
+    }
+
+    .card-collapsible[open] .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-icon {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+
+    .card-icon-orange {
+      background: #fef3e2;
+    }
+
+    .card-icon-blue {
+      background: #e0f2fe;
+    }
+
+    .card-icon-purple {
+      background: #f5f3ff;
+      color: #7c3aed;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin: 0.4rem 0 0;
+      color: var(--text);
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-label {
+      font-weight: 700;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 1rem;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-LOW {
+      background: #d1fae5;
+      color: #047857;
+    }
+
+    .badge-MEDIUM {
+      background: var(--orange-bg);
+      color: var(--orange-text);
+    }
+
+    .badge-HIGH {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .badge-CRITICAL {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-sm {
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.01em;
+    }
+
+    .badge-data-warning {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 1rem;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+      background: #fef9c3;
+      color: #854d0e;
+      border: 1px dashed #eab308;
+    }
+
+    .badge-yes {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-no {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .progress-wrap {
+      display: block;
+      width: 100%;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 0 0 1rem 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box;
+      height: 38px;
+    }
+
+    .progress-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 0.45rem;
+    }
+
+    .risk-trend-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .progress-bar {
+      height: 100% !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1rem !important;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      border-radius: 9999px;
+      min-width: 70px;
+      transition: width 0.3s ease;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+
+    .risk-LOW {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .risk-MEDIUM {
+      background: linear-gradient(90deg, #fbbf24, var(--orange));
+    }
+
+    .risk-HIGH {
+      background: linear-gradient(90deg, #f97316, #ea580c);
+    }
+
+    .risk-CRITICAL {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .progress-wrap-sm {
+      max-width: 230px;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+      height: 32px;
+    }
+
+    .progress-bar-sm {
+      height: 100% !important;
+      font-size: 0.78rem;
+      padding: 0 0.75rem !important;
+      min-width: 72px;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    .recommendation-text {
+      color: var(--text);
+      font-size: 1.02rem;
+      line-height: 1.55;
+      margin: 0 0 1rem;
+    }
+
+    .disclaimer-compact {
+      background: #fff8e6;
+      border-left: 4px solid #f0ad4e;
+      padding: 0.9rem 1rem;
+      margin-top: 1rem;
+      border-radius: 0 8px 8px 0;
+      color: #7a5c00;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .disclaimer-compact .disclaimer-toggle-link {
+      margin-left: 0.5rem;
+      color: #1d4ed8;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .disclaimer-compact .disclaimer-toggle-link:hover {
+      text-decoration: underline;
+    }
+
+    .disclaimer-full {
+      margin-top: 0.75rem;
+      font-size: 0.92rem;
+    }
+
+    .assessed-at {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .assessed-at .clock-icon {
+      font-size: 1.05rem;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      font-size: 0.98rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0 0.75rem 0.9rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      padding: 1.1rem 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+      font-size: 0.98rem;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .date-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .date-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: #e0f2fe;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .recommendation-cell {
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 320px;
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      padding: 1rem 2rem;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #ffffff;
+      text-decoration: none;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .navbar-link {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .navbar-link:hover,
+    .navbar-link.active {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 2rem;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .page-heading {
+      font-size: 1.9rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem;
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .page-subtitle {
+      color: #64748b;
+      margin: 0 0 1.5rem;
+      font-weight: 600;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 360px) 1fr;
+      gap: 1.5rem;
+    }
+
+    .profile-sidebar {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid #f1f5f9;
+      height: fit-content;
+    }
+
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eef2ff;
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .profile-name {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #1e1b4b;
+    }
+
+    .profile-type {
+      margin-top: 0.4rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.92rem;
+    }
+
+    .info-label {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .info-value {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .risk-summary {
+      margin-top: 1.25rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+    }
+
+    .risk-summary-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.7rem;
+    }
+
+    .risk-summary-text {
+      margin: 0.8rem 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    .content-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .card-subtitle {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .range-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .range-form input {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 180px;
+    }
+
+    .range-form button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .error-message {
+      margin-top: 1rem;
+      color: #b91c1c;
+      font-weight: 700;
+    }
+
+    .result-block {
+      margin-top: 1.5rem;
+    }
+
+    .meta-row-inline {
+      gap: 1.25rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
       }
-      * { box-sizing: border-box; }
-      body {
-        font-family: 'Inter', Arial, sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        margin: 0;
-        padding: 0;
-      }
-      .container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem 3rem;
-      }
-      .page-title {
-        font-size: 1.85rem;
-        font-weight: 800;
-        margin: 0 0 1.5rem;
-        color: var(--text);
-      }
-      .patient-name {
-        margin: -0.5rem 0 1.5rem;
-        color: var(--muted);
-        font-size: 0.95rem;
-        font-weight: 600;
+    }
+
+    @media (max-width: 700px) {
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
       }
 
-      .card {
-        background: var(--card);
-        border-radius: 24px;
-        padding: 1.5rem 1.75rem;
-        margin-bottom: 1.75rem;
-        box-shadow: var(--shadow);
-        border: 1px solid #f1f5f9;
-      }
-
-      .card-collapsible {
-        padding: 1rem 1.25rem;
-      }
-      .card-collapsible summary {
-        list-style: none;
-        cursor: pointer;
-      }
-      .card-collapsible summary::-webkit-details-marker {
+      thead {
         display: none;
       }
-      .card-collapsible .card-header {
-        margin-bottom: 0;
-      }
-      .card-collapsible[open] .card-header {
+
+      tbody tr {
         margin-bottom: 1.25rem;
-      }
-      .card-collapsible .toggle-icon {
-        margin-left: auto;
-        transition: transform 0.15s;
-      }
-      .card-collapsible[open] .toggle-icon {
-        transform: rotate(180deg);
-      }
-
-      .card-header {
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-        margin-bottom: 1.5rem;
-      }
-      .card-icon {
-        flex-shrink: 0;
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.6rem;
-      }
-      .card-icon-orange { background: #fef3e2; }
-      .card-icon-blue { background: #e0f2fe; }
-      .card-icon-purple { background: #f5f3ff; color: #7c3aed; }
-      .card-title {
-        font-size: 1.4rem;
-        font-weight: 800;
-        margin: 0.4rem 0 0;
-        color: var(--text);
-      }
-
-      .meta-row {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
-        margin-bottom: 1.25rem;
-        flex-wrap: wrap;
-      }
-      .meta-label {
-        font-weight: 700;
-        color: var(--muted);
-        font-size: 1rem;
-      }
-
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.45rem 1rem;
-        border-radius: 9999px;
-        font-weight: 800;
-        font-size: 0.85rem;
-        letter-spacing: 0.02em;
-      }
-      .badge-LOW { background: #d1fae5; color: #047857; }
-      .badge-MEDIUM { background: var(--orange-bg); color: var(--orange-text); }
-      .badge-HIGH { background: #ffedd5; color: #9a3412; }
-      .badge-CRITICAL { background: #fee2e2; color: #991b1b; }
-      .badge-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
-
-      .badge-status {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.25rem 0.65rem;
-        border-radius: 9999px;
-        font-weight: 700;
-        font-size: 0.82rem;
-        letter-spacing: 0.01em;
-      }
-      .badge-data-warning {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.45rem 1rem;
-        border-radius: 9999px;
-        font-weight: 800;
-        font-size: 0.85rem;
-        letter-spacing: 0.02em;
-        background: #fef9c3;
-        color: #854d0e;
-        border: 1px dashed #eab308;
-      }
-      .badge-yes {
-        background: #dcfce7;
-        color: #166534;
-      }
-      .badge-no {
-        background: #f1f5f9;
-        color: #475569;
-      }
-
-      .progress-wrap {
-        display: block;
-        width: 100%;
-        background: #e2e8f0;
-        border-radius: 9999px;
-        overflow: hidden;
-        margin: 0 0 1rem 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box;
-        height: 38px;
-      }
-
-      .progress-label {
-        display: block;
-        color: var(--muted);
-        font-size: 0.82rem;
-        font-weight: 600;
-        margin-bottom: 0.45rem;
-      }
-
-      .risk-trend-note {
-        color: var(--muted);
-        font-size: 13px;
-        margin-top: 8px;
-      }
-      .progress-bar {
-        height: 100% !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 1rem !important;
-        color: #fff;
-        font-weight: 800;
-        font-size: 0.95rem;
-        border-radius: 9999px;
-        min-width: 70px;
-        transition: width 0.3s ease;
-        white-space: nowrap;
-        box-sizing: border-box;
-      }
-      .risk-LOW { background: linear-gradient(90deg, #10b981, #059669); }
-      .risk-MEDIUM { background: linear-gradient(90deg, #fbbf24, var(--orange)); }
-      .risk-HIGH { background: linear-gradient(90deg, #f97316, #ea580c); }
-      .risk-CRITICAL { background: linear-gradient(90deg, #ef4444, #dc2626); }
-
-      .progress-wrap-sm {
-        max-width: 230px;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-sizing: border-box;
-        height: 32px;
-      }
-      .progress-bar-sm {
-        height: 100% !important;
-        font-size: 0.78rem;
-        padding: 0 0.75rem !important;
-        min-width: 72px;
-        justify-content: center;
-        box-sizing: border-box;
-      }
-
-      .recommendation-text {
-        color: var(--text);
-        font-size: 1.02rem;
-        line-height: 1.55;
-        margin: 0 0 1rem;
-      }
-
-      .disclaimer-compact {
-        background: #fff8e6;
-        border-left: 4px solid #f0ad4e;
-        padding: 0.9rem 1rem;
-        margin-top: 1rem;
-        border-radius: 0 8px 8px 0;
-        color: #7a5c00;
-        font-size: 0.95rem;
-        line-height: 1.5;
-      }
-      .disclaimer-compact .disclaimer-toggle-link {
-        margin-left: 0.5rem;
-        color: #1d4ed8;
-        text-decoration: none;
-        font-weight: 700;
-      }
-      .disclaimer-compact .disclaimer-toggle-link:hover {
-        text-decoration: underline;
-      }
-      .disclaimer-full {
-        margin-top: 0.75rem;
-        font-size: 0.92rem;
-      }
-
-      .assessed-at {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--muted);
-        font-size: 0.9rem;
-        font-weight: 500;
-      }
-      .assessed-at .clock-icon {
-        font-size: 1.05rem;
-      }
-
-      .empty {
-        color: var(--muted);
-        padding: 2.5rem 1rem;
-        text-align: center;
-        font-size: 0.98rem;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      thead th {
-        text-align: left;
-        padding: 0 0.75rem 0.9rem;
-        color: var(--muted);
-        font-size: 0.85rem;
-        font-weight: 700;
+        padding-bottom: 1rem;
         border-bottom: 1px solid var(--border);
       }
+
       tbody td {
-        padding: 1.1rem 0.75rem;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-        font-size: 0.98rem;
-      }
-      tbody tr:last-child td {
         border-bottom: none;
+        padding: 0.35rem 0;
       }
+    }
+  </style>
+</head>
 
-      .date-cell {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .date-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        background: #e0f2fe;
-        color: #0284c7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.95rem;
-        flex-shrink: 0;
-      }
-      .recommendation-cell {
-        color: var(--muted);
-        line-height: 1.5;
-        max-width: 320px;
-      }
+<body>
+  <header class="navbar">
+    <a th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
 
-      .navbar {
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-        padding: 1rem 2rem;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-      }
-      .navbar-brand {
-        font-size: 1.5rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #ffffff;
-        text-decoration: none;
-        font-family: 'Inter', Arial, sans-serif;
-      }
-      .navbar-menu {
-        display: flex;
-        gap: 1.5rem;
-        align-items: center;
-      }
-      .navbar-link {
-        color: #cbd5e1;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        font-family: 'Inter', Arial, sans-serif;
-      }
-      .navbar-link:hover,
-      .navbar-link.active {
-        color: white;
-        background-color: rgba(255, 255, 255, 0.1);
-      }
+    <nav class="navbar-menu">
+      <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo
+        Cáo AI</a>
+      <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
+      <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
+    </nav>
+  </header>
 
-      .main-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 1.5rem 2rem;
-      }
+  <main class="main-container">
+    <a class="btn-back" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
 
-      .btn-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #4f46e5;
-        text-decoration: none;
-        font-weight: 600;
-        margin-bottom: 1rem;
-      }
+    <h1 class="page-heading"><i class="ti ti-droplet"></i> Sàng Lọc Yếu Tố Liên Quan Đến Thận</h1>
 
-      .page-heading {
-        font-size: 1.9rem;
-        font-weight: 800;
-        margin: 0 0 0.5rem;
-        color: #1e1b4b;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-
-      .page-subtitle {
-        color: #64748b;
-        margin: 0 0 1.5rem;
-        font-weight: 600;
-      }
-
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: minmax(320px, 360px) 1fr;
-        gap: 1.5rem;
-      }
-
-      .profile-sidebar {
-        background: var(--card);
-        border-radius: 24px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow);
-        border: 1px solid #f1f5f9;
-        height: fit-content;
-      }
-
-      .profile-header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding-bottom: 1.25rem;
-        margin-bottom: 1.25rem;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .profile-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #eef2ff;
-        font-size: 2rem;
-        margin-bottom: 0.75rem;
-      }
-
-      .profile-name {
-        margin: 0;
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: #1e1b4b;
-      }
-
-      .profile-type {
-        margin-top: 0.4rem;
-        padding: 0.3rem 0.7rem;
-        border-radius: 999px;
-        background: #e0f2fe;
-        color: #0369a1;
-        font-size: 0.78rem;
-        font-weight: 700;
-      }
-
-      .info-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-      }
-
-      .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.92rem;
-      }
-
-      .info-label {
-        color: var(--muted);
-        font-weight: 600;
-      }
-
-      .info-value {
-        color: var(--text);
-        font-weight: 700;
-      }
-
-      .risk-summary {
-        margin-top: 1.25rem;
-        background: #f8fafc;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1rem;
-      }
-
-      .risk-summary-label {
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        margin-bottom: 0.7rem;
-      }
-
-      .risk-summary-text {
-        margin: 0.8rem 0 0;
-        color: var(--muted);
-        line-height: 1.55;
-        font-size: 0.92rem;
-      }
-
-      .content-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-      }
-
-      .card-subtitle {
-        margin: 0.25rem 0 0;
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-
-      .range-form {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: flex-end;
-      }
-
-      .range-form input {
-        padding: 0.75rem 1rem;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        width: 180px;
-      }
-
-      .range-form button {
-        background: var(--primary);
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        padding: 0.85rem 1.5rem;
-        font-weight: 700;
-        cursor: pointer;
-      }
-
-      .error-message {
-        margin-top: 1rem;
-        color: #b91c1c;
-        font-weight: 700;
-      }
-
-      .result-block {
-        margin-top: 1.5rem;
-      }
-
-      .meta-row-inline {
-        gap: 1.25rem;
-      }
-
-      .table-wrap {
-        overflow-x: auto;
-      }
-
-      @media (max-width: 900px) {
-        .dashboard-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 700px) {
-        table, thead, tbody, th, td, tr { display: block; }
-        thead { display: none; }
-        tbody tr {
-          margin-bottom: 1.25rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid var(--border);
-        }
-        tbody td {
-          border-bottom: none;
-          padding: 0.35rem 0;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <header class="navbar">
-      <a th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
-
-      <nav class="navbar-menu">
-        <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
-        <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
-        <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
-      </nav>
-    </header>
-
-    <main class="main-container">
-      <a class="btn-back" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
-
-      <h1 class="page-heading"><i class="ti ti-droplet"></i> Sàng Lọc Yếu Tố Liên Quan Đến Thận</h1>
-
-      <div class="dashboard-grid">
-        <aside class="profile-sidebar">
-          <div class="profile-header">
-            <div class="profile-avatar">
-              <i class="ti ti-user" style="font-size: 32px; color: var(--text-accent, #4B3FA0);"></i>
-            </div>
-            <h2 class="profile-name" th:text="${patientName != null ? patientName : 'Bệnh nhân'}">Bệnh nhân</h2>
-            <span class="profile-type">Theo dõi thận</span>
+    <div class="dashboard-grid">
+      <aside class="profile-sidebar">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="ti ti-user" style="font-size: 32px; color: var(--text-accent, #4B3FA0);"></i>
           </div>
+          <h2 class="profile-name" th:text="${patientName != null ? patientName : 'Bệnh nhân'}">Bệnh nhân</h2>
+          <span class="profile-type">Theo dõi thận</span>
+        </div>
 
-          <div class="info-list">
-            <div class="info-item">
-              <span class="info-label">Tuổi</span>
-              <span class="info-value" th:text="${patient != null && patient.age != null ? patient.age + ' tuổi' : '--'}">--</span>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Tuổi</span>
+            <span class="info-value"
+              th:text="${patient != null && patient.age != null ? patient.age + ' tuổi' : '--'}">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Giới tính</span>
+            <span class="info-value"
+              th:text="${patient != null && patient.gender != null ? patient.gender : '--'}">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">BMI</span>
+            <span class="info-value" th:text="${patient != null && patient.bmi != null ? patient.bmi : '--'}">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Tăng huyết áp</span>
+            <span th:if="${patient != null}"
+              th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
+              th:text="${patient.hypertension == true ? 'Có' : 'Không'}">--</span>
+            <span th:unless="${patient != null}" class="info-value">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Bệnh tim mạch</span>
+            <span th:if="${patient != null}"
+              th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
+              th:text="${patient.heartDisease == true ? 'Có' : 'Không'}">--</span>
+            <span th:unless="${patient != null}" class="info-value">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Hút thuốc</span>
+            <span class="info-value"
+              th:text="${patient != null && patient.smokingStatus != null ? patient.smokingStatus : '--'}">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Công việc</span>
+            <span class="info-value"
+              th:text="${patient != null && patient.workType != null ? patient.workType : '--'}">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Nơi ở</span>
+            <span class="info-value"
+              th:text="${patient != null && patient.residenceType != null ? patient.residenceType : '--'}">--</span>
+          </div>
+        </div>
+
+        <div class="risk-summary" th:if="${latestAssessment != null}">
+          <div class="risk-summary-label">Đánh giá mới nhất</div>
+          <div class="badge" th:classappend="' badge-' + ${latestAssessment.healthStatus}">
+            <span
+              th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
+          </div>
+          <p class="risk-summary-text" th:text="${latestAssessment.recommendation}">Khuyến nghị</p>
+        </div>
+      </aside>
+
+      <div class="content-stack">
+        <section class="card">
+          <div class="card-header">
+            <div class="card-icon card-icon-orange">
+              <i class="ti ti-activity-heartbeat" style="font-size:26px; color:#d97706;"></i>
             </div>
-            <div class="info-item">
-              <span class="info-label">Giới tính</span>
-              <span class="info-value" th:text="${patient != null && patient.gender != null ? patient.gender : '--'}">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">BMI</span>
-              <span class="info-value" th:text="${patient != null && patient.bmi != null ? patient.bmi : '--'}">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Tăng huyết áp</span>
-              <span th:if="${patient != null}" th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" th:text="${patient.hypertension == true ? 'Có' : 'Không'}">--</span>
-              <span th:unless="${patient != null}" class="info-value">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Bệnh tim mạch</span>
-              <span th:if="${patient != null}" th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}" th:text="${patient.heartDisease == true ? 'Có' : 'Không'}">--</span>
-              <span th:unless="${patient != null}" class="info-value">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Hút thuốc</span>
-              <span class="info-value" th:text="${patient != null && patient.smokingStatus != null ? patient.smokingStatus : '--'}">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Công việc</span>
-              <span class="info-value" th:text="${patient != null && patient.workType != null ? patient.workType : '--'}">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Nơi ở</span>
-              <span class="info-value" th:text="${patient != null && patient.residenceType != null ? patient.residenceType : '--'}">--</span>
+            <div>
+              <h2 class="card-title">Đánh giá gần nhất</h2>
+              <p class="card-subtitle">Kết quả sàng lọc gần đây nhất từ hệ thống AI.</p>
             </div>
           </div>
 
-          <div class="risk-summary" th:if="${latestAssessment != null}">
-            <div class="risk-summary-label">Đánh giá mới nhất</div>
-            <div class="badge" th:classappend="' badge-' + ${latestAssessment.healthStatus}">
-              <span th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
-            </div>
-            <p class="risk-summary-text" th:text="${latestAssessment.recommendation}">Khuyến nghị</p>
+          <div th:if="${latestAssessment == null}" class="empty">
+            Chưa có dữ liệu đánh giá. Hãy tạo nhật ký sức khỏe để nhận đánh giá.
           </div>
-        </aside>
 
-        <div class="content-stack">
-          <section class="card">
-            <div class="card-header">
-              <div class="card-icon card-icon-orange">
-                <i class="ti ti-activity-heartbeat" style="font-size:26px; color:#d97706;"></i>
+          <div th:if="${latestAssessment != null}">
+            <div class="meta-row">
+              <span class="meta-label">Mức độ (sàng lọc):</span>
+              <span th:class="'badge badge-' + ${latestAssessment.healthStatus}"
+                th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
+              <span th:if="${latestAssessment.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đầy
+                đủ</span>
+            </div>
+
+            <span class="progress-label">Điểm sàng lọc</span>
+            <div class="progress-wrap">
+              <div th:class="'progress-bar risk-' + ${latestAssessment.healthStatus}"
+                th:style="'width:' + ${latestAssessment.riskPercentage} + '%'"
+                th:text="${latestAssessment.riskPercentage} + '%'">45.89%</div>
+            </div>
+
+            <div class="risk-trend-note"
+              th:if="${previousAssessment != null && latestAssessment.riskPercentage != null && previousAssessment.riskPercentage != null}">
+              <span th:if="${latestAssessment.riskPercentage > previousAssessment.riskPercentage}">
+                ↑ Tăng <span
+                  th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage - previousAssessment.riskPercentage, 1, 1)}"></span>
+                điểm % so với tuần trước
+              </span>
+              <span th:if="${latestAssessment.riskPercentage < previousAssessment.riskPercentage}">
+                ↓ Giảm <span
+                  th:text="${#numbers.formatDecimal(previousAssessment.riskPercentage - latestAssessment.riskPercentage, 1, 1)}"></span>
+                điểm % so với tuần trước
+              </span>
+              <span th:if="${latestAssessment.riskPercentage == previousAssessment.riskPercentage}">
+                → Không đổi so với tuần trước
+              </span>
+            </div>
+
+            <p class="recommendation-text" th:text="${latestAssessment.recommendation}">Nguy cơ trung bình. Kiểm soát
+              đường huyết và huyết áp, tái khám 3 tháng/lần.</p>
+
+            <div class="risk-factor-note"
+              style="background: var(--surface-1, #f5f5f5); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px;">
+              <div style="font-weight: 500; margin-bottom: 6px;">Yếu tố góp phần chính</div>
+              <div th:if="${patient != null and patient.age != null}">
+                • Tuổi: <strong th:text="${patient.age}">--</strong> tuổi
+              </div>
+              <div th:if="${latestAssessment != null and latestAssessment.averageDiastolic != null}">
+                • Huyết áp tâm trương trung bình: <strong th:text="${latestAssessment.averageDiastolic}">--</strong>
+                mmHg
+              </div>
+              <div th:if="${latestAssessment != null and latestAssessment.averageBloodSugar != null}">
+                • Đường huyết trung bình: <strong th:text="${latestAssessment.averageBloodSugar}">--</strong> mmol/L
               </div>
               <div>
-                <h2 class="card-title">Đánh giá gần nhất</h2>
-                <p class="card-subtitle">Kết quả sàng lọc gần đây nhất từ hệ thống AI.</p>
+                • Tăng huyết áp: <strong
+                  th:text="${patient != null and patient.hypertension} ? 'Có' : 'Không'">--</strong>
               </div>
             </div>
 
-            <div th:if="${latestAssessment == null}" class="empty">
-              Chưa có dữ liệu đánh giá. Hãy tạo nhật ký sức khỏe để nhận đánh giá.
-            </div>
-
-            <div th:if="${latestAssessment != null}">
-              <div class="meta-row">
-                <span class="meta-label">Mức độ (sàng lọc):</span>
-                <span th:class="'badge badge-' + ${latestAssessment.healthStatus}" th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
-                <span th:if="${latestAssessment.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đầy đủ</span>
-              </div>
-
-              <span class="progress-label">Điểm sàng lọc</span>
-              <div class="progress-wrap">
-                <div th:class="'progress-bar risk-' + ${latestAssessment.healthStatus}"
-                     th:style="'width:' + ${latestAssessment.riskPercentage} + '%'"
-                     th:text="${latestAssessment.riskPercentage} + '%'">45.89%</div>
-              </div>
-
-              <div class="risk-trend-note" th:if="${previousAssessment != null && latestAssessment.riskPercentage != null && previousAssessment.riskPercentage != null}">
-                <span th:if="${latestAssessment.riskPercentage > previousAssessment.riskPercentage}">
-                  ↑ Tăng <span th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage - previousAssessment.riskPercentage, 1, 1)}"></span> điểm % so với tuần trước
-                </span>
-                <span th:if="${latestAssessment.riskPercentage < previousAssessment.riskPercentage}">
-                  ↓ Giảm <span th:text="${#numbers.formatDecimal(previousAssessment.riskPercentage - latestAssessment.riskPercentage, 1, 1)}"></span> điểm % so với tuần trước
-                </span>
-                <span th:if="${latestAssessment.riskPercentage == previousAssessment.riskPercentage}">
-                  → Không đổi so với tuần trước
-                </span>
-              </div>
-
-              <p class="recommendation-text" th:text="${latestAssessment.recommendation}">Nguy cơ trung bình. Kiểm soát đường huyết và huyết áp, tái khám 3 tháng/lần.</p>
-
-              <div class="risk-factor-note" style="background: var(--surface-1, #f5f5f5); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px;">
-                <div style="font-weight: 500; margin-bottom: 6px;">Yếu tố góp phần chính</div>
-                <div th:if="${patient != null and patient.age != null}">
-                  • Tuổi: <strong th:text="${patient.age}">--</strong> tuổi
-                </div>
-                <div th:if="${latestAssessment != null and latestAssessment.averageDiastolic != null}">
-                  • Huyết áp tâm trương trung bình: <strong th:text="${latestAssessment.averageDiastolic}">--</strong> mmHg
-                </div>
-                <div th:if="${latestAssessment != null and latestAssessment.averageBloodSugar != null}">
-                  • Đường huyết trung bình: <strong th:text="${latestAssessment.averageBloodSugar}">--</strong> mmol/L
-                </div>
-                <div>
-                  • Tăng huyết áp: <strong th:text="${patient != null and patient.hypertension} ? 'Có' : 'Không'">--</strong>
-                </div>
-              </div>
-
-              <div class="disclaimer-compact">
-                ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
-                <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
-                <div class="disclaimer-full" hidden>
-                  Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
-                </div>
-              <div class="disclaimer-note" style="background: #fff8e6; border-left: 3px solid #f0ad4e; padding: 10px 14px; margin-top: 12px; font-size: 12.5px; color: #7a5c00; border-radius: 0 6px 6px 0;">
-                Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
-              </div>
-              <div class="assessed-at">
-                <i class="ti ti-clock clock-icon" style="color:#94a3b8;"></i>
-                <span th:text="'Thời gian đánh giá: ' + ${#temporals.format(latestAssessment.createdAt,'dd/MM/yyyy HH:mm')}">Thời gian đánh giá: 22/08/2026 23:42</span>
+            <div class="disclaimer-compact">
+              ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
+              <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
+              <div class="disclaimer-full" hidden>
+                Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ
+                (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ
+                hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải
+                xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu.
+                Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
               </div>
             </div>
-          </section>
+            <div class="assessed-at">
+              <i class="ti ti-clock clock-icon" style="color:#94a3b8;"></i>
+              <span
+                th:text="'Thời gian đánh giá: ' + ${#temporals.format(latestAssessment.createdAt,'dd/MM/yyyy HH:mm')}">Thời
+                gian đánh giá: 22/08/2026 23:42</span>
+            </div>
+          </div>
+        </section>
 
-          <details class="card card-collapsible">
-            <summary>
-              <div class="card-header">
-                <div class="card-icon card-icon-blue">
-                  <i class="ti ti-history" style="font-size:26px; color:#0284c7;"></i>
-                </div>
-                <div>
-                  <h2 class="card-title">Sàng lọc yếu tố thận hàng tuần</h2>
-                  <p class="card-subtitle">Lịch sử các đánh giá tuần gần đây.</p>
-                </div>
-                <i class="ti ti-chevron-down toggle-icon"></i>
-          <section class="card">
+        <details class="card card-collapsible">
+          <summary>
             <div class="card-header">
               <div class="card-icon card-icon-blue">
                 <i class="ti ti-history" style="font-size:26px; color:#0284c7;"></i>
               </div>
-            </summary>
-            <div class="card-collapsible-body">
+              <div>
+                <h2 class="card-title">Sàng lọc yếu tố thận hàng tuần</h2>
+                <p class="card-subtitle">Lịch sử các đánh giá tuần gần đây.</p>
+              </div>
+              <i class="ti ti-chevron-down toggle-icon"></i>
+            </div>
+          </summary>
+          <div class="card-collapsible-body">
 
             <div th:if="${#lists.isEmpty(reports)}" class="empty">
               Chưa có báo cáo tuần nào được ghi nhận.
             </div>
 
             <div th:if="${!#lists.isEmpty(reports)}" class="table-wrap">
-              <p style="color: var(--muted); font-size: 0.85rem; margin: 0 0 0.75rem;">Sắp xếp: tuần gần nhất hiển thị trước</p>
+              <p style="color: var(--muted); font-size: 0.85rem; margin: 0 0 0.75rem;">Sắp xếp: tuần gần nhất hiển thị
+                trước</p>
               <table>
                 <thead>
                   <tr>
@@ -771,36 +885,39 @@
                     <td>
                       <div class="progress-wrap progress-wrap-sm">
                         <div th:class="'progress-bar progress-bar-sm risk-' + ${r.healthStatus}"
-                             th:style="'width:' + ${r.riskPercentage} + '%'"
-                             th:text="${r.riskPercentage} + '%'">45.89%</div>
+                          th:style="'width:' + ${r.riskPercentage} + '%'" th:text="${r.riskPercentage} + '%'">45.89%
+                        </div>
                       </div>
                     </td>
                     <td>
-                      <span th:class="'badge badge-sm badge-' + ${r.healthStatus}" th:text="${r.healthStatus == 'LOW'} ? 'Thấp' : (${r.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${r.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
+                      <span th:class="'badge badge-sm badge-' + ${r.healthStatus}"
+                        th:text="${r.healthStatus == 'LOW'} ? 'Thấp' : (${r.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${r.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
                     </td>
-                    <td class="recommendation-cell" th:text="${r.recommendation}">Nguy cơ trung bình. Kiểm soát đường huyết và huyết áp, tái khám 3 tháng/lần.</td>
+                    <td class="recommendation-cell" th:text="${r.recommendation}">Nguy cơ trung bình. Kiểm soát đường
+                      huyết và huyết áp, tái khám 3 tháng/lần.</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            </div>
-          </details>
+          </div>
+        </details>
 
-          <details class="card card-collapsible">
-            <summary>
-              <div class="card-header">
-                <div class="card-icon card-icon-purple">
-                  <i class="ti ti-calendar-stats" style="font-size:26px; color:#7c3aed;"></i>
-                </div>
-                <div>
-                  <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
-                  <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI. <em>Kết quả chỉ mang tính tham khảo tạm thời, không được lưu vào lịch sử.</em></p>
-                </div>
-                <i class="ti ti-chevron-down toggle-icon"></i>
+        <details class="card card-collapsible">
+          <summary>
+            <div class="card-header">
+              <div class="card-icon card-icon-purple">
+                <i class="ti ti-calendar-stats" style="font-size:26px; color:#7c3aed;"></i>
               </div>
-            </summary>
-            <div class="card-collapsible-body">
-              <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
+              <div>
+                <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
+                <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI. <em>Kết quả chỉ mang tính
+                    tham khảo tạm thời, không được lưu vào lịch sử.</em></p>
+              </div>
+              <i class="ti ti-chevron-down toggle-icon"></i>
+            </div>
+          </summary>
+          <div class="card-collapsible-body">
+            <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
 
             <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" class="range-form">
               <div>
@@ -829,177 +946,44 @@
               <span class="progress-label">Điểm sàng lọc</span>
               <div class="progress-wrap">
                 <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
-                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
-                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
+                  th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
+                  th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
               </div>
               <div class="meta-row meta-row-inline">
                 <span class="meta-label">Mức độ:</span>
-                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
+                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}"
+                  th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
                 <span class="meta-label">Số log:</span>
                 <span th:text="${customRangeResult.logCount}">5</span>
                 <span class="meta-label">Độ tin cậy:</span>
-                <span th:if="${customRangeResult.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đủ</span>
-                <span th:unless="${customRangeResult.lowConfidence}" class="badge badge-status badge-yes">Đủ dữ liệu</span>
+                <span th:if="${customRangeResult.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa
+                  đủ</span>
+                <span th:unless="${customRangeResult.lowConfidence}" class="badge badge-status badge-yes">Đủ dữ
+                  liệu</span>
               </div>
               <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
-              <div class="disclaimer-compact">
-                ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
-                <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
-                <div class="disclaimer-full" hidden>
-                  Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
-                </div>
-              </div>
             </div>
-          </section>
+          </div>
+        </details>
 
-          <details class="card card-collapsible">
-            <summary>
-              <div class="card-header">
-                <div class="card-icon card-icon-purple">
-                  <i class="ti ti-calendar-stats" style="font-size:26px; color:#7c3aed;"></i>
-                </div>
-                <div>
-                  <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
-                  <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI. <em>Kết quả chỉ mang tính tham khảo tạm thời, không được lưu vào lịch sử.</em></p>
-                </div>
-                <i class="ti ti-chevron-down toggle-icon"></i>
-              </div>
-            </summary>
-            <div class="card-collapsible-body">
-              <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
-
-            <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" class="range-form">
-              <div>
-                <label for="fromDate" class="meta-label">Từ ngày</label><br />
-                <input id="fromDate" name="fromDate" type="date" required />
-              </div>
-              <div>
-                <label for="toDate" class="meta-label">Đến ngày</label><br />
-                <input id="toDate" name="toDate" type="date" required />
-              </div>
-              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
-              <button type="submit">Tính</button>
-            </form>
-
-            <div th:if="${customRangeError}" class="error-message">
-              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
-            </div>
-
-            <div th:if="${customRangeResult != null}" class="result-block">
-              <div class="meta-row">
-                <span class="meta-label">Kết quả từ</span>
-                <span th:text="${customRangeResult.fromDate}">2026-06-01</span>
-                <span class="meta-label">đến</span>
-                <span th:text="${customRangeResult.toDate}">2026-06-14</span>
-              </div>
-              <span class="progress-label">Điểm sàng lọc</span>
-              <div class="progress-wrap">
-                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
-                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
-                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
-              </div>
-              <div class="meta-row meta-row-inline">
-                <span class="meta-label">Mức độ:</span>
-                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
-                <span class="meta-label">Số log:</span>
-                <span th:text="${customRangeResult.logCount}">5</span>
-                <span class="meta-label">Độ tin cậy:</span>
-                <span th:if="${customRangeResult.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đủ</span>
-                <span th:unless="${customRangeResult.lowConfidence}" class="badge badge-status badge-yes">Đủ dữ liệu</span>
-              </div>
-              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
-              <div class="disclaimer-compact">
-                ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
-                <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
-                <div class="disclaimer-full" hidden>
-                  Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <details class="card card-collapsible">
-            <summary>
-              <div class="card-header">
-                <div class="card-icon card-icon-purple">
-                  <i class="ti ti-calendar-stats" style="font-size:26px; color:#7c3aed;"></i>
-                </div>
-                <div>
-                  <h2 class="card-title">Tính nguy cơ theo khoảng ngày</h2>
-                  <p class="card-subtitle">Nhập phạm vi thời gian để xem kết quả mô hình AI. <em>Kết quả chỉ mang tính tham khảo tạm thời, không được lưu vào lịch sử.</em></p>
-                </div>
-                <i class="ti ti-chevron-down toggle-icon"></i>
-              </div>
-            </summary>
-            <div class="card-collapsible-body">
-              <p class="risk-trend-note">Khoảng ngày tối đa 60 ngày.</p>
-
-            <form th:action="@{/health-logs/kidney-risk/custom-range}" method="get" class="range-form">
-              <div>
-                <label for="fromDate" class="meta-label">Từ ngày</label><br />
-                <input id="fromDate" name="fromDate" type="date" required />
-              </div>
-              <div>
-                <label for="toDate" class="meta-label">Đến ngày</label><br />
-                <input id="toDate" name="toDate" type="date" required />
-              </div>
-              <input th:if="${userId != null}" type="hidden" name="userId" th:value="${userId}" />
-              <button type="submit">Tính</button>
-            </form>
-
-            <div th:if="${customRangeError}" class="error-message">
-              <span th:text="${customRangeError}">Khoảng ngày không hợp lệ.</span>
-            </div>
-
-            <div th:if="${customRangeResult != null}" class="result-block">
-              <div class="meta-row">
-                <span class="meta-label">Kết quả từ</span>
-                <span th:text="${customRangeResult.fromDate}">2026-06-01</span>
-                <span class="meta-label">đến</span>
-                <span th:text="${customRangeResult.toDate}">2026-06-14</span>
-              </div>
-              <span class="progress-label">Điểm sàng lọc</span>
-              <div class="progress-wrap">
-                <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
-                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
-                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
-              </div>
-              <div class="meta-row meta-row-inline">
-                <span class="meta-label">Mức độ:</span>
-                <span class="badge" th:classappend="' badge-' + ${customRangeResult.riskLevel}" th:text="${customRangeResult.riskLevel == 'LOW'} ? 'Thấp' : (${customRangeResult.riskLevel == 'MEDIUM'} ? 'Trung bình' : (${customRangeResult.riskLevel == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
-                <span class="meta-label">Số log:</span>
-                <span th:text="${customRangeResult.logCount}">5</span>
-                <span class="meta-label">Độ tin cậy:</span>
-                <span th:if="${customRangeResult.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đủ</span>
-                <span th:unless="${customRangeResult.lowConfidence}" class="badge badge-status badge-yes">Đủ dữ liệu</span>
-              </div>
-              <p class="recommendation-text" th:text="${customRangeResult.recommendation}">Khuyến nghị...</p>
-              <div class="disclaimer-compact">
-                ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
-                <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
-                <div class="disclaimer-full" hidden>
-                  Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
-                </div>
-              </div>
-            </div>
-          </details>
-        </div>
       </div>
-    </main>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.disclaimer-toggle-link').forEach(function(link) {
-          link.addEventListener('click', function(event) {
-            event.preventDefault();
-            var container = link.closest('.disclaimer-compact');
-            if (!container) return;
-            var full = container.querySelector('.disclaimer-full');
-            if (!full) return;
-            full.hidden = !full.hidden;
-            link.textContent = full.hidden ? 'Chi tiết' : 'Thu gọn';
-          });
+    </div>
+  </main>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.disclaimer-toggle-link').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          var container = link.closest('.disclaimer-compact');
+          if (!container) return;
+          var full = container.querySelector('.disclaimer-full');
+          if (!full) return;
+          full.hidden = !full.hidden;
+          link.textContent = full.hidden ? 'Chi tiết' : 'Thu gọn';
         });
       });
-    </script>
-  </body>
+    });
+  </script>
+</body>
+
 </html>
