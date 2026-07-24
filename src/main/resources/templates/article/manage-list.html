@@ -516,7 +516,7 @@
                         </td>
                         <td>
                             <div class="action-buttons" style="justify-content: center;">
-                                <a th:href="'/articles/' + ${article.slug}" class="btn-icon btn-view" title="Xem bài viết">
+                                <a th:if="${!isAdmin}" th:href="'/articles/' + ${article.slug}" class="btn-icon btn-view" title="Xem bài viết">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <a th:if="${isAdmin} or ${article.createdBy.id} == ${currentUserId}"
@@ -532,7 +532,7 @@
                                         th:attr="data-reason=${article.rejectionReason}">
                                     <i class="bi bi-chat-square-text"></i>
                                 </button>
-                                <form th:if="${isAdmin and article.status != null and article.status.value == 'pending_review'}" method="post" th:action="'/articles/manage/' + ${article.id} + '/approve'" style="display: inline; margin: 0;">
+                                <form th:if="${isAdmin and article.status != null and article.status.value == 'pending_review'}" method="post" th:action="'/articles/manage/' + ${article.id} + '/approve'" style="display: inline; margin: 0;" onsubmit="return confirm('Bạn chắc chắn muốn duyệt bài viết này?');">
                                     <button type="submit" class="btn-icon btn-view" title="Duyệt bài viết">
                                         <i class="bi bi-check2-circle"></i>
                                     </button>
