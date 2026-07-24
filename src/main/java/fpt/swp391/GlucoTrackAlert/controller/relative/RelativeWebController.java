@@ -63,6 +63,7 @@ public class RelativeWebController {
         try {
             User loggedInUser = getLoggedInUser();
             PatientProfileResponse patient = patientService.getProfileByUserId(loggedInUser.getId());
+
             RelativeRequest request = RelativeRequest.builder()
                     .patientId(patient.getId())
                     .notifyEnabled(true)
@@ -109,13 +110,13 @@ public class RelativeWebController {
 
     @PostMapping("/save")
     public String saveRelative(@Valid @ModelAttribute("relativeForm") RelativeRequest request,
-                               BindingResult result,
-                               @RequestParam("isNew") boolean isNew,
-                               @RequestParam(value = "relativeId", required = false) Long relativeId,
-                               Model model) {
+            BindingResult result,
+            @RequestParam("isNew") boolean isNew,
+            @RequestParam(value = "relativeId", required = false) Long relativeId,
+            Model model) {
         User loggedInUser = getLoggedInUser();
         PatientProfileResponse patient = patientService.getProfileByUserId(loggedInUser.getId());
-        
+
         // Enforce safety: Bind the correct patientId to prevent parameter spoofing
         request.setPatientId(patient.getId());
 

@@ -126,4 +126,32 @@ public class Duy_NotificationLogService {
         return notificationLogRepository.findByRelative_Patient_IdAndNotificationTypeAndSentAtBetweenOrderBySentAtDesc(
                 patientId, "DANGER_ALERT", from, to, pageable);
     }
+
+    /**
+     * Đếm tổng số cảnh báo thành công/thất bại của 1 bệnh nhân, tính trên TOÀN
+     * BỘ dữ liệu khớp bộ lọc (không chỉ trang hiện tại đang hiển thị). Dùng cho
+     * hàng thống kê ở đầu trang "Lịch sử cảnh báo của tôi" — nếu dùng
+     * logs.content (chỉ 10 dòng/trang) để đếm thì số liệu sẽ sai khi bệnh nhân
+     * có nhiều hơn 1 trang lịch sử.
+     */
+    public long[] countSuccessAndFailForPatient(Long patientId, java.time.LocalDate fromDate, java.time.LocalDate toDate) {
+        if (fromDate == null && toDate == null) {
+            long success = notificationLogRepository.countByRelative_Patient_IdAndNotificationTypeAndSuccess(
+                    patientId, "DANGER_ALERT", true);
+            long fail = notificationLogRepository.countByRelative_Patient_IdAndNotificationTypeAndSuccess(
+                    patientId, "DANGER_ALERT", false);
+            return new long[]{success, fail};
+        }
+
+        java.time.LocalDateTime from = (fromDate != null ? fromDate : java.time.LocalDate.of(2000, 1, 1))
+                .atStartOfDay();
+        java.time.LocalDateTime to = (toDate != null ? toDate : java.time.LocalDate.now())
+                .atTime(23, 59, 59);
+
+        long success = notificationLogRepository.countByRelative_Patient_IdAndNotificationTypeAndSuccessAndSentAtBetween(
+                patientId, "DANGER_ALERT", true, from, to);
+        long fail = notificationLogRepository.countByRelative_Patient_IdAndNotificationTypeAndSuccessAndSentAtBetween(
+                patientId, "DANGER_ALERT", false, from, to);
+        return new long[]{success, fail};
+    }
 }

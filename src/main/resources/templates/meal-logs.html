@@ -872,6 +872,54 @@
                 background:#f1f5f9;
                 color:var(--text-muted)
             }
+            .quick-picks{
+                display:flex;
+                flex-wrap:wrap;
+                gap:8px;
+                margin:8px 0 4px
+            }
+            .quick-pick-chip{
+                display:inline-flex;
+                align-items:center;
+                gap:6px;
+                padding:6px 12px;
+                border-radius:20px;
+                background:var(--accent-light,#eef2ff);
+                color:var(--accent,#4f46e5);
+                font-size:12.5px;
+                font-weight:600;
+                cursor:pointer;
+                border:1px solid transparent;
+                transition:.15s
+            }
+            .quick-pick-chip:hover{
+                border-color:currentColor
+            }
+            .quick-pick-chip .qp-count{
+                font-weight:400;
+                opacity:.75
+            }
+            .risk-food-row{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:10px;
+                padding:10px 14px;
+                border-radius:12px;
+                background:#f8fafc;
+                margin-bottom:8px
+            }
+            .risk-food-row:last-child{
+                margin-bottom:0
+            }
+            .risk-food-name{
+                font-weight:600;
+                font-size:14px
+            }
+            .risk-food-meta{
+                font-size:12px;
+                color:var(--text-muted)
+            }
             .action-btns{
                 display:flex;
                 gap:8px
@@ -1258,6 +1306,18 @@
                 <div class="chart-body"><canvas id="myChart"></canvas></div>
             </div>
 
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3>🍚 Món ăn hay gây tăng đường</h3>
+                    <div class="compare-badge">
+                        <span class="cmp">Dựa trên món đã ăn ≥ 2 lần</span>
+                    </div>
+                </div>
+                <div class="chart-body" id="riskyFoodsBody" style="padding:16px 20px">
+                    <div class="empty-state" style="padding:20px 0"><p>Chưa đủ dữ liệu — hãy ghi thêm vài bữa ăn để hệ thống nhận ra pattern nhé.</p></div>
+                </div>
+            </div>
+
             <div class="content-grid">
                 <div class="form-card" id="formCard">
                     <div class="form-card-header" id="formHeader">
@@ -1268,6 +1328,7 @@
                     <div class="form-body">
                         <input type="hidden" id="logId">
                         <input type="hidden" id="sugarEstimation" value="0">
+                        <input type="hidden" id="carbEstimation" value="0">
 
                         <div class="form-group">
                             <div class="step-label"><span class="step-num">1</span> Chọn ngày ăn</div>
@@ -1278,6 +1339,7 @@
                             <div class="step-label"><span class="step-num">2</span> Tên món ăn là gì?</div>
                             <input id="foodName" placeholder="Vd: Cơm trắng, Phở bò, Bún bò..." autocomplete="off" oninput="showSuggestions();calcSugar()">
                             <div class="suggestions" id="suggestions"></div>
+                            <div class="quick-picks" id="quickPicks"></div>
                         </div>
 
                         <div class="form-group">
@@ -1289,6 +1351,7 @@
                                 <span class="sugar-est-big" id="sugarEstVal">— mmol/L</span>
                                 <div><b>🩸 Đường huyết ước tính sau ăn</b></div>
                                 <div class="sugar-est-note" id="sugarEstNote"></div>
+                                <div class="sugar-est-note">🍚 Carb ước tính: <b id="carbEstVal">— g</b></div>
                             </div>
                             <div class="advice-box" id="adviceBox"></div>
                             <div class="formula-box" id="formulaBox">
@@ -1535,52 +1598,73 @@
             // Phân loại theo nhóm thực phẩm dựa trên từ khóa trong tên món,
             // dùng GI/carb trung bình của nhóm đó để ước tính tương đối chính xác
             // thay vì bỏ trống hoàn toàn.
+            //
+            // LƯU Ý: đây là danh sách từ khóa cố định nên KHÔNG THỂ bao phủ hết mọi
+            // món ăn có thể có trên đời. Ưu tiên liệt kê theo NGUYÊN LIỆU/GỐC TỪ
+            // (vd "cơm", "mì", "sữa") thay vì tên món cụ thể, vì hầu hết tên món dù
+            // lạ đến đâu cũng thường chứa ít nhất 1 từ nguyên liệu quen thuộc — cách
+            // này bao phủ được nhiều món hơn nhiều so với liệt kê từng tên món.
+            // Món càng đặc thù (nước ngoài, tên riêng...) càng dễ bị rơi vào trạng
+            // thái "chưa nhận diện" — đây là giới hạn cố hữu của cách làm keyword,
+            // không phải lỗi, và người dùng luôn có thể chọn món gần đúng nhất.
             // ============================================================
             const FOOD_CATEGORIES = [
                 {
                     label: 'tinh bột gạo (cơm/xôi/cháo)',
-                    keywords: ['cơm', 'xôi', 'cháo', 'gạo'],
+                    keywords: ['cơm', 'xôi', 'cháo', 'gạo', 'cơm chiên', 'cơm rang', 'kimbap', 'cơm nắm'],
                     gi: 75, carb: 28.0
                 },
                 {
                     label: 'món nước/bún/phở/mì',
-                    keywords: ['phở', 'bún', 'mì', 'hủ tiếu', 'miến', 'nui'],
+                    keywords: ['phở', 'bún', 'mì', 'hủ tiếu', 'miến', 'nui', 'mì ý', 'spaghetti', 'pasta', 'mì xào', 'mì trộn', 'ramen', 'udon'],
                     gi: 60, carb: 30.0
                 },
                 {
+                    label: 'tinh bột khác (khoai/bắp/ngũ cốc)',
+                    keywords: ['khoai', 'bắp', 'ngô', 'yến mạch', 'ngũ cốc', 'granola', 'bánh quy', 'bánh mặn giòn', 'cốm'],
+                    gi: 60, carb: 22.0
+                },
+                {
                     label: 'bánh mặn (bánh mì/bánh bao/bánh cuốn/bánh xèo...)',
-                    keywords: ['bánh mì', 'bánh bao', 'bánh cuốn', 'bánh xèo', 'bánh giò', 'bánh ướt', 'bánh tráng'],
+                    keywords: ['bánh mì', 'bánh bao', 'bánh cuốn', 'bánh xèo', 'bánh giò', 'bánh ướt', 'bánh tráng', 'sandwich', 'hamburger', 'burger', 'pizza', 'taco', 'burrito', 'kẹp'],
                     gi: 68, carb: 35.0
                 },
                 {
                     label: 'đạm (thịt/cá/hải sản/trứng)',
-                    keywords: ['thịt', 'cá', 'tôm', 'cua', 'mực', 'trứng', 'gà', 'heo', 'bò', 'vịt', 'lươn', 'chả'],
+                    keywords: ['thịt', 'cá', 'tôm', 'cua', 'mực', 'trứng', 'gà', 'heo', 'bò', 'vịt', 'lươn', 'chả', 'giò', 'nem', 'xúc xích', 'sườn', 'ba chỉ', 'sashimi', 'sushi', 'ốc', 'nghêu', 'sò'],
                     gi: 0, carb: 0.5
                 },
                 {
+                    label: 'đậu/hạt',
+                    keywords: ['đậu', 'đậu nành', 'đậu phộng', 'đậu hà lan', 'hạt điều', 'hạnh nhân', 'óc chó', 'mè', 'vừng', 'đậu phụ', 'đậu hũ'],
+                    gi: 25, carb: 8.0
+                },
+                {
                     label: 'rau/canh/salad',
-                    keywords: ['rau', 'canh', 'salad', 'súp', 'gỏi'],
+                    keywords: ['rau', 'canh', 'salad', 'súp', 'gỏi', 'nộm', 'dưa leo', 'cà chua', 'bắp cải', 'nấm'],
                     gi: 20, carb: 5.0
                 },
                 {
                     label: 'trái cây',
-                    keywords: ['chuối', 'xoài', 'cam', 'táo', 'nho', 'dưa', 'quả', 'trái', 'ổi', 'na', 'bưởi', 'đu đủ'],
+                    keywords: ['chuối', 'xoài', 'cam', 'táo', 'nho', 'dưa', 'quả', 'trái', 'ổi', 'na', 'bưởi', 'đu đủ', 'dâu', 'măng cụt', 'sầu riêng', 'mít', 'thanh long', 'vải', 'nhãn', 'chôm chôm', 'lê', 'kiwi'],
                     gi: 50, carb: 15.0
                 },
                 {
+                    label: 'sữa & chế phẩm từ sữa',
+                    keywords: ['sữa', 'sữa chua', 'phô mai', 'cheese', 'bơ sữa', 'kem sữa', 'yogurt'],
+                    gi: 35, carb: 10.0
+                },
+                {
                     label: 'đồ ngọt/tráng miệng (bánh kẹo/chè/kem...)',
-                    keywords: ['bánh ngọt', 'kẹo', 'chè', 'kem', 'socola', 'chocolate', 'bánh kem', 'siro', 'mứt'],
+                    keywords: ['bánh ngọt', 'kẹo', 'chè', 'kem', 'socola', 'chocolate', 'bánh kem', 'siro', 'mứt', 'donut', 'cookie', 'pudding', 'flan', 'caramel', 'tiramisu'],
                     gi: 75, carb: 45.0
                 },
                 {
-                    label: 'đồ uống (nước ngọt/sữa/trà sữa...)',
-                    keywords: ['nước ngọt', 'trà sữa', 'sữa', 'nước mía', 'sinh tố', 'nước ép', 'cà phê sữa'],
+                    label: 'đồ uống (nước ngọt/trà sữa/nước ép...)',
+                    keywords: ['nước ngọt', 'trà sữa', 'nước mía', 'sinh tố', 'nước ép', 'cà phê sữa', 'coca', 'soda', 'trà đào', 'nước tăng lực'],
                     gi: 55, carb: 12.0
                 }
             ];
-            // Ước tính mặc định khi không khớp bất kỳ nhóm nào (trung bình 1 bữa hỗn hợp VN)
-            const GENERIC_ESTIMATE = {label: 'món ăn hỗn hợp (không xác định nhóm)', gi: 58, carb: 25.0};
-
             function classifyUnknownFood(name) {
                 const q = name.toLowerCase();
                 for (const cat of FOOD_CATEGORIES) {
@@ -1588,7 +1672,22 @@
                         return {name: name, gi: cat.gi, carb: cat.carb, estimated: true, category: cat.label};
                     }
                 }
-                return {name: name, gi: GENERIC_ESTIMATE.gi, carb: GENERIC_ESTIMATE.carb, estimated: true, category: GENERIC_ESTIMATE.label};
+                // Không khớp bất kỳ nhóm thực phẩm nào -> KHÔNG tự bịa ra số liệu chung chung nữa,
+                // vì chuỗi nhập vào có thể không phải món ăn thật (gõ nhầm, gõ lung tung...).
+                // Trả về null để calcSugar() báo "chưa nhận diện được" thay vì tính bừa.
+                return null;
+            }
+
+            // Kiểm tra sơ bộ xem chuỗi nhập vào có "giống" tên món ăn hay không
+            // (phải có chữ cái thật, không phải toàn số/ký tự đặc biệt, đủ độ dài tối thiểu)
+            function looksLikeFoodName(name) {
+                if (!name)
+                    return false;
+                const trimmed = name.trim();
+                if (trimmed.length < 2)
+                    return false;
+                // cần ít nhất 2 ký tự chữ cái (kể cả có dấu tiếng Việt) đứng liền nhau
+                return /\p{L}{2,}/u.test(trimmed);
             }
 
             function findFood(name) {
@@ -1599,12 +1698,17 @@
                         FOOD_DB.find(f => f.name.toLowerCase().includes(q) || q.includes(f.name.toLowerCase()));
                 if (exact)
                     return exact;
-                // Không có trong FOOD_DB -> vẫn ước tính tương đối chính xác theo nhóm thực phẩm
+                // Không có trong FOOD_DB -> chỉ ước tính theo nhóm thực phẩm nếu chuỗi nhìn hợp lý là 1 món ăn
+                if (!looksLikeFoodName(name))
+                    return null;
                 return classifyUnknownFood(name.trim());
             }
 
             // true khi mon vua tinh la mon KHONG co trong FOOD_DB (dang duoc uoc tinh theo nhom)
             let lastEstimatedFallback = false;
+            // true khi ten mon nhap vao duoc nhan dien la mot mon an hop le (co trong FOOD_DB
+            // hoac khop 1 nhom thuc pham); false khi da go ten nhung khong nhan dien duoc
+            let lastFoodRecognized = true;
             const AUTO_NOTE_TAG_PREFIX = '⚠️ Món chưa có trong danh sách gợi ý';
 
             function calcSugar() {
@@ -1616,6 +1720,7 @@
                 const formulaBox = document.getElementById('formulaBox');
                 const formulaContent = document.getElementById('formulaContent');
                 lastEstimatedFallback = !!(food && food.estimated);
+                lastFoodRecognized = !foodName || !!food; // chưa nhập gì => coi là "chưa biết", không phải "sai"
 
                 if (!food || !qty) {
                     box.className = 'sugar-estimate';
@@ -1623,6 +1728,19 @@
                     formulaBox.className = 'formula-box';
                     if (!document.getElementById('logId').value) {
                         document.getElementById('sugarEstimation').value = 0;
+                        document.getElementById('carbEstimation').value = 0;
+                        document.getElementById('carbEstVal').textContent = '— g';
+                        document.getElementById('sugarEstVal').textContent = '— mmol/L';
+                    }
+                    // Đã nhập tên món nhưng không nhận diện được là món ăn hợp lệ
+                    if (foodName && !food) {
+                        box.className = 'sugar-estimate show warn';
+                        document.getElementById('sugarEstVal').textContent = '❓ Không xác định';
+                        document.getElementById('sugarEstNote').innerHTML =
+                                '⚠️ Chưa nhận diện được đây là món ăn hợp lệ. Vui lòng chọn món trong danh sách gợi ý, ' +
+                                'hoặc nhập tên món ăn cụ thể hơn (vd: tên món + nguyên liệu chính).';
+                        advice.innerHTML = '';
+                        advice.className = 'advice-box';
                     }
                     return;
                 }
@@ -1649,6 +1767,8 @@
 
                 document.getElementById('sugarEstimation').value = estSugar || 0;
                 document.getElementById('sugarEstVal').textContent = estSugar ? estSugar + ' mmol/L' : '— mmol/L';
+                document.getElementById('carbEstimation').value = carbGram || 0;
+                document.getElementById('carbEstVal').textContent = carbGram ? (food.estimated ? '~' : '') + carbGram.toFixed(1) + ' g' : '— g';
 
                 // ---- Công thức ----
                 let factorNote = profileLabel;
@@ -1667,10 +1787,11 @@
                 } else {
                     formulaContent.innerHTML =
                             '<div class="formula-row">📏 Khẩu phần: <span class="formula-math">' + gramBase + 'g × ' + factor.toFixed(2) + ' (' + factorNote + ')</span> = <span class="formula-result">' + gram + 'g</span></div>' +
+                            '<div class="formula-row">🍚 Carb thực tế: <span class="formula-math">' + food.carb + 'g/100g × ' + gram + 'g ÷ 100</span> = <span class="formula-result">' + carbGram.toFixed(1) + 'g</span></div>' +
                             '<div class="formula-row">🥩 GI = 0 → không ảnh hưởng đường huyết → <span class="formula-result">≈ 5.5 mmol/L</span></div>';
                 }
                 if (food.estimated) {
-                    formulaContent.innerHTML += '<div class="formula-est-note">📌 <b>"' + food.name + '"</b> chưa có trong danh sách gợi ý sẵn. Hệ thống tự xếp món này vào nhóm <b>"' + food.category + '"</b> (GI≈' + food.gi + ', Carb≈' + food.carb + 'g/100g) để tính gần đúng — số liệu có thể lệch so với thực tế nếu công thức chế biến khác nhóm tham chiếu.</div>';
+                    formulaContent.innerHTML += '<div class="formula-est-note">📌 Chưa có trong danh sách — ước tính theo nhóm <b>"' + food.category + '"</b> (GI≈' + food.gi + ', Carb≈' + food.carb + 'g/100g).</div>';
                 }
                 formulaBox.className = 'formula-box show';
 
@@ -1722,10 +1843,10 @@
                     return '—';
                 const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
                 if (v >= thr.danger)
-                    return '🚨 Rất cao (' + v + ')';
+                    return '🚨 Rất cao (' + v + ' mmol/L)';
                 if (v >= thr.warn)
-                    return '⚡ Hơi cao (' + v + ')';
-                return '✅ Ổn định (' + v + ')';
+                    return '⚡ Hơi cao (' + v + ' mmol/L)';
+                return '✅ Ổn định (' + v + ' mmol/L)';
             }
             function getSugarBadgeCls(v, condition) {
                 if (!v || v <= 0)
@@ -1739,6 +1860,79 @@
             }
 
             let allData = [], currentFiltered = [], currentPage = 1, chartInstance = null;
+
+            // Gom nhóm lịch sử ăn uống của bệnh nhân theo tên món: số lần ăn,
+            // đường huyết ước tính trung bình, lần ăn gần nhất. Dùng chung cho
+            // chip gợi ý "món hay ăn" và bảng "món hay gây tăng đường".
+            function computeFoodStats() {
+                const map = new Map();
+                allData.forEach(x => {
+                    const name = (x.foodName || '').trim();
+                    if (!name)
+                        return;
+                    const key = name.toLowerCase();
+                    const sugar = Number(x.sugarEstimation || 0);
+                    const dateStr = x.mealDate || x.logDate || '';
+                    if (!map.has(key)) {
+                        map.set(key, {name, count: 0, sugarSum: 0, sugarCount: 0, lastDate: dateStr});
+                    }
+                    const stat = map.get(key);
+                    stat.count++;
+                    if (sugar > 0) {
+                        stat.sugarSum += sugar;
+                        stat.sugarCount++;
+                    }
+                    if (dateStr > stat.lastDate)
+                        stat.lastDate = dateStr;
+                });
+                return [...map.values()].map(s => ({
+                        name: s.name,
+                        count: s.count,
+                        avgSugar: s.sugarCount ? s.sugarSum / s.sugarCount : 0,
+                        lastDate: s.lastDate
+                    }));
+            }
+
+            // Chip "món hay ăn": top món ăn nhiều lần nhất, bấm để điền nhanh vào ô tên món
+            function renderQuickPicks() {
+                const box = document.getElementById('quickPicks');
+                if (!box)
+                    return;
+                const top = computeFoodStats().sort((a, b) => b.count - a.count).slice(0, 6);
+                if (!top.length) {
+                    box.innerHTML = '';
+                    return;
+                }
+                box.innerHTML = '<div style="width:100%;font-size:12px;color:var(--text-muted);margin-bottom:2px">🕒 Món bạn hay ăn — bấm để điền nhanh:</div>' +
+                        top.map(f => `<span class="quick-pick-chip" onclick="pickSuggestion('${f.name.replace(/'/g, "\\'")}')">🍽️ ${f.name} <span class="qp-count">×${f.count}</span></span>`).join('');
+            }
+
+            // Card "món hay gây tăng đường": chỉ xét món đã ăn >= 2 lần (đủ dữ liệu để tin cậy hơn 1 lần đo),
+            // xếp theo đường huyết ước tính trung bình giảm dần, để lộ ra pattern ăn uống rủi ro.
+            function renderRiskyFoods() {
+                const body = document.getElementById('riskyFoodsBody');
+                if (!body)
+                    return;
+                const {condition} = getProfile();
+                const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
+                const candidates = computeFoodStats()
+                        .filter(f => f.count >= 2 && f.avgSugar > 0)
+                        .sort((a, b) => b.avgSugar - a.avgSugar)
+                        .slice(0, 5);
+                if (!candidates.length) {
+                    body.innerHTML = '<div class="empty-state" style="padding:20px 0"><p>Chưa đủ dữ liệu — hãy ghi thêm vài bữa ăn (mỗi món ≥ 2 lần) để hệ thống nhận ra pattern nhé.</p></div>';
+                    return;
+                }
+                body.innerHTML = candidates.map(f => {
+                    const cls = f.avgSugar >= thr.danger ? 'sugar-danger' : f.avgSugar >= thr.warn ? 'sugar-warn' : 'sugar-ok';
+                    return `<div class="risk-food-row">
+                <div><div class="risk-food-name">🍽️ ${f.name}</div>
+                <div class="risk-food-meta">Đã ăn ${f.count} lần · lần gần nhất ${f.lastDate || '—'}</div></div>
+                <span class="sugar-badge ${cls}">${f.avgSugar.toFixed(1)} mmol/L (TB)</span>
+            </div>`;
+                }).join('');
+            }
+
             function today() {
                 const d = new Date();
                 const y = d.getFullYear();
@@ -1904,13 +2098,17 @@
                 }
                 const dbMatch = FOOD_DB.filter(f => f.name.toLowerCase().includes(q)).slice(0, 4);
                 const seen = new Set(dbMatch.map(f => f.name.toLowerCase()));
-                const pastMatch = allData.map(x => x.foodName || '').filter(n => {
-                    const l = n.toLowerCase();
-                    return l.includes(q) && !seen.has(l) && seen.add(l);
-                }).slice(0, 2);
+                const freqMap = new Map(computeFoodStats().map(f => [f.name.toLowerCase(), f.count]));
+                const pastNames = [...new Set(allData.map(x => x.foodName || ''))]
+                        .filter(n => {
+                            const l = n.toLowerCase();
+                            return l.includes(q) && !seen.has(l) && seen.add(l);
+                        })
+                        .sort((a, b) => (freqMap.get(b.toLowerCase()) || 0) - (freqMap.get(a.toLowerCase()) || 0))
+                        .slice(0, 2);
                 const all = [
                     ...dbMatch.map(f => ({name: f.name, fromDB: true})),
-                    ...pastMatch.map(n => ({name: n, fromDB: false}))
+                    ...pastNames.map(n => ({name: n, fromDB: false}))
                 ];
                 if (!all.length) {
                     box.style.display = 'none';
@@ -1972,6 +2170,7 @@
                 let rows = '';
                 pageData.forEach((x, i) => {
                     const sugar = Number(x.sugarEstimation || 0);
+                    const carb = Number(x.carbEstimation || 0);
                     const meal = getMealInfo(x.mealType);
                     const icon = FOOD_EMOJIS[(start + i) % FOOD_EMOJIS.length];
                     const food = x.foodName || '';
@@ -1981,9 +2180,13 @@
                     const thr = SUGAR_THRESHOLDS[cond] || SUGAR_THRESHOLDS['none'];
                     const dateStr = x.mealDate || x.logDate || '—';
                     const rowCls = sugar >= thr.danger ? 'row-danger' : '';
-                    const isEstimated = (x.note || '').includes(AUTO_NOTE_TAG_PREFIX);
+                    const matchedFood = food ? findFood(food) : null;
+                    const isEstimated = !!(matchedFood && matchedFood.estimated);
+                    const isUnrecognized = !!food && !matchedFood;
                     const estBadge = isEstimated
-                            ? `<span class="est-tag" title="Món chưa có trong danh sách gợi ý — số liệu đường huyết là ước tính tương đối theo nhóm thực phẩm">🔶 Ước tính</span>`
+                            ? `<span class="est-tag" title="Món chưa có trong danh sách gợi ý — cả đường huyết lẫn carb đều là số liệu ước tính tương đối theo nhóm thực phẩm">🔶 Ước tính</span>`
+                            : isUnrecognized
+                            ? `<span class="est-tag" title="Không nhận diện được đây là món ăn hợp lệ — số liệu có thể không chính xác">❓ Chưa xác định</span>`
                             : '';
                     rows += `<tr class="${rowCls}">
               <td><b>#${start + i + 1}</b></td>
@@ -1992,6 +2195,7 @@
                 <div style="font-size:12px;color:var(--text-muted)">${qty}</div>
               </div></div></td>
               <td><span class="sugar-badge ${sCls}">${sLabel}</span></td>
+              <td>${carb ? carb.toFixed(1) + ' g' : '—'}</td>
               <td><span class="meal-badge ${meal.cls}">${meal.label}</span></td>
               <td>${dateStr}</td>
               <td>${x.note || '—'}</td>
@@ -2007,7 +2211,7 @@
                 pageBtns += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
                 container.innerHTML = `
             <table>
-              <thead><tr><th>STT</th><th>Tên món ăn</th><th>Đường ước tính</th><th>Bữa ăn</th><th>Ngày</th><th>Ghi chú</th><th>Thao tác</th></tr></thead>
+              <thead><tr><th>STT</th><th>Tên món ăn</th><th>Đường ước tính</th><th>Carb ước tính</th><th>Bữa ăn</th><th>Ngày</th><th>Ghi chú</th><th>Thao tác</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
             <div class="pagination">
@@ -2045,8 +2249,8 @@
 
             function exportCSV() {
                 const data = currentFiltered.length ? currentFiltered : allData;
-                const header = ['STT', 'Tên món ăn', 'Số lượng', 'Đường ước tính (mmol/L)', 'Loại bữa ăn', 'Ngày', 'Ghi chú'];
-                const rows = data.map((x, i) => [i + 1, x.foodName, x.quantityText || '', x.sugarEstimation || 0, x.mealType, x.mealDate || x.logDate || '', x.note || ''].join(','));
+                const header = ['STT', 'Tên món ăn', 'Số lượng', 'Đường ước tính (mmol/L)', 'Carb ước tính (g)', 'Loại bữa ăn', 'Ngày', 'Ghi chú'];
+                const rows = data.map((x, i) => [i + 1, x.foodName, x.quantityText || '', x.sugarEstimation || 0, x.carbEstimation || 0, x.mealType, x.mealDate || x.logDate || '', x.note || ''].join(','));
                 const csv = [header.join(','), ...rows].join('\n');
                 const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
                 const a = document.createElement('a');
@@ -2066,12 +2270,16 @@
                     calcStreak(allData);
                     updateDailySummary(allData);
                     checkRemind(allData);
+                    renderQuickPicks();
+                    renderRiskyFoods();
                 } catch {
                     allData = [];
                     renderTable(allData);
                     buildChart(allData);
                     calcStreak(allData);
                     updateDailySummary(allData);
+                    renderQuickPicks();
+                    renderRiskyFoods();
                     document.getElementById('tableContainer').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Không thể kết nối máy chủ.<br>Hãy chạy Spring Boot trước rồi thử lại!</p></div>';
                 }
             }
@@ -2085,19 +2293,13 @@
                 showToast(method === 'POST' ? 'Đã thêm bữa ăn thành công!' : 'Đã cập nhật thành công!');
             }
 
-            // Ghep ghi chu nguoi dung nhap voi ghi chu tu dong (neu mon dang duoc uoc tinh
-            // theo nhom vi khong co san trong FOOD_DB), tranh nhan tag trung lap khi sua lai.
+            // Bỏ tag ước tính cũ (nếu bản ghi này được lưu trước đây có kèm tag) khi lưu lại,
+            // KHÔNG tự thêm tag mới vào ghi chú nữa — lời giải thích ước tính chỉ hiển thị
+            // ở khung công thức lúc nhập liệu, tránh làm cột "Ghi chú" trong danh sách quá dài.
             function buildNoteWithAutoTag() {
                 let userNote = document.getElementById('note').value.trim();
-                // Bo tag cu (neu co) truoc, roi gan lai tag moi theo trang thai hien tai
                 if (userNote.includes(AUTO_NOTE_TAG_PREFIX)) {
                     userNote = userNote.split(AUTO_NOTE_TAG_PREFIX)[0].trim().replace(/\|\s*$/, '').trim();
-                }
-                if (lastEstimatedFallback) {
-                    const food = findFood(document.getElementById('foodName').value.trim());
-                    const catLabel = (food && food.category) ? food.category : 'chưa xác định';
-                    const tag = AUTO_NOTE_TAG_PREFIX + ' — đường huyết là ước tính gần đúng theo nhóm thực phẩm "' + catLabel + '", không phải số liệu chính xác tuyệt đối.';
-                    return userNote ? (userNote + ' | ' + tag) : tag;
                 }
                 return userNote;
             }
@@ -2115,6 +2317,10 @@
                     showToast(p + ' ơi, chưa nhập số lượng!', 'error');
                     return;
                 }
+                if (!findFood(food)) {
+                    showToast(p + ' ơi, tên món ăn này chưa được nhận diện. Hãy chọn món trong danh sách gợi ý hoặc mô tả rõ hơn (vd: tên món + nguyên liệu chính)!', 'error');
+                    return;
+                }
                 const estSugar = Number(document.getElementById('sugarEstimation').value) || 0;
                 try {
                     const prof = getProfile();
@@ -2123,6 +2329,7 @@
                         foodName: food,
                         quantityText: qty,
                         sugarEstimation: estSugar,
+                        carbEstimation: Number(document.getElementById('carbEstimation').value) || 0,
                         mealType: document.getElementById('mealType').value,
                         note: buildNoteWithAutoTag(),
                         mealDate: document.getElementById('mealDate').value || today(),
@@ -2160,6 +2367,10 @@
                 if (!document.getElementById('sugarEstimation').value || Number(document.getElementById('sugarEstimation').value) === 0) {
                     document.getElementById('sugarEstimation').value = x.sugarEstimation || 0;
                 }
+                if (!document.getElementById('carbEstimation').value || Number(document.getElementById('carbEstimation').value) === 0) {
+                    document.getElementById('carbEstimation').value = x.carbEstimation || 0;
+                    document.getElementById('carbEstVal').textContent = x.carbEstimation ? Number(x.carbEstimation).toFixed(1) + ' g' : '— g';
+                }
                 document.getElementById('formHeader').className = 'form-card-header edit-mode';
                 document.getElementById('formTitle').textContent = 'Chỉnh sửa bữa ăn';
                 document.getElementById('editBadge').className = 'edit-badge show';
@@ -2185,6 +2396,10 @@
                     showToast('Chưa nhập số lượng!', 'error');
                     return;
                 }
+                if (!findFood(food)) {
+                    showToast('Tên món ăn này chưa được nhận diện. Hãy chọn món trong danh sách gợi ý hoặc mô tả rõ hơn!', 'error');
+                    return;
+                }
                 try {
                     const prof2 = getProfile();
                     await doSave({
@@ -2192,6 +2407,7 @@
                         foodName: food,
                         quantityText: qty,
                         sugarEstimation: Number(document.getElementById('sugarEstimation').value) || 0,
+                        carbEstimation: Number(document.getElementById('carbEstimation').value) || 0,
                         mealType: document.getElementById('mealType').value,
                         note: buildNoteWithAutoTag(),
                         mealDate: document.getElementById('mealDate').value || today(),
@@ -2221,11 +2437,13 @@
             function clearForm() {
                 ['logId', 'foodName', 'quantityInput', 'note'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('sugarEstimation').value = '0';
+                document.getElementById('carbEstimation').value = '0';
                 document.getElementById('mealType').value = 'Breakfast';
                 document.getElementById('mealDate').value = today();
                 document.getElementById('sugarEstBox').className = 'sugar-estimate';
                 document.getElementById('adviceBox').className = 'advice-box';
                 document.getElementById('sugarEstVal').textContent = '— mmol/L';
+                document.getElementById('carbEstVal').textContent = '— g';
                 document.getElementById('formulaBox').className = 'formula-box';
                 document.getElementById('formulaContent').innerHTML = '';
                 document.getElementById('suggestions').style.display = 'none';

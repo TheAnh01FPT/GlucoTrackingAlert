@@ -26,22 +26,16 @@ public class Duy_Meal_Logs {
     private String quantityText;  // Số lượng người dùng nhập, vd: "1 bát", "2 miếng"
 
     @Column(name = "sugar_estimation")
-    private String sugarEstimation;  // ✅ giữ tên Java cũ (String thay vì Double)
+    private String sugarEstimation;  // Đường huyết ước tính sau ăn, đơn vị mmol/L (String thay vì Double - giữ tên Java cũ)
 
     @Column(name = "carb_estimation")
-    private Double carbEstimation;
+    private Double carbEstimation;  // Khối lượng carbohydrate ước tính, đơn vị gram (g)
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 
     @Column(name = "log_date", nullable = false)
     private LocalDate mealDate;
-
-    @Column(name = "created_at")
-    private java.time.LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private java.time.LocalDateTime updatedAt;
 
     // --- CONSTRUCTORS ---
     public Duy_Meal_Logs() {
@@ -118,22 +112,6 @@ public class Duy_Meal_Logs {
 
     public void setMealDate(LocalDate mealDate) {
         this.mealDate = mealDate;
-    }
-
-    public java.time.LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(java.time.LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public java.time.LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(java.time.LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     @PrePersist

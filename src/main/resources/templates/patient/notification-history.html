@@ -50,14 +50,14 @@
                     <div class="stat-item">
                         <span class="stat-dot dot-ok"></span>
                         <div>
-                            <div class="stat-value" th:text="${logs.content.?[success == true].size()}">0</div>
+                            <div class="stat-value" th:text="${successCount}">0</div>
                             <div class="stat-desc">Gửi thành công</div>
                         </div>
                     </div>
                     <div class="stat-item">
                         <span class="stat-dot dot-fail"></span>
                         <div>
-                            <div class="stat-value" th:text="${logs.content.?[success == false].size()}">0</div>
+                            <div class="stat-value" th:text="${failCount}">0</div>
                             <div class="stat-desc">Gửi thất bại</div>
                         </div>
                     </div>

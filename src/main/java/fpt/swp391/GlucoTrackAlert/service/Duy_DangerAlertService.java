@@ -10,6 +10,8 @@ import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
@@ -44,7 +46,24 @@ public class Duy_DangerAlertService {
      * hàm này sau khi lưu DailyHealthLog vào DB.
      *
      * @param log Bản ghi nhật ký vừa lưu (phải có patient được load sẵn)
+     *
+     * LƯU Ý QUAN TRỌNG: hàm này chạy trong TRANSACTION RIÊNG (REQUIRES_NEW).
+     * DailyHealthLogServiceImpl.createLog()/updateLog() gọi hàm này bên trong
+     * try/catch, nhưng bản thân try/catch đó KHÔNG đủ để bảo vệ transaction
+     * chính: các repository (Spring Data JPA) đều tự mang @Transactional, nên
+     * chỉ cần MỘT lệnh gọi repository ở đây (vd. relativeRepository,
+     * notificationLogRepository...) ném exception là transaction của
+     * createLog()/updateLog() bị đánh dấu rollback-only ngay lập tức — cho dù
+     * exception có bị bắt (catch) ở tầng trên hay không. Hậu quả: khi
+     * createLog() return, Spring cố commit transaction, phát hiện bị đánh dấu
+     * rollback-only, ném UnexpectedRollbackException ra ngoài controller (hiển
+     * thị "có lỗi" cho người dùng) VÀ rollback luôn cả bản ghi DailyHealthLog
+     * vừa nhập, cùng log lịch sử cảnh báo vừa ghi (nếu có). Bằng cách cho hàm
+     * này chạy trong transaction riêng, nếu nó lỗi thì chỉ transaction này
+     * rollback (không gửi được cảnh báo lần đó), transaction chính lưu nhật ký
+     * sức khỏe vẫn commit bình thường.
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkAndAlertRelatives(DailyHealthLog healthLog) {
         if (healthLog == null || healthLog.getPatient() == null) {
             return;
@@ -116,18 +135,23 @@ public class Duy_DangerAlertService {
         // nhưng chỉ số nguy hiểm không đổi), thì bỏ qua, không gửi lại để tránh
         // làm phiền người thân. Nếu nội dung khác (chỉ số mới, mức độ khác...) thì
         // vẫn gửi bình thường vì đó là thông tin mới, không nên bị chặn.
-        var lastAlertOpt = notificationLogRepository
-                .findTopByRelative_Patient_IdAndNotificationTypeAndSuccessTrueOrderBySentAtDesc(
-                        patientId, "DANGER_ALERT");
-        if (lastAlertOpt.isPresent()) {
-            var lastAlert = lastAlertOpt.get();
-            boolean sameDay = lastAlert.getSentAt() != null
-                    && lastAlert.getSentAt().toLocalDate().equals(java.time.LocalDate.now());
-            boolean sameContent = alertSummary.equals(lastAlert.getBodySummary());
-            if (sameDay && sameContent) {
-                log.info("[DangerAlert] Bỏ qua gửi trùng lặp cho bệnh nhân id={}: nội dung cảnh báo không đổi so với lần gửi gần nhất trong ngày.", patientId);
-                return;
+        try {
+            var lastAlertOpt = notificationLogRepository
+                    .findTopByRelative_Patient_IdAndNotificationTypeAndSuccessTrueOrderBySentAtDesc(
+                            patientId, "DANGER_ALERT");
+            if (lastAlertOpt.isPresent()) {
+                var lastAlert = lastAlertOpt.get();
+                boolean sameDay = lastAlert.getSentAt() != null
+                        && lastAlert.getSentAt().toLocalDate().equals(java.time.LocalDate.now());
+                boolean sameContent = alertSummary.equals(lastAlert.getBodySummary());
+                if (sameDay && sameContent) {
+                    log.info("[DangerAlert] Bỏ qua gửi trùng lặp cho bệnh nhân id={}: nội dung cảnh báo không đổi so với lần gửi gần nhất trong ngày.", patientId);
+                    return;
+                }
             }
+        } catch (Exception e) {
+            // Không để lỗi ở bước kiểm tra chống trùng lặp chặn việc gửi cảnh báo thật sự
+            log.warn("[DangerAlert] Không thể kiểm tra lịch sử cảnh báo gần nhất cho bệnh nhân id={}: {}", patientId, e.getMessage());
         }
 
         String patientName = healthLog.getPatient().getFullName();

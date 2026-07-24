@@ -23,6 +23,7 @@ import fpt.swp391.GlucoTrackAlert.service.strokeai.WeeklyStrokeAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -51,7 +52,7 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     private final WeeklyStrokeAiService weeklyStrokeAiService;
 
     // Tạm thời giữ nguyên record Snapshot cho đồng bộ cấu trúc cũ của bạn
-        private record WeeklySnapshot(
+    private record WeeklySnapshot(
             BigDecimal avgBloodSugar,
             BigDecimal avgSystolic,
             BigDecimal avgDiastolic,
@@ -63,10 +64,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             double avgDiaForModel,
             double avgBsForModel,
             boolean htn,
-            double htnScore
-            ) {
+            double htnScore) {
 
-        }
+    }
 
     private WeeklySnapshot computeSnapshot(Patient patient, Long patientId, LocalDate weekStart, LocalDate weekEnd) {
         List<DailyHealthLog> logs = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(patientId, weekStart, weekEnd);
@@ -161,11 +161,11 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         RiskAssessment assessment = riskAssessmentRepository
                 .findByWeeklyReportIdAndAssessmentType(report.getId(), "NEPHROPATHY_WEEKLY")
                 .orElseGet(() -> RiskAssessment.builder()
-                        .patient(patient)
-                        .weeklyReportId(report.getId())
-                        .dailyHealthLogId(null)
-                        .assessmentType("NEPHROPATHY_WEEKLY")
-                        .build());
+                .patient(patient)
+                .weeklyReportId(report.getId())
+                .dailyHealthLogId(null)
+                .assessmentType("NEPHROPATHY_WEEKLY")
+                .build());
 
         assessment.setRiskLevel(s.level().name());
         assessment.setRiskPercentage(s.riskPercentage());
@@ -206,11 +206,11 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         AiAnalysisLog aiLog = aiAnalysisLogRepository
                 .findByWeeklyReportIdAndAnalysisType(report.getId(), "CKD_WEEKLY_LOGISTIC_V1")
                 .orElseGet(() -> AiAnalysisLog.builder()
-                        .patientId(patientId)
-                        .dailyHealthLogId(null)
-                        .weeklyReportId(report.getId())
-                        .analysisType("CKD_WEEKLY_LOGISTIC_V1")
-                        .build());
+                .patientId(patientId)
+                .dailyHealthLogId(null)
+                .weeklyReportId(report.getId())
+                .analysisType("CKD_WEEKLY_LOGISTIC_V1")
+                .build());
         aiLog.setInputData("{\"age\":" + s.age() + ",\"avg_diastolic\":" + s.avgDiaForModel() + ",\"avg_blood_sugar\":" + s.avgBsForModel() + ",\"htn\":" + s.htn() + "}");
         aiLog.setOutputResult("{\"riskPercentage\":" + s.riskPct() + ",\"riskLevel\":\"" + s.level().name() + "\"}");
         aiLog.setRiskLevel(s.level().name());
@@ -273,8 +273,13 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
         });
     }
 
+    // REQUIRES_NEW: đây là entry point được DailyHealthLogServiceImpl.createLog()/
+    // updateLog() gọi trong try/catch. Nếu để mặc định (tham gia transaction của
+    // caller) thì bất kỳ lỗi nào ở đây (thiếu cột DB, lỗi tính toán báo cáo tuần...)
+    // sẽ đánh dấu rollback-only cho cả transaction lưu DailyHealthLog, gây
+    // UnexpectedRollbackException dù exception đã được catch ở tầng trên.
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void syncWeeklyReport(Long patientId, LocalDate weekStart) {
         if (weeklyHealthReportRepository.existsByPatientIdAndWeekStart(patientId, weekStart)) {
             recalculateIfExists(patientId, weekStart);
@@ -311,8 +316,8 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     }
 
     /**
-     * Hàm xử lý tự động tính toán trung bình cộng chỉ số tuần, kết hợp Profile tĩnh
-     * và đồng bộ kết quả AI Tim mạch vào Database hệ thống.
+     * Hàm xử lý tự động tính toán trung bình cộng chỉ số tuần, kết hợp Profile
+     * tĩnh và đồng bộ kết quả AI Tim mạch vào Database hệ thống.
      */
     @Transactional
     public void processWeeklyEvaluation(Patient patient, LocalDate weekStart, LocalDate weekEnd, WeeklyHealthReport report) {
@@ -334,10 +339,10 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 RiskAssessment assessment = riskAssessmentRepository
                         .findByWeeklyReportIdAndAssessmentType(report.getId(), "WEEKLY_CARDIO_RISK")
                         .orElseGet(() -> RiskAssessment.builder()
-                                .patient(patient)
-                                .weeklyReportId(report.getId())
-                                .assessmentType("WEEKLY_CARDIO_RISK")
-                                .build());
+                        .patient(patient)
+                        .weeklyReportId(report.getId())
+                        .assessmentType("WEEKLY_CARDIO_RISK")
+                        .build());
                 assessment.setRiskLevel(riskLevel);
                 assessment.setRiskPercentage(BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP));
                 assessment.setAiSummary(summary);
@@ -414,10 +419,10 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 RiskAssessment assessment = riskAssessmentRepository
                         .findByWeeklyReportIdAndAssessmentType(report.getId(), "WEEKLY_STROKE_RISK")
                         .orElseGet(() -> RiskAssessment.builder()
-                                .patient(patient)
-                                .weeklyReportId(report.getId())
-                                .assessmentType("WEEKLY_STROKE_RISK")
-                                .build());
+                        .patient(patient)
+                        .weeklyReportId(report.getId())
+                        .assessmentType("WEEKLY_STROKE_RISK")
+                        .build());
                 assessment.setRiskLevel(mappedLevel);
                 BigDecimal finalPct = BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP);
                 assessment.setRiskPercentage(finalPct);
@@ -452,11 +457,11 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                         .patientId(patient.getId())
                         .weeklyReportId(report.getId())
                         .analysisType("STROKE_WEEKLY_V1")
-                        .inputData("{" +
-                                "\"patientId\":" + patient.getId() +
-                                ",\"weekStart\":\"" + weekStart + "\"" +
-                                ",\"weekEnd\":\"" + weekEnd + "\"" +
-                                "}")
+                        .inputData("{"
+                                + "\"patientId\":" + patient.getId()
+                                + ",\"weekStart\":\"" + weekStart + "\""
+                                + ",\"weekEnd\":\"" + weekEnd + "\""
+                                + "}")
                         .outputResult(aiStrokeResult.toString())
                         .riskLevel(mappedLevel)
                         .createdAt(LocalDateTime.now())
