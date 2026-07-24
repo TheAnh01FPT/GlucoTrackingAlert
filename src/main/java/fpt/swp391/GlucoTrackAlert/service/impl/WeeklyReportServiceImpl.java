@@ -390,8 +390,10 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
             Map<String, Object> aiStrokeResult = weeklyStrokeAiService.calculateWeeklyStrokeRisk(patient, weekStart, weekEnd);
 
             if (aiStrokeResult != null && !aiStrokeResult.isEmpty()) {
-                Object strokeRiskObj = aiStrokeResult.containsKey("risk_percentage") ? aiStrokeResult.get("risk_percentage") : aiStrokeResult.get("riskPercentage");
-                Double riskPercentage = strokeRiskObj != null ? Double.parseDouble(strokeRiskObj.toString()) : null;
+                Double riskPercentage = null;
+                if (aiStrokeResult.get("risk_percentage") != null) {
+                    riskPercentage = Double.parseDouble(aiStrokeResult.get("risk_percentage").toString());
+                }
                 String rawRiskLevel = (String) aiStrokeResult.get("risk_level");
 
                 // Mức độ mặc định

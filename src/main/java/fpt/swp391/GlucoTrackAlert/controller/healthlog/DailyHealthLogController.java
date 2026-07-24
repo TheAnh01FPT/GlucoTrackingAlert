@@ -1047,7 +1047,6 @@ public class DailyHealthLogController {
                 && userId != null
                 && !userId.equals(curUserId);
 
-        final Long finalPatientId = patientId;
         List<WeeklyHealthReport> dbReports = weeklyHealthReportRepository.findByPatientIdOrderByWeekStartDesc(patientId);
         List<Map<String, Object>> reports = dbReports.stream().map(r -> {
             Map<String, Object> map = new HashMap<>();
@@ -1058,19 +1057,6 @@ public class DailyHealthLogController {
             map.put("averageSystolic", r.getAverageSystolic());
             map.put("averageDiastolic", r.getAverageDiastolic());
             map.put("createdAt", r.getCreatedAt());
-
-            // Tính toán số ngày vận động thực tế trong tuần (dựa trên daily_health_logs)
-            List<DailyHealthLog> weekLogsForActivity = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(finalPatientId, r.getWeekStart(), r.getWeekEnd());
-            long activeDays = weekLogsForActivity.stream().filter(l -> l.getPhysicalActivity() != null && l.getPhysicalActivity() == 1).count();
-            int totalDays = weekLogsForActivity.size();
-            map.put("activeDays", activeDays);
-            map.put("totalDays", totalDays);
-            String activeWeekLabel = "--";
-            if (totalDays > 0) {
-                long inactiveDays = totalDays - activeDays;
-                activeWeekLabel = activeDays > inactiveDays ? "Có" : "Không";
-            }
-            map.put("activeWeek", activeWeekLabel);
 
             Optional<RiskAssessment> strokeAss = riskAssessmentRepository.findByWeeklyReportIdAndAssessmentType(r.getId(), "WEEKLY_STROKE_RISK");
             if (strokeAss.isPresent()) {
@@ -1084,8 +1070,10 @@ public class DailyHealthLogController {
                 try {
                     Map<String, Object> aiStrokeResult = weeklyStrokeAiService.calculateWeeklyStrokeRisk(patient, r.getWeekStart(), r.getWeekEnd());
                     if (aiStrokeResult != null && !aiStrokeResult.isEmpty()) {
-                        Object strokeRiskValue = aiStrokeResult.containsKey("risk_percentage") ? aiStrokeResult.get("risk_percentage") : aiStrokeResult.get("riskPercentage");
-                        Double riskPercentage = strokeRiskValue != null ? Double.parseDouble(strokeRiskValue.toString()) : null;
+                        Double riskPercentage = null;
+                        if (aiStrokeResult.get("risk_percentage") != null) {
+                            riskPercentage = Double.parseDouble(aiStrokeResult.get("risk_percentage").toString());
+                        }
                         String rawRiskLevel = (String) aiStrokeResult.get("risk_level");
 
                         String mappedLevel = "LOW";
