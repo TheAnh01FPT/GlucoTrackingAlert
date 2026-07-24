@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
     private String frontendUrl;
 
     public UserServiceImpl(UserRepository userRepository,
-                           RoleRepository roleRepository,
-                           EmailVerificationTokenRepository tokenRepository,
-                           PasswordResetTokenRepository passwordResetTokenRepository,
-                           EmailService emailService,
-                           BCryptPasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil,
-                           DoctorRepository doctorRepository) {
+            RoleRepository roleRepository,
+            EmailVerificationTokenRepository tokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailService emailService,
+            BCryptPasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil,
+            DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
@@ -201,14 +201,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginResponse login(LoginRequest request) throws Exception {
-        User user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail() == null ? "" : request.getEmail().trim();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Email hoặc mật khẩu không đúng."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new Exception("Email hoặc mật khẩu không đúng.");
         }
 
+        String roleName = user.getRole() != null ? user.getRole().getName() : "PATIENT";
+
         if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            if ("PATIENT".equalsIgnoreCase(roleName) && "pending_verification".equalsIgnoreCase(user.getStatus())) {
+                try {
+                    resendOtp(user.getEmail());
+                } catch (Exception ignored) {
+                    // ignore - still return pending OTP response
+                }
+
+                return LoginResponse.builder()
+                        .email(user.getEmail())
+                        .role(roleName)
+                        .requiresOtp(true)
+                        .message("Tài khoản đang ở trạng thái chờ xác thực. Một mã OTP mới đã được gửi tới email của bạn.")
+                        .build();
+            }
+
             throw new Exception("Tài khoản chưa được xác nhận email. Vui lòng kiểm tra hộp thư.");
         }
 
@@ -216,7 +234,6 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Tài khoản đã bị khóa hoặc chưa được kích hoạt.");
         }
 
-        String roleName = user.getRole() != null ? user.getRole().getName() : "PATIENT";
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
         Long doctorId = null;
@@ -237,6 +254,7 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .role(roleName)
                 .doctorId(doctorId)
+                .requiresOtp(false)
                 .message("Đăng nhập thành công.")
                 .build();
     }
@@ -244,7 +262,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) throws Exception {
-        User user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail() == null ? "" : request.getEmail().trim();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("Email không tồn tại trong hệ thống"));
 
         if (!"active".equalsIgnoreCase(user.getStatus())) {

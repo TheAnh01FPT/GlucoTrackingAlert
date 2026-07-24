@@ -22,11 +22,14 @@ public class Duy_Meal_Logs {
     @Column(name = "meal_type")
     private String mealType;  // ✅ giữ tên Java cũ
 
+    @Column(name = "quantity_text")
+    private String quantityText;  // Số lượng người dùng nhập, vd: "1 bát", "2 miếng"
+
     @Column(name = "sugar_estimation")
-    private String sugarEstimation;  // ✅ giữ tên Java cũ (String thay vì Double)
+    private String sugarEstimation;  // Đường huyết ước tính sau ăn, đơn vị mmol/L (String thay vì Double - giữ tên Java cũ)
 
     @Column(name = "carb_estimation")
-private Double carbEstimation;
+    private Double carbEstimation;  // Khối lượng carbohydrate ước tính, đơn vị gram (g)
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
@@ -34,50 +37,91 @@ private Double carbEstimation;
     @Column(name = "log_date", nullable = false)
     private LocalDate mealDate;
 
-    @Column(name = "created_at")
-    private java.time.LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private java.time.LocalDateTime updatedAt;
-
     // --- CONSTRUCTORS ---
-    public Duy_Meal_Logs() {}
+    public Duy_Meal_Logs() {
+    }
 
     // --- GETTERS & SETTERS ---
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getPatientId() { return patientId; }
-    public void setPatientId(Long patientId) { this.patientId = patientId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getFoodName() { return foodName; }
-    public void setFoodName(String foodName) { this.foodName = foodName; }
+    public Long getPatientId() {
+        return patientId;
+    }
 
-    public String getMealType() { return mealType; }
-    public void setMealType(String mealType) { this.mealType = mealType; }
+    public void setPatientId(Long patientId) {
+        this.patientId = patientId;
+    }
 
-    public String getSugarEstimation() { return sugarEstimation; }
-    public void setSugarEstimation(String sugarEstimation) { this.sugarEstimation = sugarEstimation; }
+    public String getFoodName() {
+        return foodName;
+    }
 
-    public Double getCarbEstimation() { return carbEstimation; }
-    public void setCarbEstimation(Double carbEstimation) { this.carbEstimation = carbEstimation; }
+    public void setFoodName(String foodName) {
+        this.foodName = foodName;
+    }
 
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
+    public String getMealType() {
+        return mealType;
+    }
 
-    public LocalDate getMealDate() { return mealDate; }
-    public void setMealDate(LocalDate mealDate) { this.mealDate = mealDate; }
+    public void setMealType(String mealType) {
+        this.mealType = mealType;
+    }
 
-    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getQuantityText() {
+        return quantityText;
+    }
 
-    public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setQuantityText(String quantityText) {
+        this.quantityText = quantityText;
+    }
+
+    public String getSugarEstimation() {
+        return sugarEstimation;
+    }
+
+    public void setSugarEstimation(String sugarEstimation) {
+        this.sugarEstimation = sugarEstimation;
+    }
+
+    public Double getCarbEstimation() {
+        return carbEstimation;
+    }
+
+    public void setCarbEstimation(Double carbEstimation) {
+        this.carbEstimation = carbEstimation;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public LocalDate getMealDate() {
+        return mealDate;
+    }
+
+    public void setMealDate(LocalDate mealDate) {
+        this.mealDate = mealDate;
+    }
 
     @PrePersist
     @PreUpdate
     public void normalizeData() {
-        if (foodName != null) foodName = foodName.trim();
-        if (mealDate == null) mealDate = LocalDate.now();
+        if (foodName != null) {
+            foodName = foodName.trim();
+        }
+        if (mealDate == null) {
+            mealDate = LocalDate.now();
+        }
     }
 }
