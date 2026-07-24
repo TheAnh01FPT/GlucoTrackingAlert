@@ -24,7 +24,8 @@ public class SecurityConfig {
                         // 1. Các đường dẫn công khai (Public)
                         .requestMatchers(
                                 "/", "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
-                                "/css/**", "/js/**", "/images/**", "/oauth2/**", "/api/contact-requests"
+                                "/css/**", "/js/**", "/images/**", "/oauth2/**", "/api/contact-requests",
+                                "/articles", "/articles/{slug}"
                         ).permitAll()
 
                         // Ảnh avatar bác sĩ: công khai để bệnh nhân có thể xem
