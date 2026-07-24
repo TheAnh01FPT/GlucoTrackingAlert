@@ -244,6 +244,52 @@
             font-weight: 500;
         }
 
+        .otp-panel {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #dbeafe;
+            display: none;
+        }
+
+        .otp-panel h3 {
+            font-size: 16px;
+            color: #14532d;
+            margin-bottom: 8px;
+        }
+
+        .otp-panel p {
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .otp-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .otp-actions button {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-otp-confirm {
+            background: #1a6b5a;
+            color: white;
+        }
+
+        .btn-otp-resend {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
         .success {
             background-color: #dcfce7;
             color: #166534;
@@ -310,6 +356,20 @@
 
         <div id="messageBox" class="message"></div>
 
+        <div id="otpPanel" class="otp-panel">
+            <h3>Nhập mã OTP để kích hoạt tài khoản</h3>
+            <p id="otpHint">Một mã OTP mới vừa được gửi tới email của bạn.</p>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Mã OTP (6 số)</label>
+                <input type="text" id="otpInput" maxlength="6" placeholder="Nhập 6 chữ số">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="otp-actions">
+                <button type="button" id="verifyOtpBtn" class="btn-otp-confirm">Xác nhận OTP</button>
+                <button type="button" id="resendOtpBtn" class="btn-otp-resend">Gửi lại OTP</button>
+            </div>
+        </div>
+
         <div class="divider">HOẶC</div>
 
         <a href="/oauth2/authorization/google" class="btn-google">
@@ -324,24 +384,60 @@
 </div>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const messageBox = document.getElementById('messageBox');
+    const messageBox = document.getElementById('messageBox');
+    const otpPanel = document.getElementById('otpPanel');
+    const otpHint = document.getElementById('otpHint');
+    const otpInput = document.getElementById('otpInput');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
 
-        fetch('/api/auth/login', {
+    let pendingLoginEmail = '';
+    let pendingLoginPassword = '';
+
+    function showMessage(type, text) {
+        messageBox.style.display = 'block';
+        messageBox.className = 'message ' + type;
+        messageBox.innerText = text;
+    }
+
+    function showOtpSection(email) {
+        pendingLoginEmail = email;
+        otpHint.textContent = 'Một mã OTP mới vừa được gửi tới ' + email + '. Vui lòng kiểm tra hộp thư.';
+        otpPanel.style.display = 'block';
+        otpInput.value = '';
+        otpInput.focus();
+    }
+
+    function hideOtpSection() {
+        otpPanel.style.display = 'none';
+        otpInput.value = '';
+    }
+
+    function loginWithCredentials(email, password) {
+        return fetch('/api/auth/login', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({email: email, password: password})
-        })
+        });
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        loginWithCredentials(email, password)
             .then(async response => {
-                messageBox.style.display = 'block';
                 if (response.ok) {
                     const data = await response.json();
-                    messageBox.className = 'message success';
-                    messageBox.innerText = 'Đăng nhập thành công! Đang chuyển hướng...';
+                    if (data.requiresOtp) {
+                        pendingLoginPassword = password;
+                        showOtpSection(data.email || email);
+                        showMessage('success', data.message || 'Tài khoản đang chờ xác thực. Một mã OTP mới đã được gửi tới email của bạn.');
+                        return;
+                    }
 
+                    showMessage('success', 'Đăng nhập thành công! Đang chuyển hướng...');
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('email', data.email);
                     localStorage.setItem('role', data.role);
@@ -356,14 +452,76 @@
                     }, 1000);
                 } else {
                     const text = await response.text();
-                    messageBox.className = 'message error';
-                    messageBox.innerText = text || 'Đăng nhập thất bại.';
+                    showMessage('error', text || 'Đăng nhập thất bại.');
                 }
             })
-            .catch(err => {
-                messageBox.style.display = 'block';
-                messageBox.className = 'message error';
-                messageBox.innerText = 'Không thể kết nối đến server.';
+            .catch(() => {
+                showMessage('error', 'Không thể kết nối đến server.');
+            });
+    });
+
+    verifyOtpBtn.addEventListener('click', function () {
+        const otp = otpInput.value.trim();
+        if (!otp || !/^\d{6}$/.test(otp)) {
+            showMessage('error', 'Mã OTP phải gồm đúng 6 chữ số.');
+            return;
+        }
+
+        fetch(`/api/auth/verify-otp?otp=${encodeURIComponent(otp)}`, {method: 'POST'})
+            .then(async response => {
+                if (!response.ok) {
+                    const text = await response.text();
+                    showMessage('error', text || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
+                    return;
+                }
+
+                showMessage('success', 'Xác thực OTP thành công. Đang đăng nhập vào hệ thống...');
+                hideOtpSection();
+                const loginResponse = await loginWithCredentials(pendingLoginEmail, pendingLoginPassword);
+                const data = await loginResponse.json();
+
+                if (!loginResponse.ok) {
+                    showMessage('error', data.message || 'Không thể đăng nhập sau khi xác thực OTP.');
+                    return;
+                }
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('email', data.email);
+                localStorage.setItem('role', data.role);
+                if (data.doctorId) localStorage.setItem('doctorId', data.doctorId);
+                document.cookie = `jwt=${data.token}; path=/; max-age=86400; SameSite=Strict`;
+
+                setTimeout(() => {
+                    if (data.role === 'ADMIN') window.location.href = '/admin/dashboard';
+                    else if (data.role === 'PATIENT') window.location.href = '/patient/homepage';
+                    else if (data.role === 'DOCTOR') window.location.href = '/doctor/homepage';
+                    else window.location.href = '/login';
+                }, 1000);
+            })
+            .catch(() => {
+                showMessage('error', 'Không thể xác thực OTP. Vui lòng thử lại.');
+            });
+    });
+
+    resendOtpBtn.addEventListener('click', function () {
+        if (!pendingLoginEmail) {
+            showMessage('error', 'Vui lòng đăng nhập lại để gửi mã OTP mới.');
+            return;
+        }
+
+        fetch(`/api/auth/resend-otp?email=${encodeURIComponent(pendingLoginEmail)}`, {method: 'POST'})
+            .then(async response => {
+                if (!response.ok) {
+                    const text = await response.text();
+                    showMessage('error', text || 'Không thể gửi lại OTP.');
+                    return;
+                }
+                showMessage('success', 'Mã OTP mới đã được gửi lại tới email của bạn.');
+                otpInput.value = '';
+                otpInput.focus();
+            })
+            .catch(() => {
+                showMessage('error', 'Không thể gửi lại OTP. Vui lòng thử lại.');
             });
     });
 </script>
