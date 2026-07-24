@@ -17,6 +17,12 @@ public interface UserAdminService {
 
     long getPatientCount();
 
+    long getActivePatientCount();
+
+    long getPendingPatientCount();
+
+    long getBannedPatientCount();
+
     List<User> getUsersFilteredByRole(Long roleId);
 
     User getUserById(Long id) throws Exception;
@@ -24,5 +30,9 @@ public interface UserAdminService {
     User createUserByAdmin(UserAdminRequest request) throws Exception;
 
     User updateUserByAdmin(Long id, UserAdminRequest request) throws Exception;
+
+    User updateUserStatusByAdmin(Long id, String status) throws Exception;
+
+    User resetPatientPasswordByAdmin(Long id) throws Exception;
 
 }

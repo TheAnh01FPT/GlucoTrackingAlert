@@ -39,57 +39,66 @@
     </div>
 
     <!-- STAT CARDS -->
-    <div class="stat-cards">
-        <div class="stat-card">
-            <div class="stat-title">Tổng Tài Khoản</div>
-            <div class="stat-value" th:text="${totalItems != null ? totalItems : 0}">0</div>
+    <div class="stat-cards"
+         style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px;">
+        <div class="stat-card"
+             style="background: linear-gradient(135deg, #eff6ff, #ffffff); border-left: 4px solid #2563eb;">
+            <div class="stat-title">Tổng tài khoản</div>
+            <div id="totalPatientCount" class="stat-value" th:text="${patientCount != null ? patientCount : 0}">0</div>
         </div>
+        <div class="stat-card"
+             style="background: linear-gradient(135deg, #ecfdf5, #ffffff); border-left: 4px solid #16a34a;">
+            <div class="stat-title">TÀI KHOẢN HOẠT ĐỘNG</div>
+            <div id="activePatientCount" class="stat-value"
+                 th:text="${activePatientCount != null ? activePatientCount : 0}">0
+            </div>
+        </div>
+        <div class="stat-card"
+             style="background: linear-gradient(135deg, #fff7ed, #ffffff); border-left: 4px solid #f59e0b;">
+            <div class="stat-title">TÀI KHOẢN CHỜ XÁC NHẬN</div>
+            <div id="pendingPatientCount" class="stat-value"
+                 th:text="${pendingPatientCount != null ? pendingPatientCount : 0}">0
+            </div>
+        </div>
+        <div class="stat-card"
+             style="background: linear-gradient(135deg, #fef2f2, #ffffff); border-left: 4px solid #dc2626;">
+            <div class="stat-title">TÀI KHOẢN ĐÃ KHÓA</div>
+            <div id="bannedPatientCount" class="stat-value"
+                 th:text="${bannedPatientCount != null ? bannedPatientCount : 0}">0
+            </div>
+        </div>
+    </div>
     <!-- MAIN CONTAINER -->
     <div class="container">
         <h2>👤 Quản Lý Tài Khoản (Bệnh Nhân)</h2>
 
         <!-- Alert Banners -->
-        <div id="successAlert" th:if="${successMessage}" class="alert-success">
-            <span th:text="${successMessage}"></span>
+        <div id="successAlert"
+             th:classappend="${successMessage != null} ? 'alert-success' : 'alert-success'"
+             th:style="${successMessage != null} ? '' : 'display:none;'"
+             th:text="${successMessage}">
         </div>
-        <div id="errorAlert" th:if="${errorMessage}" class="alert-error">
-            <span th:text="${errorMessage}"></span>
+        <div id="errorAlert"
+             th:classappend="${errorMessage != null} ? 'alert-error' : 'alert-error'"
+             th:style="${errorMessage != null} ? '' : 'display:none;'"
+             th:text="${errorMessage}">
         </div>
         <div id="clientMessageBox" class="alert-error" style="display: none;"></div>
 
-        <form id="userForm" th:action="@{/admin/users/save}" method="POST">
-            <input type="hidden" id="userFormId" name="id">
+        <div class="panel-note"
+             style="margin-bottom: 18px; padding: 14px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; color: #1d4ed8; font-weight: 600;">
+            Chỉ cho phép Admin: <strong>Thêm bệnh nhân mới</strong>, <strong>Thay đổi trạng thái</strong> và <strong>Reset
+            mật khẩu</strong>. Không cho phép Admin chỉnh sửa Email, mật khẩu trực tiếp hoặc thông tin cá nhân bệnh
+            nhân.
+        </div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="userEmail">Email người dùng:</label>
-                    <input type="email" id="userEmail" name="email" class="form-control"
-                           placeholder="example@gmail.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="userPassword" id="passwordLabel">Mật khẩu khởi tạo:</label>
-                    <input type="password" id="userPassword" name="password" class="form-control"
-                           placeholder="Nhập mật khẩu" required>
-                </div>
-                <div class="form-group">
-                    <label for="userStatus">Trạng thái:</label>
-                    <select id="userStatus" name="status" class="form-control">
-                        <option value="active">Active</option>
-                        <option value="pending_verification">Pending</option>
-                        <option value="banned">Banned</option>
-                    </select>
-                </div>
-                <input type="hidden" id="userRole" name="roleName" value="PATIENT">
-                <div class="form-group form-checkbox" style="flex: 0.5;">
-                    <input type="checkbox" id="userEmailVerified" name="emailVerified" value="true" checked>
-                    <label for="userEmailVerified">Đã xác thực</label>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" id="btnSubmitUser" class="btn btn-blue">💾 Lưu</button>
-                    <span id="cancelUserEdit" class="cancel-edit" onclick="resetUserForm()">Hủy</span>
-                </div>
-            </div>
-        </form>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+            <div style="font-size: 18px; font-weight: 700; color: #0f172a;">Danh sách bệnh nhân</div>
+            <button type="button" class="btn btn-blue" id="openCreatePatientModalBtn"
+                    style="margin: 0; padding: 11px 18px; border: none; border-radius: 10px; font-weight: 700; box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);">
+                ＋ Thêm Bệnh Nhân Mới
+            </button>
+        </div>
 
         <!-- Search & Filter Bar -->
         <div class="filter-bar"
@@ -98,21 +107,13 @@
                   style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin: 0;">
                 <input type="hidden" name="size" th:value="${pageSize}">
 
-                <div style="flex: 1; min-width: 250px;">
+                <div style="flex: 1; min-width: 280px;">
                     <input type="text" name="email" th:value="${filterEmail}" placeholder="🔍 Tìm kiếm theo Email..."
-                           class="form-control" style="margin: 0;">
+                           class="form-control" style="margin: 0; height: 42px; box-sizing: border-box;">
                 </div>
 
-                <div style="width: 200px;">
-                    <select name="roleName" class="form-control" style="margin: 0;">
-                        <option value="">-- Tất cả vai trò --</option>
-                        <option value="PATIENT" th:selected="${filterRole == 'PATIENT'}">Bệnh nhân (PATIENT)</option>
-                        <option value="ADMIN" th:selected="${filterRole == 'ADMIN'}">Quản trị (ADMIN)</option>
-                    </select>
-                </div>
-
-                <div style="width: 200px;">
-                    <select name="status" class="form-control" style="margin: 0;">
+                <div style="width: 220px;">
+                    <select name="status" class="form-control" style="margin: 0; height: 42px; box-sizing: border-box;">
                         <option value="">-- Tất cả trạng thái --</option>
                         <option value="active" th:selected="${filterStatus == 'active'}">Active</option>
                         <option value="pending_verification" th:selected="${filterStatus == 'pending_verification'}">
@@ -123,12 +124,14 @@
                 </div>
 
                 <div style="display: flex; gap: 10px;">
-                    <button type="submit" class="btn btn-blue" style="margin: 0; padding: 10px 20px;"><i
-                            class="fa-solid fa-filter"></i> Lọc
+                    <button type="submit" class="btn btn-blue filter-action-btn"
+                            style="margin: 0; min-width: 100px; height: 42px; box-sizing: border-box; padding: 10px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-filter"></i> Lọc
                     </button>
-                    <a href="/admin/dashboard" class="btn"
-                       style="margin: 0; padding: 10px 20px; background: #e2e8f0; color: #475569; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;"><i
-                            class="fa-solid fa-rotate-right"></i> Hủy</a>
+                    <a href="/admin/dashboard" class="btn filter-action-btn"
+                       style="margin: 0; min-width: 100px; height: 42px; box-sizing: border-box; padding: 10px 16px; background: #e2e8f0; color: #475569; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-rotate-right"></i> Hủy
+                    </a>
                 </div>
             </form>
         </div>
@@ -137,11 +140,12 @@
             <thead>
             <tr>
                 <th style="width: 8%;">ID</th>
-                <th style="width: 32%;">Email</th>
-                <th style="width: 20%;">Vai trò (Role)</th>
-                <th style="width: 15%;">Trạng thái</th>
-                <th style="width: 15%;">Xác thực Email</th>
-                <th style="width: 6%;">Hành động</th>
+                <th style="width: 28%;">Email</th>
+                <th style="width: 14%;">Vai trò (Role)</th>
+                <th style="width: 16%;">Trạng thái</th>
+                <th style="width: 18%;">Cập nhật Trạng thái</th>
+                <th style="width: 10%;">Xác thực Email</th>
+                <th style="width: 10%;">Hành động</th>
             </tr>
             </thead>
             <tbody>
@@ -149,23 +153,52 @@
                 <td th:text="${user.id}">1</td>
                 <td th:text="${user.email}" style="font-weight: 500;">user@gmail.com</td>
                 <td>
-                            <span th:text="${user.role != null ? user.role.name : 'Chưa gán'}"
-                                  th:class="${user.role != null && user.role.name == 'DOCTOR'} ? 'badge badge-doctor' : 'badge badge-patient'">
-                                PATIENT
-                            </span>
+                    <span th:text="${user.role != null ? user.role.name : 'Chưa gán'}"
+                          th:class="${user.role != null && user.role.name == 'DOCTOR'} ? 'badge badge-doctor' : 'badge badge-patient'">
+                        PATIENT
+                    </span>
                 </td>
                 <td>
-                            <span th:text="${user.status}"
-                                  th:class="${user.status == 'active' ? 'badge badge-active' : (user.status == 'banned' ? 'badge badge-banned' : 'badge badge-pending')}">active</span>
+                    <span class="status-badge"
+                          th:text="${user.status == 'active' ? 'Active' : (user.status == 'banned' ? 'Banned' : 'Pending')}"
+                          th:style="${user.status == 'active'} ? 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#d1fae5; color:#065f46; font-size:12px; font-weight:700;' : (${user.status == 'banned'} ? 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#fee2e2; color:#991b1b; font-size:12px; font-weight:700;' : 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#fef3c7; color:#92400e; font-size:12px; font-weight:700;')">
+                        Pending
+                    </span>
                 </td>
-                <td th:text="${user.emailVerified ? 'Đã xác thực ✔' : 'Chưa xác thực ❌'}">Đã xác thực</td>
                 <td>
-                    <a href="#" class="btn-sm btn-edit"
-                       th:onclick="fillUserToForm([[${user.id}]], [[${user.email}]], [[${user.status}]], [[${user.role != null ? user.role.name : ''}]], [[${user.emailVerified}]])">Sửa</a>
+                    <select class="status-select form-control"
+                            th:data-user-id="${user.id}"
+                            th:data-email="${user.email}"
+                            th:data-original-status="${user.status}"
+                            th:data-status-label="${user.status == 'active' ? 'Active' : (user.status == 'banned' ? 'Banned' : 'Pending')}">
+                        <option th:if="${user.status == 'pending_verification'}" value="pending_verification" selected>
+                            Pending
+                        </option>
+                        <option th:if="${user.status == 'pending_verification'}" value="active">Active</option>
+                        <option th:if="${user.status == 'pending_verification'}" value="banned">Banned</option>
+
+                        <option th:if="${user.status != 'pending_verification'}" value="active"
+                                th:selected="${user.status == 'active'}">Active
+                        </option>
+                        <option th:if="${user.status != 'pending_verification'}" value="banned"
+                                th:selected="${user.status == 'banned'}">Banned
+                        </option>
+                    </select>
+                </td>
+                <td class="email-verified-cell" th:text="${user.emailVerified ? 'Đã xác thực ✔' : 'Chưa xác thực ❌'}">Đã
+                    xác thực
+                </td>
+                <td>
+                    <button type="button"
+                            class="btn-sm btn-warning reset-password-btn"
+                            th:data-user-id="${user.id}"
+                            th:data-email="${user.email}">
+                        🔑 Reset
+                    </button>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(users)}">
-                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có tài
+                <td colspan="7" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có tài
                     khoản Bệnh
                     nhân nào.
                 </td>
@@ -185,7 +218,6 @@
                   style="margin: 0; display: flex; align-items: center; gap: 8px;">
                 <input type="hidden" name="page" th:value="${currentPage}"/>
                 <input type="hidden" name="email" th:value="${filterEmail}"/>
-                <input type="hidden" name="roleName" th:value="${filterRole}"/>
                 <input type="hidden" name="status" th:value="${filterStatus}"/>
 
                 <label for="sizeSelect" style="font-size: 13px; color: #64748b; font-weight: 500;">Số mục mỗi
@@ -235,19 +267,19 @@
             </style>
             <div style="display: flex; gap: 8px;">
                 <a th:if="${currentPage > 0}"
-                   th:href="@{/admin/dashboard(page=${currentPage - 1}, size=${pageSize}, email=${filterEmail}, roleName=${filterRole}, status=${filterStatus})}"
+                   th:href="@{/admin/dashboard(page=${currentPage - 1}, size=${pageSize}, email=${filterEmail}, status=${filterStatus})}"
                    style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
                     ← Trước
                 </a>
                 <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-                    <a th:href="@{/admin/dashboard(page=${i}, size=${pageSize}, email=${filterEmail}, roleName=${filterRole}, status=${filterStatus})}"
+                    <a th:href="@{/admin/dashboard(page=${i}, size=${pageSize}, email=${filterEmail}, status=${filterStatus})}"
                        th:text="${i + 1}"
                        th:style="${i == currentPage} ? 'padding: 7px 14px; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px; text-decoration: none;'
                                              : 'padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;'">
                     </a>
                 </th:block>
                 <a th:if="${currentPage < totalPages - 1}"
-                   th:href="@{/admin/dashboard(page=${currentPage + 1}, size=${pageSize}, email=${filterEmail}, roleName=${filterRole}, status=${filterStatus})}"
+                   th:href="@{/admin/dashboard(page=${currentPage + 1}, size=${pageSize}, email=${filterEmail}, status=${filterStatus})}"
                    style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">
                     Sau →
                 </a>
@@ -255,117 +287,400 @@
         </div>
     </div>
 
+    <div id="createPatientModal"
+         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+        <div style="background: #fff; padding: 24px; border-radius: 14px; width: 460px; max-width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+            <span onclick="closeCreatePatientModal()"
+                  style="position: absolute; top: 14px; right: 18px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
+                  title="Đóng">&times;</span>
+            <h3 style="margin: 0 0 18px; color: #0f172a;">Thêm Tài Khoản Bệnh Nhân Mới</h3>
+            <form id="createPatientForm" novalidate>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div>
+                        <label for="newPatientEmail"
+                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Email
+                            người dùng</label>
+                        <input id="newPatientEmail" type="email" required placeholder="example@gmail.com"
+                               class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
+                    </div>
+                    <div>
+                        <label for="newPatientPassword"
+                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Mật
+                            khẩu khởi tạo</label>
+                        <div style="position: relative;">
+                            <input id="newPatientPassword" type="password" required placeholder="Nhập mật khẩu"
+                                   class="form-control"
+                                   style="width: 100%; box-sizing: border-box; height: 42px; padding-right: 44px;">
+                            <button type="button" id="toggleNewPatientPassword"
+                                    onclick="togglePasswordVisibility('newPatientPassword', this)"
+                                    style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer; font-size: 16px;">
+                                👁️
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+                        <button type="button" class="cancel-edit" onclick="closeCreatePatientModal()"
+                                style="background: none; border: none; padding: 10px 15px;">Hủy
+                        </button>
+                        <button type="submit" class="btn btn-blue" style="padding: 10px 20px;">Tạo Tài Khoản</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        function fillUserToForm(id, email, status, roleName, emailVerified) {
-            hideClientError();
-            document.getElementById('userFormId').value = id;
-            document.getElementById('userEmail').value = email;
-            document.getElementById('userStatus').value = status;
-            document.getElementById('userRole').value = roleName.toUpperCase();
-            document.getElementById('userEmailVerified').checked = emailVerified;
-
-            document.getElementById('userPassword').required = false;
-            document.getElementById('userPassword').placeholder = "Bỏ trống nếu giữ nguyên mật khẩu cũ";
-            document.getElementById('passwordLabel').innerText = "Cập nhật mật khẩu mới:";
-            document.getElementById('btnSubmitUser').innerText = "💾 Cập Nhật Tài Khoản";
-            document.getElementById('cancelUserEdit').style.display = "inline-flex";
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
-
-        function resetUserForm() {
-            hideClientError();
-            document.getElementById('userFormId').value = "";
-            document.getElementById('userEmail').value = "";
-            document.getElementById('userPassword').value = "";
-            document.getElementById('userPassword').required = true;
-            document.getElementById('userPassword').placeholder = "Nhập mật khẩu";
-            document.getElementById('passwordLabel').innerText = "Mật khẩu khởi tạo:";
-            document.getElementById('userStatus').selectedIndex = 0;
-            document.getElementById('userRole').value = 'PATIENT';
-            document.getElementById('userEmailVerified').checked = true;
-            document.getElementById('btnSubmitUser').innerText = "💾 Lưu Thông Tin";
-            document.getElementById('cancelUserEdit').style.display = "none";
-        }
-
-        document.getElementById('userForm').addEventListener('submit', function (e) {
-            hideClientError();
-            const emailInput = document.getElementById('userEmail');
-            const passwordInput = document.getElementById('userPassword');
-            const userIdInput = document.getElementById('userFormId');
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            const isEdit = userIdInput && userIdInput.value !== "";
-
-            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            if (!emailRegex.test(email)) {
-                showClientError("Địa chỉ Email không đúng định dạng!");
-                e.preventDefault();
-                return;
-            }
-
-            if (!isEdit) {
-                if (!password || password.trim() === "") {
-                    showClientError("Mật khẩu không được để trống");
-                    e.preventDefault();
-                    return;
-                }
-                const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
-                if (!passRegex.test(password)) {
-                    showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
-                    e.preventDefault();
-                    return;
-                }
-            } else {
-                if (password && password.trim() !== "") {
-                    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,32}$/;
-                    if (!passRegex.test(password)) {
-                        showClientError("Mật khẩu phải từ 6-32 ký tự, chứa ít nhất 1 chữ viết hoa, 1 chữ viết thường và 1 số!");
-                        e.preventDefault();
-                        return;
-                    }
-                }
-            }
-        });
-
         let clientMessageTimeout;
+        let alertHideTimeout = null;
+        let pendingStatusChange = null;
+        let pendingResetUser = null;
+
+        function statusText(status) {
+            if (status === 'active') return 'Active';
+            if (status === 'banned') return 'Banned';
+            return 'Pending';
+        }
+
+        function statusBadgeStyle(status) {
+            if (status === 'active') {
+                return 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#d1fae5; color:#065f46; font-size:12px; font-weight:700;';
+            }
+            if (status === 'banned') {
+                return 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#fee2e2; color:#991b1b; font-size:12px; font-weight:700;';
+            }
+            return 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#fef3c7; color:#92400e; font-size:12px; font-weight:700;';
+        }
+
+        function renderStatusOptions(select, status) {
+            const normalizedStatus = status || 'active';
+            const isPending = normalizedStatus === 'pending_verification';
+            let optionsHtml = '';
+
+            if (isPending) {
+                optionsHtml = [
+                    '<option value="pending_verification" selected>Pending</option>',
+                    '<option value="active">Active</option>',
+                    '<option value="banned">Banned</option>'
+                ].join('');
+            } else {
+                optionsHtml = [
+                    '<option value="active" ' + (normalizedStatus === 'active' ? 'selected' : '') + '>Active</option>',
+                    '<option value="banned" ' + (normalizedStatus === 'banned' ? 'selected' : '') + '>Banned</option>'
+                ].join('');
+            }
+
+            select.innerHTML = optionsHtml;
+            select.value = normalizedStatus;
+        }
+
+        function updateStatusStatCards(previousStatus, newStatus) {
+            const normalizeStatus = (status) => {
+                if (status === 'pending_verification') return 'pending';
+                return status;
+            };
+
+            const previousKey = normalizeStatus(previousStatus);
+            const newKey = normalizeStatus(newStatus);
+
+            const statMap = {
+                total: document.getElementById('totalPatientCount'),
+                active: document.getElementById('activePatientCount'),
+                pending: document.getElementById('pendingPatientCount'),
+                banned: document.getElementById('bannedPatientCount')
+            };
+
+            if (previousKey !== newKey) {
+                const previousNode = statMap[previousKey];
+                const nextNode = statMap[newKey];
+                if (previousNode) {
+                    previousNode.textContent = Math.max(0, Number(previousNode.textContent || 0) - 1);
+                }
+                if (nextNode) {
+                    nextNode.textContent = Number(nextNode.textContent || 0) + 1;
+                }
+            }
+        }
+
+        function updateStatusRowUI(select, newStatus, previousStatus) {
+            const row = select.closest('tr');
+            const rowBadge = row?.querySelector('.status-badge');
+            const emailVerifiedCell = row?.querySelector('.email-verified-cell');
+            if (rowBadge) {
+                rowBadge.textContent = statusText(newStatus);
+                rowBadge.style.cssText = statusBadgeStyle(newStatus);
+            }
+            if (emailVerifiedCell) {
+                emailVerifiedCell.textContent = newStatus === 'active' ? 'Đã xác thực ✔' : 'Chưa xác thực ❌';
+            }
+            renderStatusOptions(select, newStatus);
+            select.dataset.originalStatus = newStatus;
+            select.dataset.statusLabel = statusText(newStatus);
+            updateStatusStatCards(previousStatus, newStatus);
+        }
+
+        function fadeOutAlert(alert) {
+            if (!alert) return;
+            alert.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-4px)';
+            setTimeout(() => {
+                alert.style.display = 'none';
+                alert.style.opacity = '1';
+                alert.style.transform = 'translateY(0)';
+            }, 550);
+        }
+
+        function showTransientAlert(message, alertId = 'successAlert', duration = 3000) {
+            const alert = document.getElementById(alertId);
+            if (!alert) return;
+            if (alertHideTimeout) clearTimeout(alertHideTimeout);
+            alert.innerHTML = `<span>${message}</span>`;
+            alert.style.display = 'block';
+            alert.style.opacity = '1';
+            alert.style.transform = 'translateY(0)';
+            alertHideTimeout = setTimeout(() => fadeOutAlert(alert), duration);
+        }
+
+        function togglePasswordVisibility(inputId, toggleButton) {
+            const passwordInput = document.getElementById(inputId);
+            if (!passwordInput) return;
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            toggleButton.textContent = isHidden ? '🙈' : '👁️';
+        }
+
+        function openCreatePatientModal() {
+            document.body.classList.add('modal-open');
+            document.getElementById('createPatientModal').style.display = 'flex';
+        }
+
+        function closeCreatePatientModal() {
+            document.body.classList.remove('modal-open');
+            document.getElementById('createPatientModal').style.display = 'none';
+            document.getElementById('createPatientForm').reset();
+        }
 
         function showClientError(msg) {
             const msgBox = document.getElementById('clientMessageBox');
             msgBox.innerText = msg;
             msgBox.style.opacity = '1';
             msgBox.style.display = 'block';
+            msgBox.style.transform = 'translateY(0)';
             window.scrollTo({top: 0, behavior: 'smooth'});
             if (clientMessageTimeout) clearTimeout(clientMessageTimeout);
             clientMessageTimeout = setTimeout(() => {
-                msgBox.style.transition = 'opacity 0.5s ease';
-                msgBox.style.opacity = '0';
-                setTimeout(() => {
-                    msgBox.style.display = 'none';
-                }, 500);
-            }, 4000);
+                fadeOutAlert(msgBox);
+            }, 2000);
         }
 
         function hideClientError() {
             const msgBox = document.getElementById('clientMessageBox');
-            msgBox.style.display = 'none';
-            msgBox.style.opacity = '1';
+            if (msgBox) {
+                msgBox.style.display = 'none';
+                msgBox.style.opacity = '1';
+                msgBox.style.transform = 'translateY(0)';
+            }
             if (clientMessageTimeout) clearTimeout(clientMessageTimeout);
         }
+
+        function openStatusChangeModal() {
+            document.body.classList.add('modal-open');
+            document.getElementById('statusChangeModal').style.display = 'flex';
+        }
+
+        function closeStatusChangeModal() {
+            document.body.classList.remove('modal-open');
+            document.getElementById('statusChangeModal').style.display = 'none';
+        }
+
+        function openResetPasswordModal() {
+            document.body.classList.add('modal-open');
+            document.getElementById('resetPasswordModal').style.display = 'flex';
+        }
+
+        function closeResetPasswordModal() {
+            document.body.classList.remove('modal-open');
+            document.getElementById('resetPasswordModal').style.display = 'none';
+        }
+
+        document.getElementById('openCreatePatientModalBtn').addEventListener('click', openCreatePatientModal);
+
+        document.getElementById('createPatientModal').addEventListener('click', function (event) {
+            if (event.target.id === 'createPatientModal') {
+                closeCreatePatientModal();
+            }
+        });
+
+        document.getElementById('createPatientForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const email = document.getElementById('newPatientEmail').value.trim();
+            const password = document.getElementById('newPatientPassword').value.trim();
+            const status = 'active';
+
+            if (!email || !password) {
+                showClientError('Vui lòng nhập đầy đủ Email và mật khẩu khởi tạo.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        status: status,
+                        emailVerified: true,
+                        roleName: 'PATIENT'
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || result.error || 'Không thể tạo tài khoản bệnh nhân mới.');
+                }
+
+                closeCreatePatientModal();
+                showTransientAlert('Tạo tài khoản bệnh nhân mới thành công.', 'successAlert', 2500);
+                const currentPage = Number(document.querySelector('[name="currentPage"]')?.value || 0);
+                if (typeof window !== 'undefined') {
+                    setTimeout(() => window.location.reload(), 3200);
+                }
+            } catch (error) {
+                showClientError(error.message || 'Không thể tạo tài khoản bệnh nhân mới.');
+            }
+        });
+
+        document.querySelectorAll('.status-select').forEach(select => {
+            renderStatusOptions(select, select.dataset.originalStatus || select.value);
+
+            select.addEventListener('change', function () {
+                const userId = this.dataset.userId;
+                const email = this.dataset.email;
+                const originalStatus = this.dataset.originalStatus;
+                const newStatus = this.value;
+                const newStatusLabel = statusText(newStatus);
+
+                pendingStatusChange = {
+                    userId,
+                    email,
+                    select,
+                    originalStatus,
+                    newStatus
+                };
+
+                document.getElementById('confirmStatusTitle').textContent = 'Xác nhận thay đổi trạng thái?';
+                document.getElementById('confirmStatusMessage').textContent =
+                    `Bạn có chắc chắn muốn chuyển trạng thái tài khoản ${email} thành ${newStatusLabel}?`;
+                openStatusChangeModal();
+            });
+        });
+
+        document.querySelectorAll('.reset-password-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const email = this.dataset.email;
+                pendingResetUser = {
+                    userId: this.dataset.userId,
+                    email
+                };
+                document.getElementById('confirmResetTitle').textContent = 'Xác nhận cấp lại mật khẩu?';
+                document.getElementById('confirmResetMessage').textContent =
+                    `Bạn có chắc chắn muốn cấp lại mật khẩu cho bệnh nhân ${email}? Mật khẩu mới sẽ được gửi về email của họ.`;
+                openResetPasswordModal();
+            });
+        });
+
+        function cancelStatusChange() {
+            if (pendingStatusChange && pendingStatusChange.select) {
+                pendingStatusChange.select.value = pendingStatusChange.originalStatus;
+            }
+            pendingStatusChange = null;
+            closeStatusChangeModal();
+        }
+
+        function confirmStatusChange() {
+            if (!pendingStatusChange) return;
+            const {userId, newStatus, select, originalStatus} = pendingStatusChange;
+            fetch(`/api/admin/users/${userId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({status: newStatus})
+            })
+                .then(async response => {
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Không thể cập nhật trạng thái.');
+                    }
+                    updateStatusRowUI(select, newStatus, originalStatus);
+                    closeStatusChangeModal();
+                    showTransientAlert('Cập nhật trạng thái tài khoản thành công.', 'successAlert', 2500);
+                })
+                .catch(error => {
+                    select.value = pendingStatusChange.originalStatus;
+                    showClientError(error.message || 'Cập nhật trạng thái thất bại.');
+                    document.getElementById('statusChangeModal').style.display = 'none';
+                })
+                .finally(() => {
+                    pendingStatusChange = null;
+                });
+        }
+
+        function confirmResetPassword() {
+            if (!pendingResetUser) return;
+            fetch(`/api/admin/users/${pendingResetUser.userId}/reset-password`, {
+                method: 'POST'
+            })
+                .then(async response => {
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Không thể cấp lại mật khẩu.');
+                    }
+                    closeResetPasswordModal();
+                    showTransientAlert('Đã gửi mật khẩu mới tới email bệnh nhân: ' + pendingResetUser.email + '.', 'successAlert', 2500);
+                })
+                .catch(error => {
+                    showClientError(error.message || 'Cấp lại mật khẩu thất bại.');
+                    closeResetPasswordModal();
+                })
+                .finally(() => {
+                    pendingResetUser = null;
+                });
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                const statusModal = document.getElementById('statusChangeModal');
+                const resetModal = document.getElementById('resetPasswordModal');
+                const createModal = document.getElementById('createPatientModal');
+                if (statusModal && statusModal.style.display === 'flex') {
+                    cancelStatusChange();
+                } else if (resetModal && resetModal.style.display === 'flex') {
+                    closeResetPasswordModal();
+                } else if (createModal && createModal.style.display === 'flex') {
+                    closeCreatePatientModal();
+                }
+            }
+        });
 
         setTimeout(() => {
             const successAlert = document.getElementById('successAlert');
             const errorAlert = document.getElementById('errorAlert');
-            if (successAlert) {
-                successAlert.style.transition = 'opacity 0.5s ease';
-                successAlert.style.opacity = '0';
-                setTimeout(() => successAlert.style.display = 'none', 500);
+            if (successAlert && successAlert.style.display !== 'none') {
+                fadeOutAlert(successAlert);
             }
-            if (errorAlert) {
-                errorAlert.style.transition = 'opacity 0.5s ease';
-                errorAlert.style.opacity = '0';
-                setTimeout(() => errorAlert.style.display = 'none', 500);
+            if (errorAlert && errorAlert.style.display !== 'none') {
+                fadeOutAlert(errorAlert);
             }
-        }, 4000);
+        }, 3000);
 
         async function submitAdminPasswordChange(e) {
             e.preventDefault();
@@ -413,6 +728,46 @@
             document.getElementById('adminPasswordForm').reset();
         }
     </script>
+
+    <div id="statusChangeModal"
+         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 460px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+            <span onclick="cancelStatusChange()"
+                  style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
+                  title="Đóng">&times;</span>
+            <h3 id="confirmStatusTitle" style="margin-top: 0; color: #1e293b;">Xác nhận thay đổi trạng thái?</h3>
+            <p id="confirmStatusMessage" style="margin: 10px 0 20px; color: #475569; line-height: 1.6;">Bạn có chắc chắn
+                muốn chuyển trạng thái tài khoản?</p>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="cancel-edit" style="background: none; border: none; padding: 10px 15px;"
+                        onclick="cancelStatusChange()">Hủy
+                </button>
+                <button type="button" class="btn btn-blue" style="padding: 10px 20px;" onclick="confirmStatusChange()">
+                    Đồng ý
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resetPasswordModal"
+         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 460px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+            <span onclick="closeModal('resetPasswordModal')"
+                  style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
+                  title="Đóng">&times;</span>
+            <h3 id="confirmResetTitle" style="margin-top: 0; color: #1e293b;">Xác nhận cấp lại mật khẩu?</h3>
+            <p id="confirmResetMessage" style="margin: 10px 0 20px; color: #475569; line-height: 1.6;">Bạn có chắc chắn
+                muốn cấp lại mật khẩu cho bệnh nhân?</p>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="cancel-edit" style="background: none; border: none; padding: 10px 15px;"
+                        onclick="closeModal('resetPasswordModal')">Hủy
+                </button>
+                <button type="button" class="btn btn-warning" style="padding: 10px 20px;"
+                        onclick="confirmResetPassword()">Đồng ý
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Đổi Mật Khẩu Modal -->
     <div id="changePasswordModal"
