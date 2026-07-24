@@ -1,12 +1,11 @@
 package fpt.swp391.GlucoTrackAlert.scheduler;
 
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
-import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.model.medication.MedicationLog;
 import fpt.swp391.GlucoTrackAlert.model.medication.PrescriptionItem;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorPatientAssignmentRepository;
 import fpt.swp391.GlucoTrackAlert.repository.medication.MedicationLogRepository;
-import fpt.swp391.GlucoTrackAlert.service.NotificationService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,9 +38,6 @@ public class MedicationAdherenceScheduler {
     private MedicationLogRepository logRepo;
 
     @Autowired
-    private NotificationService notificationService;
-
-    @Autowired
     private DoctorPatientAssignmentRepository assignmentRepo;
 
     @Autowired
@@ -58,8 +53,6 @@ public class MedicationAdherenceScheduler {
     // nhưng không chờ quá lâu khiến việc can thiệp mất tác dụng.
     private static final int DOCTOR_ESCALATION_STREAK = 2;
 
-    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy");
-
     // Chạy mỗi 15 phút — đủ nhanh để phát hiện sớm, không quá dày để tốn tài nguyên
     @Transactional
     @Scheduled(fixedDelay = 15 * 60_000)
@@ -74,22 +67,9 @@ public class MedicationAdherenceScheduler {
 
                 PrescriptionItem item = log.getPrescriptionItem();
                 Long patientId = log.getPatient() != null ? log.getPatient().getId() : null;
-                Long userId = (log.getPatient() != null && log.getPatient().getUser() != null)
-                        ? log.getPatient().getUser().getId() : null;
-                if (userId == null || item == null) {
+                if (item == null) {
                     continue;
                 }
-
-                String time = log.getScheduledTime() != null ? log.getScheduledTime().format(DISPLAY_FMT) : "";
-                notificationService.createNotification(
-                        userId,
-                        "💊 Đã bỏ lỡ 1 liều thuốc",
-                        "Bạn chưa xác nhận đã uống " + item.getMedicineName()
-                        + (item.getDosage() != null ? " (" + item.getDosage() + ")" : "")
-                        + " theo lịch lúc " + time + ". Hãy uống bù sớm nếu còn phù hợp, "
-                        + "hoặc liên hệ bác sĩ nếu có thắc mắc.",
-                        "MEDICATION_MISSED"
-                );
 
                 if (patientId != null) {
                     escalateToDoctorIfNeeded(patientId, item);
@@ -129,15 +109,6 @@ public class MedicationAdherenceScheduler {
 
         String patientName = assignment.get().getPatient() != null
                 ? assignment.get().getPatient().getFullName() : ("bệnh nhân #" + patientId);
-        String alertMessage = patientName + " đã bỏ lỡ " + streak + " liều liên tiếp thuốc "
-                + item.getMedicineName() + ". Bác sĩ nên cân nhắc liên hệ hoặc điều chỉnh phác đồ.";
-
-        notificationService.createNotification(
-                doctor.getUser().getId(),
-                "⚠️ Bệnh nhân bỏ thuốc liên tục",
-                alertMessage,
-                "MEDICATION_ADHERENCE_ALERT"
-        );
 
         String doctorEmail = doctor.getUser().getEmail();
         if (doctorEmail != null && !doctorEmail.isBlank()) {

@@ -205,23 +205,6 @@ public class PageController {
         return "patient/choose-doctor";
     }
 
-    @GetMapping("/patient/medications")
-    public String medicationsPage(Model model) {
-        try {
-            String email = (String) SecurityContextHolder.getContext()
-                    .getAuthentication().getPrincipal();
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            PatientProfileResponse profile = patientService.getProfileByUserId(user.getId());
-            model.addAttribute("patientId", profile.getId());
-            model.addAttribute("patientName", profile.getFullName());
-        } catch (Exception e) {
-            // Tương tự health-reminders: không fallback về patientId=1 nữa.
-            return "redirect:/patient/profile/edit?error=Hay tao ho so benh nhan truoc khi dung tinh nang thuoc.";
-        }
-        return "patient/medications";
-    }
-
     @GetMapping("/meal-logs")
     public String mealLogsPage(Model model) {
         try {
