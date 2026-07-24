@@ -23,13 +23,20 @@ import java.util.stream.Collectors;
 @Service
 public class MedicationServiceImpl implements MedicationService {
 
-    @Autowired private PrescriptionRepository prescriptionRepo;
-    @Autowired private PrescriptionItemRepository itemRepo;
-    @Autowired private MedicationLogRepository logRepo;
-    @Autowired private PatientRepository patientRepo;
-    @Autowired private DoctorRepository doctorRepo;
-    @Autowired private Duy_ReminderService reminderService;
-    @Autowired private MedicineRepository medicineRepo;
+    @Autowired
+    private PrescriptionRepository prescriptionRepo;
+    @Autowired
+    private PrescriptionItemRepository itemRepo;
+    @Autowired
+    private MedicationLogRepository logRepo;
+    @Autowired
+    private PatientRepository patientRepo;
+    @Autowired
+    private DoctorRepository doctorRepo;
+    @Autowired
+    private Duy_ReminderService reminderService;
+    @Autowired
+    private MedicineRepository medicineRepo;
 
     @Override
     @Transactional
@@ -71,6 +78,10 @@ public class MedicationServiceImpl implements MedicationService {
                 item = itemRepo.save(item);
                 savedItems.add(item);
 
+                // Nếu bác sĩ gõ tên thuốc chưa có trong danh mục (medicines), tự thêm
+                // vào danh mục để lần kê đơn sau hiện lên gợi ý dropdown.
+                saveToMedicineCatalogIfNew(itemReq);
+
                 generateLogs(item, patient, startDate, endDate);
                 createMedicationReminder(item, patient.getId());
             }
@@ -78,8 +89,39 @@ public class MedicationServiceImpl implements MedicationService {
         return toResponse(prescription, savedItems);
     }
 
+    // So khớp không phân biệt hoa/thường và khoảng trắng thừa, tránh tạo trùng
+    // ("Paracetamol" và "paracetamol " phải được coi là cùng 1 thuốc).
+    private void saveToMedicineCatalogIfNew(PrescriptionItemRequest itemReq) {
+        String name = itemReq.getMedicineName() == null ? "" : itemReq.getMedicineName().trim();
+        if (name.isEmpty()) {
+            return;
+        }
+        boolean exists = medicineRepo.findByActiveTrueOrderByNameAsc().stream()
+                .anyMatch(m -> m.getName() != null && m.getName().trim().equalsIgnoreCase(name));
+        if (exists) {
+            return;
+        }
+        Medicine newMedicine = Medicine.builder()
+                .name(name)
+                .defaultDosage(itemReq.getDosage())
+                .defaultFrequency(itemReq.getFrequency())
+                .defaultTimeOfDay(itemReq.getTimeOfDay())
+                .defaultDurationDays(itemReq.getDurationDays())
+                .defaultInstructions(itemReq.getInstructions())
+                .active(true)
+                .build();
+        try {
+            medicineRepo.save(newMedicine);
+        } catch (Exception e) {
+            // Bỏ qua nếu bị trùng do race condition (2 request cùng lúc tạo cùng tên) -
+            // ràng buộc unique ở DB sẽ chặn, không ảnh hưởng đến việc lưu đơn thuốc.
+        }
+    }
+
     private void generateLogs(PrescriptionItem item, Patient patient, LocalDate startDate, LocalDate endDate) {
-        if (item.getTimeOfDay() == null || item.getTimeOfDay().isBlank()) return;
+        if (item.getTimeOfDay() == null || item.getTimeOfDay().isBlank()) {
+            return;
+        }
         String[] times = item.getTimeOfDay().split(",");
         LocalDate current = startDate;
         while (!current.isAfter(endDate)) {
@@ -93,14 +135,17 @@ public class MedicationServiceImpl implements MedicationService {
                             .status("PENDING")
                             .build();
                     logRepo.save(log);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
             current = current.plusDays(1);
         }
     }
 
     private void createMedicationReminder(PrescriptionItem item, Long patientId) {
-        if (item.getTimeOfDay() == null || item.getTimeOfDay().isBlank()) return;
+        if (item.getTimeOfDay() == null || item.getTimeOfDay().isBlank()) {
+            return;
+        }
         String[] times = item.getTimeOfDay().split(",");
         LocalDate reminderDate = item.getStartDate() != null ? item.getStartDate() : LocalDate.now();
         // Tạo MỘT reminder cho MỖI giờ uống thuốc trong timeOfDay (vd "07:00,12:00,19:00"
@@ -117,8 +162,8 @@ public class MedicationServiceImpl implements MedicationService {
                 reminder.setReminderType("MEDICATION");
                 reminder.setTitle("Uống thuốc: " + item.getMedicineName());
                 reminder.setMessage(
-                    (item.getDosage() != null ? item.getDosage() : "") +
-                    (item.getInstructions() != null ? " - " + item.getInstructions() : "")
+                        (item.getDosage() != null ? item.getDosage() : "")
+                        + (item.getInstructions() != null ? " - " + item.getInstructions() : "")
                 );
                 reminder.setReminderTime(reminderDateTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
                 reminder.setRepeatType("DAILY");
@@ -193,20 +238,20 @@ public class MedicationServiceImpl implements MedicationService {
     public List<MedicineResponse> getMedicineCatalog() {
         return medicineRepo.findByActiveTrueOrderByNameAsc().stream()
                 .map(m -> MedicineResponse.builder()
-                        .id(m.getId()).name(m.getName())
-                        .defaultDosage(m.getDefaultDosage())
-                        .defaultFrequency(m.getDefaultFrequency())
-                        .defaultTimeOfDay(m.getDefaultTimeOfDay())
-                        .defaultDurationDays(m.getDefaultDurationDays())
-                        .defaultInstructions(m.getDefaultInstructions())
-                        .contraindications(m.getContraindications())
-                        .build())
+                .id(m.getId()).name(m.getName())
+                .defaultDosage(m.getDefaultDosage())
+                .defaultFrequency(m.getDefaultFrequency())
+                .defaultTimeOfDay(m.getDefaultTimeOfDay())
+                .defaultDurationDays(m.getDefaultDurationDays())
+                .defaultInstructions(m.getDefaultInstructions())
+                .contraindications(m.getContraindications())
+                .build())
                 .collect(Collectors.toList());
     }
 
     private PrescriptionResponse toResponse(Prescription p, List<PrescriptionItem> items) {
-        List<PrescriptionItemResponse> itemResponses = items.stream().map(i ->
-                PrescriptionItemResponse.builder()
+        List<PrescriptionItemResponse> itemResponses = items.stream().map(i
+                -> PrescriptionItemResponse.builder()
                         .id(i.getId()).medicineName(i.getMedicineName()).dosage(i.getDosage())
                         .frequency(i.getFrequency()).timeOfDay(i.getTimeOfDay())
                         .durationDays(i.getDurationDays()).instructions(i.getInstructions())

@@ -56,11 +56,14 @@ public class Duy_PatientNotificationLogController {
         }
 
         Page<NotificationLog> logs = notificationLogService.findLogsForPatient(patientId, fromDate, toDate, page, size);
+        long[] counts = notificationLogService.countSuccessAndFailForPatient(patientId, fromDate, toDate);
 
         model.addAttribute("logs", logs);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", logs.getTotalPages());
         model.addAttribute("noPatientFound", false);
+        model.addAttribute("successCount", counts[0]);
+        model.addAttribute("failCount", counts[1]);
 
         return "patient/notification-history";
     }

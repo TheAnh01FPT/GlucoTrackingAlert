@@ -20,7 +20,6 @@ public class UserAdminRequest {
     // Khi tạo mới bắt buộc nhập, khi cập nhật nếu để trống nghĩa là không thay đổi mật khẩu cũ
     private String password;
 
-    @NotBlank(message = "Trạng thái tài khoản không được bỏ trống")
     private String status; // active, pending_verification, banned
 
     private Boolean emailVerified;

@@ -3,8 +3,10 @@ package fpt.swp391.GlucoTrackAlert.service.impl.register;
 import fpt.swp391.GlucoTrackAlert.model.notification.NotificationLog;
 import fpt.swp391.GlucoTrackAlert.repository.notification.NotificationLogRepository;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -21,10 +23,34 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender emailSender;
     private final NotificationLogRepository notificationLogRepository;
 
+    @Value("${spring.mail.username:}")
+    private String configuredMailUsername;
+
+    @Value("${spring.mail.password:}")
+    private String configuredMailPassword;
+
     public EmailServiceImpl(JavaMailSender emailSender,
             NotificationLogRepository notificationLogRepository) {
         this.emailSender = emailSender;
         this.notificationLogRepository = notificationLogRepository;
+    }
+
+    // Fail rõ ràng ngay khi app khởi động nếu thiếu cấu hình mail, thay vì để
+    // Spring âm thầm dùng "spring.mail.password=${MAIL_PASSWORD:}" (rỗng) rồi
+    // chỉ phát hiện ra khi có người dùng thật thao tác và nhận lỗi
+    // "Authentication failed" khó hiểu từ Gmail nhiều bước sau đó.
+    @PostConstruct
+    private void validateMailConfig() {
+        if (configuredMailUsername == null || configuredMailUsername.isBlank()
+                || configuredMailPassword == null || configuredMailPassword.isBlank()) {
+            throw new IllegalStateException(
+                    "[EmailService] Thiếu cấu hình gửi mail: spring.mail.username/spring.mail.password đang rỗng. "
+                    + "Hãy set biến môi trường MAIL_USERNAME và MAIL_PASSWORD (App Password của Gmail, dạng 'xxxx xxxx xxxx xxxx') "
+                    + "trước khi chạy ứng dụng, hoặc kích hoạt profile 'local' (-Dspring.profiles.active=local) "
+                    + "nếu đã cấu hình sẵn trong application-local.properties. "
+                    + "Ứng dụng dừng khởi động tại đây để tránh lỗi 'Authentication failed' khó debug về sau.");
+        }
+        log.info("[EmailService] Cấu hình gửi mail OK — tài khoản gửi: {}", configuredMailUsername);
     }
 
     // BUG FIX: Bỏ @Async ở đây — ReminderScheduler tự xử lý exception và retry.

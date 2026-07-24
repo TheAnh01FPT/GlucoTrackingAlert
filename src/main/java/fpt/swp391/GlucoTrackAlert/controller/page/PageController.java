@@ -30,10 +30,10 @@ public class PageController {
 
     @Autowired
     public PageController(PatientService patientService,
-                          UserRepository userRepository,
-                          RelativeService relativeService,
-                          DoctorRepository doctorRepository,
-                          fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
+            UserRepository userRepository,
+            RelativeService relativeService,
+            DoctorRepository doctorRepository,
+            fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;
@@ -44,17 +44,17 @@ public class PageController {
     private static final int MAX_FEATURED_DOCTORS = 4; // đúng 1 hàng với layout col-lg-3
 
     /**
-     * Trang chủ hiển thị "giới thiệu đội ngũ bác sĩ" tự động lấy từ hồ sơ bác sĩ
-     * (Doctor) đang active — không cần admin nhập tay lại lần 2. Ưu tiên bác sĩ
-     * nhiều năm kinh nghiệm nhất lên đầu.
+     * Trang chủ hiển thị "giới thiệu đội ngũ bác sĩ" tự động lấy từ hồ sơ bác
+     * sĩ (Doctor) đang active — không cần admin nhập tay lại lần 2. Ưu tiên bác
+     * sĩ nhiều năm kinh nghiệm nhất lên đầu.
      */
     @GetMapping("/")
     public String indexPage(Model model) {
         try {
             List<Doctor> doctors = doctorRepository.findByStatus("active").stream()
                     .sorted((a, b) -> Integer.compare(
-                            b.getExperienceYears() == null ? 0 : b.getExperienceYears(),
-                            a.getExperienceYears() == null ? 0 : a.getExperienceYears()))
+                    b.getExperienceYears() == null ? 0 : b.getExperienceYears(),
+                    a.getExperienceYears() == null ? 0 : a.getExperienceYears()))
                     .limit(MAX_FEATURED_DOCTORS)
                     .toList();
             model.addAttribute("doctors", doctors);
@@ -62,7 +62,7 @@ public class PageController {
             model.addAttribute("doctors", List.of());
         }
         model.addAttribute("banners", bannerRepository.findByStatusOrderByDisplayOrderAsc(true));
-        
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAuthenticated = auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
         model.addAttribute("isAuthenticated", isAuthenticated);
@@ -70,17 +70,19 @@ public class PageController {
             String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("");
             model.addAttribute("userRole", role);
         }
-       
+
         return "index";
     }
 
     @GetMapping("/login")
-    public String loginPage() { return "login/login"; }
+    public String loginPage() {
+        return "login/login";
+    }
 
     @GetMapping("/oauth2/success")
-    public String oauth2Success(Model model, @RequestParam("token") String token, 
-                                @RequestParam("email") String email, 
-                                @RequestParam("role") String role) {
+    public String oauth2Success(Model model, @RequestParam("token") String token,
+            @RequestParam("email") String email,
+            @RequestParam("role") String role) {
         model.addAttribute("token", token);
         model.addAttribute("email", email);
         model.addAttribute("role", role);
@@ -88,7 +90,9 @@ public class PageController {
     }
 
     @GetMapping("/register")
-    public String registerPage() { return "register/register"; }
+    public String registerPage() {
+        return "register/register";
+    }
 
     @GetMapping("/forgot-password")
     public String forgotPasswordPage() {
@@ -102,10 +106,14 @@ public class PageController {
             if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
                 String email = (String) auth.getPrincipal();
                 User user = userRepository.findByEmail(email).orElse(null);
-                if (user != null) userId = user.getId();
+                if (user != null) {
+                    userId = user.getId();
+                }
             }
         }
-        if (userId == null) userId = 1L;
+        if (userId == null) {
+            userId = 1L;
+        }
 
         model.addAttribute("userId", userId);
         try {
@@ -160,8 +168,11 @@ public class PageController {
             model.addAttribute("patientId", profile.getId());
             model.addAttribute("patientName", profile.getFullName());
         } catch (Exception e) {
-            model.addAttribute("patientId", 1L);
-            model.addAttribute("patientName", "Bệnh nhân");
+            // KHÔNG fallback về patientId=1 (bệnh nhân khác) nữa — trước đây làm vậy
+            // khiến tài khoản chưa có hồ sơ vô tình gọi API bằng id của người khác,
+            // vừa lộ dữ liệu vừa gây lỗi "Không thể tải dữ liệu" phía client.
+            // Đưa thẳng người dùng sang trang tạo hồ sơ bệnh nhân.
+            return "redirect:/patient/profile/edit?error=Hay tao ho so benh nhan truoc khi dung tinh nang nhac nho.";
         }
         return "health-reminders";
     }
@@ -173,27 +184,12 @@ public class PageController {
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             String email = (String) auth.getPrincipal();
             User user = userRepository.findByEmail(email).orElse(null);
-            if (user != null) userId = user.getId();
+            if (user != null) {
+                userId = user.getId();
+            }
         }
         model.addAttribute("userId", userId);
         return "patient/choose-doctor";
-    }
-
-    @GetMapping("/patient/medications")
-    public String medicationsPage(Model model) {
-        try {
-            String email = (String) SecurityContextHolder.getContext()
-                    .getAuthentication().getPrincipal();
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            PatientProfileResponse profile = patientService.getProfileByUserId(user.getId());
-            model.addAttribute("patientId", profile.getId());
-            model.addAttribute("patientName", profile.getFullName());
-        } catch (Exception e) {
-            model.addAttribute("patientId", 1L);
-            model.addAttribute("patientName", "Bệnh nhân");
-        }
-        return "patient/medications";
     }
 
     @GetMapping("/meal-logs")
@@ -227,24 +223,24 @@ public class PageController {
 
             List<RelativeResponse> relatives = relativeService.getRelativesByPatientId(profile.getId());
 
-            model.addAttribute("patientId",   profile.getId());
+            model.addAttribute("patientId", profile.getId());
             model.addAttribute("patientName", profile.getFullName());
-            model.addAttribute("gender",      gender);
-            model.addAttribute("ageGroup",    ageGroup);
-            model.addAttribute("condition",   condition);
-            model.addAttribute("age",         age);
-            model.addAttribute("bmi",         profile.getBmi() != null ? profile.getBmi().toString() : "—");
-            model.addAttribute("relatives",   relatives);
+            model.addAttribute("gender", gender);
+            model.addAttribute("ageGroup", ageGroup);
+            model.addAttribute("condition", condition);
+            model.addAttribute("age", age);
+            model.addAttribute("bmi", profile.getBmi() != null ? profile.getBmi().toString() : "—");
+            model.addAttribute("relatives", relatives);
 
         } catch (Exception e) {
-            model.addAttribute("patientId",   1L);
+            model.addAttribute("patientId", 1L);
             model.addAttribute("patientName", "Bệnh nhân");
-            model.addAttribute("gender",      "male");
-            model.addAttribute("ageGroup",    "elder");
-            model.addAttribute("condition",   "none");
-            model.addAttribute("age",         65);
-            model.addAttribute("bmi",         "—");
-            model.addAttribute("relatives",   List.of());
+            model.addAttribute("gender", "male");
+            model.addAttribute("ageGroup", "elder");
+            model.addAttribute("condition", "none");
+            model.addAttribute("age", 65);
+            model.addAttribute("bmi", "—");
+            model.addAttribute("relatives", List.of());
         }
         return "meal-logs";
     }

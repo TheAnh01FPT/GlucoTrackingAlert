@@ -2,6 +2,7 @@ package fpt.swp391.GlucoTrackAlert.controller.patient;
 
 import fpt.swp391.GlucoTrackAlert.dto.doctor.AssignmentResponse;
 import fpt.swp391.GlucoTrackAlert.dto.doctor.PublicDoctorResponse;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.DoctorResponse;
 import fpt.swp391.GlucoTrackAlert.dto.ProposeAssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
