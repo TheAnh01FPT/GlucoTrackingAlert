@@ -573,27 +573,17 @@
   </head>
   <body>
     <header class="navbar">
-      <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
-      <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
+      <a th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
 
       <nav class="navbar-menu">
-        <th:block th:if="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
-          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
-          <a href="/doctor/home" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
-        </th:block>
-
-        <th:block th:unless="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
-          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
-          <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
-        </th:block>
+        <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
+        <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
+        <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
       </nav>
     </header>
 
     <main class="main-container">
-      <a class="btn-back" th:if="${isDoctorView}" href="/doctor/home">← Quay lại trang bác sĩ</a>
-      <a class="btn-back" th:unless="${isDoctorView}" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
+      <a class="btn-back" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
 
       <h1 class="page-heading"><i class="ti ti-droplet"></i> Sàng Lọc Yếu Tố Liên Quan Đến Thận</h1>
 
@@ -713,6 +703,13 @@
                 </div>
               </div>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> f4a32f8 (update UI/UX ai report, than va dot quy)
+>>>>>>> 75fc65d (fix merge)
               <div class="disclaimer-compact">
                 ⚠ Công cụ sàng lọc sơ bộ, không thay thế xét nghiệm y khoa.
                 <a href="#" class="disclaimer-toggle-link">Chi tiết</a>
@@ -721,6 +718,10 @@
                 </div>
               <div class="disclaimer-note" style="background: #fff8e6; border-left: 3px solid #f0ad4e; padding: 10px 14px; margin-top: 12px; font-size: 12.5px; color: #7a5c00; border-radius: 0 6px 6px 0;">
                 Đây là công cụ sàng lọc sơ bộ dựa trên mô hình thống kê huấn luyện trên bộ dữ liệu tham chiếu quy mô nhỏ (~400 hồ sơ) và chỉ dùng 4 chỉ số (tuổi, huyết áp, đường huyết, tăng huyết áp). Kết quả phản ánh mức độ hồ sơ của bạn tương đồng với nhóm từng được chẩn đoán bệnh thận trong dữ liệu tham chiếu — không phải xét nghiệm chẩn đoán và không thay thế creatinine máu / độ lọc cầu thận (eGFR) / xét nghiệm nước tiểu. Nếu điểm ở mức Cao/Cần chú ý, hãy đặt lịch khám và làm xét nghiệm chức năng thận với bác sĩ.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 75fc65d (fix merge)
               </div>
               <div class="assessed-at">
                 <i class="ti ti-clock clock-icon" style="color:#94a3b8;"></i>
@@ -794,6 +795,7 @@
               </table>
             </div>
           </details>
+<<<<<<< HEAD
 
           <details class="card card-collapsible">
             <summary>
@@ -860,6 +862,8 @@
               </div>
             </div>
           </section>
+=======
+>>>>>>> f4a32f8 (update UI/UX ai report, than va dot quy)
 
           <details class="card card-collapsible">
             <summary>
