@@ -1,4 +1,4 @@
-package fpt.swp391.GlucoTrackAlert.dto;
+package fpt.swp391.GlucoTrackAlert.dto.doctor;
 
 import lombok.Getter;
 import lombok.Setter;

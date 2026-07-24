@@ -2,10 +2,10 @@ package fpt.swp391.GlucoTrackAlert.service.medication;
 
 import fpt.swp391.GlucoTrackAlert.dto.medication.*;
 import fpt.swp391.GlucoTrackAlert.dto.reminder.Duy_ReminderRequest;
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.medication.*;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.medication.*;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.Duy_ReminderService;

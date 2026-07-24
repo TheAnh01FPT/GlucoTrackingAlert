@@ -1,13 +1,18 @@
-package fpt.swp391.GlucoTrackAlert.doctor;
+package fpt.swp391.GlucoTrackAlert.service.impl.doctor;
 
-import fpt.swp391.GlucoTrackAlert.doctor.Doctor;
-import fpt.swp391.GlucoTrackAlert.model.DoctorPatientAssignment;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.AdminCreateDoctorRequest;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.DoctorRequest;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.DoctorResponse;
+import fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
-import fpt.swp391.GlucoTrackAlert.repository.DoctorPatientAssignmentRepository;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorPatientAssignmentRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
-import fpt.swp391.GlucoTrackAlert.doctor.DoctorService;
+import fpt.swp391.GlucoTrackAlert.service.doctor.DoctorService;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class DoctorServiceImp implements DoctorService {
+public class DoctorServiceImpl implements DoctorService {
 
     private final DoctorRepository doctorRepository;
     private final UserRepository userRepository;
