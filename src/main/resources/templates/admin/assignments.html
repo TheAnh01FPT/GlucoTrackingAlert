@@ -577,19 +577,44 @@
                                 }
                             }
 
-                            function populateDoctorSelect() {
+                            function populateDoctorSelect(selectedDoctorId = null) {
                                 const sel = document.getElementById('doctorSelect');
+                                const MAX_PATIENTS_PER_DOCTOR = 5; // đồng bộ với DoctorPatientAssignmentService.MAX_PATIENTS_PER_DOCTOR
+                                const activeCountByDoctor = {};
+                                allAssignments.forEach(a => {
+                                    if (a.status === 'active' && a.doctorId) {
+                                        activeCountByDoctor[a.doctorId] = (activeCountByDoctor[a.doctorId] || 0) + 1;
+                                    }
+                                });
+                                // Chỉ hiện bác sĩ đã được duyệt & đang hoạt động (status = 'active').
+                                // Các trạng thái khác (pending_verification, pending_approval, rejected,
+                                // inactive...) đều bị ẩn, trừ khi đó chính là bác sĩ đang được chọn.
+                                const visible = allDoctors.filter(d => {
+                                    if (d.id == selectedDoctorId) return true;
+                                    if (d.status !== 'active') return false;
+                                    return (activeCountByDoctor[d.id] || 0) < MAX_PATIENTS_PER_DOCTOR;
+                                });
                                 sel.innerHTML = '<option value="">-- Chọn bác sĩ --</option>' +
-                                        allDoctors.map(d =>
-                                                `<option value='${JSON.stringify(d).replace(/'/g, "&#39;")}' ${d.status === 'inactive' ? 'disabled' : ''}>${d.fullName} – ${d.specialization || ''}${d.status === 'inactive' ? ' (Ngừng hoạt động)' : ''}</option>`
+                                        visible.map(d =>
+                                                `<option value='${JSON.stringify(d).replace(/'/g, "&#39;")}'>${d.fullName} – ${d.specialization || ''}</option>`
                                         ).join('');
                             }
 
                             function populatePatientSelect(selectedPatientId = null) {
                                 const sel = document.getElementById('patientSelect');
-                                // Hiển thị bệnh nhân active, cộng thêm bệnh nhân đang được chọn dù inactive
+                                // Bệnh nhân đang có 1 phân công "Hoạt động" (đã có bác sĩ đang chăm sóc)
+                                // sẽ không hiện trong danh sách chọn nữa — chỉ bệnh nhân chưa có ai
+                                // khám mới hiện ra, để tránh chọn nhầm/tạo trùng phân công.
+                                // Ngoại lệ: nếu đang Sửa đúng dòng của bệnh nhân đó thì vẫn phải hiện
+                                // (không thì modal Sửa không có gì để chọn).
+                                const assignedPatientIds = new Set(
+                                    allAssignments
+                                        .filter(a => a.status === 'active' && a.patientId)
+                                        .map(a => a.patientId)
+                                );
                                 const visible = allPatients.filter(p =>
-                                    p.status !== 'inactive' || p.id == selectedPatientId
+                                    p.id == selectedPatientId
+                                    || (p.status !== 'inactive' && !assignedPatientIds.has(p.id))
                                 );
                                 sel.innerHTML = '<option value="">-- Chọn bệnh nhân --</option>' +
                                         visible.map(p =>
@@ -601,7 +626,10 @@
                                 document.getElementById('totalAssign').textContent = list.length;
                                 document.getElementById('activeAssign').textContent = list.filter(a => a.status === 'active').length;
                                 document.getElementById('inactiveAssign').textContent = list.filter(a => a.status === 'inactive').length;
-                                const docs = new Set(list.filter(a => a.doctorId).map(a => a.doctorId));
+                                // Chỉ tính bác sĩ ĐANG có ít nhất 1 phân công active — trước đây đếm
+                                // trên toàn bộ list (kể cả dòng đã hủy) nên bác sĩ đã bị hủy hết phân
+                                // công (VD: do ngừng hoạt động) vẫn bị tính nhầm vào đây.
+                                const docs = new Set(list.filter(a => a.doctorId && a.status === 'active').map(a => a.doctorId));
                                 document.getElementById('doctorCount').textContent = docs.size;
 
                                 // Hiển thị cảnh báo nếu có bác sĩ ngừng hoạt động còn trong danh sách
@@ -826,7 +854,7 @@
                                 document.getElementById('note').value = a.note || '';
                                 document.getElementById('assignStatus').value = a.status || 'active';
                                 document.getElementById('statusField').style.display = 'block';
-                                populateDoctorSelect();
+                                populateDoctorSelect(a.doctorId);
                                 populatePatientSelect(a.patientId);
                                 // Set doctor bằng selectedIndex để tránh lỗi so sánh string
                                 const doctorSel = document.getElementById('doctorSelect');

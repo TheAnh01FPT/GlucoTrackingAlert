@@ -429,9 +429,21 @@ public class DoctorServiceImpl implements DoctorService {
         if (req.getAvatarUrl() != null) {
             doctor.setAvatarUrl(req.getAvatarUrl());
         }
-        if (req.getStatus() != null) {
-            doctor.setStatus(req.getStatus());
+       if (req.getStatus() != null) {
+    if ("active".equalsIgnoreCase(req.getStatus())) {
+        if (doctor.getNationalId() == null
+                || doctor.getNationalId().isBlank()
+                || doctor.getPracticeLicense() == null
+                || doctor.getPracticeLicense().isBlank()) {
+
+            throw new IllegalArgumentException(
+                "Không thể chuyển bác sĩ sang hoạt động khi chưa có CCCD và chứng chỉ hành nghề"
+            );
         }
+    }
+
+    doctor.setStatus(req.getStatus());
+}
     }
 
     /**

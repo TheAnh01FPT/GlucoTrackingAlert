@@ -35,9 +35,35 @@ public class DoctorPatientAssignmentService {
     private static final LocalTime WORK_START = WorkShift.START;
     private static final LocalTime WORK_END = WorkShift.END;
     private static final ScheduledExecutorService scheduler
-      = Executors.newSingleThreadScheduledExecutor();
+            = Executors.newSingleThreadScheduledExecutor();
 
     public static final int MAX_PATIENTS_PER_DOCTOR = 5;
+
+    // Nhãn note do hệ thống tự gán khi 1 bác sĩ bị ngừng hoạt động (deactivateDoctor)
+    // và tự động hủy các phân công active của bác sĩ đó.
+    private static final String AUTO_CANCEL_NOTE = "Bác sĩ ngừng hoạt động - tự động hủy phân công";
+    // Nhãn note thay thế khi bệnh nhân đã được phân công lại cho bác sĩ khác,
+    // để banner cảnh báo "phân công tự động hủy" không đếm dòng này nữa.
+    private static final String REASSIGNED_NOTE = "Đã được phân công lại cho bác sĩ khác";
+
+    /**
+     * Dọn nhãn AUTO_CANCEL_NOTE trên các phân công "inactive" khác của cùng
+     * bệnh nhân, mỗi khi bệnh nhân được (tái) phân công cho một bác sĩ đang
+     * hoạt động — dù thao tác đó là tạo phân công mới hay sửa một phân công
+     * đã có (kể cả khi admin quên tự tay xóa/đổi ô note trên form Sửa).
+     */
+    private void clearAutoCancelNoteForPatient(Long patientId, Long excludeAssignmentId) {
+        if (patientId == null) {
+            return;
+        }
+        assignmentRepository.findByPatientIdAndStatus(patientId, "inactive").stream()
+                .filter(old -> excludeAssignmentId == null || !old.getId().equals(excludeAssignmentId))
+                .filter(old -> old.getNote() != null && old.getNote().contains(AUTO_CANCEL_NOTE))
+                .forEach(old -> {
+                    old.setNote(REASSIGNED_NOTE);
+                    assignmentRepository.save(old);
+                });
+    }
 
     @PreDestroy
     public void shutdownScheduler() {
@@ -107,6 +133,14 @@ public class DoctorPatientAssignmentService {
 
         assignment.setAssignedAt(LocalDateTime.now());
         assignment.setStatus("active");
+
+        // Bệnh nhân được phân công lại cho bác sĩ mới.
+        // Đánh dấu assignment cũ bị hủy do bác sĩ ngừng hoạt động
+        // là đã được xử lý bằng cách đổi note.
+        if (assignment.getPatient() != null) {
+            clearAutoCancelNoteForPatient(assignment.getPatient().getId(), null);
+        }
+
         DoctorPatientAssignment saved = assignmentRepository.save(assignment);
         sendAssignmentNotification(saved);
         return saved;
@@ -243,23 +277,39 @@ public class DoctorPatientAssignmentService {
             }
         }
 
-
         if (updatedAssignment.getDoctor() != null) {
             assignment.setDoctor(updatedAssignment.getDoctor());
         }
         if (updatedAssignment.getPatient() != null) {
             assignment.setPatient(updatedAssignment.getPatient());
         }
-        assignment.setNote(updatedAssignment.getNote());
         if (updatedAssignment.getStatus() != null) {
             assignment.setStatus(updatedAssignment.getStatus());
         }
 
-        assignment.setDoctor(updatedAssignment.getDoctor());
-        assignment.setPatient(updatedAssignment.getPatient());
-        assignment.setNote(updatedAssignment.getNote());
-        assignment.setStatus(updatedAssignment.getStatus());
-        return assignmentRepository.save(assignment);
+        // Form "Sửa phân công" ở FE tự điền lại note cũ (kể cả nhãn hệ thống
+        // tự gán khi bác sĩ bị ngừng hoạt động) vào ô note khi mở modal. Nếu
+        // admin đổi bác sĩ/kích hoạt lại phân công mà quên xóa ô đó, không để
+        // nhãn AUTO_CANCEL_NOTE tồn tại tiếp trên một dòng đang active — nếu
+        // không banner cảnh báo "phân công tự động hủy" sẽ tiếp tục đếm nhầm.
+        String incomingNote = updatedAssignment.getNote();
+        boolean staleAutoCancelNote = incomingNote != null && incomingNote.contains(AUTO_CANCEL_NOTE);
+        if ("active".equals(assignment.getStatus()) && staleAutoCancelNote) {
+            assignment.setNote(REASSIGNED_NOTE);
+        } else {
+            assignment.setNote(incomingNote);
+        }
+
+        DoctorPatientAssignment saved = assignmentRepository.save(assignment);
+
+        // Nếu bệnh nhân này còn dòng phân công "inactive" khác (VD: bác sĩ cũ
+        // bị ngừng hoạt động) vẫn đang mang nhãn AUTO_CANCEL_NOTE, dọn luôn để
+        // banner cảnh báo giảm đúng số ngay khi bệnh nhân đã có người khám mới.
+        if ("active".equals(saved.getStatus()) && saved.getPatient() != null) {
+            clearAutoCancelNoteForPatient(saved.getPatient().getId(), saved.getId());
+        }
+
+        return saved;
     }
 
     public void deleteAssignment(Long id) {
@@ -311,15 +361,14 @@ public class DoctorPatientAssignmentService {
     // =====================================================================
     // NGHIỆP VỤ: Bệnh nhân đề xuất bác sĩ đồng hành -> Admin xét duyệt
     // =====================================================================
-
     /**
-     * Bệnh nhân tạo đề xuất bác sĩ đồng hành (status = pending).
-     * - Chặn ngay nếu bác sĩ đã full chỗ (danh sách chọn ở FE cũng đã lọc trước,
-     *   đây là lớp chặn thứ 2 phòng trường hợp gọi thẳng API / dữ liệu FE cũ).
-     *   Vẫn kiểm tra lại lần nữa lúc Admin duyệt vì có thể đã đầy thêm trong lúc chờ.
-     * - Không chặn nếu bệnh nhân đang có bác sĩ active khác (cho phép đổi bác sĩ,
-     *   bác sĩ cũ sẽ bị hủy kèm lý do khi đề xuất mới được duyệt).
-     * - Chặn nếu bệnh nhân đang có 1 đề xuất pending khác chưa xử lý.
+     * Bệnh nhân tạo đề xuất bác sĩ đồng hành (status = pending). - Chặn ngay
+     * nếu bác sĩ đã full chỗ (danh sách chọn ở FE cũng đã lọc trước, đây là lớp
+     * chặn thứ 2 phòng trường hợp gọi thẳng API / dữ liệu FE cũ). Vẫn kiểm tra
+     * lại lần nữa lúc Admin duyệt vì có thể đã đầy thêm trong lúc chờ. - Không
+     * chặn nếu bệnh nhân đang có bác sĩ active khác (cho phép đổi bác sĩ, bác
+     * sĩ cũ sẽ bị hủy kèm lý do khi đề xuất mới được duyệt). - Chặn nếu bệnh
+     * nhân đang có 1 đề xuất pending khác chưa xử lý.
      */
     public DoctorPatientAssignment proposeAssignment(Long patientId, Long doctorId, String note) {
         Patient patient = patientRepository.findById(patientId)
@@ -371,7 +420,8 @@ public class DoctorPatientAssignmentService {
     }
 
     /**
-     * Bệnh nhân tự hủy đề xuất đang pending của chính mình (chưa được Admin xử lý).
+     * Bệnh nhân tự hủy đề xuất đang pending của chính mình (chưa được Admin xử
+     * lý).
      */
     public void cancelPendingAssignment(Long patientId, Long assignmentId) {
         DoctorPatientAssignment assignment = assignmentRepository.findById(assignmentId)
@@ -392,9 +442,10 @@ public class DoctorPatientAssignmentService {
     }
 
     /**
-     * Admin duyệt đề xuất: kiểm tra lại giới hạn 5 bệnh nhân/bác sĩ ngay tại thời điểm
-     * duyệt (vì có thể đã đầy kể từ lúc bệnh nhân đề xuất). Nếu bệnh nhân đang có
-     * một phân công active khác, tự động hủy phân công cũ kèm lý do.
+     * Admin duyệt đề xuất: kiểm tra lại giới hạn 5 bệnh nhân/bác sĩ ngay tại
+     * thời điểm duyệt (vì có thể đã đầy kể từ lúc bệnh nhân đề xuất). Nếu bệnh
+     * nhân đang có một phân công active khác, tự động hủy phân công cũ kèm lý
+     * do.
      */
     public DoctorPatientAssignment approveAssignment(Long assignmentId) {
         DoctorPatientAssignment assignment = assignmentRepository.findById(assignmentId)
@@ -428,8 +479,9 @@ public class DoctorPatientAssignmentService {
     }
 
     /**
-     * Admin từ chối đề xuất, bắt buộc có lý do để bệnh nhân biết vì sao bị từ chối.
-     * Bệnh nhân vẫn được phép đề xuất lại sau đó (tạo bản ghi pending mới).
+     * Admin từ chối đề xuất, bắt buộc có lý do để bệnh nhân biết vì sao bị từ
+     * chối. Bệnh nhân vẫn được phép đề xuất lại sau đó (tạo bản ghi pending
+     * mới).
      */
     public DoctorPatientAssignment rejectAssignment(Long assignmentId, String reason) {
         if (reason == null || reason.isBlank()) {
