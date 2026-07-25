@@ -10,40 +10,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
     <link rel="stylesheet" th:href="@{/css/banner-admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
-<body>
+<body class="admin-layout-body">
 
 <!-- 1. SIDEBAR DUY NHẤT -->
-<div class="sidebar">
-    <div class="sidebar-logo">
-        <span><i class="bi bi-droplet-half me-2" style="color:#27ae60"></i>GlucoTrackAlert</span>
-        <small>Hệ thống quản trị</small>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
-        <a href="/admin/banners" class="nav-item-link active"><i class="bi bi-image"></i> Quản lý Banner</a>
-        <a href="/admin/doctors" class="nav-item-link"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
-        <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
-        <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
-        <a href="/admin/patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
-        <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
-    </nav>
-    <div style="padding:16px 20px; border-top:1px solid rgba(255,255,255,.1)">
-        <div style="color:rgba(255,255,255,.5); font-size:.75rem">Admin</div>
-        <div style="color:#fff; font-size:.85rem; font-weight:600">Nguyễn Quang</div>
-    </div>
-</div>
+<div th:replace="~{fragments/layout :: sidebar('banners')}"></div>
 
 <!-- 2. KHU VỰC NỘI DUNG CHÍNH (MAIN) -->
 <div class="main">
-    <!-- Topbar -->
-    <div class="topbar">
-        <div>
-            <h4 th:text="${banner != null && banner.id != null ? '🖼️ Sửa Thông Tin Banner' : '🖼️ Thêm Banner Mới'}">Thêm
-                Banner</h4>
-            <div class="topbar-sub">Điền đầy đủ thông tin bên dưới để cấu hình banner trang chủ</div>
-        </div>
-    </div>
+    <div th:replace="~{fragments/layout :: topbar(${banner != null && banner.id != null ? 'Sửa Thông Tin Banner' : 'Thêm Banner Mới'})}"></div>
 
     <!-- Form nhập liệu -->
     <div class="form-container">

@@ -426,10 +426,19 @@
             }
         }
     </style>
+    <th:block th:if="${isAdmin}">
+        <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}"/>
+    </th:block>
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg">
+<body th:classappend="${isAdmin} ? 'admin-layout-body' : ''">
+    <!-- Sidebar for Admin -->
+    <div th:if="${isAdmin}" th:replace="~{fragments/layout :: sidebar('articles')}"></div>
+
+    <div th:class="${isAdmin} ? 'main-content' : ''">
+        <div th:if="${isAdmin}" th:replace="~{fragments/layout :: topbar('Quản lý Bài viết')}"></div>
+
+        <!-- Navigation -->
+        <nav th:if="${!isAdmin}" class="navbar navbar-expand-lg">
         <div class="container-fluid px-4">
             <a class="navbar-brand" href="/">
                 <i class="bi bi-heart-pulse"></i> GlucoTrackAlert
@@ -637,6 +646,7 @@
                 </form>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

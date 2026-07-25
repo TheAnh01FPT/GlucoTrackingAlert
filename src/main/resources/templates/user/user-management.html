@@ -3,47 +3,33 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlucoTrackAlert - Quản Trị Người Dùng</title>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
           rel="stylesheet">
     <!-- Đường dẫn tới file CSS riêng vừa tạo -->
     <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
 
-<body>
+<body class="admin-layout-body">
 <!-- SIDEBAR -->
-<div class="sidebar">
-    <div class="sidebar-logo">
-        <h2>GlucoTrackAlert</h2>
-        <span>Admin Portal</span>
-    </div>
-    <div class="sidebar-menu">
-        <a href="/admin/dashboard" class="menu-item active">👤 Quản Lý Tài Khoản</a>
-        <a href="/articles/manage" class="menu-item">📰 Quản Lý Tin Tức</a>
-        <a href="/admin/doctors" class="menu-item">🩺 Quản Lý Bác Sĩ</a>
-        <a href="/admin/assignments" class="menu-item">📋 Phân Công Bác Sĩ</a>
-        <a href="/admin/requests" class="menu-item">📁 Yêu Cầu Thay Đổi</a>
-        <a href="/admin/banners" class="menu-item">🖼️ Quản Lý Banner</a>
-        <a href="/admin/feedbacks" class="menu-item">💬 Quản Lý Đánh Giá</a>
-    </div>
-</div>
+<div th:replace="~{fragments/layout :: sidebar('dashboard')}"></div>
 
 <!-- MAIN CONTENT -->
 <div class="main-content">
     <!-- TOPBAR -->
-    <div class="topbar">
-        <div class="topbar-title">Hệ Thống Quản Trị Hệ Thống (Phân Hệ Đối Tượng Y Tế)</div>
-        <a href="/logout" class="btn-logout">Đăng xuất 🚪</a>
-        <a href="/articles/manage" class="btn btn-blue" style="background-color: #0f766e;">📰 Quản Lý Tin Tức</a>
-        <a href="/admin/contact-requests" class="btn btn-blue" style="background-color: #ec4899;">✉️ Yêu Cầu Liên Hệ</a>
-    </div>
+    <div th:replace="~{fragments/layout :: topbar('Hệ Thống Quản Trị Hệ Thống (Phân Hệ Đối Tượng Y Tế)')}"></div>
+
 
     <!-- STAT CARDS -->
     <div class="stat-cards">
-        <div class="stat-card">
+        <div class="stat-card" style="max-width: 280px;">
             <div class="stat-title">Tổng Tài Khoản</div>
             <div class="stat-value" th:text="${totalItems != null ? totalItems : 0}">0</div>
         </div>
+    </div>
+
     <!-- MAIN CONTAINER -->
     <div class="container">
         <h2>👤 Quản Lý Tài Khoản (Bệnh Nhân)</h2>
@@ -367,91 +353,10 @@
             }
         }, 4000);
 
-        async function submitAdminPasswordChange(e) {
-            e.preventDefault();
-            const currentPassword = document.getElementById('adminCurrentPassword').value;
-            const newPassword = document.getElementById('adminNewPassword').value;
-            const confirmPassword = document.getElementById('adminConfirmPassword').value;
 
-            if (newPassword !== confirmPassword) {
-                alert('Mật khẩu xác nhận không khớp!');
-                return;
-            }
-
-            const formData = new URLSearchParams();
-            formData.append('currentPassword', currentPassword);
-            formData.append('newPassword', newPassword);
-
-            try {
-                const response = await fetch('/admin/api/change-password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: formData
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    alert(result.success);
-                    closeAdminPasswordModal();
-                } else {
-                    alert(result.error || 'Có lỗi xảy ra!');
-                }
-            } catch (error) {
-                alert('Lỗi kết nối!');
-            }
-        }
-
-        function openAdminPasswordModal() {
-            document.body.classList.add('modal-open');
-            document.getElementById('changePasswordModal').style.display = 'flex';
-        }
-
-        function closeAdminPasswordModal() {
-            document.body.classList.remove('modal-open');
-            document.getElementById('changePasswordModal').style.display = 'none';
-            document.getElementById('adminPasswordForm').reset();
-        }
     </script>
 
-    <!-- Đổi Mật Khẩu Modal -->
-    <div id="changePasswordModal"
-         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div
-                style="background: white; padding: 25px; border-radius: 12px; width: 400px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
-                <span onclick="closeAdminPasswordModal()"
-                      style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
-                      title="Đóng">&times;</span>
-            <h3 style="margin-top: 0; color: #1e293b;">Đổi Mật Khẩu Admin</h3>
-            <form id="adminPasswordForm" onsubmit="submitAdminPasswordChange(event)">
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500;">Mật khẩu
-                        hiện tại</label>
-                    <input type="password" id="adminCurrentPassword" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500;">Mật khẩu
-                        mới</label>
-                    <input type="password" id="adminNewPassword" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                </div>
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500;">Xác nhận
-                        mật khẩu mới</label>
-                    <input type="password" id="adminConfirmPassword" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="cancel-edit"
-                            style="background: none; border: none; padding: 10px 15px;"
-                            onclick="closeAdminPasswordModal()">Hủy
-                    </button>
-                    <button type="submit" class="btn btn-blue" style="padding: 10px 20px;">Lưu Thay Đổi</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 </div>
 </body>
 
