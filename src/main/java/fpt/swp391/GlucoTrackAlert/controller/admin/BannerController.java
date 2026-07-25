@@ -66,8 +66,11 @@ public class BannerController {
     // 3. Xử lý Lưu (Thêm mới hoặc Cập nhật) từ Modal
     @PostMapping("/save")
     public String saveBanner(@ModelAttribute Banner banner,
+            @RequestParam(value = "status", required = false) Boolean status,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             RedirectAttributes redirectAttributes) {
+
+        banner.setStatus(Boolean.TRUE.equals(status));
 
         // Validate dữ liệu đầu vào, nếu lỗi trả về trang danh sách kèm thông báo lỗi
         // hiển thị trên Modal/Toast

@@ -92,16 +92,6 @@ public class PageController {
         return "login/login";
     }
 
-    @GetMapping("/oauth2/success")
-    public String oauth2Success(Model model, @RequestParam("token") String token,
-            @RequestParam("email") String email,
-            @RequestParam("role") String role) {
-        model.addAttribute("token", token);
-        model.addAttribute("email", email);
-        model.addAttribute("role", role);
-        return "login/oauth2-success";
-    }
-
     @GetMapping("/register")
     public String registerPage() {
         return "register/register";

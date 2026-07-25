@@ -370,14 +370,7 @@
             </div>
         </div>
 
-        <div class="divider">HOẶC</div>
-
-        <a href="/oauth2/authorization/google" class="btn-google">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
-            Đăng nhập bằng Google
-        </a>
-
-        <div class="switch-link">
+        <div class="switch-link" style="margin-top: 24px;">
             Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
         </div>
     </div>
@@ -451,8 +444,13 @@
                         else window.location.href = '/login';
                     }, 1000);
                 } else {
-                    const text = await response.text();
-                    showMessage('error', text || 'Đăng nhập thất bại.');
+                    try {
+                        const errData = await response.json();
+                        showMessage('error', errData.message || 'Đăng nhập thất bại.');
+                    } catch (err) {
+                        const text = await response.text();
+                        showMessage('error', text || 'Đăng nhập thất bại.');
+                    }
                 }
             })
             .catch(() => {
@@ -470,8 +468,13 @@
         fetch(`/api/auth/verify-otp?otp=${encodeURIComponent(otp)}`, {method: 'POST'})
             .then(async response => {
                 if (!response.ok) {
-                    const text = await response.text();
-                    showMessage('error', text || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
+                    try {
+                        const errData = await response.json();
+                        showMessage('error', errData.message || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
+                    } catch (err) {
+                        const text = await response.text();
+                        showMessage('error', text || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
+                    }
                     return;
                 }
 
