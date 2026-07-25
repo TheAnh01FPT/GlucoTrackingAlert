@@ -304,7 +304,12 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Email không khớp với mã OTP");
         }
 
-        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        String newPassword = request.getNewPassword().trim();
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new Exception("Mật khẩu mới không được trùng với mật khẩu hiện tại");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
@@ -326,8 +331,9 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Mật khẩu hiện tại không đúng");
         }
 
-        if (newPassword.length() < 6) {
-            throw new Exception("Mật khẩu mới phải có ít nhất 6 ký tự");
+        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
+        if (newPassword.length() < 6 || newPassword.length() > 32 || !java.util.regex.Pattern.matches(pattern, newPassword)) {
+            throw new Exception("Mật khẩu mới phải từ 6 đến 32 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
         }
 
         if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {

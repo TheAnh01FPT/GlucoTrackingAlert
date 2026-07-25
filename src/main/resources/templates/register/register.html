@@ -414,7 +414,13 @@
                     otpMessageBox.innerText = "Mã xác nhận đã gửi đến " + email;
                     startResendCountdown();
                 } else {
-                    showError(messageBox, text || "Đăng ký thất bại.");
+                    try {
+                        const errData = await response.json();
+                        showError(messageBox, errData.message || "Đăng ký thất bại.");
+                    } catch (err) {
+                        const text = await response.text();
+                        showError(messageBox, text || "Đăng ký thất bại.");
+                    }
                 }
             })
             .catch(() => {
@@ -441,7 +447,13 @@
                     messageBox.innerText = "Xác nhận thành công! Đang chuyển đến trang đăng nhập...";
                     setTimeout(() => window.location.href = '/login', 2000);
                 } else {
-                    showError(messageBox, text || "Mã xác nhận không đúng.");
+                    try {
+                        const errData = await response.json();
+                        showError(messageBox, errData.message || "Mã xác nhận không đúng.");
+                    } catch (err) {
+                        const text = await response.text();
+                        showError(messageBox, text || "Mã xác nhận không đúng.");
+                    }
                 }
             })
             .catch(() => {

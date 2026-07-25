@@ -1,10 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.service.impl.user_impl;
 
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
-import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
-import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
@@ -27,18 +25,15 @@ public class UserAdminServiceImpl implements UserAdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final DoctorRepository doctorRepository;
     private final EmailService emailService;
 
     public UserAdminServiceImpl(UserRepository userRepository,
                                 RoleRepository roleRepository,
                                 BCryptPasswordEncoder passwordEncoder,
-                                DoctorRepository doctorRepository,
                                 EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.doctorRepository = doctorRepository;
         this.emailService = emailService;
     }
 
@@ -156,11 +151,7 @@ public class UserAdminServiceImpl implements UserAdminService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        User savedUser = userRepository.save(user);
-
-
-
-        return savedUser;
+        return userRepository.save(user);
     }
 
     @Override

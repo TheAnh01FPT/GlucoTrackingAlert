@@ -27,15 +27,15 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request, org.springframework.validation.BindingResult bindingResult) {
         // Nếu có bất kỳ lỗi Validate nào từ Validation Annotations
         if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
-            return ResponseEntity.badRequest().body(errorMessage);
+            String errorMessage = bindingResult.getFieldError() != null ? bindingResult.getFieldError().getDefaultMessage() : "Dữ liệu nhập không hợp lệ";
+            return ResponseEntity.badRequest().body(Map.of("message", errorMessage));
         }
 
         try {
             userService.register(request);
-            return ResponseEntity.ok("Mã xác nhận đã được gửi đến email của bạn.");
+            return ResponseEntity.ok(Map.of("message", "Mã xác nhận đã được gửi đến email của bạn."));
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 
@@ -43,9 +43,9 @@ public class AuthController {
     public ResponseEntity<?> verifyOtp(@RequestParam("otp") String otp) {
         try {
             userService.activateUser(otp);
-            return ResponseEntity.ok("Xác nhận thành công! Bạn có thể đăng nhập.");
+            return ResponseEntity.ok(Map.of("message", "Xác nhận thành công! Bạn có thể đăng nhập."));
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 
@@ -53,9 +53,9 @@ public class AuthController {
     public ResponseEntity<?> resendOtp(@RequestParam("email") String email) {
         try {
             userService.resendOtp(email);
-            return ResponseEntity.ok("Mã xác nhận mới đã được gửi đến email của bạn.");
+            return ResponseEntity.ok(Map.of("message", "Mã xác nhận mới đã được gửi đến email của bạn."));
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 
@@ -65,7 +65,7 @@ public class AuthController {
             LoginResponse response = userService.login(request);
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 
@@ -73,9 +73,9 @@ public class AuthController {
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         try {
             userService.forgotPassword(request);
-            return ResponseEntity.ok("Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn.");
+            return ResponseEntity.ok(Map.of("message", "Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn."));
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 
@@ -83,9 +83,9 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         try {
             userService.resetPassword(request);
-            return ResponseEntity.ok("Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập ngay.");
+            return ResponseEntity.ok(Map.of("message", "Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập ngay."));
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 
@@ -97,22 +97,22 @@ public class AuthController {
             String email = principal.getName();
             String oldPassword = body.get("oldPassword");
             String newPassword = body.get("newPassword");
-        if (oldPassword == null || newPassword == null) {
-            return ResponseEntity.badRequest().body("Thiếu thông tin mật khẩu");
-        }
-        // Validate new password length
-        if (newPassword.length() < 6 || newPassword.length() > 32) {
-            return ResponseEntity.badRequest().body("Mật khẩu phải từ 6 đến 32 ký tự");
-        }
-        // Validate pattern: at least one lower, one upper, one digit
-        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
-        if (!Pattern.matches(pattern, newPassword)) {
-            return ResponseEntity.badRequest().body("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
-        }
-        userService.changePassword(email, oldPassword, newPassword);
-        return ResponseEntity.ok("Đổi mật khẩu thành công");
+            if (oldPassword == null || newPassword == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Thiếu thông tin mật khẩu"));
+            }
+            // Validate new password length
+            if (newPassword.length() < 6 || newPassword.length() > 32) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu phải từ 6 đến 32 ký tự"));
+            }
+            // Validate pattern: at least one lower, one upper, one digit
+            String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
+            if (!Pattern.matches(pattern, newPassword)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số"));
+            }
+            userService.changePassword(email, oldPassword, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu thành công"));
         } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
     }
 }
