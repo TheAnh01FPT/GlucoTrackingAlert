@@ -754,8 +754,11 @@
                                 }
                                 tbody.innerHTML = list.map((a, i) => {
                                     const isInactive = a.status === 'inactive';
-                                    const actions = isInactive
+                                    const isNeverActive = a.status === 'rejected' || a.status === 'cancelled';
+                                    const actions = isNeverActive
                                             ? `<button class="action-btn" onclick="openHardDelete(${a.id})" title="Xóa khỏi nhật ký" style="color:#aaa;"><i class="bi bi-trash3"></i></button>`
+                                            : isInactive
+                                            ? `<span class="text-muted" style="font-size:.78rem;" title="Đã từng là phân công điều trị thật nên được giữ lại làm lịch sử, không thể xóa vĩnh viễn">Lưu trữ lịch sử</span>`
                                             : `<button class="action-btn edit" onclick='openEdit(${JSON.stringify(a)})' title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
                        <button class="action-btn delete" onclick="openDelete(${a.id})" title="Hủy phân công"><i class="bi bi-x-circle"></i></button>`;
                                     return `

@@ -348,12 +348,23 @@ public class DoctorPatientAssignmentService {
                 .toList();
     }
 
+    /**
+     * Chỉ cho phép xóa vĩnh viễn các đề xuất CHƯA TỪNG trở thành quan hệ điều
+     * trị thật (status = rejected hoặc cancelled). Record "inactive" (từng
+     * active, tức từng có bác sĩ thật sự phụ trách bệnh nhân) KHÔNG được xóa
+     * cứng, để giữ lại lịch sử điều trị phục vụ audit trail / tra cứu tranh
+     * chấp / liên tục chăm sóc. Muốn dọn "inactive" cũ thì chỉ nên ẩn khỏi
+     * danh sách hiển thị, không xóa khỏi DB.
+     */
     public void hardDeleteAssignment(Long id) {
         DoctorPatientAssignment assignment
                 = assignmentRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Assignment not found"));
-        if (!"inactive".equals(assignment.getStatus())) {
-            throw new RuntimeException("Chỉ có thể xóa vĩnh viễn các phân công đã hủy.");
+        String status = assignment.getStatus();
+        if (!("rejected".equals(status) || "cancelled".equals(status))) {
+            throw new RuntimeException(
+                    "Chỉ có thể xóa vĩnh viễn các đề xuất chưa từng được duyệt (rejected/cancelled). "
+                    + "Các phân công đã từng active (inactive) được giữ lại làm lịch sử điều trị.");
         }
         assignmentRepository.delete(assignment);
     }
