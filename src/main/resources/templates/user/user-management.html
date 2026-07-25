@@ -25,6 +25,7 @@
         <a href="/admin/requests" class="menu-item">📁 Yêu Cầu Thay Đổi</a>
         <a href="/admin/banners" class="menu-item">🖼️ Quản Lý Banner</a>
         <a href="/admin/feedbacks" class="menu-item">💬 Quản Lý Đánh Giá</a>
+        <a href="javascript:void(0)" onclick="openAdminPasswordModal()" class="menu-item">🔑 Đổi Mật Khẩu Admin</a>
     </div>
 </div>
 
@@ -140,12 +141,11 @@
             <thead>
             <tr>
                 <th style="width: 8%;">ID</th>
-                <th style="width: 28%;">Email</th>
+                <th style="width: 30%;">Email</th>
                 <th style="width: 14%;">Vai trò (Role)</th>
-                <th style="width: 16%;">Trạng thái</th>
-                <th style="width: 18%;">Cập nhật Trạng thái</th>
-                <th style="width: 10%;">Xác thực Email</th>
-                <th style="width: 10%;">Hành động</th>
+                <th style="width: 20%;">Trạng thái</th>
+                <th style="width: 16%;">Xác thực Email</th>
+                <th style="width: 12%;">Hành động</th>
             </tr>
             </thead>
             <tbody>
@@ -159,18 +159,12 @@
                     </span>
                 </td>
                 <td>
-                    <span class="status-badge"
-                          th:text="${user.status == 'active' ? 'Active' : (user.status == 'banned' ? 'Banned' : 'Pending')}"
-                          th:style="${user.status == 'active'} ? 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#d1fae5; color:#065f46; font-size:12px; font-weight:700;' : (${user.status == 'banned'} ? 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#fee2e2; color:#991b1b; font-size:12px; font-weight:700;' : 'display:inline-flex; align-items:center; justify-content:center; min-width:74px; padding:4px 8px; border-radius:999px; background:#fef3c7; color:#92400e; font-size:12px; font-weight:700;')">
-                        Pending
-                    </span>
-                </td>
-                <td>
                     <select class="status-select form-control"
                             th:data-user-id="${user.id}"
                             th:data-email="${user.email}"
                             th:data-original-status="${user.status}"
-                            th:data-status-label="${user.status == 'active' ? 'Active' : (user.status == 'banned' ? 'Banned' : 'Pending')}">
+                            th:data-status-label="${user.status == 'active' ? 'Active' : (user.status == 'banned' ? 'Banned' : 'Pending')}"
+                            th:style="${user.status == 'active'} ? 'background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; font-weight:700; border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;' : (${user.status == 'banned'} ? 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-weight:700; border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;' : 'background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700; border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;')">
                         <option th:if="${user.status == 'pending_verification'}" value="pending_verification" selected>
                             Pending
                         </option>
@@ -198,7 +192,7 @@
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(users)}">
-                <td colspan="7" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có tài
+                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Hệ thống chưa có tài
                     khoản Bệnh
                     nhân nào.
                 </td>
@@ -294,6 +288,7 @@
                   style="position: absolute; top: 14px; right: 18px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
                   title="Đóng">&times;</span>
             <h3 style="margin: 0 0 18px; color: #0f172a;">Thêm Tài Khoản Bệnh Nhân Mới</h3>
+            <div id="createPatientModalError" class="alert-error" style="display: none; margin-bottom: 14px; font-size: 13px; padding: 10px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;"></div>
             <form id="createPatientForm" novalidate>
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div>
@@ -401,16 +396,28 @@
             }
         }
 
+        function statusSelectStyle(status) {
+            if (status === 'active') {
+                return 'background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; font-weight:700; border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;';
+            }
+            if (status === 'banned') {
+                return 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-weight:700; border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;';
+            }
+            return 'background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700; border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;';
+        }
+
         function updateStatusRowUI(select, newStatus, previousStatus) {
             const row = select.closest('tr');
-            const rowBadge = row?.querySelector('.status-badge');
             const emailVerifiedCell = row?.querySelector('.email-verified-cell');
-            if (rowBadge) {
-                rowBadge.textContent = statusText(newStatus);
-                rowBadge.style.cssText = statusBadgeStyle(newStatus);
+            if (select) {
+                select.style.cssText = statusSelectStyle(newStatus);
             }
             if (emailVerifiedCell) {
-                emailVerifiedCell.textContent = newStatus === 'active' ? 'Đã xác thực ✔' : 'Chưa xác thực ❌';
+                if (newStatus === 'active') {
+                    emailVerifiedCell.textContent = 'Đã xác thực ✔';
+                } else if (newStatus === 'pending_verification') {
+                    emailVerifiedCell.textContent = 'Chưa xác thực ❌';
+                }
             }
             renderStatusOptions(select, newStatus);
             select.dataset.originalStatus = newStatus;
@@ -451,6 +458,8 @@
 
         function openCreatePatientModal() {
             document.body.classList.add('modal-open');
+            const errBox = document.getElementById('createPatientModalError');
+            if (errBox) errBox.style.display = 'none';
             document.getElementById('createPatientModal').style.display = 'flex';
         }
 
@@ -458,6 +467,23 @@
             document.body.classList.remove('modal-open');
             document.getElementById('createPatientModal').style.display = 'none';
             document.getElementById('createPatientForm').reset();
+            const errBox = document.getElementById('createPatientModalError');
+            if (errBox) errBox.style.display = 'none';
+        }
+
+        function showModalError(boxId, msg) {
+            const errBox = document.getElementById(boxId);
+            if (errBox) {
+                errBox.innerText = msg;
+                errBox.style.display = 'block';
+            }
+        }
+
+        function hideModalError(boxId) {
+            const errBox = document.getElementById(boxId);
+            if (errBox) {
+                errBox.style.display = 'none';
+            }
         }
 
         function showClientError(msg) {
@@ -513,12 +539,13 @@
 
         document.getElementById('createPatientForm').addEventListener('submit', async function (event) {
             event.preventDefault();
+            hideModalError('createPatientModalError');
             const email = document.getElementById('newPatientEmail').value.trim();
             const password = document.getElementById('newPatientPassword').value.trim();
             const status = 'active';
 
             if (!email || !password) {
-                showClientError('Vui lòng nhập đầy đủ Email và mật khẩu khởi tạo.');
+                showModalError('createPatientModalError', 'Vui lòng nhập đầy đủ Email và mật khẩu khởi tạo.');
                 return;
             }
 
@@ -537,19 +564,25 @@
                     })
                 });
 
-                const result = await response.json();
+                let result = {};
+                const responseText = await response.text();
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    result = { message: responseText };
+                }
+
                 if (!response.ok) {
-                    throw new Error(result.message || result.error || 'Không thể tạo tài khoản bệnh nhân mới.');
+                    throw new Error(result.message || result.error || responseText || 'Không thể tạo tài khoản bệnh nhân mới.');
                 }
 
                 closeCreatePatientModal();
                 showTransientAlert('Tạo tài khoản bệnh nhân mới thành công.', 'successAlert', 2500);
-                const currentPage = Number(document.querySelector('[name="currentPage"]')?.value || 0);
                 if (typeof window !== 'undefined') {
-                    setTimeout(() => window.location.reload(), 3200);
+                    setTimeout(() => window.location.reload(), 1500);
                 }
             } catch (error) {
-                showClientError(error.message || 'Không thể tạo tài khoản bệnh nhân mới.');
+                showModalError('createPatientModalError', error.message || 'Không thể tạo tài khoản bệnh nhân mới.');
             }
         });
 
@@ -684,12 +717,13 @@
 
         async function submitAdminPasswordChange(e) {
             e.preventDefault();
+            hideModalError('adminPasswordModalError');
             const currentPassword = document.getElementById('adminCurrentPassword').value;
             const newPassword = document.getElementById('adminNewPassword').value;
             const confirmPassword = document.getElementById('adminConfirmPassword').value;
 
             if (newPassword !== confirmPassword) {
-                alert('Mật khẩu xác nhận không khớp!');
+                showModalError('adminPasswordModalError', 'Mật khẩu xác nhận không khớp!');
                 return;
             }
 
@@ -707,18 +741,19 @@
                 });
                 const result = await response.json();
                 if (response.ok) {
-                    alert(result.success);
                     closeAdminPasswordModal();
+                    showTransientAlert(result.success || 'Cập nhật mật khẩu Admin thành công!', 'successAlert', 2500);
                 } else {
-                    alert(result.error || 'Có lỗi xảy ra!');
+                    showModalError('adminPasswordModalError', result.error || 'Không thể đổi mật khẩu Admin.');
                 }
             } catch (error) {
-                alert('Lỗi kết nối!');
+                showModalError('adminPasswordModalError', 'Lỗi kết nối máy chủ!');
             }
         }
 
         function openAdminPasswordModal() {
             document.body.classList.add('modal-open');
+            hideModalError('adminPasswordModalError');
             document.getElementById('changePasswordModal').style.display = 'flex';
         }
 
@@ -726,6 +761,7 @@
             document.body.classList.remove('modal-open');
             document.getElementById('changePasswordModal').style.display = 'none';
             document.getElementById('adminPasswordForm').reset();
+            hideModalError('adminPasswordModalError');
         }
     </script>
 
@@ -778,6 +814,7 @@
                       style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
                       title="Đóng">&times;</span>
             <h3 style="margin-top: 0; color: #1e293b;">Đổi Mật Khẩu Admin</h3>
+            <div id="adminPasswordModalError" class="alert-error" style="display: none; margin-bottom: 14px; font-size: 13px; padding: 10px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;"></div>
             <form id="adminPasswordForm" onsubmit="submitAdminPasswordChange(event)">
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500;">Mật khẩu

@@ -174,7 +174,7 @@ public class PatientServiceImpl implements PatientService {
 
         patient.setCholesterol(request.getCholesterol() != null ? request.getCholesterol() : 1);
         patient.setAlco(request.getAlco() != null ? request.getAlco() : 0);
-        patient.setActive(request.getActive() != null ? request.getActive() : 1);
+        patient.setActive(request.getActive() != null ? request.getActive() : (patient.getActive() != null ? patient.getActive() : 1));
 
         calculateAgeAndBmi(patient);
         patient.setPatientType(determinePatientType(patient));
