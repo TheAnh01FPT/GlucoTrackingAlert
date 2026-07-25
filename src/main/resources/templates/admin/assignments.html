@@ -297,6 +297,31 @@
                 </table>
             </div>
 
+            <!-- Khu vực: Bệnh nhân chưa có bác sĩ chăm sóc -->
+            <div class="table-wrap mb-4" id="unassignedSection" style="display:none;">
+                <div style="padding:14px 20px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between;">
+                    <h6 class="fw-700 mb-0" style="color:#c0392b;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Bệnh nhân chưa có bác sĩ chăm sóc</h6>
+                    <span class="badge bg-danger" id="unassignedBadgeCount" style="font-size: 0.8rem; padding: 4px 8px;">0</span>
+                </div>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Bệnh nhân</th>
+                                <th>Số điện thoại</th>
+                                <th>Email</th>
+                                <th>Trạng thái gần nhất</th>
+                                <th style="width:180px">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unassignedTable">
+                            <tr><td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-arrow-clockwise me-1"></i>Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="toolbar">
                 <div class="search-wrap">
                     <i class="bi bi-search"></i>
@@ -484,6 +509,7 @@
                                     allDoctors = Array.isArray(d) ? d : [];
                                     allPatients = Array.isArray(p) ? p : [];
                                     populateDoctorSelect();
+                                    populateUnassignedTable();
                                     filteredList = [...allAssignments];
                                     applyFilters();
                                     updateStats(allAssignments);
@@ -691,6 +717,99 @@
                                 const pageData = filteredList.slice(start, start + PAGE_SIZE);
                                 renderTable(pageData, start);
                                 renderPagination(total, totalPages);
+                            }
+
+                            function fmtShortDate(str) {
+                                if (!str)
+                                    return '';
+                                const d = new Date(str);
+                                return `${d.getDate()}/${d.getMonth() + 1}`;
+                            }
+
+                            function populateUnassignedTable() {
+                                const activePatientIds = new Set(allAssignments.filter(a => a.status === 'active').map(a => a.patientId));
+                                const unassigned = allPatients.filter(p => !activePatientIds.has(p.id) && p.status !== 'inactive');
+
+                                document.getElementById('unassignedBadgeCount').textContent = unassigned.length;
+
+                                const tbody = document.getElementById('unassignedTable');
+                                const section = document.getElementById('unassignedSection');
+
+                                if (unassigned.length === 0) {
+                                    section.style.display = 'none';
+                                    return;
+                                }
+                                section.style.display = 'block';
+
+                                tbody.innerHTML = unassigned.map((p, i) => {
+                                    // Tìm lịch sử liên kết gần đây nhất của bệnh nhân
+                                    const pAssigns = allAssignments.filter(a => a.patientId === p.id);
+                                    let latestStatusText = '<span class="text-muted">Chưa từng đăng ký bác sĩ</span>';
+                                    
+                                    if (pAssigns.length > 0) {
+                                        pAssigns.sort((x, y) => {
+                                            const dateX = x.assignedAt ? new Date(x.assignedAt) : 0;
+                                            const dateY = y.assignedAt ? new Date(y.assignedAt) : 0;
+                                            return dateY - dateX || y.id - x.id;
+                                        });
+                                        const latest = pAssigns[0];
+                                        const dateStr = fmtShortDate(latest.assignedAt);
+                                        
+                                        if (latest.status === 'inactive') {
+                                            if (latest.note === 'Bác sĩ ngừng hoạt động - tự động hủy phân công') {
+                                                latestStatusText = `<span style="color:#c0392b; font-weight:600;"><i class="bi bi-robot me-1"></i>Hủy tự động: Bác sĩ ngừng HĐ (${dateStr})</span>`;
+                                            } else if (latest.cancelReason) {
+                                                latestStatusText = `<span style="color:#c0392b; font-weight:550;">Bị hủy: ${latest.cancelReason} (${dateStr})</span>`;
+                                            } else {
+                                                latestStatusText = `<span class="text-secondary">Bị hủy phân công (${dateStr})</span>`;
+                                            }
+                                        } else if (latest.status === 'rejected') {
+                                            const reason = latest.rejectReason ? `: ${latest.rejectReason}` : '';
+                                            latestStatusText = `<span style="color:#d97706; font-weight:550;">Đề xuất bị từ chối${reason} (${dateStr})</span>`;
+                                        } else if (latest.status === 'pending') {
+                                            latestStatusText = `<span class="text-primary font-weight-550">Đang chờ duyệt đề xuất (${dateStr})</span>`;
+                                        } else {
+                                            latestStatusText = `<span>${latest.status} (${dateStr})</span>`;
+                                        }
+                                    }
+
+                                    return `
+                                        <tr>
+                                            <td class="text-muted">${i + 1}</td>
+                                            <td><span class="pill-patient"><i class="bi bi-person me-1"></i>${p.fullName || 'N/A'}</span></td>
+                                            <td>${p.phone || '<span class="text-muted">–</span>'}</td>
+                                            <td>${p.email || '<span class="text-muted">–</span>'}</td>
+                                            <td style="font-size: 0.85rem;">${latestStatusText}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success px-3" onclick="openCreateWithPatient(${p.id})" style="background-color:#1a6b5a; border:none; border-radius:6px; font-weight:600; font-size:12.5px;">
+                                                    <i class="bi bi-plus-lg me-1"></i> Phân công ngay
+                                                </button>
+                                            </td>
+                                        </tr>`;
+                                }).join('');
+                            }
+
+                            function openCreateWithPatient(patientId) {
+                                document.getElementById('modalTitle').textContent = 'Thêm phân công mới';
+                                document.getElementById('saveBtnText').textContent = 'Thêm phân công';
+                                document.getElementById('assignId').value = '';
+                                document.getElementById('doctorSelect').value = '';
+                                document.getElementById('note').value = '';
+                                document.getElementById('statusField').style.display = 'none';
+                                
+                                populatePatientSelect(patientId);
+
+                                const patientSelect = document.getElementById('patientSelect');
+                                for (let option of patientSelect.options) {
+                                    if (option.value) {
+                                        const p = JSON.parse(option.value);
+                                        if (p.id == patientId) {
+                                            patientSelect.value = option.value;
+                                            break;
+                                        }
+                                    }
+                                }
+                                assignModal.show();
                             }
 
                             function renderPagination(total, totalPages) {
