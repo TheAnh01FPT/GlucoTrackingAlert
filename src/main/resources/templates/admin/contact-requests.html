@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 30px; color: #1e293b; }
-        .dashboard-header { margin-bottom: 25px; border-left: 5px solid #ec4899; padding-left: 15px; }
+        .dashboard-header { margin-bottom: 25px; border-left: 5px solid #1a6b5a; padding-left: 15px; }
         .dashboard-header h1 { margin: 0; font-size: 24px; color: #0f172a; }
         .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 35px; }
         h2 { color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
@@ -17,7 +17,7 @@
         .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .filter-btn { padding: 8px 16px; border: 1px solid #cbd5e1; background: #ffffff; border-radius: 6px; font-weight: 600; font-size: 13px; color: #64748b; cursor: pointer; transition: all 0.2s; }
         .filter-btn:hover { background: #f8fafc; color: #1e293b; }
-        .filter-btn.active { background: #ec4899; color: #ffffff; border-color: #ec4899; }
+        .filter-btn.active { background: #1a6b5a; color: #ffffff; border-color: #1a6b5a; }
 
         /* Table */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
@@ -31,8 +31,8 @@
         .badge-handled { background-color: #dcfce7; color: #15803d; }
 
         .btn { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.2s; }
-        .btn-pink { background-color: #ec4899; color: white; }
-        .btn-pink:hover { background-color: #db2777; }
+        .btn-teal { background-color: #1a6b5a; color: white; }
+        .btn-teal:hover { background-color: #115e59; }
         .btn-blue { background-color: #3b82f6; color: white; }
         .btn-blue:hover { background-color: #2563eb; }
 
@@ -55,7 +55,7 @@
         .field-value { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 6px; font-size: 14px; color: #1e293b; min-height: 20px; }
         
         .textarea-reply { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; font-size: 14px; font-family: inherit; box-sizing: border-box; resize: vertical; }
-        .textarea-reply:focus { border-color: #ec4899; outline: none; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15); }
+        .textarea-reply:focus { border-color: #1a6b5a; outline: none; box-shadow: 0 0 0 3px rgba(26, 107, 90, 0.15); }
 
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
 
@@ -65,11 +65,64 @@
         .pagination-btns { display: flex; gap: 5px; }
         .page-size-selector { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #64748b; }
         .page-size-select { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; color: #334155; background-color: white; outline: none; cursor: pointer; }
-        .page-size-select:focus { border-color: #ec4899; }
+        .page-size-select:focus { border-color: #1a6b5a; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toolbar & Search */
+        .toolbar {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            border: 1px solid #cbd5e1;
+        }
+        .search-wrap {
+            position: relative;
+            flex: 1;
+        }
+        .search-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+        .search-wrap input {
+            padding-left: 36px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: .875rem;
+            height: 38px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .search-wrap input:focus {
+            outline: none;
+            border-color: #1a6b5a;
+            box-shadow: 0 0 0 3px rgba(26, 107, 90, 0.15);
+        }
+        .form-select {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: .875rem;
+            height: 38px;
+            background-color: white;
+            outline: none;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .form-select:focus {
+            border-color: #1a6b5a;
+            box-shadow: 0 0 0 3px rgba(26, 107, 90, 0.15);
         }
     </style>
     <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}"/>
@@ -82,13 +135,19 @@
 <div th:replace="~{fragments/layout :: topbar('Hệ Thống Quản Trị Hệ Thống (Phân Hệ Liên Hệ)')}"></div>
 
 <div class="container">
-    <h2 style="color: #ec4899;"><i class="bi bi-envelope-open-fill"></i> ✉️ Quản Lý Yêu Cầu Liên Hệ từ Người dùng</h2>
+    <h2 style="color: #1a6b5a;"><i class="bi bi-envelope-open-fill"></i> ✉️ Quản Lý Yêu Cầu Liên Hệ từ Người dùng</h2>
 
-    <!-- Tabs Filter -->
-    <div class="filter-tabs">
-        <button class="filter-btn active" id="tabAll" onclick="changeTab('all')">Xem tất cả (All)</button>
-        <button class="filter-btn" id="tabNew" onclick="changeTab('new')">Chưa xử lý (New)</button>
-        <button class="filter-btn" id="tabHandled" onclick="changeTab('handled')">Đã xử lý (Handled)</button>
+    <!-- Toolbar Search & Filter -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Tìm theo tên, email, số điện thoại, tiêu đề..." oninput="handleFilterChange()"/>
+        </div>
+        <select class="form-select" id="filterStatus" style="width: 180px;" onchange="handleFilterChange()">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="new" selected>Chưa xử lý (New)</option>
+            <option value="handled">Đã xử lý (Handled)</option>
+        </select>
     </div>
 
     <!-- Table -->
@@ -187,16 +246,17 @@
         </div>
         <div class="modal-footer">
             <button class="btn btn-reply" style="padding: 8px 16px;" onclick="closeModal()">Đóng</button>
-            <button class="btn btn-pink" style="padding: 8px 16px;" id="btnSubmitReply" onclick="submitReply()">Gửi Email phản hồi</button>
+            <button class="btn btn-teal" style="padding: 8px 16px;" id="btnSubmitReply" onclick="submitReply()">Gửi Email phản hồi</button>
         </div>
     </div>
 </div>
 </div>
 
 <script>
-    let currentStatus = 'all';
     let currentPage = 0;
     let pageSize = 5;
+    let rawContactRequestsList = [];
+    let filteredRequestsList = [];
     let contactRequestsList = [];
 
     // Tải dữ liệu khi mở trang
@@ -204,30 +264,57 @@
         loadContactRequests();
     });
 
-    function changeTab(status) {
-        currentStatus = status;
-        currentPage = 0;
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-        if (status === 'new') {
-            document.getElementById('tabNew').classList.add('active');
-        } else if (status === 'handled') {
-            document.getElementById('tabHandled').classList.add('active');
-        } else {
-            document.getElementById('tabAll').classList.add('active');
-        }
-        loadContactRequests();
-    }
-
     function loadContactRequests() {
-        const url = `/api/admin/contact-requests?status=${currentStatus}&page=${currentPage}&size=${pageSize}`;
+        const url = `/api/admin/contact-requests?status=all&page=0&size=999999`;
         fetch(url)
             .then(res => res.json())
             .then(data => {
-                contactRequestsList = data.content;
-                renderTable(data.content);
-                renderPagination(data);
+                rawContactRequestsList = data.content || [];
+                applyContactFilters();
             })
             .catch(err => console.error("Lỗi tải yêu cầu liên hệ: ", err));
+    }
+
+    function handleFilterChange() {
+        currentPage = 0;
+        applyContactFilters();
+    }
+
+    function applyContactFilters() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const st = document.getElementById('filterStatus').value;
+
+        filteredRequestsList = rawContactRequestsList.filter(item => {
+            const matchStatus = st === 'all' || item.status === st;
+            const matchQuery = !q 
+                || (item.fullName || '').toLowerCase().includes(q)
+                || (item.email || '').toLowerCase().includes(q)
+                || (item.phone || '').toLowerCase().includes(q)
+                || (item.subject || '').toLowerCase().includes(q)
+                || (item.message || '').toLowerCase().includes(q);
+            return matchStatus && matchQuery;
+        });
+
+        renderContactPage();
+    }
+
+    function renderContactPage() {
+        const totalElements = filteredRequestsList.length;
+        const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
+        
+        if (currentPage >= totalPages) {
+            currentPage = totalPages - 1;
+        }
+        if (currentPage < 0) {
+            currentPage = 0;
+        }
+
+        const start = currentPage * pageSize;
+        const pageData = filteredRequestsList.slice(start, start + pageSize);
+        contactRequestsList = pageData;
+        
+        renderTable(pageData);
+        renderClientPagination();
     }
 
     function renderTable(list) {
@@ -235,7 +322,7 @@
         tbody.innerHTML = "";
 
         if (list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Không có yêu cầu liên hệ nào ở trạng thái này.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Không có yêu cầu liên hệ nào phù hợp.</td></tr>`;
             return;
         }
 
@@ -260,20 +347,23 @@
         });
     }
 
-    function renderPagination(pageData) {
-        const start = pageData.empty ? 0 : (pageData.number * pageData.size) + 1;
-        const end = (pageData.number * pageData.size) + pageData.numberOfElements;
-        document.getElementById("paginationInfo").innerHTML = `Hiển thị <strong>${start}-${end}</strong> trong tổng <strong>${pageData.totalElements}</strong> bản ghi`;
+    function renderClientPagination() {
+        const totalElements = filteredRequestsList.length;
+        const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
+
+        const start = totalElements === 0 ? 0 : (currentPage * pageSize) + 1;
+        const end = Math.min((currentPage + 1) * pageSize, totalElements);
+        
+        document.getElementById("paginationInfo").innerHTML = `Hiển thị <strong>${start}-${end}</strong> trong tổng <strong>${totalElements}</strong> bản ghi`;
 
         const pButtons = document.getElementById("paginationButtons");
         pButtons.innerHTML = "";
 
         // Prev Button
-        const prevDisabled = pageData.first ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const prevDisabled = currentPage === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
         pButtons.innerHTML += `<button class="filter-btn btn-sm" ${prevDisabled} onclick="goToPage(${currentPage - 1})">« Trước</button>`;
 
         // Phân trang động (Dynamic Pagination) hiển thị tối đa 5 nút trang xung quanh trang hiện tại
-        const totalPages = pageData.totalPages;
         const maxPageButtons = 5;
         let startPage = Math.max(0, currentPage - 2);
         let endPage = Math.min(totalPages - 1, startPage + maxPageButtons - 1);
@@ -305,19 +395,19 @@
         }
 
         // Next Button
-        const nextDisabled = pageData.last ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const nextDisabled = currentPage === totalPages - 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
         pButtons.innerHTML += `<button class="filter-btn btn-sm" ${nextDisabled} onclick="goToPage(${currentPage + 1})">Sau »</button>`;
     }
 
     function goToPage(page) {
         currentPage = page;
-        loadContactRequests();
+        renderContactPage();
     }
 
     function changePageSize(size) {
         pageSize = parseInt(size);
         currentPage = 0;
-        loadContactRequests();
+        renderContactPage();
     }
 
     function openReplyModal(id) {
