@@ -845,9 +845,13 @@
 
                                 function updateStats(doctors) {
                                     document.getElementById('totalDoctors').textContent = doctors.length;
-                                    const active = doctors.filter(d => d.status !== 'inactive').length;
+                                    // Đếm đúng theo từng trạng thái — trước đây "Đang hoạt động" được tính
+                                    // bằng "khác inactive", nên vô tình gộp luôn cả bác sĩ đang
+                                    // pending_verification/pending_approval/rejected vào ô này.
+                                    const active = doctors.filter(d => d.status === 'active').length;
+                                    const inactive = doctors.filter(d => d.status === 'inactive').length;
                                     document.getElementById('activeDoctors').textContent = active;
-                                    document.getElementById('inactiveDoctors').textContent = doctors.length - active;
+                                    document.getElementById('inactiveDoctors').textContent = inactive;
                                     const specs = new Set(doctors.map(d => d.specialization).filter(Boolean));
                                     document.getElementById('specialCount').textContent = specs.size;
                                 }
@@ -1003,6 +1007,22 @@
                                     doctorModal.show();
                                 }
 
+                                // GlobalExceptionHandler trả lỗi dạng JSON { message: "..." }, không phải text thô.
+                                async function extractErrorMessage(res) {
+                                    try {
+                                        const data = await res.json();
+                                        return data.message || 'Thao tác thất bại!';
+                                    } catch {
+                                        return 'Thao tác thất bại!';
+                                    }
+                                }
+
+                                // Cùng quy tắc với backend (@Pattern trong AdminCreateDoctorRequest / DoctorRequest):
+                                // chỉ chữ cái (kể cả có dấu) + '.', '-', ''' xen giữa; KHÔNG cho khoảng trắng
+                                // đầu/cuối hoặc khoảng trắng liên tiếp (chặn case chỉ toàn dấu cách).
+                                const NAME_PATTERN = /^\p{L}+(?:[ .'-]\p{L}+)*$/u;
+                                const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
                                 async function saveDoctor() {
                                     const id = document.getElementById('doctorId').value;
                                     const fullName = document.getElementById('fullName').value.trim();
@@ -1012,12 +1032,28 @@
                                         showToast('Vui lòng điền đầy đủ họ tên và chuyên khoa!', 'danger');
                                         return;
                                     }
+                                    if (fullName.length < 2) {
+                                        showToast('Họ tên phải từ 2 ký tự trở lên!', 'danger');
+                                        return;
+                                    }
+                                    if (!NAME_PATTERN.test(fullName)) {
+                                        showToast('Họ tên chỉ được chứa chữ cái và khoảng trắng, không được là số/ký tự đặc biệt!', 'danger');
+                                        return;
+                                    }
+                                    if (!NAME_PATTERN.test(specialization)) {
+                                        showToast('Chuyên khoa chỉ được chứa chữ cái và khoảng trắng, không được là số/ký tự đặc biệt!', 'danger');
+                                        return;
+                                    }
 
                                     if (!id) {
                                         // Tạo mới: dùng admin-create, gửi email
                                         const email = document.getElementById('userEmailLookup').value.trim();
                                         if (!email) {
                                             showToast('Vui lòng nhập email bác sĩ!', 'danger');
+                                            return;
+                                        }
+                                        if (!EMAIL_PATTERN.test(email)) {
+                                            showToast('Email không đúng định dạng!', 'danger');
                                             return;
                                         }
                                         const payload = {
@@ -1037,7 +1073,7 @@
                                                 body: JSON.stringify(payload)
                                             });
                                             if (!res.ok) {
-                                                showToast('❌ ' + (await res.text() || 'Tạo thất bại!'), 'danger');
+                                                showToast('❌ ' + (await extractErrorMessage(res)), 'danger');
                                                 return;
                                             }
                                             doctorModal.hide();
@@ -1065,7 +1101,7 @@
                                                 body: JSON.stringify(payload)
                                             });
                                             if (!res.ok) {
-                                                showToast('❌ ' + (await res.text() || 'Cập nhật thất bại!'), 'danger');
+                                                showToast('❌ ' + (await extractErrorMessage(res)), 'danger');
                                                 return;
                                             }
                                             doctorModal.hide();

@@ -2,12 +2,19 @@ package fpt.swp391.GlucoTrackAlert.controller.recommendation;
 
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationRequest;
 import fpt.swp391.GlucoTrackAlert.dto.recommendation.DoctorRecommendationResponse;
+import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
+import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
+import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.recommendation.DoctorRecommendationService;
 
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -19,6 +26,8 @@ import java.util.List;
 public class DoctorRecommendationController {
 
     private final DoctorRecommendationService recommendationService;
+    private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
 
     // Bác sĩ tạo khuyến nghị
     @PostMapping
@@ -40,6 +49,9 @@ public class DoctorRecommendationController {
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<List<DoctorRecommendationResponse>> getByPatient(
             @PathVariable Long patientId) {
+        if (!isOwnPatientIdOrAdmin(patientId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.ok(recommendationService.getByPatient(patientId));
     }
 
@@ -73,6 +85,9 @@ public class DoctorRecommendationController {
     @GetMapping("/patient/{patientId}/all")
     public ResponseEntity<List<DoctorRecommendationResponse>> getAllByPatient(
             @PathVariable Long patientId) {
+        if (!isOwnPatientIdOrAdmin(patientId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.ok(recommendationService.getAllByPatient(patientId));
     }
 
@@ -81,6 +96,35 @@ public class DoctorRecommendationController {
     public ResponseEntity<DoctorRecommendationResponse> markAsRead(
             @PathVariable Long patientId,
             @PathVariable Long id) {
+        if (!isOwnPatientIdOrAdmin(patientId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.ok(recommendationService.markAsRead(patientId, id));
+    }
+
+    // ========== PRIVATE HELPERS ==========
+
+    /**
+     * Chặn IDOR: bệnh nhân chỉ được thao tác trên patientId của chính mình.
+     * Chỉ Admin được bypass. Doctor KHÔNG được bypass ở đây — Doctor phải đi qua
+     * route riêng /doctor/patient/{patientId} (đã check assignment ở service).
+     */
+    private boolean isOwnPatientIdOrAdmin(Long patientId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return false;
+        }
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (isAdmin) {
+            return true;
+        }
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        Patient patient = patientRepository.findByUserId(user.getId()).orElse(null);
+        return patient != null && patient.getId().equals(patientId);
     }
 }

@@ -361,6 +361,7 @@ public class DailyHealthLogController {
     public String getMyLogs(@RequestParam Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            RedirectAttributes redirectAttributes,
             Model model) {
         // If caller is not admin/doctor and the requested userId is not their own,
         // redirect to login to prevent tampering with the `userId` query parameter.
@@ -374,6 +375,14 @@ public class DailyHealthLogController {
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             return "redirect:/login"; // hoặc trang lỗi
+        }
+
+        // Doctor không được đi vòng qua màn "của bệnh nhân" để xem log của
+        // bệnh nhân không do mình phụ trách. Chặn cứng, hướng họ về doctor-view
+        // (nơi đã có check assignment đúng).
+        if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này.");
+            return "redirect:/health-logs/doctor-view";
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(patientId, pageable);
@@ -706,10 +715,23 @@ public class DailyHealthLogController {
     public String getChart(@RequestParam(required = false) Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            RedirectAttributes redirectAttributes,
             Model model) {
-        List<Patient> patients = patientRepository.findAllByStatus("active");
-        if (patients.isEmpty()) {
-            patients = patientRepository.findAll();
+        List<Patient> patients;
+        if (hasRole("ROLE_DOCTOR") && !hasRole("ROLE_ADMIN")) {
+            // Bác sĩ chỉ được thấy/xem bệnh nhân do mình phụ trách, không phải toàn bộ hệ thống.
+            Long currentUserId = getCurrentUserId();
+            Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+            patients = doctor == null ? Collections.emptyList()
+                    : assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active").stream()
+                            .map(fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment::getPatient)
+                            .filter(java.util.Objects::nonNull)
+                            .toList();
+        } else {
+            patients = patientRepository.findAllByStatus("active");
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAll();
+            }
         }
         model.addAttribute("patients", patients);
 
@@ -724,6 +746,13 @@ public class DailyHealthLogController {
         Long selectedPatientId = resolvePatientId(userId);
         if (selectedPatientId == null && !patients.isEmpty()) {
             selectedPatientId = patients.get(0).getId();
+        }
+
+        // Bác sĩ không được xem chart của bệnh nhân không do mình phụ trách,
+        // kể cả nếu họ tự sửa tham số userId trên URL.
+        if (hasRole("ROLE_DOCTOR") && selectedPatientId != null && !isDoctorAssignedToPatient(selectedPatientId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này.");
+            return "redirect:/health-logs/doctor-view";
         }
 
         LocalDate endDate = to != null ? to : LocalDate.now();
@@ -750,6 +779,7 @@ public class DailyHealthLogController {
     public String getMyChart(@RequestParam Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            RedirectAttributes redirectAttributes,
             Model model) {
         // Prevent IDOR: non-admin/doctor users may only view their own chart,
         // regardless of what userId is passed in the request.
@@ -763,6 +793,12 @@ public class DailyHealthLogController {
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             patientId = userId;
+        }
+
+        // Doctor không được xem chart của bệnh nhân không do mình phụ trách.
+        if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này.");
+            return "redirect:/health-logs/doctor-view";
         }
 
         LocalDate endDate = to != null ? to : LocalDate.now();

@@ -12,13 +12,19 @@ import lombok.Setter;
 @Setter
 public class DoctorRequest {
 
+    @NotBlank(message = "Họ tên không được để trống")
     @Size(min = 2, max = 100, message = "Họ tên phải từ 2-100 ký tự")
+    @Pattern(regexp = "^\\p{L}+(?:[ .'-]\\p{L}+)*$",
+            message = "Họ tên không hợp lệ: chỉ chữ cái, không khoảng trắng đầu/cuối hoặc liên tiếp, không số/ký tự đặc biệt")
     private String fullName;
 
-    @Size(max = 100, message = "Chuyên khoa không được vượt quá 100 ký tự")
+    @NotBlank(message = "Chuyên khoa không được để trống")
+    @Size(min = 2, max = 100, message = "Chuyên khoa phải từ 2-100 ký tự")
+    @Pattern(regexp = "^\\p{L}+(?:[ .'-]\\p{L}+)*$",
+            message = "Chuyên khoa không hợp lệ: chỉ chữ cái, không khoảng trắng đầu/cuối hoặc liên tiếp, không số/ký tự đặc biệt")
     private String specialization;
 
-    @Size(max = 100, message = "Bằng cấp không được vượt quá 100 ký tự")
+    @Pattern(regexp = "^$|^(BS|BSCKII|ThS|TS|PGS\\.TS|GS\\.TS)$", message = "Bằng cấp không hợp lệ")
     private String degree;
 
     @Min(value = 0, message = "Số năm kinh nghiệm không được âm")
