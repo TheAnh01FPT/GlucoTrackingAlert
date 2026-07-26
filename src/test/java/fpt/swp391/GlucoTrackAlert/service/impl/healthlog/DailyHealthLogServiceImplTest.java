@@ -1,12 +1,12 @@
-package fpt.swp391.GlucoTrackAlert.service.impl;
+package fpt.swp391.GlucoTrackAlert.service.impl.healthlog;
 
-import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
-import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
+import fpt.swp391.GlucoTrackAlert.repository.healthlog.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.risk.WeeklyHealthReportRepository;
 import fpt.swp391.GlucoTrackAlert.service.ComplicationRiskService;
-import fpt.swp391.GlucoTrackAlert.service.HealthThresholdService;
-import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
+import fpt.swp391.GlucoTrackAlert.service.healthlog.HealthThresholdService;
+import fpt.swp391.GlucoTrackAlert.service.healthlog.WeeklyReportService;
 import fpt.swp391.GlucoTrackAlert.service.cardioai.WeeklyCardioAiService;
 import fpt.swp391.GlucoTrackAlert.service.Duy_DangerAlertService;
 import org.junit.jupiter.api.BeforeEach;
