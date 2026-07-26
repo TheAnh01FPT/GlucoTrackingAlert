@@ -69,7 +69,7 @@ public class SecurityConfig {
                         .requestMatchers("/doctor/**", "/api/doctor/**").hasAnyRole("DOCTOR", "ADMIN")
 
                         // 8. Khuyến nghị và Thông báo
-                        .requestMatchers(HttpMethod.GET, "/api/recommendations/patient/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/recommendations/patient/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                         .requestMatchers("/api/recommendations/**").hasRole("DOCTOR")
                         .requestMatchers("/api/notifications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
