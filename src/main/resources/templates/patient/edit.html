@@ -47,6 +47,28 @@
                     👤 Thông tin cá nhân hành chính
                 </h3>
 
+                <div class="form-group" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px;">
+                     <div id="avatarPreviewContainer" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary-light); background: #f1f5f9; display: flex; align-items: center; justify-content: center; position: relative;">
+                         <img id="avatarPreview" th:src="${profileForm.avatar != null && !profileForm.avatar.isEmpty() ? profileForm.avatar : 'https://res.cloudinary.com/dy1j8lall/image/upload/v1722000000/default-avatar.png'}" style="width: 100%; height: 100%; object-fit: cover;">
+                     </div>
+                     <label class="action-btn btn-secondary" style="font-size: 13px; padding: 6px 12px; cursor: pointer; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                         📸 Chọn ảnh đại diện
+                         <input type="file" id="avatarFile" name="avatarFile" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
+                     </label>
+                 </div>
+
+                <div class="form-group" style="text-align: center; margin-bottom: 20px;">
+                    <label class="form-label" style="display: block; text-align: center; font-weight: 600;">Ảnh đại diện (Avatar)</label>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 10px;">
+                        <div id="avatarPreviewContainer" style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 2px solid #ddd; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+                            <img id="avatarPreview" th:if="${profileForm.avatar != null && !profileForm.avatar.isEmpty()}" th:src="${profileForm.avatar}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <span id="avatarPlaceholder" th:unless="${profileForm.avatar != null && !profileForm.avatar.isEmpty()}" style="font-size: 2.5rem; color: #94a3b8;">👤</span>
+                        </div>
+                        <input type="file" id="avatarFile" name="avatarFile" accept="image/*" class="form-input" style="max-width: 250px;" onchange="previewAvatar(this)">
+                        <input type="hidden" th:field="*{avatar}">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label" for="fullName">Họ và tên bệnh nhân *</label>
                     <input type="text" id="fullName" th:field="*{fullName}" class="form-input" placeholder="Nhập họ và tên đầy đủ">
@@ -240,6 +262,31 @@
 </div>
 
 <script>
+    function previewAvatar(input) {
+        var container = document.getElementById('avatarPreviewContainer');
+        var preview = document.getElementById('avatarPreview');
+        var placeholder = document.getElementById('avatarPlaceholder');
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (!preview) {
+                    preview = document.createElement('img');
+                    preview.id = 'avatarPreview';
+                    preview.style.width = '100%';
+                    preview.style.height = '100%';
+                    preview.style.objectFit = 'cover';
+                    container.appendChild(preview);
+                }
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                if (placeholder) {
+                    placeholder.style.display = 'none';
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     function previewCardImage(input, previewId) {
         var container = document.getElementById(previewId);
         if (!container) return;

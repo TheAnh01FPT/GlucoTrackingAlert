@@ -105,6 +105,7 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceCardStatus(request.getInsuranceCardStatus() != null ? request.getInsuranceCardStatus() : "UNVERIFIED")
                 .isPregnant(isPregnantVal)
                 .status("active")
+                .avatar(request.getAvatar())
                 .hypertension(request.getHypertension() != null ? request.getHypertension() : false)
                 .heartDisease(request.getHeartDisease() != null ? request.getHeartDisease() : false)
                 .everMarried(request.getEverMarried() != null ? request.getEverMarried() : "No")
@@ -153,6 +154,9 @@ public class PatientServiceImpl implements PatientService {
         if (request.getInsuranceNumberImage() != null && !request.getInsuranceNumberImage().isEmpty()) {
             patient.setInsuranceNumberImage(request.getInsuranceNumberImage());
             patient.setInsuranceCardStatus("UNVERIFIED");
+        }
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            patient.setAvatar(request.getAvatar());
         }
 
         boolean isPregnantVal = false;
@@ -269,6 +273,7 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(patient.getInsuranceNumber())
                 .insuranceNumberImage(patient.getInsuranceNumberImage())
                 .insuranceCardStatus(patient.getInsuranceCardStatus() != null ? patient.getInsuranceCardStatus() : "UNVERIFIED")
+                .avatar(patient.getAvatar())
                 .patientType(patient.getPatientType())
                 .isPregnant(patient.getIsPregnant())
                 .hypertension(patient.getHypertension())
@@ -493,6 +498,7 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(patient.getInsuranceNumber())
                 .insuranceNumberImage(patient.getInsuranceNumberImage())
                 .insuranceCardStatus(patient.getInsuranceCardStatus() != null ? patient.getInsuranceCardStatus() : "UNVERIFIED")
+                .avatar(patient.getAvatar())
                 .patientType(patient.getPatientType())
                 .isPregnant(patient.getIsPregnant())
                 .hypertension(patient.getHypertension())

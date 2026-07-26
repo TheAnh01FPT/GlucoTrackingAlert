@@ -48,6 +48,8 @@ public class PatientProfileRequest {
 
     private String identityCardStatus;
 
+    private String avatar;
+
     @Size(max = 50, message = "Mã bảo hiểm y tế không được vượt quá 50 ký tự")
     @Pattern(regexp = "^$|[0-9]{10}$", message = "Mã số bảo hiểm y tế phải gồm đúng 10 chữ số")
     private String insuranceNumber;

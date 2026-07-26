@@ -76,6 +76,7 @@ CREATE TABLE patients (
   weight_kg DECIMAL(5,2),
   bmi DECIMAL(5,2),
   status VARCHAR(30) DEFAULT 'active',
+  avatar VARCHAR(500) NULL COMMENT 'Ảnh đại diện bệnh nhân',
   patient_type VARCHAR(20) DEFAULT 'adult' COMMENT 'elderly=Người cao tuổi, adult=Người trưởng thành, pregnant=Phụ nữ có thai, child=Trẻ em',
   identity_card VARCHAR(20) NULL COMMENT 'Căn cước công dân (CCCD)',
   identity_card_image VARCHAR(500) NULL COMMENT 'Ảnh chụp CCCD',

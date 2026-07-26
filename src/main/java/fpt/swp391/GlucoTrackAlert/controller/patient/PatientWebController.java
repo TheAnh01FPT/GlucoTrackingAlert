@@ -110,6 +110,7 @@ public class PatientWebController {
                         .insuranceNumber(profile.getInsuranceNumber())
                         .insuranceNumberImage(profile.getInsuranceNumberImage())
                         .insuranceCardStatus(profile.getInsuranceCardStatus())
+                        .avatar(profile.getAvatar())
                         .isPregnant(profile.getIsPregnant())
                         .hypertension(profile.getHypertension())
                         .heartDisease(profile.getHeartDisease())
@@ -151,6 +152,7 @@ public class PatientWebController {
                               BindingResult result,
                               @RequestParam(name = "identityCardFile", required = false) MultipartFile identityCardFile,
                               @RequestParam(name = "insuranceNumberFile", required = false) MultipartFile insuranceNumberFile,
+                              @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
                               @RequestParam(name = "isNew", defaultValue = "false") boolean isNewParam,
                               Model model) {
         User loggedInUser = getLoggedInUser();
@@ -182,6 +184,9 @@ public class PatientWebController {
                     request.setInsuranceNumberImage(currentProfile.getInsuranceNumberImage());
                     request.setInsuranceCardStatus(currentProfile.getInsuranceCardStatus());
                 }
+                if ((avatarFile == null || avatarFile.isEmpty()) && request.getAvatar() == null) {
+                    request.setAvatar(currentProfile.getAvatar());
+                }
             } catch (Exception ignored) {}
         }
 
@@ -204,6 +209,16 @@ public class PatientWebController {
                 request.setInsuranceCardStatus("UNVERIFIED");
             } catch (Exception e) {
                 System.err.println("⚠️ Lỗi upload ảnh BHYT: " + e.getMessage());
+            }
+        }
+
+        // Upload avatar image if provided
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                String avatarUrl = cloudinaryService.uploadFile(avatarFile, "patient_avatars");
+                request.setAvatar(avatarUrl);
+            } catch (Exception e) {
+                System.err.println("⚠️ Lỗi upload ảnh đại diện: " + e.getMessage());
             }
         }
 
