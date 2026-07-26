@@ -72,5 +72,5 @@ def predict_cardio():
         return jsonify({'status': 'error', 'message': f"Lỗi tiền xử lý dữ liệu AI: {str(e)}"}), 400
 
 if __name__ == '__main__':
-    # Chạy API Server ở cổng 5000
-    app.run(host='0.0.0.0', port=5000)
+    # Chạy API Server ở cổng 6000
+    app.run(host='0.0.0.0', port=6000)

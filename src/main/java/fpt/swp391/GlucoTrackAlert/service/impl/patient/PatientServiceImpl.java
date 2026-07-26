@@ -303,7 +303,7 @@ public class PatientServiceImpl implements PatientService {
                 double finalSystolic = (rawAvgSystolic != null) ? rawAvgSystolic : 120.0;
                 double finalDiastolic = (rawAvgDiastolic != null) ? rawAvgDiastolic : 80.0;
 
-                // --- 1. GỌI MÔ HÌNH AI TIM MẠCH ĐỘNG (Port 5000 - /predict-cardio) ---
+                // --- 1. GỌI MÔ HÌNH AI TIM MẠCH ĐỘNG (Port 6000 - /predict-cardio) ---
                 try {
                     Map<String, Object> cardioRequest = new HashMap<>();
 
@@ -327,7 +327,7 @@ public class PatientServiceImpl implements PatientService {
                     // ĐÃ ĐỔI: Sử dụng kết quả vận động động tính toán từ các bản ghi Daily Logs trong tuần thay vì lấy từ Profile tĩnh
                     cardioRequest.put("active", finalActiveDynamic);
 
-                    String cardioApiUrl = "http://127.0.0.1:5000/predict-cardio";
+                    String cardioApiUrl = "http://127.0.0.1:6000/predict-cardio";
                     Map<String, Object> cardioResponse = restTemplate.postForObject(cardioApiUrl, cardioRequest, Map.class);
 
                     if (cardioResponse != null && "success".equalsIgnoreCase(cardioResponse.get("status").toString())) {
@@ -336,7 +336,7 @@ public class PatientServiceImpl implements PatientService {
                         if (cardioResponse.containsKey("advice")) cardioAlertMsg = cardioResponse.get("advice").toString();
                     }
                 } catch (Exception e) {
-                    System.err.println("⚠️ Lỗi trạm AI Cardio (Port 5000): " + e.getMessage());
+                    System.err.println("⚠️ Lỗi trạm AI Cardio (Port 6000): " + e.getMessage());
                 }
 
                 // --- 2. GỌI MÔ HÌNH AI ĐỘT QUỴ ĐỘNG (Port 8000 - /predict) ---
