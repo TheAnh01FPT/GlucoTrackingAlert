@@ -455,7 +455,8 @@ public class DailyHealthLogController {
             return false;
         }
 
-        return assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId).isPresent();
+        Optional<DoctorPatientAssignment> assignment = assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId);
+        return assignment.isPresent() && "active".equalsIgnoreCase(assignment.get().getStatus());
     }
 
     private String friendlyErrorMessage(Exception e) {
