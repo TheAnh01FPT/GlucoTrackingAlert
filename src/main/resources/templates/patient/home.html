@@ -5,6 +5,32 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Trang chủ | GlucoTrack - Hệ thống Theo dõi Sức khỏe</title>
         <link rel="stylesheet" th:href="@{/css/home.css}" />
+        <style>
+            .dropdown-item:hover {
+                background-color: var(--primary-light) !important;
+                color: var(--primary-color) !important;
+            }
+            .dropdown-item.text-danger:hover {
+                background-color: #fef2f2 !important;
+                color: #dc2626 !important;
+            }
+            .profile-dropdown-menu.show {
+                display: block !important;
+            }
+            @keyframes dropdownFadeIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.95) translateY(-5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+            body.modal-open {
+                overflow: hidden;
+            }
+        </style>
     </head>
 
     <body>
@@ -13,11 +39,29 @@
             <!-- Top Area: Greeting top right -->
             <div class="home-navbar" style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 10px; padding-bottom: 0;">
                 <a href="/" style="color: #27ae60; text-decoration: none; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 5px;">&larr; Quay lại trang chủ</a>
-                <div class="user-greeting">
-                    <span class="active-dot"></span>
-                    <span>Hello, </span>
-                    <strong th:text="${patientName != 'Chưa tạo hồ sơ' ? patientName : 'Bệnh nhân'}">Nguyễn Văn A</strong>
-                    <span style="font-size: 11.5px; opacity: 0.7; margin-left: 2px;" th:text="'(' + ${userEmail} + ')'">(patient@gmail.com)</span>
+                
+                <!-- Profile Dropdown Container -->
+                <div class="profile-dropdown-container" style="position: relative;">
+                    <div class="user-greeting" onclick="toggleProfileDropdown(event)" style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; color: var(--text-muted); background: rgba(255, 255, 255, 0.6); padding: 8px 18px; border-radius: 30px; border: 1px solid rgba(0,0,0,0.03); user-select: none;">
+                        <span class="active-dot"></span>
+                        <span>Hello, </span>
+                        <strong th:text="${patientName != 'Chưa tạo hồ sơ' ? patientName : 'Bệnh nhân'}">Nguyễn Văn A</strong>
+                        <span style="font-size: 11.5px; opacity: 0.7; margin-left: 2px;" th:text="'(' + ${userEmail} + ')'">(patient@gmail.com)</span>
+                        <span style="font-size: 10px; margin-left: 4px; opacity: 0.6;">▼</span>
+                    </div>
+
+                    <!-- Dropdown Menu -->
+                    <div class="profile-dropdown-menu" id="profileDropdownMenu" style="display: none; position: absolute; top: calc(100% + 8px); right: 0; background-color: #ffffff; min-width: 200px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); border-radius: 12px; border: 1px solid #e2e8f0; z-index: 10000; padding: 8px 0; animation: dropdownFadeIn 0.2s ease-in-out;">
+                        <a href="#" onclick="openChangePasswordModal(); closeProfileDropdown(); return false;" class="dropdown-item" style="display: flex; align-items: center; gap: 10px; padding: 12px 18px; color: #334155; text-decoration: none; font-size: 14.5px; font-weight: 500; transition: all 0.15s ease-in-out;">
+                            🔑 Đổi mật khẩu
+                        </a>
+                        <div style="height: 1px; background-color: #e2e8f0; margin: 4px 0;"></div>
+                        <form th:action="@{/logout}" method="post" id="logoutForm" style="margin: 0;">
+                            <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item text-danger" style="display: flex; align-items: center; gap: 10px; padding: 12px 18px; color: #dc2626; text-decoration: none; font-size: 14.5px; font-weight: 500; transition: all 0.15s ease-in-out;">
+                                🚪 Đăng xuất
+                            </a>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -110,5 +154,126 @@
                 </a>
             </div>
         </div>
+
+        <!-- Đổi Mật Khẩu Modal -->
+        <div id="changePasswordModal"
+             style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; font-family: 'Inter', sans-serif;">
+            <div style="background: white; padding: 25px; border-radius: 16px; width: 400px; max-width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; color: #1e293b;">
+                <span onclick="closeChangePasswordModal()"
+                      style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
+                      title="Đóng">&times;</span>
+                <h3 style="margin-top: 0; margin-bottom: 20px; color: #1e293b; font-weight: 700; font-size: 18px; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+                    🔑 Đổi Mật Khẩu
+                </h3>
+                <form id="changePasswordForm" onsubmit="submitPasswordChange(event)">
+                    <div style="margin-bottom: 15px; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Mật khẩu hiện tại</label>
+                        <input type="password" id="currentPassword" required
+                               style="width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 14.5px; outline: none; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='var(--primary-color)'"
+                               onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
+                    <div style="margin-bottom: 15px; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Mật khẩu mới</label>
+                        <input type="password" id="newPassword" required
+                               style="width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 14.5px; outline: none; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='var(--primary-color)'"
+                               onblur="this.style.borderColor='#cbd5e1'">
+                        <span style="font-size: 11px; color: #94a3b8; display: block; margin-top: 4px;">Từ 6 - 32 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số.</span>
+                    </div>
+                    <div style="margin-bottom: 25px; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Xác nhận mật khẩu mới</label>
+                        <input type="password" id="confirmPassword" required
+                               style="width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 14.5px; outline: none; transition: border-color 0.2s;"
+                               onfocus="this.style.borderColor='var(--primary-color)'"
+                               onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" style="background: none; border: none; padding: 10px 15px; cursor: pointer; color: #64748b; font-weight: 500;"
+                                onclick="closeChangePasswordModal()">Hủy
+                        </button>
+                        <button type="submit" style="background-color: var(--primary-color); color: white; border: none; border-radius: 10px; padding: 10px 20px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background-color 0.2s;"
+                                onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+                                onmouseout="this.style.backgroundColor='var(--primary-color)'">
+                            Lưu Thay Đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Script xử lý Đổi Mật Khẩu và Dropdown Menu -->
+        <script>
+            function toggleProfileDropdown(event) {
+                event.stopPropagation();
+                const menu = document.getElementById('profileDropdownMenu');
+                menu.classList.toggle('show');
+            }
+
+            function closeProfileDropdown() {
+                const menu = document.getElementById('profileDropdownMenu');
+                if (menu) menu.classList.remove('show');
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const container = document.querySelector('.profile-dropdown-container');
+                if (container && !container.contains(event.target)) {
+                    closeProfileDropdown();
+                }
+            });
+
+            function openChangePasswordModal() {
+                document.body.classList.add('modal-open');
+                document.getElementById('changePasswordModal').style.display = 'flex';
+            }
+
+            document.getElementById('changePasswordModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeChangePasswordModal();
+                }
+            });
+
+            function closeChangePasswordModal() {
+                document.body.classList.remove('modal-open');
+                document.getElementById('changePasswordModal').style.display = 'none';
+                document.getElementById('changePasswordForm').reset();
+            }
+
+            async function submitPasswordChange(e) {
+                e.preventDefault();
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                if (newPassword !== confirmPassword) {
+                    alert('Mật khẩu xác nhận không khớp!');
+                    return;
+                }
+
+                const formData = new URLSearchParams();
+                formData.append('currentPassword', currentPassword);
+                formData.append('newPassword', newPassword);
+
+                try {
+                    const response = await fetch('/patient/api/change-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.success || 'Đổi mật khẩu thành công!');
+                        closeChangePasswordModal();
+                    } else {
+                        alert(result.error || 'Có lỗi xảy ra!');
+                    }
+                } catch (error) {
+                    alert('Lỗi kết nối!');
+                }
+            }
+        </script>
     </body>
 </html>
