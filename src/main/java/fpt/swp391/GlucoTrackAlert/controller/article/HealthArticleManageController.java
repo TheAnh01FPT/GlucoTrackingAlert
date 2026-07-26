@@ -314,10 +314,7 @@ public class HealthArticleManageController {
     private void validateStatusForCurrentUser(ArticleStatus parsedStatus, ArticleStatus currentStatus, User currentUser) throws Exception {
         boolean isAdmin = currentUser.getRole().getName().equals("ROLE_ADMIN");
         if (!isAdmin && parsedStatus == ArticleStatus.PUBLISHED) {
-            boolean alreadyPublished = (currentStatus == ArticleStatus.PUBLISHED);
-            if (!alreadyPublished) {
-                throw new Exception("Bác sĩ chỉ có thể lưu bài viết ở trạng thái Nháp hoặc Chờ duyệt");
-            }
+            throw new Exception("Bác sĩ không thể đăng trực tiếp bài viết ở trạng thái Đã xuất bản. Vui lòng chọn Nháp hoặc Chờ duyệt.");
         }
     }
 
