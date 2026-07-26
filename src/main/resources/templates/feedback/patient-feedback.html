@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đánh Giá Của Bệnh Nhân</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f8fafc;
+            padding: 20px;
+            color: #334155;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #1e293b;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: #b91c1c;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: #15803d;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #22c55e;
+        }
+
+        .feedback-form {
+            margin-bottom: 50px;
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        select.form-control, textarea.form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        select.form-control:focus, textarea.form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        textarea.form-control {
+            height: 120px;
+            resize: vertical;
+        }
+
+        /* Star Rating Component */
+        .star-rating-input {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+
+        .star-rating-input input {
+            display: none;
+        }
+
+        .star-rating-input label {
+            color: #cbd5e1;
+            font-size: 32px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star-rating-input input:checked ~ label, .star-rating-input label:hover, .star-rating-input label:hover ~ label {
+            color: #fbbf24;
+        }
+
+        button.btn-submit {
+            background: #10b981;
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button.btn-submit:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        h3.history-title {
+            margin-top: 50px;
+            margin-bottom: 25px;
+            color: #1e293b;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Feedback Cards */
+        .feedback-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feedback-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .card-doctor {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 16px;
+        }
+
+        .card-date {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .card-rating {
+            color: #fbbf24;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .card-content {
+            font-size: 15px;
+            color: #334155;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .btn-edit:hover {
+            background: #dbeafe;
+        }
+
+        .btn-delete {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .btn-delete:hover {
+            background: #fee2e2;
+        }
+
+        .edit-form {
+            display: none;
+            margin-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 40px;
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #059669;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2><i class="fa-solid fa-comments text-emerald-500"></i> Gửi Ý Kiến Phản Hồi / Đánh Giá</h2>
+
+    <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"></div>
+    <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
+
+    <div class="feedback-form">
+        <form action="/patient/feedbacks/submit" method="post">
+
+            <div class="form-group">
+                <label>Đánh giá sao</label>
+                <div class="star-rating-input">
+                    <input type="radio" id="star5" name="rating" value="5" required/><label for="star5" title="5 sao"><i
+                        class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star4" name="rating" value="4"/><label for="star4" title="4 sao"><i
+                        class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star3" name="rating" value="3"/><label for="star3" title="3 sao"><i
+                        class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star2" name="rating" value="2"/><label for="star2" title="2 sao"><i
+                        class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star1" name="rating" value="1"/><label for="star1" title="1 sao"><i
+                        class="fa-solid fa-star"></i></label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nội dung ý kiến</label>
+                <textarea name="content" class="form-control"
+                          placeholder="Nhập ý kiến đánh giá của bạn tại đây (chúng tôi luôn lắng nghe để cải thiện dịch vụ)..."
+                          required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fa-solid fa-paper-plane"></i> Gửi đánh giá
+            </button>
+        </form>
+    </div>
+
+
+
+    <h3 class="history-title"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử đánh giá của bạn</h3>
+    <div th:if="${#lists.isEmpty(feedbacks)}"
+         style="background: #f8fafc; padding: 30px; text-align: center; border-radius: 12px; border: 1px dashed #cbd5e1;">
+        <p style="color: #64748b; margin: 0;"><i class="fa-regular fa-folder-open text-3xl mb-2 block"></i>Bạn chưa gửi
+            đánh giá nào.</p>
+    </div>
+
+    <div th:each="fb : ${feedbacks}" class="feedback-card">
+        <div class="card-header">
+            <div class="card-meta">
+
+                <div class="card-date">
+                    <i class="fa-regular fa-calendar-days"></i> <span
+                        th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                </div>
+            </div>
+            <div class="card-rating">
+                    <span th:if="${fb.rating != null}">
+                        <th:block th:each="i : ${#numbers.sequence(1, fb.rating)}"><i
+                                class="fa-solid fa-star"></i></th:block>
+                    </span>
+                <span th:if="${fb.rating == null}" style="color: #cbd5e1; font-size: 14px;">Chưa đánh giá sao</span>
+            </div>
+        </div>
+
+        <div class="card-content" th:id="'content-' + ${fb.id}" th:text="${fb.content}"></div>
+
+        <div class="card-actions">
+            <button type="button" class="btn-action btn-edit" th:onclick="'toggleEdit(' + ${fb.id} + ')'">
+                <i class="fa-solid fa-pen"></i> Chỉnh sửa
+            </button>
+            <form action="/patient/feedbacks/delete" method="post" style="display:inline;"
+                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này không?');">
+                <input type="hidden" name="feedbackId" th:value="${fb.id}">
+                <button type="submit" class="btn-action btn-delete">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </form>
+        </div>
+
+        <div class="edit-form" th:id="'edit-form-' + ${fb.id}">
+            <form action="/patient/feedbacks/update" method="post">
+                <input type="hidden" name="feedbackId" th:value="${fb.id}">
+                <textarea name="content" class="form-control" style="height: 80px; margin-bottom: 10px;" required
+                          th:text="${fb.content}"></textarea>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="submit" class="btn-action" style="background: #10b981; color: white;"><i
+                            class="fa-solid fa-check"></i> Lưu lại
+                    </button>
+                    <button type="button" class="btn-action" style="background: #94a3b8; color: white;"
+                            th:onclick="'toggleEdit(' + ${fb.id} + ')'"><i class="fa-solid fa-xmark"></i> Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <a href="/patient/homepage" class="back-link"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+</div>
+
+<script>
+    function toggleEdit(id) {
+        var form = document.getElementById('edit-form-' + id);
+        var content = document.getElementById('content-' + id);
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'block';
+            content.style.display = 'none';
+        } else {
+            form.style.display = 'none';
+            content.style.display = 'block';
+        }
+    }
+</script>
+</body>
+</html>

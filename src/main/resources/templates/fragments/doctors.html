@@ -1,0 +1,41 @@
+<div th:fragment="doctor-list" xmlns:th="http://www.thymeleaf.org">
+    <div class="row g-4 justify-content-center" th:if="${doctors != null and !doctors.isEmpty()}">
+        <div class="col-lg-3 col-md-6" th:each="doc : ${doctors}">
+            <div class="card border-0 shadow-sm text-center p-4 bg-white h-100">
+                <img th:if="${doc.avatarUrl != null and !doc.avatarUrl.isEmpty()}"
+                     th:src="${doc.avatarUrl}" alt="Ảnh bác sĩ"
+                     class="rounded-circle mx-auto mb-3"
+                     style="width:80px;height:80px;object-fit:cover;" />
+                <i th:unless="${doc.avatarUrl != null and !doc.avatarUrl.isEmpty()}"
+                   class="bi bi-person-workspace text-success fs-1 mb-3"></i>
+                <h5 class="fw-bold mb-1" th:text="${doc.displayName}">Tên bác sĩ</h5>
+                <small class="text-success fw-semibold mb-2 d-block"
+                       th:text="${doc.title != null ? doc.title : ''}">Học vị</small>
+                <p class="text-muted small"
+                   th:text="${doc.introduction != null and !doc.introduction.isEmpty() ? doc.introduction : 'Tận tâm đồng hành cùng sức khỏe người bệnh.'}">
+                    Giới thiệu
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fallback tĩnh khi chưa có dữ liệu -->
+    <div class="row g-4 justify-content-center" th:if="${doctors == null or doctors.isEmpty()}">
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm text-center p-4 bg-white">
+                <i class="bi bi-person-workspace text-success fs-1 mb-3"></i>
+                <h5 class="fw-bold mb-1">BS. CKII Nguyễn Văn A</h5>
+                <small class="text-success fw-semibold mb-2 d-block">BS. CKII</small>
+                <p class="text-muted small">Hơn 15 năm kinh nghiệm trong điều trị và tư vấn kiểm soát đường huyết.</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm text-center p-4 bg-white">
+                <i class="bi bi-person-workspace text-success fs-1 mb-3"></i>
+                <h5 class="fw-bold mb-1">ThS. Bác sĩ Trần Thị B</h5>
+                <small class="text-success fw-semibold mb-2 d-block">ThS. BS</small>
+                <p class="text-muted small">Tư vấn chế độ ăn lành mạnh và lối sống khoa học cho người bệnh tiểu đường.</p>
+            </div>
+        </div>
+    </div>
+</div>

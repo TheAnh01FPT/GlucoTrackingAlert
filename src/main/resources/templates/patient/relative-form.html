@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isNew ? 'Thêm người thân mới' : 'Chỉnh sửa thông tin người thân'}">Người thân | GlucoTrack</title>
+    <link rel="stylesheet" th:href="@{/css/relatives.css}">
+</head>
+<body>
+
+    <div class="relatives-container">
+        <!-- Header -->
+        <div class="relatives-header">
+            <h1 class="brand-title">
+                <span class="brand-icon">🩸</span> GlucoTrack
+            </h1>
+            <div style="display: flex; gap: 12px;">
+                <!-- Back to Home Button -->
+                <a th:href="@{/patient/homepage}" class="action-btn btn-secondary">
+                    🏠 Trang chủ
+                </a>
+                <a th:href="@{/patient/relatives}" class="action-btn btn-secondary">
+                    ⬅️ Quay lại danh sách
+                </a>
+            </div>
+        </div>
+
+        <!-- Error Alert Banner -->
+        <div class="error-banner" th:if="${errorMessage != null || param.error != null}">
+            <span>⚠️</span>
+            <span th:text="${errorMessage != null ? errorMessage : param.error}">Đã xảy ra lỗi khi lưu thông tin.</span>
+        </div>
+
+        <h2 class="panel-title" th:text="${isNew ? '✨ Thêm thông tin người thân mới' : '⚙️ Cập nhật thông tin người thân'}">
+            Quản lý người thân
+        </h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">
+            Nhập chính xác email và số điện thoại người thân để hệ thống gửi các cảnh báo chỉ số khẩn cấp khi cần thiết.
+        </p>
+
+        <!-- Form Section -->
+        <form th:action="@{/patient/relatives/save}" th:object="${relativeForm}" method="post">
+            <!-- Hidden context fields -->
+            <input type="hidden" th:field="*{patientId}">
+            <input type="hidden" name="isNew" th:value="${isNew}">
+            <input type="hidden" name="relativeId" th:value="${relativeId}">
+            <input type="hidden" name="userId" th:value="${userId}">
+
+            <div class="relatives-grid">
+                
+                <!-- Left Side Card: Key Identity -->
+                <div class="relative-card" style="background: rgba(255, 255, 255, 0.75);">
+                    <div class="form-group">
+                        <label class="form-label" for="fullName">Họ và tên người thân *</label>
+                        <input type="text" id="fullName" th:field="*{fullName}" class="form-input" placeholder="Nhập họ và tên đầy đủ">
+                        <span class="error-text" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">Lỗi họ tên</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="relationship">Mối quan hệ *</label>
+                        <select id="relationship" th:field="*{relationship}" class="form-input">
+                            <option value="">-- Chọn mối quan hệ --</option>
+                            <option value="Bố">Bố</option>
+                            <option value="Mẹ">Mẹ</option>
+                            <option value="Vợ">Vợ</option>
+                            <option value="Chồng">Chồng</option>
+                            <option value="Con">Con</option>
+                            <option value="Anh chị em">Anh chị em</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                        <span class="error-text" th:if="${#fields.hasErrors('relationship')}" th:errors="*{relationship}">Lỗi quan hệ</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="age">Tuổi</label>
+                        <input type="number" id="age" th:field="*{age}" class="form-input" placeholder="Nhập số tuổi" min="0" max="150">
+                        <span class="error-text" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Lỗi tuổi</span>
+                    </div>
+                </div>
+
+                <!-- Right Side Card: Contact & Alerts -->
+                <div class="relative-card" style="background: rgba(255, 255, 255, 0.75);">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Địa chỉ Email nhận cảnh báo *</label>
+                        <input type="email" id="email" th:field="*{email}" class="form-input" placeholder="example@gmail.com">
+                        <span class="error-text" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Lỗi email</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Số điện thoại liên lạc</label>
+                        <input type="tel" id="phone" th:field="*{phone}" class="form-input" placeholder="Nhập số điện thoại">
+                        <span class="error-text" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Lỗi số điện thoại</span>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 25px;">
+                        <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" th:field="*{notifyEnabled}" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                            <span>Kích hoạt nhận email cảnh báo khẩn cấp</span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Submit Controls -->
+            <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
+                <a th:href="@{/patient/relatives}" class="action-btn btn-secondary" style="width: 150px; justify-content: center;">
+                    Hủy bỏ
+                </a>
+                <button type="submit" class="action-btn btn-primary" style="width: 180px; justify-content: center;">
+                    💾 Lưu người thân
+                </button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

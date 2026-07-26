@@ -1,15 +1,16 @@
 package fpt.swp391.GlucoTrackAlert.service.impl.user_impl;
 
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
+import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
+import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +25,16 @@ public class UserAdminServiceImpl implements UserAdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final DoctorRepository doctorRepository;
 
     public UserAdminServiceImpl(UserRepository userRepository,
                                 RoleRepository roleRepository,
-                                BCryptPasswordEncoder passwordEncoder) {
+                                BCryptPasswordEncoder passwordEncoder,
+                                DoctorRepository doctorRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.doctorRepository = doctorRepository;
     }
 
     @Override
@@ -40,11 +44,9 @@ public class UserAdminServiceImpl implements UserAdminService {
 
     @Override
     public Page<User> getUsersPaged(int page, int size) {
-        // Lấy tất cả user rồi filter PATIENT/DOCTOR, sau đó phân trang thủ công
         List<User> filtered = userRepository.findAll().stream()
                 .filter(u -> u.getRole() != null &&
-                        (u.getRole().getName().equalsIgnoreCase("PATIENT") ||
-                                u.getRole().getName().equalsIgnoreCase("DOCTOR")))
+                        u.getRole().getName().equalsIgnoreCase("PATIENT"))
                 .collect(Collectors.toList());
 
         int start = page * size;
@@ -55,9 +57,35 @@ public class UserAdminServiceImpl implements UserAdminService {
     }
 
     @Override
+    public Page<User> searchAndFilterUsersPaged(String email, String roleName, String status, int page, int size) {
+        List<User> filtered = userRepository.searchAndFilterUsers(email, roleName, status).stream()
+                .filter(u -> u.getRole() != null &&
+                        (u.getRole().getName().equalsIgnoreCase("PATIENT") ||
+                                u.getRole().getName().equalsIgnoreCase("ADMIN")))
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, filtered.size());
+        List<User> pageContent = (start >= filtered.size()) ? List.of() : filtered.subList(start, end);
+
+        return new PageImpl<>(pageContent, PageRequest.of(page, size), filtered.size());
+    }
+
+    @Override
+    public long getDoctorCount() {
+        return userRepository.countByRole_Name("DOCTOR");
+    }
+
+    @Override
+    public long getPatientCount() {
+        return userRepository.countByRole_Name("PATIENT");
+    }
+
+    @Override
     public List<User> getUsersFilteredByRole(Long roleId) {
         return userRepository.findByRoleId(roleId);
     }
+
 
     @Override
     public User getUserById(Long id) throws Exception {
@@ -68,25 +96,36 @@ public class UserAdminServiceImpl implements UserAdminService {
     @Override
     @Transactional
     public User createUserByAdmin(UserAdminRequest request) throws Exception {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Tài khoản email '" + request.getEmail() + "' đã tồn tại trên hệ thống.");
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new Exception("Email không được để trống");
+        }
+        String email = request.getEmail().trim();
+        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new Exception("Định dạng Email không hợp lệ");
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw new Exception("Tài khoản email '" + email + "' đã tồn tại trên hệ thống.");
         }
 
-        String inputRole = request.getRoleName().toUpperCase().trim();
-        if (!inputRole.equals("PATIENT") && !inputRole.equals("DOCTOR")) {
-            throw new Exception("Hệ thống quản trị chỉ cho phép tạo tài khoản với vai trò PATIENT hoặc DOCTOR.");
-        }
+        String inputRole = "PATIENT";
 
         Role role = roleRepository.findByName(inputRole)
                 .orElseThrow(() -> new Exception("Không tìm thấy cấu hình vai trò: " + inputRole));
 
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            throw new Exception("Mật khẩu khởi tạo không được phép bỏ trống.");
+            throw new Exception("Mật khẩu không được để trống");
+        }
+        String password = request.getPassword().trim();
+        if (password.length() < 6 || password.length() > 32) {
+            throw new Exception("Mật khẩu phải từ 6 đến 32 ký tự");
+        }
+        if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$")) {
+            throw new Exception("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
         }
 
         User user = User.builder()
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword().trim()))
+                .email(email)
+                .passwordHash(passwordEncoder.encode(password))
                 .status(request.getStatus())
                 .emailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : true)
                 .role(role)
@@ -94,7 +133,11 @@ public class UserAdminServiceImpl implements UserAdminService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+
+
+        return savedUser;
     }
 
     @Override
@@ -103,41 +146,47 @@ public class UserAdminServiceImpl implements UserAdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("Không tìm thấy dữ liệu người dùng cần cập nhật."));
 
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail()) &&
-                userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email mới '" + request.getEmail() + "' đã được sử dụng bởi một tài khoản khác.");
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new Exception("Email không được để trống");
+        }
+        String email = request.getEmail().trim();
+        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new Exception("Định dạng Email không hợp lệ");
         }
 
-        String inputRole = request.getRoleName().toUpperCase().trim();
-        if (!inputRole.equals("PATIENT") && !inputRole.equals("DOCTOR")) {
-            throw new Exception("Hệ thống quản trị chỉ cho phép cập nhật vai trò sang PATIENT hoặc DOCTOR.");
+        if (!user.getEmail().equalsIgnoreCase(email) &&
+                userRepository.existsByEmail(email)) {
+            throw new Exception("Email mới '" + email + "' đã được sử dụng bởi một tài khoản khác.");
         }
+
+        String inputRole = "PATIENT";
 
         Role role = roleRepository.findByName(inputRole)
                 .orElseThrow(() -> new Exception("Không tồn tại quyền vai trò hệ thống: " + inputRole));
 
-        user.setEmail(request.getEmail());
+        String oldRole = user.getRole() != null ? user.getRole().getName() : "";
+
+        user.setEmail(email);
         user.setStatus(request.getStatus());
         user.setEmailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : false);
         user.setRole(role);
         user.setUpdatedAt(LocalDateTime.now());
 
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
-            user.setPasswordHash(passwordEncoder.encode(request.getPassword().trim()));
+            String password = request.getPassword().trim();
+            if (password.length() < 6 || password.length() > 32) {
+                throw new Exception("Mật khẩu phải từ 6 đến 32 ký tự");
+            }
+            if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$")) {
+                throw new Exception("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
+            }
+            user.setPasswordHash(passwordEncoder.encode(password));
         }
 
-        return userRepository.save(user);
-    }
+        User savedUser = userRepository.save(user);
 
-//    @Override
-//    @Transactional
-//    public void deleteUserByAdmin(Long id) throws Exception {
-//        User user = userRepository.findById(id)
-//                .orElseThrow(() -> new Exception("Không tìm thấy người dùng có mã số ID để xóa."));
-//        try {
-//            userRepository.delete(user);
-//        } catch (Exception e) {
-//            throw new Exception("Không thể xóa tài khoản do đã phát sinh dữ liệu liên kết.");
-//        }
-//    }
+
+
+        return savedUser;
+    }
 }

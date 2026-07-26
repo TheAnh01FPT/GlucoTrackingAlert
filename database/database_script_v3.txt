@@ -1,0 +1,8 @@
+-- SQL migration for article moderation
+-- Adds rejection_reason support for health_articles
+
+CREATE DATABASE IF NOT EXISTS healthcare_db_01;
+USE healthcare_db_01;
+
+ALTER TABLE health_articles
+  ADD COLUMN rejection_reason TEXT NULL COMMENT 'Lý do từ chối (nếu có)';

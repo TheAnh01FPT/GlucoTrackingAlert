@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlucoTrackAlert - Biểu Đồ Chỉ Số Sức Khỏe</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Navbar Layout */
+        .navbar {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            padding: 1rem 2rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .navbar-link:hover,
+        .navbar-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-admin {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .navbar-admin:hover {
+            background-color: #2563eb;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Filter Panel */
+        .filter-panel {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .filter-form {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+        }
+
+        .filter-inputs-group {
+            display: flex;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            flex-grow: 1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-select,
+        .form-input {
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            font-family: inherit;
+            background-color: #f8fafc;
+            color: var(--text-primary);
+            outline: none;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .form-select:focus,
+        .form-input:focus {
+            border-color: var(--primary);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-filter {
+            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+        }
+
+        /* Charts Grid Layout */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 600px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .chart-card:hover {
+            box-shadow: 0 12px 24px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        .empty-state {
+            padding: 5rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .empty-state-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+            🩸 GlucoTrackAlert
+        </a>
+        <nav class="navbar-menu">
+            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
+            <a href="#" class="navbar-link active">Biểu Đồ Xu Hướng</a>
+            <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
+            
+        </nav>
+    </header>
+
+    <main class="main-container">
+
+        <!-- Time Range & Patient Filter Form -->
+        <section class="filter-panel">
+            <form th:action="@{/health-logs/my-chart}" method="GET" class="filter-form">
+
+                <div class="filter-inputs-group">
+                    <input type="hidden" name="userId" th:value="${userId}" />
+
+                    <!-- From Date -->
+                    <div class="form-group">
+                        <label class="form-label" for="from">Từ Ngày</label>
+                        <input type="date" id="from" name="from" th:value="${from}" class="form-input" required />
+                    </div>
+
+                    <!-- To Date -->
+                    <div class="form-group">
+                        <label class="form-label" for="to">Đến Ngày</label>
+                        <input type="date" id="to" name="to" th:value="${to}" class="form-input" required />
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="btn btn-filter">🔍 Lọc Dữ Liệu</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Charts Section -->
+        <section th:if="${!#lists.isEmpty(chartData)}">
+            <div class="charts-grid">
+
+                <!-- Chart 1: Blood Sugar Trend -->
+                <div class="chart-card">
+                    <h3 class="chart-title">📈 Xu Hướng Đường Huyết (mmol/L)</h3>
+                    <div class="chart-container">
+                        <canvas id="bloodSugarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Blood Pressure Trend (Systolic & Diastolic) -->
+                <div class="chart-card">
+                    <h3 class="chart-title">💖 Biểu Đồ Huyết Áp (mmHg)</h3>
+                    <div class="chart-container">
+                        <canvas id="bloodPressureChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Empty state when no data matches the range -->
+        <section class="empty-state" th:if="${#lists.isEmpty(chartData)}">
+            <span class="empty-state-icon">📊</span>
+            <h2>Không Có Dữ Liệu Biểu Đồ</h2>
+            <p>Không tìm thấy nhật ký sức khỏe nào cho bệnh nhân được chọn trong khoảng thời gian từ <strong
+                    th:text="${#temporals.format(from, 'dd/MM/yyyy')}">...</strong> đến <strong
+                    th:text="${#temporals.format(to, 'dd/MM/yyyy')}">...</strong>.</p>
+            <p>Vui lòng chọn khoảng thời gian khác hoặc điền thêm nhật ký đo chỉ số sức khỏe.</p>
+        </section>
+
+    </main>
+
+    <!-- Script rendering logic -->
+    <script th:inline="javascript" th:if="${!#lists.isEmpty(chartData)}">
+        /*<![CDATA[*/
+        // Dynamic chart data injected from Thymeleaf model
+        const chartData = /*[[${chartData}]]*/[];
+        /*]]>*/
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sort data chronologically by date
+            chartData.sort((a, b) => new Date(a.logDate) - new Date(b.logDate));
+
+            // Map data arrays
+            const labels = chartData.map(item => {
+                const date = new Date(item.logDate);
+                return `${date.getDate()}/${date.getMonth() + 1}`;
+            });
+            const bloodSugars = chartData.map(item => item.bloodSugar);
+            const systolicValues = chartData.map(item => item.systolic);
+            const diastolicValues = chartData.map(item => item.diastolic);
+
+            // Chart Colors
+            const primaryColor = '#4f46e5'; // Indigo
+            const dangerColor = '#ef4444'; // Red
+            const infoColor = '#3b82f6'; // Blue
+
+            // 1. Render Blood Sugar Chart
+            const ctxSugar = document.getElementById('bloodSugarChart').getContext('2d');
+
+            const sugarGradient = ctxSugar.createLinearGradient(0, 0, 0, 300);
+            sugarGradient.addColorStop(0, 'rgba(79, 70, 229, 0.35)');
+            sugarGradient.addColorStop(1, 'rgba(79, 70, 229, 0.01)');
+
+            new Chart(ctxSugar, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Đường huyết (mmol/L)',
+                        data: bloodSugars,
+                        borderColor: primaryColor,
+                        backgroundColor: sugarGradient,
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 3,
+                        pointBackgroundColor: primaryColor,
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 15,
+                                font: { family: "'Inter', sans-serif", size: 12, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: "'Inter', sans-serif", size: 11 } }
+                        },
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: "'Inter', sans-serif", size: 11 } },
+                            suggestedMin: 3.0,
+                            suggestedMax: 10.0
+                        }
+                    }
+                }
+            });
+
+            // 2. Render Blood Pressure Chart (Systolic & Diastolic)
+            const ctxPressure = document.getElementById('bloodPressureChart').getContext('2d');
+
+            new Chart(ctxPressure, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Tâm thu - Systolic (mmHg)',
+                            data: systolicValues,
+                            borderColor: dangerColor,
+                            backgroundColor: 'transparent',
+                            tension: 0.3,
+                            borderWidth: 3,
+                            pointBackgroundColor: dangerColor,
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Tâm trương - Diastolic (mmHg)',
+                            data: diastolicValues,
+                            borderColor: infoColor,
+                            backgroundColor: 'transparent',
+                            tension: 0.3,
+                            borderWidth: 3,
+                            pointBackgroundColor: infoColor,
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 15,
+                                font: { family: "'Inter', sans-serif", size: 12, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: "'Inter', sans-serif", size: 11 } }
+                        },
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: "'Inter', sans-serif", size: 11 } },
+                            suggestedMin: 50,
+                            suggestedMax: 150
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

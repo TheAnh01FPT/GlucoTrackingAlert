@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GlucoTrackAlert - Quản Lý Banner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/banner-admin.css}">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <span><i class="bi bi-droplet-half me-2" style="color:#27ae60"></i>GlucoTrackAlert</span>
+        <small>Hệ thống quản trị</small>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+        <a href="/admin/banners" class="nav-item-link active"><i class="bi bi-image"></i> Quản lý Banner</a>
+        <a href="/admin/doctors" class="nav-item-link"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
+        <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
+        <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
+        <a href="/admin/patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
+        <a href="#" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+    </nav>
+</div>
+
+<div class="main">
+    <!-- Cấu trúc Topbar được làm mới hoàn toàn để xử lý khoảng cách -->
+    <div class="topbar">
+        <div>
+            <h4>🖼️ Quản Lý Banner Trang Chủ</h4>
+            <div class="topbar-sub">Quản lý danh sách hình ảnh banner hiển thị ngoài trang chủ</div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary px-3 py-2"
+                    style="background-color: #1a6b5a; border: none; font-weight: 600; font-size: 14px; border-radius: 8px;"
+                    onclick="openCreateModal()">
+                <i class="bi bi-plus-lg me-1"></i> Thêm Banner Mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Thông báo Alert -->
+    <div id="successAlert" th:if="${successMessage}" class="alert alert-success" role="alert"><span
+            th:text="${successMessage}"></span></div>
+    <div id="errorAlert" th:if="${errorMessage}" class="alert alert-danger" role="alert"><span
+            th:text="${errorMessage}"></span></div>
+
+    <div class="custom-table-wrap table-responsive">
+        <table class="table align-middle">
+            <thead>
+            <tr>
+                <th style="width: 8%;">ID</th>
+                <th style="width: 15%;">Ảnh</th>
+                <th style="width: 30%;">Tiêu đề</th>
+                <th style="width: 12%;">Thứ tự</th>
+                <th style="width: 15%;">Trạng thái</th>
+                <th style="width: 20%; text-align: center;">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="banner : ${banners}">
+                <td th:text="${banner.id}" style="font-weight: 600; color: #64748b;">1</td>
+                <td>
+                    <img th:src="${banner.imageUrl}" alt="Banner"
+                         style="max-height: 40px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                </td>
+                <td th:text="${banner.title}" style="font-weight: 500;">Banner 1</td>
+                <td th:text="${banner.displayOrder}">0</td>
+                <td>
+                    <span th:text="${banner.status ? 'Hoạt động' : 'Tạm ẩn'}"
+                          th:class="${banner.status ? 'badge-status badge-active' : 'badge-status badge-inactive'}">Hoạt động</span>
+                </td>
+                <td style="white-space: nowrap; text-align: center;">
+                    <button type="button" class="btn-action-edit me-1"
+                            th:onclick="openEditModal([[${banner.id}]], [[${banner.title}]], [[${banner.subtitle}]], [[${banner.redirectUrl}]], [[${banner.displayOrder}]], [[${banner.status}]], [[${banner.imageUrl}]])">
+                        <i class="bi bi-pencil-square"></i> Sửa
+                    </button>
+                    <a th:href="@{/admin/banners/delete/{id}(id=${banner.id})}" class="btn-action-delete"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa banner này?');">
+                        <i class="bi bi-trash"></i> Xóa
+                    </a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(banners)}">
+                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 40px;">Hệ thống chưa có banner
+                    nào.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Paging -->
+        <div th:if="${totalPages > 0}"
+             style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f1f5f9;">
+            <span style="font-size: 13px; color: #64748b;">
+                Hiển thị trang <strong th:text="${currentPage + 1}"></strong> / <strong
+                    th:text="${totalPages}"></strong>
+            </span>
+
+            <form th:action="@{/admin/banners}" method="get"
+                  style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                <input type="hidden" name="page" th:value="${currentPage}"/>
+                <label for="sizeSelect" style="font-size: 13px; color: #64748b;">Số mục:</label>
+                <select id="sizeSelect" name="size" th:onchange="this.form.submit()" class="custom-select-size">
+                    <option th:value="5" th:selected="${pageSize == 5}">5</option>
+                    <option th:value="10" th:selected="${pageSize == 10}">10</option>
+                    <option th:value="15" th:selected="${pageSize == 15}">15</option>
+                    <option th:value="20" th:selected="${pageSize == 20}">20</option>
+                </select>
+            </form>
+
+            <div style="display: flex; gap: 6px;">
+                <a th:if="${currentPage > 0}" th:href="@{/admin/banners(page=${currentPage - 1}, size=${pageSize})}"
+                   style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">←</a>
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                    <a th:href="@{/admin/banners(page=${i}, size=${pageSize})}" th:text="${i + 1}"
+                       th:style="${i == currentPage} ? 'padding: 7px 14px; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px; text-decoration: none;' : 'padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;'"></a>
+                </th:block>
+                <a th:if="${currentPage < totalPages - 1}"
+                   th:href="@{/admin/banners(page=${currentPage + 1}, size=${pageSize})}"
+                   style="padding: 7px 14px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; text-decoration: none; color: #334155;">→</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CẤU TRÚC MODAL THÊM / SỬA BANNER ==================== -->
+<div class="modal fade" id="bannerModal" tabindex="-1" aria-labelledby="bannerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bannerModalLabel" style="font-weight: 700; color: #1e293b;">🖼️ Cấu Hình
+                    Banner</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/admin/banners/save}" method="POST" enctype="multipart/form-data" id="bannerForm">
+                <div class="modal-body px-4">
+                    <input type="hidden" name="id" id="bannerId">
+
+                    <div class="mb-3">
+                        <label class="form-label">Tiêu đề chính:</label>
+                        <input type="text" name="title" id="bannerTitle" class="form-control" maxlength="150" required
+                               placeholder="Nhập tiêu đề banner...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Phụ đề / Mô tả ngắn:</label>
+                        <textarea name="subtitle" id="bannerSubtitle" class="form-control" rows="3" maxlength="500"
+                                  placeholder="Nhập mô tả chi tiết..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Đường dẫn khi click (Redirect URL):</label>
+                            <input type="text" name="redirectUrl" id="bannerRedirectUrl" class="form-control"
+                                   maxlength="2048" placeholder="https://example.com">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Thứ tự hiển thị:</label>
+                            <input type="number" name="displayOrder" id="bannerDisplayOrder" class="form-control"
+                                   min="1" max="9999" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check mt-2">
+                        <input type="checkbox" class="form-check-input" id="bannerStatus" name="status">
+                        <label class="form-check-label font-weight-500" for="bannerStatus" style="font-size: 13px;">Kích
+                            hoạt hiển thị (Active)</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" id="uploadLabel">Tải ảnh Banner:</label>
+                        <input type="file" name="imageFile" id="bannerImageFile" class="form-control"
+                               accept=".jpg,.jpeg,.png,.webp">
+
+                        <div id="currentImageWrapper" class="mt-3" style="display: none;">
+                            <p style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Ảnh hiện tại:</p>
+                            <img src="" id="previewImage" alt="Current Banner"
+                                 style="max-height: 100px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light"
+                     style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            style="font-size: 13px; font-weight: 600;">Hủy Bỏ
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                            style="background-color: #1a6b5a; border: none; font-size: 13px; font-weight: 600;">💾 Lưu
+                        Banner
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let myModal;
+    document.addEventListener("DOMContentLoaded", function () {
+        myModal = new bootstrap.Modal(document.getElementById('bannerModal'));
+    });
+
+    function openCreateModal() {
+        document.getElementById('bannerModalLabel').innerText = "🖼️ Thêm Banner Mới";
+        document.getElementById('bannerForm').reset();
+        document.getElementById('bannerId').value = "";
+        document.getElementById('bannerDisplayOrder').value = "1";
+        document.getElementById('bannerStatus').checked = true;
+        document.getElementById('bannerImageFile').required = true;
+        document.getElementById('uploadLabel').innerText = "Tải ảnh Banner (Bắt buộc):";
+        document.getElementById('currentImageWrapper').style.display = 'none';
+        myModal.show();
+    }
+
+    function openEditModal(id, title, subtitle, redirectUrl, displayOrder, status, imageUrl) {
+        document.getElementById('bannerModalLabel').innerText = "🖼️ Sửa Thông Tin Banner";
+        document.getElementById('bannerId').value = id;
+        document.getElementById('bannerTitle').value = title;
+        document.getElementById('bannerSubtitle').value = subtitle || "";
+        document.getElementById('bannerRedirectUrl').value = redirectUrl || "";
+        document.getElementById('bannerDisplayOrder').value = displayOrder;
+        document.getElementById('bannerStatus').checked = status;
+        document.getElementById('bannerImageFile').required = false;
+        document.getElementById('uploadLabel').innerText = "Tải ảnh Banner mới (chỉ chọn nếu muốn thay đổi ảnh):";
+
+        if (imageUrl) {
+            document.getElementById('previewImage').src = imageUrl;
+            document.getElementById('currentImageWrapper').style.display = 'block';
+        } else {
+            document.getElementById('currentImageWrapper').style.display = 'none';
+        }
+        myModal.show();
+    }
+
+    // Validation form trước khi submit
+    document.getElementById('bannerForm').addEventListener('submit', function (e) {
+        const orderInput = document.getElementById('bannerDisplayOrder');
+        const urlInput = document.getElementById('bannerRedirectUrl');
+        const fileInput = document.getElementById('bannerImageFile');
+
+        if (orderInput.value < 1 || orderInput.value >= 10000) {
+            e.preventDefault();
+            alert("Thứ tự hiển thị phải từ 1 đến 9999!");
+            orderInput.focus();
+            return;
+        }
+
+        if (urlInput.value && urlInput.value.trim() !== "") {
+            const urlValue = urlInput.value.trim();
+            if (!urlValue.startsWith("http://") && !urlValue.startsWith("https://")) {
+                e.preventDefault();
+                alert("Đường dẫn (URL) phải bắt đầu bằng http:// hoặc https://");
+                urlInput.focus();
+                return;
+            }
+        }
+
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const validExts = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+            if (!validExts.includes(file.type)) {
+                e.preventDefault();
+                alert("Chỉ chấp nhận các định dạng ảnh .jpg, .jpeg, .png, .webp!");
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                e.preventDefault();
+                alert("Kích thước file không được vượt quá 5MB!");
+                return;
+            }
+        }
+    });
+
+    setTimeout(() => {
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        if (successAlert) {
+            successAlert.style.display = 'none';
+        }
+        if (errorAlert) {
+            errorAlert.style.display = 'none';
+        }
+    }, 4000);
+</script>
+</body>
+</html>

@@ -12,8 +12,8 @@ import lombok.*;
 @Builder
 public class UserAdminRequest {
 
-    @NotBlank(message = "Email không được bỏ trống")
-    @Email(message = "Địa chỉ email không đúng định dạng")
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Định dạng Email không hợp lệ")
     @Size(max = 150, message = "Email không vượt quá 150 ký tự")
     private String email;
 

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Lịch sử cảnh báo | GlucoTrack</title>
+        <link rel="stylesheet" th:href="@{/css/notification-history.css}"/>
+    </head>
+    <body>
+
+        <!-- Top bar -->
+        <div class="topbar">
+            <a th:href="@{/patient/homepage}" class="logo">
+                <div class="logo-icon">🩸</div>
+                GlucoTrack
+            </a>
+            <nav class="topbar-nav">
+                <a th:href="@{/patient/homepage}" class="nav-btn">🏠 Trang chủ</a>
+                <a th:href="@{/patient/relatives}" class="nav-btn">👪 Người thân</a>
+                <a th:href="@{/health-logs/my-logs}" class="nav-btn">📋 Nhật ký</a>
+            </nav>
+        </div>
+
+        <div class="page-wrap">
+
+            <!-- Title band -->
+            <div class="card">
+                <div class="page-title-band">
+                    <div class="alert-icon-circle">🚨</div>
+                    <div class="page-title-text">
+                        <h1>Lịch sử cảnh báo đã gửi cho người thân</h1>
+                        <p>Các lần hệ thống tự động gửi email khẩn cấp tới người thân khi chỉ số đường huyết hoặc huyết áp rơi vào vùng nguy hiểm.</p>
+                    </div>
+                </div>
+
+                <!-- Error: no patient profile -->
+                <div th:if="${noPatientFound}" class="err-banner">
+                    ⚠️ Không tìm thấy hồ sơ bệnh nhân gắn với tài khoản hiện tại.
+                </div>
+
+                <!-- Stats row -->
+                <div class="stats-row" th:if="${!noPatientFound and !logs.content.isEmpty()}">
+                    <div class="stat-item">
+                        <span class="stat-dot dot-total"></span>
+                        <div>
+                            <div class="stat-value" th:text="${logs.totalElements}">0</div>
+                            <div class="stat-desc">Tổng cảnh báo</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-dot dot-ok"></span>
+                        <div>
+                            <div class="stat-value" th:text="${successCount}">0</div>
+                            <div class="stat-desc">Gửi thành công</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-dot dot-fail"></span>
+                        <div>
+                            <div class="stat-value" th:text="${failCount}">0</div>
+                            <div class="stat-desc">Gửi thất bại</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="card filter-card" th:if="${!noPatientFound}">
+                <div class="filter-label">🔎 Lọc theo khoảng thời gian</div>
+                <form method="get" th:action="@{/patient/notification-history}" class="filter-row">
+                    <div class="filter-field">
+                        <label for="fromDate">Từ ngày</label>
+                        <input type="date" id="fromDate" name="fromDate" th:value="${fromDate}"/>
+                    </div>
+                    <div class="filter-field">
+                        <label for="toDate">Đến ngày</label>
+                        <input type="date" id="toDate" name="toDate" th:value="${toDate}"/>
+                    </div>
+                    <button type="submit" class="btn-filter">Áp dụng</button>
+                    <a th:href="@{/patient/notification-history}" class="link-clear">Xóa bộ lọc</a>
+                </form>
+            </div>
+
+            <!-- Empty -->
+            <div class="card" th:if="${!noPatientFound and logs.content.isEmpty()}">
+                <div class="empty-wrap">
+                    <div class="empty-icon-big" th:if="${fromDate != null or toDate != null}">🔎</div>
+                    <div class="empty-icon-big" th:unless="${fromDate != null or toDate != null}">✅</div>
+                    <div class="empty-title" th:if="${fromDate != null or toDate != null}">
+                        Không có cảnh báo nào trong khoảng thời gian đã chọn
+                    </div>
+                    <div class="empty-title" th:unless="${fromDate != null or toDate != null}">
+                        Chưa có cảnh báo nào
+                    </div>
+                    <div class="empty-desc" th:unless="${fromDate != null or toDate != null}">
+                        Đây là tín hiệu tốt. Các chỉ số sức khỏe của bạn hiện đang nằm trong ngưỡng an toàn và chưa kích hoạt cảnh báo nào tới người thân.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="card" th:if="${!noPatientFound and !logs.content.isEmpty()}">
+                <div class="table-scroll">
+                    <table class="notif-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Email người thân</th>
+                                <th>Tiêu đề email</th>
+                                <th>Trạng thái</th>
+                                <th>Chỉ số cảnh báo</th>
+                                <th>Lỗi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="l : ${logs.content}">
+                                <td class="cell-time">
+                                    <span class="cell-date" th:text="${#temporals.format(l.sentAt, 'dd/MM/yyyy')}">01/07/2026</span>
+                                    <span class="cell-hhmm" th:text="${#temporals.format(l.sentAt, 'HH:mm')}">13:44</span>
+                                </td>
+                                <td class="cell-email" th:text="${l.recipientEmail}">example@gmail.com</td>
+                                <td class="cell-subject" th:text="${l.subject}">🚨 CẢNH BÁO KHẨN CẤP...</td>
+                                <td>
+                                    <span th:if="${l.success}" class="status-chip chip-ok">
+                                        <span class="chip-dot"></span>Đã gửi
+                                    </span>
+                                    <span th:unless="${l.success}" class="status-chip chip-fail">
+                                        <span class="chip-dot"></span>Thất bại
+                                    </span>
+                                </td>
+                                <td class="summary-cell">
+                                    <span th:if="${l.bodySummary == null or l.bodySummary.isEmpty()}" class="cell-none">—</span>
+                                    <div th:unless="${l.bodySummary == null or l.bodySummary.isEmpty()}">
+                                        <div th:each="line : ${l.bodySummary.replace('Cảnh báo nguy hiểm: ','').split(';')}"
+                                             class="summary-item"
+                                             th:text="${line.trim()}">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="error-cell">
+                                    <span th:if="${l.errorMessage == null or l.errorMessage.isEmpty()}" class="cell-none">—</span>
+                                    <span th:unless="${l.errorMessage == null or l.errorMessage.isEmpty()}" th:text="${l.errorMessage}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-wrap" th:if="${totalPages > 1}">
+                    <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <a th:if="${i != currentPage}"
+                           th:href="@{/patient/notification-history(page=${i}, fromDate=${fromDate}, toDate=${toDate})}"
+                           th:text="${i + 1}"></a>
+                        <strong th:if="${i == currentPage}" th:text="${i + 1}"></strong>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </body>
+</html>

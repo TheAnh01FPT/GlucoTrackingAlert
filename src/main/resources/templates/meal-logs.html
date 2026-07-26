@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<<<<<<< HEAD
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -1002,3 +1003,2465 @@ loadLogs();
 </script>
 </body>
 </html>[
+=======
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GlucoTrack | Nhật Ký Bữa Ăn</title>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+        <style>
+            *,*::before,*::after{
+                box-sizing:border-box;
+                margin:0;
+                padding:0
+            }
+            :root{
+                --primary:#005b99;
+                --primary-dark:#003f6e;
+                --primary-light:#e8f4fd;
+                --accent:#00a86b;
+                --accent-light:#e6f7f1;
+                --danger:#dc2626;
+                --danger-light:#fef2f2;
+                --warning:#d97706;
+                --warning-light:#fffbeb;
+                --text:#1a2535;
+                --text-muted:#5a6a81;
+                --border:#d1dde8;
+                --bg:#f0f4f8;
+                --shadow:0 2px 12px rgba(0,91,153,.08);
+                --shadow-lg:0 8px 32px rgba(0,91,153,.13);
+                --radius:14px;
+            }
+            body{
+                font-family:'Be Vietnam Pro',sans-serif;
+                background:var(--bg);
+                color:var(--text);
+                min-height:100vh;
+                font-size:16px
+            }
+            .header{
+                background:linear-gradient(90deg,var(--primary-dark) 0%,var(--primary) 60%,#0077c2 100%);
+                color:#fff;
+                padding:0 32px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                height:68px;
+                box-shadow:0 2px 16px rgba(0,63,110,.18);
+                position:sticky;
+                top:0;
+                z-index:100
+            }
+            .header-left{
+                display:flex;
+                align-items:center;
+                gap:14px
+            }
+            .header-logo{
+                width:42px;
+                height:42px;
+                background:#fff;
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:22px
+            }
+            .header-title{
+                font-family:'Lexend',sans-serif;
+                font-size:22px;
+                font-weight:700
+            }
+            .header-sub{
+                font-size:13px;
+                opacity:.75;
+                margin-top:1px
+            }
+            .header-right{
+                display:flex;
+                align-items:center;
+                gap:10px;
+                font-size:14px;
+                opacity:.85
+            }
+            .status-dot{
+                width:9px;
+                height:9px;
+                border-radius:50%;
+                background:#4ade80;
+                box-shadow:0 0 6px #4ade80;
+                animation:pulse 2s infinite
+            }
+            @keyframes pulse{
+                0%,100%{
+                    opacity:1
+                }
+                50%{
+                    opacity:.5
+                }
+            }
+            .breadcrumb{
+                background:#fff;
+                border-bottom:1px solid var(--border);
+                padding:11px 32px;
+                font-size:14px;
+                color:var(--text-muted);
+                display:flex;
+                align-items:center;
+                gap:6px
+            }
+            .breadcrumb span{
+                color:var(--primary);
+                font-weight:600
+            }
+            .remind-banner{
+                background:linear-gradient(135deg,#7c3aed,#a855f7);
+                color:#fff;
+                border-radius:var(--radius);
+                padding:14px 22px;
+                margin-bottom:16px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                box-shadow:var(--shadow-lg);
+                font-size:15px
+            }
+            .remind-icon{
+                font-size:28px;
+                margin-right:12px
+            }
+            .remind-close{
+                background:rgba(255,255,255,.2);
+                border:none;
+                color:#fff;
+                border-radius:8px;
+                padding:5px 12px;
+                cursor:pointer;
+                font-size:13px;
+                font-family:'Be Vietnam Pro',sans-serif
+            }
+            .streak-banner{
+                background:linear-gradient(135deg,#1e40af,#0ea5e9);
+                color:#fff;
+                border-radius:var(--radius);
+                padding:16px 22px;
+                margin-bottom:16px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                box-shadow:var(--shadow-lg)
+            }
+            .streak-left{
+                display:flex;
+                align-items:center;
+                gap:14px;
+                font-size:16px
+            }
+            .streak-fire{
+                font-size:32px
+            }
+            .streak-num{
+                font-family:'Lexend',sans-serif;
+                font-size:32px;
+                font-weight:700;
+                margin-right:4px
+            }
+            .streak-right{
+                font-size:14px;
+                opacity:.85;
+                text-align:right
+            }
+            .daily-summary{
+                background:#fff;
+                border-radius:var(--radius);
+                box-shadow:var(--shadow);
+                padding:18px 22px;
+                margin-bottom:16px;
+                border-left:5px solid var(--accent)
+            }
+            .daily-summary-header{
+                display:flex;
+                align-items:center;
+                gap:8px;
+                font-family:'Lexend',sans-serif;
+                font-weight:700;
+                font-size:16px;
+                margin-bottom:12px
+            }
+            .daily-summary-body{
+                display:flex;
+                gap:28px;
+                align-items:center;
+                flex-wrap:wrap
+            }
+            .ds-item{
+                font-size:15px;
+                color:var(--text-muted)
+            }
+            .ds-item b{
+                color:var(--text);
+                font-size:16px
+            }
+            .ds-status{
+                margin-left:auto;
+                padding:8px 18px;
+                border-radius:20px;
+                font-size:14px;
+                font-weight:700
+            }
+            .ds-safe{
+                background:var(--accent-light);
+                color:var(--accent)
+            }
+            .ds-warn{
+                background:var(--warning-light);
+                color:var(--warning)
+            }
+            .ds-danger{
+                background:var(--danger-light);
+                color:var(--danger)
+            }
+            .stats-row{
+                display:grid;
+                grid-template-columns:repeat(3,1fr);
+                gap:16px;
+                margin-bottom:20px
+            }
+            .stat-card{
+                background:#fff;
+                border-radius:var(--radius);
+                padding:20px;
+                box-shadow:var(--shadow);
+                border-left:5px solid var(--primary);
+                display:flex;
+                align-items:center;
+                gap:16px;
+                transition:box-shadow .2s
+            }
+            .stat-card:hover{
+                box-shadow:var(--shadow-lg)
+            }
+            .stat-card.green{
+                border-left-color:var(--accent)
+            }
+            .stat-card.red{
+                border-left-color:var(--danger)
+            }
+            .stat-icon{
+                width:50px;
+                height:50px;
+                border-radius:12px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:22px;
+                background:var(--primary-light);
+                flex-shrink:0
+            }
+            .stat-card.green .stat-icon{
+                background:var(--accent-light)
+            }
+            .stat-card.red .stat-icon{
+                background:var(--danger-light)
+            }
+            .stat-label{
+                font-size:12px;
+                color:var(--text-muted);
+                font-weight:600;
+                text-transform:uppercase;
+                letter-spacing:.5px
+            }
+            .stat-value{
+                font-family:'Lexend',sans-serif;
+                font-size:26px;
+                font-weight:700;
+                color:var(--text);
+                line-height:1.1
+            }
+            .stat-unit{
+                font-size:12px;
+                color:var(--text-muted)
+            }
+            .chart-card{
+                background:#fff;
+                border-radius:var(--radius);
+                box-shadow:var(--shadow);
+                margin-bottom:24px;
+                overflow:hidden
+            }
+            .chart-card-header{
+                padding:18px 22px;
+                border-bottom:1px solid var(--border);
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                flex-wrap:wrap;
+                gap:10px
+            }
+            .chart-card-header h3{
+                font-family:'Lexend',sans-serif;
+                font-size:16px;
+                font-weight:700
+            }
+            .chart-body{
+                padding:20px;
+                height:260px
+            }
+            .compare-badge{
+                display:flex;
+                gap:10px
+            }
+            .cmp{
+                font-size:13px;
+                font-weight:600;
+                padding:5px 14px;
+                border-radius:20px
+            }
+            .cmp.up{
+                background:#fef2f2;
+                color:var(--danger)
+            }
+            .cmp.down{
+                background:var(--accent-light);
+                color:var(--accent)
+            }
+            .cmp.same{
+                background:var(--primary-light);
+                color:var(--primary)
+            }
+            .content-grid{
+                display:grid;
+                grid-template-columns:400px 1fr;
+                gap:20px
+            }
+            .form-card{
+                background:#fff;
+                border-radius:var(--radius);
+                box-shadow:var(--shadow);
+                overflow:hidden;
+                position:sticky;
+                top:80px;
+                max-height:calc(100vh - 100px);
+                overflow-y:auto
+            }
+            .form-card-header{
+                background:linear-gradient(135deg,var(--primary) 0%,#0077c2 100%);
+                color:#fff;
+                padding:18px 22px;
+                display:flex;
+                align-items:center;
+                gap:10px;
+                position:sticky;
+                top:0;
+                z-index:10
+            }
+            .form-card-header.edit-mode{
+                background:linear-gradient(135deg,#d97706 0%,#f59e0b 100%)
+            }
+            .form-card-header h3{
+                font-family:'Lexend',sans-serif;
+                font-size:17px;
+                font-weight:700
+            }
+            .edit-badge{
+                background:rgba(255,255,255,.25);
+                border-radius:20px;
+                padding:3px 12px;
+                font-size:13px;
+                margin-left:auto;
+                display:none
+            }
+            .edit-badge.show{
+                display:block
+            }
+            .form-body{
+                padding:22px
+            }
+            .step-label{
+                display:flex;
+                align-items:center;
+                gap:8px;
+                font-size:15px;
+                font-weight:700;
+                color:var(--primary);
+                margin-bottom:8px
+            }
+            .step-num{
+                width:26px;
+                height:26px;
+                background:var(--primary);
+                color:#fff;
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:13px;
+                font-weight:700;
+                flex-shrink:0
+            }
+            .form-group{
+                margin-bottom:20px
+            }
+            .form-group input,.form-group select{
+                width:100%;
+                padding:14px 16px;
+                border:2px solid var(--border);
+                border-radius:12px;
+                font-family:'Be Vietnam Pro',sans-serif;
+                font-size:16px;
+                color:var(--text);
+                background:#fafbfc;
+                transition:all .2s;
+                outline:none
+            }
+            .form-group input:focus,.form-group select:focus{
+                border-color:var(--primary);
+                background:#fff;
+                box-shadow:0 0 0 3px rgba(0,91,153,.1)
+            }
+            .form-group input::placeholder{
+                color:#aab4c0;
+                font-size:15px
+            }
+
+            /* SUGAR ESTIMATE BOX */
+            .sugar-estimate{
+                border-radius:12px;
+                padding:16px;
+                margin-top:12px;
+                font-size:15px;
+                line-height:1.7;
+                display:none;
+                border:2px solid
+            }
+            .sugar-estimate.show{
+                display:block
+            }
+            .sugar-estimate.ok{
+                background:var(--accent-light);
+                border-color:#86efac;
+                color:#166534
+            }
+            .sugar-estimate.warn{
+                background:var(--warning-light);
+                border-color:#fcd34d;
+                color:var(--warning)
+            }
+            .sugar-estimate.danger{
+                background:var(--danger-light);
+                border-color:#fca5a5;
+                color:var(--danger)
+            }
+            .sugar-est-big{
+                font-family:'Lexend',sans-serif;
+                font-size:28px;
+                font-weight:700;
+                display:block;
+                margin-bottom:4px
+            }
+            .sugar-est-note{
+                font-size:13px;
+                opacity:.85;
+                font-style:italic
+            }
+            /* Trang thai UOC TINH (mon khong co san trong FOOD_DB) */
+            .sugar-estimate.estimated{
+                border-style:dashed;
+                border-color:#fb923c
+            }
+            .confidence-badge{
+                display:inline-flex;
+                align-items:center;
+                gap:5px;
+                font-size:12px;
+                font-weight:700;
+                padding:3px 9px;
+                border-radius:20px;
+                margin-bottom:6px;
+                letter-spacing:.2px
+            }
+            .confidence-badge.high{
+                background:#dcfce7;
+                color:#15803d
+            }
+            .confidence-badge.approx{
+                background:#ffedd5;
+                color:#c2410c
+            }
+            .formula-est-note{
+                margin-top:10px;
+                padding-top:10px;
+                border-top:1px dashed #e2e8f0;
+                font-size:13px;
+                color:#c2410c;
+                line-height:1.6
+            }
+            /* Badge nho hien trong bang meal-logs canh ten mon */
+            .est-tag{
+                display:inline-flex;
+                align-items:center;
+                gap:3px;
+                font-size:11px;
+                font-weight:700;
+                background:#ffedd5;
+                color:#c2410c;
+                padding:1px 7px;
+                border-radius:10px;
+                margin-left:6px;
+                cursor:help;
+                vertical-align:middle
+            }
+
+            /* ADVICE */
+            .advice-box{
+                background:linear-gradient(135deg,#e0f2fe,#e8f4fd);
+                border:2px solid #7dd3fc;
+                border-radius:12px;
+                padding:14px 16px;
+                margin-top:10px;
+                font-size:14px;
+                color:#0369a1;
+                line-height:1.7;
+                display:none
+            }
+            .advice-box.show{
+                display:block
+            }
+
+            .suggestions{
+                background:#fff;
+                border:2px solid var(--border);
+                border-radius:10px;
+                margin-top:-12px;
+                margin-bottom:12px;
+                overflow:hidden;
+                display:none;
+                box-shadow:var(--shadow)
+            }
+            .suggestion-item{
+                padding:12px 16px;
+                font-size:15px;
+                cursor:pointer;
+                border-bottom:1px solid #f1f5f9;
+                display:flex;
+                align-items:center;
+                gap:10px
+            }
+            .suggestion-item:last-child{
+                border-bottom:none
+            }
+            .suggestion-item:hover{
+                background:var(--primary-light)
+            }
+            .form-divider{
+                height:1px;
+                background:var(--border);
+                margin:18px 0
+            }
+            .btn-group{
+                display:flex;
+                flex-direction:column;
+                gap:10px
+            }
+            .btn{
+                width:100%;
+                padding:16px;
+                border:none;
+                border-radius:12px;
+                font-family:'Be Vietnam Pro',sans-serif;
+                font-size:16px;
+                font-weight:700;
+                cursor:pointer;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:8px;
+                transition:all .2s
+            }
+            .btn-primary{
+                background:var(--primary);
+                color:#fff
+            }
+            .btn-primary:hover{
+                background:var(--primary-dark);
+                transform:translateY(-2px);
+                box-shadow:0 6px 16px rgba(0,91,153,.3)
+            }
+            .btn-warning{
+                background:var(--warning);
+                color:#fff;
+                display:none
+            }
+            .btn-warning.show{
+                display:flex
+            }
+            .btn-warning:hover{
+                background:#b45309;
+                transform:translateY(-2px)
+            }
+            .btn-secondary{
+                background:#f1f5f9;
+                color:var(--text-muted);
+                border:2px solid var(--border);
+                font-size:15px
+            }
+            .btn-secondary:hover{
+                background:#e2e8f0
+            }
+            .btn-export{
+                background:#fff;
+                color:var(--primary);
+                border:2px solid var(--primary);
+                padding:9px 16px;
+                border-radius:10px;
+                font-size:14px;
+                font-weight:600;
+                cursor:pointer;
+                transition:all .15s;
+                font-family:'Be Vietnam Pro',sans-serif
+            }
+            .btn-export:hover{
+                background:var(--primary);
+                color:#fff
+            }
+            .sos-btn{
+                position:fixed;
+                bottom:30px;
+                left:30px;
+                background:#dc2626;
+                color:#fff;
+                border:none;
+                border-radius:50px;
+                padding:14px 22px;
+                font-size:15px;
+                font-weight:700;
+                cursor:pointer;
+                box-shadow:0 4px 20px rgba(220,38,38,.4);
+                z-index:999;
+                font-family:'Be Vietnam Pro',sans-serif;
+                display:flex;
+                align-items:center;
+                gap:8px;
+                animation:sosPulse 2s infinite
+            }
+            @keyframes sosPulse{
+                0%,100%{
+                    box-shadow:0 4px 20px rgba(220,38,38,.4)
+                }
+                50%{
+                    box-shadow:0 4px 30px rgba(220,38,38,.7)
+                }
+            }
+            .sos-panel{
+                display:none;
+                position:fixed;
+                bottom:90px;
+                left:30px;
+                background:#fff;
+                border-radius:16px;
+                padding:20px;
+                box-shadow:var(--shadow-lg);
+                z-index:1000;
+                min-width:260px;
+                border:2px solid var(--danger)
+            }
+            .sos-panel.show{
+                display:block
+            }
+            .sos-title{
+                font-weight:700;
+                color:var(--danger);
+                font-size:16px;
+                margin-bottom:12px
+            }
+            .sos-item{
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding:10px 0;
+                border-bottom:1px solid #f1f5f9;
+                font-size:15px
+            }
+            .sos-item:last-child{
+                border-bottom:none
+            }
+            .sos-item a{
+                color:var(--primary);
+                font-weight:600;
+                text-decoration:none
+            }
+            .date-filter{
+                display:flex;
+                align-items:center;
+                gap:10px;
+                flex-wrap:wrap
+            }
+            .date-filter input[type="date"]{
+                padding:8px 12px;
+                border:2px solid var(--border);
+                border-radius:10px;
+                font-family:'Be Vietnam Pro',sans-serif;
+                font-size:14px;
+                color:var(--text);
+                outline:none;
+                cursor:pointer
+            }
+            .btn-today{
+                padding:8px 16px;
+                background:var(--primary-light);
+                color:var(--primary);
+                border:none;
+                border-radius:10px;
+                font-size:14px;
+                font-weight:600;
+                cursor:pointer
+            }
+            .btn-today:hover{
+                background:var(--primary);
+                color:#fff
+            }
+            .table-card{
+                background:#fff;
+                border-radius:var(--radius);
+                box-shadow:var(--shadow);
+                overflow:hidden
+            }
+            .table-card-header{
+                padding:18px 22px;
+                border-bottom:1px solid var(--border);
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                flex-wrap:wrap;
+                gap:10px
+            }
+            .table-card-header h3{
+                font-family:'Lexend',sans-serif;
+                font-size:16px;
+                font-weight:700;
+                display:flex;
+                align-items:center;
+                gap:8px
+            }
+            .badge{
+                background:var(--primary-light);
+                color:var(--primary);
+                font-size:13px;
+                font-weight:600;
+                padding:3px 12px;
+                border-radius:20px
+            }
+            .search-box{
+                display:flex;
+                align-items:center;
+                gap:8px;
+                background:var(--bg);
+                border:2px solid var(--border);
+                border-radius:10px;
+                padding:8px 14px
+            }
+            .search-box input{
+                border:none;
+                background:transparent;
+                outline:none;
+                font-family:'Be Vietnam Pro',sans-serif;
+                font-size:14px;
+                color:var(--text);
+                width:150px
+            }
+            table{
+                width:100%;
+                border-collapse:collapse
+            }
+            thead tr{
+                background:#f8fafc;
+                border-bottom:2px solid var(--border)
+            }
+            th{
+                padding:14px 16px;
+                text-align:left;
+                font-size:12px;
+                font-weight:700;
+                color:var(--text-muted);
+                text-transform:uppercase;
+                letter-spacing:.5px;
+                white-space:nowrap
+            }
+            td{
+                padding:14px 16px;
+                font-size:15px;
+                border-bottom:1px solid #f1f5f9;
+                vertical-align:middle
+            }
+            tr:last-child td{
+                border-bottom:none
+            }
+            tbody tr:hover{
+                background:var(--primary-light)
+            }
+            tbody tr.row-danger{
+                background:#fff5f5
+            }
+            tbody tr.row-danger:hover{
+                background:#fee2e2
+            }
+            .food-cell{
+                display:flex;
+                align-items:center;
+                gap:12px
+            }
+            .food-icon{
+                width:36px;
+                height:36px;
+                background:var(--accent-light);
+                border-radius:10px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:18px;
+                flex-shrink:0
+            }
+            .food-name{
+                font-weight:700;
+                color:var(--text);
+                font-size:15px
+            }
+            .meal-badge{
+                display:inline-block;
+                padding:4px 12px;
+                border-radius:20px;
+                font-size:13px;
+                font-weight:600
+            }
+            .meal-breakfast{
+                background:#fef9c3;
+                color:#854d0e
+            }
+            .meal-lunch{
+                background:#dcfce7;
+                color:#166534
+            }
+            .meal-dinner{
+                background:#ede9fe;
+                color:#5b21b6
+            }
+            .meal-snack{
+                background:#fce7f3;
+                color:#9d174d
+            }
+            .sugar-badge{
+                display:inline-flex;
+                align-items:center;
+                gap:5px;
+                padding:5px 12px;
+                border-radius:20px;
+                font-size:13px;
+                font-weight:600
+            }
+            .sugar-ok{
+                background:var(--accent-light);
+                color:var(--accent)
+            }
+            .sugar-warn{
+                background:var(--warning-light);
+                color:var(--warning)
+            }
+            .sugar-danger{
+                background:var(--danger-light);
+                color:var(--danger)
+            }
+            .sugar-na{
+                background:#f1f5f9;
+                color:var(--text-muted)
+            }
+            .quick-picks{
+                display:flex;
+                flex-wrap:wrap;
+                gap:8px;
+                margin:8px 0 4px
+            }
+            .quick-pick-chip{
+                display:inline-flex;
+                align-items:center;
+                gap:6px;
+                padding:6px 12px;
+                border-radius:20px;
+                background:var(--accent-light,#eef2ff);
+                color:var(--accent,#4f46e5);
+                font-size:12.5px;
+                font-weight:600;
+                cursor:pointer;
+                border:1px solid transparent;
+                transition:.15s
+            }
+            .quick-pick-chip:hover{
+                border-color:currentColor
+            }
+            .quick-pick-chip .qp-count{
+                font-weight:400;
+                opacity:.75
+            }
+            .risk-food-row{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:10px;
+                padding:10px 14px;
+                border-radius:12px;
+                background:#f8fafc;
+                margin-bottom:8px
+            }
+            .risk-food-row:last-child{
+                margin-bottom:0
+            }
+            .risk-food-name{
+                font-weight:600;
+                font-size:14px
+            }
+            .risk-food-meta{
+                font-size:12px;
+                color:var(--text-muted)
+            }
+            .action-btns{
+                display:flex;
+                gap:8px
+            }
+            .btn-sm{
+                padding:8px 16px;
+                border:none;
+                border-radius:8px;
+                font-size:14px;
+                font-weight:600;
+                cursor:pointer;
+                transition:all .15s;
+                font-family:'Be Vietnam Pro',sans-serif
+            }
+            .btn-edit{
+                background:var(--primary-light);
+                color:var(--primary)
+            }
+            .btn-edit:hover{
+                background:var(--primary);
+                color:#fff
+            }
+            .btn-del{
+                background:var(--danger-light);
+                color:var(--danger)
+            }
+            .btn-del:hover{
+                background:var(--danger);
+                color:#fff
+            }
+            .empty-state{
+                padding:60px 20px;
+                text-align:center;
+                color:var(--text-muted)
+            }
+            .empty-state .icon{
+                font-size:56px;
+                margin-bottom:14px
+            }
+            .empty-state p{
+                font-size:16px
+            }
+            .pagination{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                padding:16px 20px;
+                border-top:1px solid var(--border);
+                background:#fafbfc
+            }
+            .page-info{
+                font-size:14px;
+                color:var(--text-muted)
+            }
+            .page-btns{
+                display:flex;
+                gap:8px
+            }
+            .page-btn{
+                min-width:40px;
+                height:40px;
+                border:2px solid var(--border);
+                background:#fff;
+                border-radius:10px;
+                font-size:14px;
+                font-weight:600;
+                cursor:pointer;
+                color:var(--text-muted);
+                transition:all .15s;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-family:'Be Vietnam Pro',sans-serif;
+                padding:0 10px
+            }
+            .page-btn:hover{
+                border-color:var(--primary);
+                color:var(--primary)
+            }
+            .page-btn.active{
+                background:var(--primary);
+                color:#fff;
+                border-color:var(--primary)
+            }
+            .page-btn:disabled{
+                opacity:.4;
+                cursor:not-allowed
+            }
+            .toast{
+                position:fixed;
+                bottom:24px;
+                right:24px;
+                background:var(--primary-dark);
+                color:#fff;
+                padding:14px 22px;
+                border-radius:12px;
+                font-size:15px;
+                font-weight:500;
+                box-shadow:var(--shadow-lg);
+                transform:translateY(80px);
+                opacity:0;
+                transition:all .3s ease;
+                z-index:9999;
+                max-width:340px;
+                line-height:1.5
+            }
+            .toast.show{
+                transform:translateY(0);
+                opacity:1
+            }
+            .toast.success{
+                background:var(--accent)
+            }
+            .toast.error{
+                background:var(--danger)
+            }
+            .toast.warn{
+                background:var(--warning)
+            }
+            .loading{
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                padding:50px;
+                gap:12px;
+                color:var(--text-muted);
+                font-size:15px
+            }
+            .spinner{
+                width:22px;
+                height:22px;
+                border:2.5px solid var(--border);
+                border-top-color:var(--primary);
+                border-radius:50%;
+                animation:spin .7s linear infinite
+            }
+            @keyframes spin{
+                to{
+                    transform:rotate(360deg)
+                }
+            }
+            .footer{
+                text-align:center;
+                padding:22px;
+                color:var(--text-muted);
+                font-size:13px;
+                border-top:1px solid var(--border);
+                margin-top:32px
+            }
+            .main{
+                padding:24px 32px;
+                max-width:1400px;
+                margin:0 auto
+            }
+
+            /* GENDER / AGE SELECTOR */
+            .profile-bar{
+                background:linear-gradient(135deg,#0f4c81,#005b99);
+                border-radius:var(--radius);
+                padding:14px 22px;
+                margin-bottom:16px;
+                display:flex;
+                align-items:center;
+                gap:20px;
+                flex-wrap:wrap;
+                box-shadow:var(--shadow)
+            }
+            .profile-bar-label{
+                color:rgba(255,255,255,.8);
+                font-size:13px;
+                font-weight:600;
+                text-transform:uppercase;
+                letter-spacing:.5px;
+                white-space:nowrap
+            }
+            .profile-select{
+                background:rgba(255,255,255,.15);
+                border:1.5px solid rgba(255,255,255,.3);
+                color:#fff;
+                border-radius:10px;
+                padding:9px 14px;
+                font-family:'Be Vietnam Pro',sans-serif;
+                font-size:15px;
+                font-weight:600;
+                cursor:pointer;
+                outline:none;
+                transition:all .2s
+            }
+            .profile-select:hover,.profile-select:focus{
+                background:rgba(255,255,255,.25);
+                border-color:rgba(255,255,255,.6)
+            }
+            .profile-select option{
+                color:var(--text);
+                background:#fff;
+                font-weight:500
+            }
+            .profile-indicator{
+                display:flex;
+                align-items:center;
+                gap:8px;
+                color:#fff;
+                font-size:14px;
+                margin-left:auto
+            }
+            .profile-icon{
+                font-size:28px
+            }
+
+            /* FORMULA BOX */
+            .formula-box{
+                background:#f0f4ff;
+                border:2px solid #93c5fd;
+                border-radius:10px;
+                padding:12px 16px;
+                margin-top:10px;
+                font-size:13px;
+                color:#1e40af;
+                line-height:1.8;
+                display:none
+            }
+            .formula-box.show{
+                display:block
+            }
+            .formula-title{
+                font-weight:700;
+                font-size:13px;
+                margin-bottom:6px;
+                color:#1d4ed8
+            }
+            .formula-row{
+                display:flex;
+                align-items:baseline;
+                gap:6px;
+                flex-wrap:wrap
+            }
+            .formula-math{
+                font-family:monospace;
+                background:#dbeafe;
+                border-radius:5px;
+                padding:2px 7px;
+                font-size:12.5px;
+                color:#1e3a8a
+            }
+            .formula-result{
+                font-weight:700;
+                color:#1e40af;
+                font-size:15px
+            }
+        </style>
+    </head>
+    <body>
+
+        <button class="sos-btn" onclick="toggleSOS()">🚨 Cần giúp đỡ?</button>
+        <div class="sos-panel" id="sosPanel">
+            <div class="sos-title">🚨 Liên hệ khẩn cấp</div>
+            <div class="sos-item">🚑 Cấp cứu: <a href="tel:115">115</a></div>
+            <div class="sos-item">🏥 Bệnh viện: <a href="tel:1900">1900</a></div>
+            <!-- Danh sách người thân từ DB -->
+            <div th:if="${relatives != null and !relatives.empty}">
+                <div th:each="r : ${relatives}" class="sos-item">
+                    👤 <b th:text="${r.fullName}">Người thân</b>
+                    <span th:if="${r.relationship != null}" style="color:var(--text-muted);font-size:13px" th:text="${'(' + r.relationship + ')'}"></span>:
+                    <a th:href="${'tel:' + r.phone}" th:text="${r.phone != null ? r.phone : 'Chưa có SĐT'}">Gọi</a>
+                </div>
+            </div>
+            <div th:if="${relatives == null or relatives.empty}" class="sos-item">
+                👤 Chưa có người thân nào — <a href="/patient/relatives">Thêm ngay</a>
+            </div>
+            <div style="margin-top:10px;font-size:13px;color:var(--text-muted)">💡 Nếu đường huyết rất cao, nghỉ ngơi ngay và gọi người thân!</div>
+        </div>
+
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">🏥</div>
+                <div>
+                    <div class="header-title">GlucoTrack</div>
+                    <div class="header-sub">Hệ thống quản lý bệnh nhân tiểu đường</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-dot"></div>
+                Hệ thống hoạt động bình thường &nbsp;|&nbsp; Bệnh nhân #1
+            </div>
+        </div>
+
+        <div class="breadcrumb">
+            🏠 Trang chủ › Bệnh nhân › <span>Nhật Ký Bữa Ăn Hàng Ngày</span>
+        </div>
+
+        <div class="main">
+
+            <!-- PROFILE BAR: Lấy từ hồ sơ bệnh nhân đã đăng ký -->
+            <!-- Hidden inputs chứa giá trị profile từ server (Thymeleaf) -->
+            <input type="hidden" id="profileGender"    th:value="${gender}">
+            <input type="hidden" id="profileAgeGroup"  th:value="${ageGroup}">
+            <input type="hidden" id="profileCondition" th:value="${condition}">
+            <input type="hidden" id="profilePatientId" th:value="${patientId}">
+
+            <div class="profile-bar">
+                <span class="profile-icon" id="profileIcon">👤</span>
+                <div>
+                    <div class="profile-bar-label">Hồ sơ bệnh nhân</div>
+                    <div style="color:#fff;font-size:13px;margin-top:2px">
+                        Thông tin từ hồ sơ đã đăng ký —
+                        <a th:href="@{/patient/profile}" href="/patient/profile"
+                           style="color:#7dd3fc;font-weight:600;text-decoration:underline">Xem / Cập nhật hồ sơ</a>
+                    </div>
+                </div>
+                <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-left:16px">
+                    <div style="color:#fff;font-size:15px">
+                        👤 <b th:text="${patientName}">Bệnh nhân</b>
+                    </div>
+                    <div style="color:rgba(255,255,255,.8);font-size:14px">
+                        🎂 Tuổi: <b th:text="${age}">—</b>
+                    </div>
+                    <div style="color:rgba(255,255,255,.8);font-size:14px">
+                        📊 BMI: <b th:text="${bmi}">—</b>
+                    </div>
+                    <div th:if="${condition != null and condition != 'none'}"
+                         th:style="${condition == 'pregnant'} ? 'font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap;background:rgba(255,182,193,.35);color:#fff;' : 'font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;white-space:nowrap;background:rgba(255,165,0,.35);color:#fff;'"
+                         th:text="${condition == 'pregnant'} ? '🤰 Đang mang thai' : '⚖️ B�o phì'">
+                    </div>
+                </div>
+                <div class="profile-indicator" id="profileIndicator">
+                    <span id="profileLabel">Đang tải...</span>
+                </div>
+                <a th:href="@{/patient/home}" href="/patient/home"
+                   style="margin-left:12px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:10px;padding:8px 16px;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap">
+                    ← Về trang bệnh nhân
+                </a>
+            </div>
+
+            <div class="remind-banner" id="remindBanner" style="display:none">
+                <div style="display:flex;align-items:center">
+                    <span class="remind-icon">🔔</span>
+                    <span id="remindText"></span>
+                </div>
+                <button class="remind-close" onclick="document.getElementById('remindBanner').style.display = 'none'">Đã hiểu</button>
+            </div>
+
+            <div class="streak-banner">
+                <div class="streak-left">
+                    <div class="streak-fire">🔥</div>
+                    <div>
+                        <span class="streak-num" id="streakNum">0</span> ngày ghi nhật ký liên tiếp!
+                        <div style="font-size:14px;opacity:.8;margin-top:2px" id="streakMsg">Hãy ghi nhật ký hôm nay để bắt đầu!</div>
+                    </div>
+                </div>
+                <div class="streak-right" id="streakDate"></div>
+            </div>
+
+            <div class="daily-summary">
+                <div class="daily-summary-header">📊 Tóm tắt sức khỏe hôm nay — <span id="summaryDate"></span></div>
+                <div class="daily-summary-body">
+                    <div class="ds-item">🍽️ <b id="sumMeals">0</b> bữa ăn</div>
+                    <div class="ds-item">🩸 Đường ước tính cao nhất: <b id="sumSugar">—</b></div>
+                    <div class="ds-status ds-safe" id="sumStatus">Chưa có dữ liệu hôm nay</div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon">🍽️</div>
+                    <div><div class="stat-label">Bữa ăn hôm nay</div><div class="stat-value" id="statTotal">0</div></div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon">🩸</div>
+                    <div><div class="stat-label">Đường ước tính cao nhất</div><div class="stat-value" id="statSugar" style="font-size:18px">—</div></div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-icon">⚠️</div>
+                    <div><div class="stat-label">Bữa cần cẩn thận</div><div class="stat-value" id="statDanger">0</div></div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3>📈 Đường huyết ước tính - 7 ngày gần nhất</h3>
+                    <div class="compare-badge">
+                        <span class="cmp" id="cmpSugar">Đường: —</span>
+                    </div>
+                </div>
+                <div class="chart-body"><canvas id="myChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3>🍚 Món ăn hay gây tăng đường</h3>
+                    <div class="compare-badge">
+                        <span class="cmp">Dựa trên món đã ăn ≥ 2 lần</span>
+                    </div>
+                </div>
+                <div class="chart-body" id="riskyFoodsBody" style="padding:16px 20px">
+                    <div class="empty-state" style="padding:20px 0"><p>Chưa đủ dữ liệu — hãy ghi thêm vài bữa ăn để hệ thống nhận ra pattern nhé.</p></div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="form-card" id="formCard">
+                    <div class="form-card-header" id="formHeader">
+                        <span>📋</span>
+                        <h3 id="formTitle">Ghi nhận bữa ăn</h3>
+                        <span class="edit-badge" id="editBadge">✏️ Đang sửa</span>
+                    </div>
+                    <div class="form-body">
+                        <input type="hidden" id="logId">
+                        <input type="hidden" id="sugarEstimation" value="0">
+                        <input type="hidden" id="carbEstimation" value="0">
+
+                        <div class="form-group">
+                            <div class="step-label"><span class="step-num">1</span> Chọn ngày ăn</div>
+                            <input type="date" id="mealDate">
+                        </div>
+
+                        <div class="form-group">
+                            <div class="step-label"><span class="step-num">2</span> Tên món ăn là gì?</div>
+                            <input id="foodName" placeholder="Vd: Cơm trắng, Phở bò, Bún bò..." autocomplete="off" oninput="showSuggestions();calcSugar()">
+                            <div class="suggestions" id="suggestions"></div>
+                            <div class="quick-picks" id="quickPicks"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="step-label"><span class="step-num">3</span> Số lượng bữa ăn</div>
+                            <input type="text" id="quantityInput" placeholder="Vd: 1 bát, 2 miếng, nửa tô, 1 đĩa..." oninput="calcSugar()">
+
+                            <!-- SUGAR ESTIMATE -->
+                            <div class="sugar-estimate" id="sugarEstBox">
+                                <span class="sugar-est-big" id="sugarEstVal">— mmol/L</span>
+                                <div><b>🩸 Đường huyết ước tính sau ăn</b></div>
+                                <div class="sugar-est-note" id="sugarEstNote"></div>
+                                <div class="sugar-est-note">🍚 Carb ước tính: <b id="carbEstVal">— g</b></div>
+                            </div>
+                            <div class="advice-box" id="adviceBox"></div>
+                            <div class="formula-box" id="formulaBox">
+                                <div class="formula-title">📐 Công thức tính (theo hồ sơ bệnh nhân)</div>
+                                <div id="formulaContent"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="step-label"><span class="step-num">4</span> Đây là bữa gì?</div>
+                            <select id="mealType">
+                                <option value="Breakfast">🌅 Bữa sáng</option>
+                                <option value="Lunch">☀️ Bữa trưa</option>
+                                <option value="Dinner">🌙 Bữa tối</option>
+                                <option value="Snack">🍎 Bữa phụ / Ăn vặt</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="step-label"><span class="step-num">5</span> Ghi chú thêm <span style="font-weight:400;color:#aab4c0;font-size:13px">(tùy chọn)</span></div>
+                            <input id="note" placeholder="Vd: Ngon, ăn được, hơi mặn...">
+                        </div>
+
+                        <div class="form-divider"></div>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="btnAdd" onclick="addLog()">➕ Thêm bữa ăn</button>
+                            <button class="btn btn-warning" id="btnUpdate" onclick="updateLog()">✏️ Cập nhật bữa ăn</button>
+                            <button class="btn btn-secondary" onclick="clearForm()">🧹 Làm mới / Nhập bữa mới</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="table-card">
+                        <div class="table-card-header">
+                            <h3>📋 Danh sách bữa ăn <span class="badge" id="countBadge">0 bản ghi</span></h3>
+                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                                <button class="btn-export" onclick="exportCSV()">📥 Xuất CSV</button>
+                                <div class="date-filter">
+                                    <input type="date" id="filterDate" onchange="filterTable()">
+                                    <button class="btn-today" onclick="filterToday()">Hôm nay</button>
+                                    <button class="btn-today" style="background:#f1f5f9;color:var(--text-muted)" onclick="clearDateFilter()">Tất cả</button>
+                                </div>
+                                <div class="search-box">🔍 <input id="searchInput" placeholder="Tìm món ăn..." oninput="filterTable()"></div>
+                            </div>
+                        </div>
+                        <div id="tableContainer">
+                            <div class="loading"><div class="spinner"></div> Đang tải dữ liệu...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">GlucoTrack Clinical System © 2026 &nbsp;|&nbsp; Phát triển bởi nhóm SWP391 &nbsp;|&nbsp; FPT University</div>
+        <div class="toast" id="toast"></div>
+
+        <script>
+            const API = "http://localhost:8081/api/meal-logs";
+            const PAGE_SIZE = 6;
+            const FOOD_EMOJIS = ['🍚', '🍜', '🍲', '🥗', '🥩', '🍱', '🥘', '🌮', '🍛', '🫕'];
+            const MEAL_LABELS = {
+                Breakfast: {label: 'Bữa sáng', cls: 'meal-breakfast'},
+                Lunch: {label: 'Bữa trưa', cls: 'meal-lunch'},
+                Dinner: {label: 'Bữa tối', cls: 'meal-dinner'},
+                Snack: {label: 'Bữa phụ', cls: 'meal-snack'}
+            };
+
+            // ================================================================
+            // FOOD DATABASE - tên món, GI, carb/100g
+            // ================================================================
+            const FOOD_DB = [
+                {name: 'Cơm trắng', gi: 72, carb: 28.2},
+                {name: 'Cơm gạo lứt', gi: 55, carb: 23.0},
+                {name: 'Xôi', gi: 88, carb: 38.0},
+                {name: 'Cháo trắng', gi: 78, carb: 15.8},
+                {name: 'Bánh mì', gi: 70, carb: 49.0},
+                {name: 'Phở bò', gi: 61, carb: 32.0},
+                {name: 'Phở gà', gi: 58, carb: 29.0},
+                {name: 'Bún bò Huế', gi: 60, carb: 30.0},
+                {name: 'Bún riêu', gi: 57, carb: 28.0},
+                {name: 'Mì quảng', gi: 62, carb: 31.0},
+                {name: 'Hủ tiếu', gi: 61, carb: 30.0},
+                {name: 'Mì gói', gi: 74, carb: 55.0},
+                {name: 'Thịt lợn', gi: 0, carb: 0.0},
+                {name: 'Thịt bò', gi: 0, carb: 0.0},
+                {name: 'Thịt gà', gi: 0, carb: 0.0},
+                {name: 'Cá hồi', gi: 0, carb: 0.0},
+                {name: 'Tôm', gi: 0, carb: 0.0},
+                {name: 'Trứng', gi: 0, carb: 1.1},
+                {name: 'Rau muống', gi: 20, carb: 5.0},
+                {name: 'Rau cải', gi: 15, carb: 4.0},
+                {name: 'Khoai lang', gi: 54, carb: 20.0},
+                {name: 'Khoai tây', gi: 78, carb: 17.0},
+                {name: 'Chuối', gi: 51, carb: 23.0},
+                {name: 'Xoài', gi: 56, carb: 15.0},
+                {name: 'Cam', gi: 43, carb: 12.0},
+                {name: 'Nước ngọt', gi: 63, carb: 10.5},
+                {name: 'Bánh ngọt', gi: 82, carb: 58.0},
+                {name: 'Sữa chua', gi: 36, carb: 11.4},
+                {name: 'Bánh chưng', gi: 72, carb: 40.0},
+                {name: 'Đậu phụ', gi: 15, carb: 1.9},
+                {name: 'Bánh cuốn', gi: 65, carb: 25.0},
+                {name: 'Bún đậu', gi: 60, carb: 28.0},
+                {name: 'Cơm tấm', gi: 70, carb: 27.0},
+            ];
+
+            // ============================================================
+            // PROFILE: giới tính + nhóm tuổi + tình trạng đặc biệt
+            // ============================================================
+            // Hệ số khẩu phần (gram): điều chỉnh lượng ăn tiêu chuẩn theo giới tính & tuổi
+            // Cơ sở: nhu cầu năng lượng khác nhau (TDEE) — nam trẻ ăn nhiều hơn nữ cao tuổi
+            const PROFILE_FACTORS = {
+                male: {young: 1.25, middle: 1.10, elder: 1.00},
+                female: {young: 1.00, middle: 0.90, elder: 0.82}
+            };
+
+            // Hệ số phản ứng đường huyết (sugar response) theo giới tính & tuổi
+            // Phản ánh khả năng xử lý insulin: người cao tuổi & nữ có phản ứng cao hơn
+            // với cùng lượng carb do kháng insulin tăng dần theo tuổi
+            // Nguồn tham khảo: ADA, WHO glycemic response guidelines
+            const SUGAR_RESPONSE = {
+                male: {young: 0.90, middle: 1.00, elder: 1.12},
+                female: {young: 0.95, middle: 1.08, elder: 1.20}
+            };
+
+            // Hệ số tình trạng đặc biệt — nhân vào SUGAR_RESPONSE (không phải gram)
+            // Béo phì: kháng insulin → đường huyết tăng mạnh hơn cùng lượng carb (+20%)
+            // Mang thai: ngưỡng nhạy cảm hơn do tiểu đường thai kỳ (+10% phản ứng)
+            const CONDITION_MODIFIERS = {
+                none: {factor: 1.00, label: '', icon: '', pronoun_note: ''},
+                obese: {factor: 1.20, label: '· Béo phì', icon: '⚖️', pronoun_note: 'béo phì'},
+                pregnant: {factor: 1.10, label: '· Mang thai', icon: '🤰', pronoun_note: 'mang thai'}
+            };
+
+            // Ngưỡng cảnh báo đường huyết SAU ĂN (mmol/L) theo tình trạng
+            // Người thường: warn ≥7.8 | danger ≥11.0  (WHO/ADA standard)
+            // Béo phì:      warn ≥7.2 | danger ≥10.0  (chặt hơn vì kháng insulin)
+            // Mang thai:    warn ≥7.8 | danger ≥8.5   (GDM threshold — ACOG guidelines)
+            const SUGAR_THRESHOLDS = {
+                none: {warn: 7.8, danger: 11.0},
+                obese: {warn: 7.2, danger: 10.0},
+                pregnant: {warn: 7.8, danger: 8.5}
+            };
+            const PROFILE_LABELS = {
+                male: {young: '👦 Nam · Thanh niên', middle: '👨 Nam · Trung niên', elder: '👴 Nam · Cao tuổi'},
+                female: {young: '👧 Nữ · Thanh niên', middle: '👩 Nữ · Trung niên', elder: '👵 Nữ · Cao tuổi'}
+            };
+            const PROFILE_ICONS = {
+                male: {young: '👦', middle: '👨', elder: '👴'},
+                female: {young: '👧', middle: '👩', elder: '👵'}
+            };
+
+            // onGenderChange removed - profile loaded from patient record
+
+            function getPronoun(gender, ageGroup) {
+                if (ageGroup === 'young')
+                    return gender === 'male' ? 'Anh' : 'Chị';
+                if (ageGroup === 'middle')
+                    return gender === 'male' ? 'Anh' : 'Bà';
+                // elder
+                return gender === 'male' ? 'Ông' : 'Bà';
+            }
+
+            function getProfile() {
+                // Doc tu hidden inputs (du lieu tu server, lay tu ho so benh nhan da dang ky)
+                const gender = (document.getElementById('profileGender') || {value: 'male'}).value || 'male';
+                const ageGroup = (document.getElementById('profileAgeGroup') || {value: 'elder'}).value || 'elder';
+                const condition = (document.getElementById('profileCondition') || {value: 'none'}).value || 'none';
+                const baseFactor = PROFILE_FACTORS[gender][ageGroup];
+                const mod = CONDITION_MODIFIERS[condition];
+                const factor = Math.round(baseFactor * 100) / 100;
+                const sugarFactor = Math.round(SUGAR_RESPONSE[gender][ageGroup] * mod.factor * 100) / 100;
+                return {gender, ageGroup, condition, factor, baseFactor, mod, sugarFactor};
+            }
+
+            function onProfileChange() {
+                const {gender, ageGroup, condition, factor, sugarFactor, mod} = getProfile();
+                const icon = PROFILE_ICONS[gender][ageGroup];
+                const baseLabel = PROFILE_LABELS[gender][ageGroup];
+                const condLabel = mod.label;
+                document.getElementById('profileIcon').textContent = (mod.icon || icon);
+                document.getElementById('profileLabel').textContent =
+                        baseLabel + condLabel + ' · Khẩu phần: ×' + factor.toFixed(2) + ' · Phản ứng: ×' + sugarFactor.toFixed(2);
+                calcSugar();
+            }
+            // Goi khi trang load xong de hien thi thong tin profile
+            document.addEventListener('DOMContentLoaded', function () {
+                onProfileChange();
+            });
+
+            // ============================================================
+            // ước tính gram từ mô tả số lượng
+            function estimateGram(input, foodName) {
+                if (!input)
+                    return 0;
+                const s = input.toLowerCase().trim();
+                const numMatch = s.match(/(\d+\.?\d*)/);
+                const qty = numMatch ? parseFloat(numMatch[1]) : 1;
+                const half = s.includes('nửa') || s.includes('1/2') ? 0.5 : 1;
+                const multiplier = half < 1 ? half : qty;
+
+                // Theo loại đồ đựng/đơn vị
+                if (s.includes('tô lớn') || s.includes('tô to'))
+                    return multiplier * 450;
+                if (s.includes('tô'))
+                    return multiplier * 350;
+                if (s.includes('bát lớn') || s.includes('chén lớn'))
+                    return multiplier * 300;
+                if (s.includes('bát') || s.includes('chén'))
+                    return multiplier * 200;
+                if (s.includes('đĩa lớn'))
+                    return multiplier * 300;
+                if (s.includes('đĩa'))
+                    return multiplier * 200;
+                if (s.includes('miếng lớn'))
+                    return multiplier * 150;
+                if (s.includes('miếng'))
+                    return multiplier * 100;
+                if (s.includes('quả lớn') || s.includes('trái lớn'))
+                    return multiplier * 200;
+                if (s.includes('quả') || s.includes('trái') || s.includes('củ'))
+                    return multiplier * 150;
+                if (s.includes('ly lớn') || s.includes('cốc lớn'))
+                    return multiplier * 350;
+                if (s.includes('ly') || s.includes('cốc'))
+                    return multiplier * 250;
+                if (s.includes('muỗng') || s.includes('thìa'))
+                    return multiplier * 15;
+                if (s.includes('gói') || s.includes('hộp'))
+                    return multiplier * 200;
+                if (s.includes('lon'))
+                    return multiplier * 330;
+
+                // Nếu chỉ là số → coi là gram
+                if (s.match(/^\d+\.?\d*\s*(g|gram|gr)?$/))
+                    return qty;
+
+                return multiplier * 200; // mặc định
+            }
+
+            // ============================================================
+            // ƯỚC TÍNH CHO MÓN KHÔNG CÓ TRONG FOOD_DB
+            // Phân loại theo nhóm thực phẩm dựa trên từ khóa trong tên món,
+            // dùng GI/carb trung bình của nhóm đó để ước tính tương đối chính xác
+            // thay vì bỏ trống hoàn toàn.
+            //
+            // LƯU Ý: đây là danh sách từ khóa cố định nên KHÔNG THỂ bao phủ hết mọi
+            // món ăn có thể có trên đời. Ưu tiên liệt kê theo NGUYÊN LIỆU/GỐC TỪ
+            // (vd "cơm", "mì", "sữa") thay vì tên món cụ thể, vì hầu hết tên món dù
+            // lạ đến đâu cũng thường chứa ít nhất 1 từ nguyên liệu quen thuộc — cách
+            // này bao phủ được nhiều món hơn nhiều so với liệt kê từng tên món.
+            // Món càng đặc thù (nước ngoài, tên riêng...) càng dễ bị rơi vào trạng
+            // thái "chưa nhận diện" — đây là giới hạn cố hữu của cách làm keyword,
+            // không phải lỗi, và người dùng luôn có thể chọn món gần đúng nhất.
+            // ============================================================
+            const FOOD_CATEGORIES = [
+                {
+                    label: 'tinh bột gạo (cơm/xôi/cháo)',
+                    keywords: ['cơm', 'xôi', 'cháo', 'gạo', 'cơm chiên', 'cơm rang', 'kimbap', 'cơm nắm'],
+                    gi: 75, carb: 28.0
+                },
+                {
+                    label: 'món nước/bún/phở/mì',
+                    keywords: ['phở', 'bún', 'mì', 'hủ tiếu', 'miến', 'nui', 'mì ý', 'spaghetti', 'pasta', 'mì xào', 'mì trộn', 'ramen', 'udon'],
+                    gi: 60, carb: 30.0
+                },
+                {
+                    label: 'tinh bột khác (khoai/bắp/ngũ cốc)',
+                    keywords: ['khoai', 'bắp', 'ngô', 'yến mạch', 'ngũ cốc', 'granola', 'bánh quy', 'bánh mặn giòn', 'cốm'],
+                    gi: 60, carb: 22.0
+                },
+                {
+                    label: 'bánh mặn (bánh mì/bánh bao/bánh cuốn/bánh xèo...)',
+                    keywords: ['bánh mì', 'bánh bao', 'bánh cuốn', 'bánh xèo', 'bánh giò', 'bánh ướt', 'bánh tráng', 'sandwich', 'hamburger', 'burger', 'pizza', 'taco', 'burrito', 'kẹp'],
+                    gi: 68, carb: 35.0
+                },
+                {
+                    label: 'đạm (thịt/cá/hải sản/trứng)',
+                    keywords: ['thịt', 'cá', 'tôm', 'cua', 'mực', 'trứng', 'gà', 'heo', 'bò', 'vịt', 'lươn', 'chả', 'giò', 'nem', 'xúc xích', 'sườn', 'ba chỉ', 'sashimi', 'sushi', 'ốc', 'nghêu', 'sò'],
+                    gi: 0, carb: 0.5
+                },
+                {
+                    label: 'đậu/hạt',
+                    keywords: ['đậu', 'đậu nành', 'đậu phộng', 'đậu hà lan', 'hạt điều', 'hạnh nhân', 'óc chó', 'mè', 'vừng', 'đậu phụ', 'đậu hũ'],
+                    gi: 25, carb: 8.0
+                },
+                {
+                    label: 'rau/canh/salad',
+                    keywords: ['rau', 'canh', 'salad', 'súp', 'gỏi', 'nộm', 'dưa leo', 'cà chua', 'bắp cải', 'nấm'],
+                    gi: 20, carb: 5.0
+                },
+                {
+                    label: 'trái cây',
+                    keywords: ['chuối', 'xoài', 'cam', 'táo', 'nho', 'dưa', 'quả', 'trái', 'ổi', 'na', 'bưởi', 'đu đủ', 'dâu', 'măng cụt', 'sầu riêng', 'mít', 'thanh long', 'vải', 'nhãn', 'chôm chôm', 'lê', 'kiwi'],
+                    gi: 50, carb: 15.0
+                },
+                {
+                    label: 'sữa & chế phẩm từ sữa',
+                    keywords: ['sữa', 'sữa chua', 'phô mai', 'cheese', 'bơ sữa', 'kem sữa', 'yogurt'],
+                    gi: 35, carb: 10.0
+                },
+                {
+                    label: 'đồ ngọt/tráng miệng (bánh kẹo/chè/kem...)',
+                    keywords: ['bánh ngọt', 'kẹo', 'chè', 'kem', 'socola', 'chocolate', 'bánh kem', 'siro', 'mứt', 'donut', 'cookie', 'pudding', 'flan', 'caramel', 'tiramisu'],
+                    gi: 75, carb: 45.0
+                },
+                {
+                    label: 'đồ uống (nước ngọt/trà sữa/nước ép...)',
+                    keywords: ['nước ngọt', 'trà sữa', 'nước mía', 'sinh tố', 'nước ép', 'cà phê sữa', 'coca', 'soda', 'trà đào', 'nước tăng lực'],
+                    gi: 55, carb: 12.0
+                }
+            ];
+            function classifyUnknownFood(name) {
+                const q = name.toLowerCase();
+                for (const cat of FOOD_CATEGORIES) {
+                    if (cat.keywords.some(k => q.includes(k))) {
+                        return {name: name, gi: cat.gi, carb: cat.carb, estimated: true, category: cat.label};
+                    }
+                }
+                // Không khớp bất kỳ nhóm thực phẩm nào -> KHÔNG tự bịa ra số liệu chung chung nữa,
+                // vì chuỗi nhập vào có thể không phải món ăn thật (gõ nhầm, gõ lung tung...).
+                // Trả về null để calcSugar() báo "chưa nhận diện được" thay vì tính bừa.
+                return null;
+            }
+
+            // Kiểm tra sơ bộ xem chuỗi nhập vào có "giống" tên món ăn hay không
+            // (phải có chữ cái thật, không phải toàn số/ký tự đặc biệt, đủ độ dài tối thiểu)
+            function looksLikeFoodName(name) {
+                if (!name)
+                    return false;
+                const trimmed = name.trim();
+                if (trimmed.length < 2)
+                    return false;
+                // cần ít nhất 2 ký tự chữ cái (kể cả có dấu tiếng Việt) đứng liền nhau
+                return /\p{L}{2,}/u.test(trimmed);
+            }
+
+            function findFood(name) {
+                if (!name)
+                    return null;
+                const q = name.trim().toLowerCase();
+                const exact = FOOD_DB.find(f => f.name.toLowerCase() === q) ||
+                        FOOD_DB.find(f => f.name.toLowerCase().includes(q) || q.includes(f.name.toLowerCase()));
+                if (exact)
+                    return exact;
+                // Không có trong FOOD_DB -> chỉ ước tính theo nhóm thực phẩm nếu chuỗi nhìn hợp lý là 1 món ăn
+                if (!looksLikeFoodName(name))
+                    return null;
+                return classifyUnknownFood(name.trim());
+            }
+
+            // true khi mon vua tinh la mon KHONG co trong FOOD_DB (dang duoc uoc tinh theo nhom)
+            let lastEstimatedFallback = false;
+            // true khi ten mon nhap vao duoc nhan dien la mot mon an hop le (co trong FOOD_DB
+            // hoac khop 1 nhom thuc pham); false khi da go ten nhung khong nhan dien duoc
+            let lastFoodRecognized = true;
+            const AUTO_NOTE_TAG_PREFIX = '⚠️ Món chưa có trong danh sách gợi ý';
+
+            function calcSugar() {
+                const foodName = document.getElementById('foodName').value.trim();
+                const qty = document.getElementById('quantityInput').value.trim();
+                const food = findFood(foodName);
+                const box = document.getElementById('sugarEstBox');
+                const advice = document.getElementById('adviceBox');
+                const formulaBox = document.getElementById('formulaBox');
+                const formulaContent = document.getElementById('formulaContent');
+                lastEstimatedFallback = !!(food && food.estimated);
+                lastFoodRecognized = !foodName || !!food; // chưa nhập gì => coi là "chưa biết", không phải "sai"
+
+                if (!food || !qty) {
+                    box.className = 'sugar-estimate';
+                    advice.className = 'advice-box';
+                    formulaBox.className = 'formula-box';
+                    if (!document.getElementById('logId').value) {
+                        document.getElementById('sugarEstimation').value = 0;
+                        document.getElementById('carbEstimation').value = 0;
+                        document.getElementById('carbEstVal').textContent = '— g';
+                        document.getElementById('sugarEstVal').textContent = '— mmol/L';
+                    }
+                    // Đã nhập tên món nhưng không nhận diện được là món ăn hợp lệ
+                    if (foodName && !food) {
+                        box.className = 'sugar-estimate show warn';
+                        document.getElementById('sugarEstVal').textContent = '❓ Không xác định';
+                        document.getElementById('sugarEstNote').innerHTML =
+                                '⚠️ Chưa nhận diện được đây là món ăn hợp lệ. Vui lòng chọn món trong danh sách gợi ý, ' +
+                                'hoặc nhập tên món ăn cụ thể hơn (vd: tên món + nguyên liệu chính).';
+                        advice.innerHTML = '';
+                        advice.className = 'advice-box';
+                    }
+                    return;
+                }
+
+                const {gender, ageGroup, condition, factor, baseFactor, mod, sugarFactor} = getProfile();
+                const pronoun = getPronoun(gender, ageGroup);
+                const profileLabel = PROFILE_LABELS[gender][ageGroup] + mod.label;
+                const thresholds = SUGAR_THRESHOLDS[condition];
+
+                const gramBase = estimateGram(qty, foodName);
+                const gram = Math.round(gramBase * factor);
+                const carbGram = (food.carb * gram) / 100;
+                const gi = food.gi;
+
+                let estSugar = null, gl = 0;
+                if (gi > 0 && carbGram > 0) {
+                    gl = (gi * carbGram) / 100;
+                    // Nhan them sugarFactor: phan ung duong huyet khac nhau theo gioi tinh, tuoi, tinh trang
+                    estSugar = Math.round((7.0 + gl * 0.12 * sugarFactor) * 10) / 10;
+                    estSugar = Math.min(estSugar, 20);
+                } else if (gi === 0) {
+                    estSugar = 5.5;
+                }
+
+                document.getElementById('sugarEstimation').value = estSugar || 0;
+                document.getElementById('sugarEstVal').textContent = estSugar ? estSugar + ' mmol/L' : '— mmol/L';
+                document.getElementById('carbEstimation').value = carbGram || 0;
+                document.getElementById('carbEstVal').textContent = carbGram ? (food.estimated ? '~' : '') + carbGram.toFixed(1) + ' g' : '— g';
+
+                // ---- Công thức ----
+                let factorNote = profileLabel;
+                if (condition === 'obese')
+                    factorNote += ' · ×1.20 phan ung (beo phi)';
+                if (condition === 'pregnant')
+                    factorNote += ' · ×1.10 phan ung (thai ky)';
+
+                if (gi > 0) {
+                    formulaContent.innerHTML =
+                            '<div class="formula-row">📏 Khẩu phần: <span class="formula-math">' + gramBase + 'g × ' + factor.toFixed(2) + ' (' + factorNote + ')</span> = <span class="formula-result">' + gram + 'g</span></div>' +
+                            '<div class="formula-row">🍚 Carb thực tế: <span class="formula-math">' + food.carb + 'g/100g × ' + gram + 'g ÷ 100</span> = <span class="formula-result">' + carbGram.toFixed(1) + 'g</span></div>' +
+                            '<div class="formula-row">📊 Tải lượng GL: <span class="formula-math">GI(' + gi + ') × ' + carbGram.toFixed(1) + 'g ÷ 100</span> = <span class="formula-result">' + gl.toFixed(2) + '</span></div>' +
+                            '<div class="formula-row">🩸 Đường ước tính: <span class="formula-math">7.0 + ' + gl.toFixed(2) + ' × 0.12 × ' + sugarFactor.toFixed(2) + ' (hs sinh lý)</span> = <span class="formula-result">' + estSugar + ' mmol/L</span></div>' +
+                            '<div class="formula-row" style="margin-top:4px;color:#7c3aed;font-size:12px">⚠️ Ngưỡng cảnh báo: warn ≥<b>' + thresholds.warn + '</b> · nguy hiểm ≥<b>' + thresholds.danger + '</b> mmol/L</div>';
+                } else {
+                    formulaContent.innerHTML =
+                            '<div class="formula-row">📏 Khẩu phần: <span class="formula-math">' + gramBase + 'g × ' + factor.toFixed(2) + ' (' + factorNote + ')</span> = <span class="formula-result">' + gram + 'g</span></div>' +
+                            '<div class="formula-row">🍚 Carb thực tế: <span class="formula-math">' + food.carb + 'g/100g × ' + gram + 'g ÷ 100</span> = <span class="formula-result">' + carbGram.toFixed(1) + 'g</span></div>' +
+                            '<div class="formula-row">🥩 GI = 0 → không ảnh hưởng đường huyết → <span class="formula-result">≈ 5.5 mmol/L</span></div>';
+                }
+                if (food.estimated) {
+                    formulaContent.innerHTML += '<div class="formula-est-note">📌 Chưa có trong danh sách — ước tính theo nhóm <b>"' + food.category + '"</b> (GI≈' + food.gi + ', Carb≈' + food.carb + 'g/100g).</div>';
+                }
+                formulaBox.className = 'formula-box show';
+
+                // ---- Đánh giá theo ngưỡng của từng tình trạng ----
+                let cls = 'ok', note = '', adviceText = '';
+                if (estSugar >= thresholds.danger) {
+                    cls = 'danger';
+                    note = '🚨 Rất cao! Món này có thể làm đường huyết tăng mạnh.';
+                    if (condition === 'pregnant')
+                        adviceText = '🚨 Ngưỡng nguy hiểm với thai kỳ rất thấp (' + thresholds.danger + ' mmol/L). ' + pronoun + ' cần báo ngay cho bác sĩ sản khoa, nghỉ ngơi và không ăn thêm tinh bột.';
+                    else if (condition === 'obese')
+                        adviceText = '⚠️ ' + pronoun + ' bị béo phì — kháng insulin khiến đường huyết tăng mạnh hơn. Cần ngưng ăn, đi bộ 20 phút và theo dõi sát.';
+                    else
+                        adviceText = '⚠️ ' + pronoun + ' nên giảm bớt khẩu phần, không ăn thêm đồ ngọt và đi bộ nhẹ 15-20 phút sau ăn.';
+                } else if (estSugar >= thresholds.warn) {
+                    cls = 'warn';
+                    note = '⚡ Hơi cao — cần chú ý theo dõi sau ăn.';
+                    if (condition === 'pregnant')
+                        adviceText = '💡 Với phụ nữ mang thai, ngưỡng này đã cần chú ý. ' + pronoun + ' nên đi bộ nhẹ 10 phút, uống nước lọc và ghi lại để báo bác sĩ lần khám tới.';
+                    else if (condition === 'obese')
+                        adviceText = '💡 Do béo phì làm kháng insulin, ngưỡng cảnh báo chặt hơn bình thường. ' + pronoun + ' nên giảm khẩu phần lần sau và đi bộ 10-15 phút.';
+                    else
+                        adviceText = '💡 ' + pronoun + ' nên đi bộ nhẹ khoảng 10-15 phút sau bữa ăn để ổn định đường huyết.';
+                } else if (estSugar > 0) {
+                    cls = 'ok';
+                    note = '✅ Ổn định — phù hợp cho bệnh nhân tiểu đường.';
+                    if (condition === 'pregnant')
+                        adviceText = '😊 Tốt! Khẩu phần này an toàn cho thai kỳ. ' + pronoun + ' tiếp tục chia nhỏ bữa ăn (5-6 bữa/ngày) để ổn định đường huyết suốt thai kỳ.';
+                    else if (condition === 'obese')
+                        adviceText = '👍 Khẩu phần đã được điều chỉnh phù hợp. ' + pronoun + ' duy trì mức này và kết hợp vận động nhẹ hàng ngày để hỗ trợ giảm cân.';
+                    else
+                        adviceText = '😊 Khẩu phần phù hợp với hồ sơ của ' + pronoun.toLowerCase() + '. ' + pronoun + ' tiếp tục duy trì nhé!';
+                }
+
+                if (food.estimated) {
+                    note = (note ? note + ' ' : '') + '⚠️ Số liệu chỉ mang tính tương đối.';
+                }
+                const badgeHtml = food.estimated
+                        ? '<span class="confidence-badge approx">🔶 Độ chính xác: Tương đối</span><br>'
+                        : '<span class="confidence-badge high">✅ Độ chính xác: Cao</span><br>';
+                document.getElementById('sugarEstNote').innerHTML = badgeHtml + note;
+                box.className = 'sugar-estimate show ' + cls + (food.estimated ? ' estimated' : '');
+                advice.innerHTML = adviceText;
+                advice.className = 'advice-box show';
+            }
+
+            function getSugarLabel(v, condition) {
+                if (!v || v <= 0)
+                    return '—';
+                const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
+                if (v >= thr.danger)
+                    return '🚨 Rất cao (' + v + ' mmol/L)';
+                if (v >= thr.warn)
+                    return '⚡ Hơi cao (' + v + ' mmol/L)';
+                return '✅ Ổn định (' + v + ' mmol/L)';
+            }
+            function getSugarBadgeCls(v, condition) {
+                if (!v || v <= 0)
+                    return 'sugar-na';
+                const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
+                if (v >= thr.danger)
+                    return 'sugar-danger';
+                if (v >= thr.warn)
+                    return 'sugar-warn';
+                return 'sugar-ok';
+            }
+
+            let allData = [], currentFiltered = [], currentPage = 1, chartInstance = null;
+
+            // Gom nhóm lịch sử ăn uống của bệnh nhân theo tên món: số lần ăn,
+            // đường huyết ước tính trung bình, lần ăn gần nhất. Dùng chung cho
+            // chip gợi ý "món hay ăn" và bảng "món hay gây tăng đường".
+            function computeFoodStats() {
+                const map = new Map();
+                allData.forEach(x => {
+                    const name = (x.foodName || '').trim();
+                    if (!name)
+                        return;
+                    const key = name.toLowerCase();
+                    const sugar = Number(x.sugarEstimation || 0);
+                    const dateStr = x.mealDate || x.logDate || '';
+                    if (!map.has(key)) {
+                        map.set(key, {name, count: 0, sugarSum: 0, sugarCount: 0, lastDate: dateStr});
+                    }
+                    const stat = map.get(key);
+                    stat.count++;
+                    if (sugar > 0) {
+                        stat.sugarSum += sugar;
+                        stat.sugarCount++;
+                    }
+                    if (dateStr > stat.lastDate)
+                        stat.lastDate = dateStr;
+                });
+                return [...map.values()].map(s => ({
+                        name: s.name,
+                        count: s.count,
+                        avgSugar: s.sugarCount ? s.sugarSum / s.sugarCount : 0,
+                        lastDate: s.lastDate
+                    }));
+            }
+
+            // Chip "món hay ăn": top món ăn nhiều lần nhất, bấm để điền nhanh vào ô tên món
+            function renderQuickPicks() {
+                const box = document.getElementById('quickPicks');
+                if (!box)
+                    return;
+                const top = computeFoodStats().sort((a, b) => b.count - a.count).slice(0, 6);
+                if (!top.length) {
+                    box.innerHTML = '';
+                    return;
+                }
+                box.innerHTML = '<div style="width:100%;font-size:12px;color:var(--text-muted);margin-bottom:2px">🕒 Món bạn hay ăn — bấm để điền nhanh:</div>' +
+                        top.map(f => `<span class="quick-pick-chip" onclick="pickSuggestion('${f.name.replace(/'/g, "\\'")}')">🍽️ ${f.name} <span class="qp-count">×${f.count}</span></span>`).join('');
+            }
+
+            // Card "món hay gây tăng đường": chỉ xét món đã ăn >= 2 lần (đủ dữ liệu để tin cậy hơn 1 lần đo),
+            // xếp theo đường huyết ước tính trung bình giảm dần, để lộ ra pattern ăn uống rủi ro.
+            function renderRiskyFoods() {
+                const body = document.getElementById('riskyFoodsBody');
+                if (!body)
+                    return;
+                const {condition} = getProfile();
+                const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
+                const candidates = computeFoodStats()
+                        .filter(f => f.count >= 2 && f.avgSugar > 0)
+                        .sort((a, b) => b.avgSugar - a.avgSugar)
+                        .slice(0, 5);
+                if (!candidates.length) {
+                    body.innerHTML = '<div class="empty-state" style="padding:20px 0"><p>Chưa đủ dữ liệu — hãy ghi thêm vài bữa ăn (mỗi món ≥ 2 lần) để hệ thống nhận ra pattern nhé.</p></div>';
+                    return;
+                }
+                body.innerHTML = candidates.map(f => {
+                    const cls = f.avgSugar >= thr.danger ? 'sugar-danger' : f.avgSugar >= thr.warn ? 'sugar-warn' : 'sugar-ok';
+                    return `<div class="risk-food-row">
+                <div><div class="risk-food-name">🍽️ ${f.name}</div>
+                <div class="risk-food-meta">Đã ăn ${f.count} lần · lần gần nhất ${f.lastDate || '—'}</div></div>
+                <span class="sugar-badge ${cls}">${f.avgSugar.toFixed(1)} mmol/L (TB)</span>
+            </div>`;
+                }).join('');
+            }
+
+            function today() {
+                const d = new Date();
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return y + '-' + m + '-' + day;
+            }
+            function getMealInfo(t) {
+                return MEAL_LABELS[t] || {label: t, cls: 'meal-snack'};
+            }
+
+            function showToast(msg, type = 'success') {
+                const t = document.getElementById('toast');
+                t.textContent = (type === 'success' ? '✅ ' : type === 'warn' ? '⚠️ ' : '❌ ') + msg;
+                t.className = 'toast ' + type + ' show';
+                setTimeout(() => t.className = 'toast', 3500);
+            }
+
+            function toggleSOS() {
+                document.getElementById('sosPanel').classList.toggle('show');
+            }
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.sos-btn') && !e.target.closest('.sos-panel'))
+                    document.getElementById('sosPanel').classList.remove('show');
+            });
+
+            function checkRemind(data) {
+                const now = new Date(), h = now.getHours(), t = today();
+                const td = data.filter(x => (x.mealDate || x.logDate || '') === t);
+                const hasMeal = type => td.some(x => x.mealType === type);
+                const {gender, ageGroup} = getProfile();
+                const p = getPronoun(gender, ageGroup);
+                let msg = '';
+                if (h >= 12 && h < 14 && !hasMeal('Lunch'))
+                    msg = '🍜 ' + p + ' chưa ghi bữa trưa hôm nay! Hãy ghi lại để theo dõi đường huyết nhé.';
+                else if (h >= 7 && h < 10 && !hasMeal('Breakfast'))
+                    msg = '🌅 Chào buổi sáng! ' + p + ' chưa ghi bữa sáng hôm nay. Hãy ghi lại nhé!';
+                else if (h >= 18 && h < 21 && !hasMeal('Dinner'))
+                    msg = '🌙 ' + p + ' chưa ghi bữa tối hôm nay! Nhớ ghi lại sau khi ăn để theo dõi sức khỏe.';
+                if (msg) {
+                    document.getElementById('remindText').textContent = msg;
+                    document.getElementById('remindBanner').style.display = 'flex';
+                }
+            }
+
+            function calcStreak(data) {
+                const days = new Set(data.map(x => x.mealDate || x.logDate || '').filter(Boolean));
+                let streak = 0, d = new Date();
+                while (true) {
+                    const s = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    if (days.has(s)) {
+                        streak++;
+                        d.setDate(d.getDate() - 1);
+                    } else
+                        break;
+                }
+                document.getElementById('streakNum').textContent = streak;
+                const {gender, ageGroup} = getProfile();
+                const p = getPronoun(gender, ageGroup);
+                if (streak >= 7)
+                    document.getElementById('streakMsg').textContent = 'Tuyệt vời! ' + p + ' đang duy trì rất tốt 🏆';
+                else if (streak >= 3)
+                    document.getElementById('streakMsg').textContent = 'Tốt lắm! ' + p + ' đang cố gắng rất giỏi 💪';
+                else if (streak === 0)
+                    document.getElementById('streakMsg').textContent = 'Hãy ghi nhật ký hôm nay để bắt đầu theo dõi!';
+                else
+                    document.getElementById('streakMsg').textContent = p + ' đang làm rất tốt! Tiếp tục nhé!';
+                const now = new Date();
+                document.getElementById('streakDate').textContent = 'Hôm nay: ' + now.getDate() + '/' + (now.getMonth() + 1) + '/' + now.getFullYear();
+            }
+
+            function updateDailySummary(data) {
+                const t = today(), td = data.filter(x => (x.mealDate || x.logDate || '') === t);
+                const fmt = d => d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+                document.getElementById('summaryDate').textContent = fmt(new Date());
+                if (!td.length) {
+                    document.getElementById('sumMeals').textContent = '0';
+                    document.getElementById('sumSugar').textContent = '—';
+                    const s = document.getElementById('sumStatus');
+                    s.textContent = 'Chưa có dữ liệu hôm nay — hãy ghi bữa ăn đầu tiên!';
+                    s.className = 'ds-status ds-safe';
+                    return;
+                }
+                const sugars = td.map(x => Number(x.sugarEstimation || 0)).filter(v => v > 0);
+                const maxSugar = sugars.length ? Math.max(...sugars) : 0;
+                document.getElementById('sumMeals').textContent = td.length;
+                const {gender, ageGroup, condition} = getProfile();
+                const p = getPronoun(gender, ageGroup);
+                document.getElementById('sumSugar').textContent = getSugarLabel(maxSugar, condition);
+                const s = document.getElementById('sumStatus');
+                const thr = SUGAR_THRESHOLDS[condition] || SUGAR_THRESHOLDS['none'];
+                if (maxSugar >= thr.danger) {
+                    s.textContent = '🚨 Đường ước tính rất cao — ' + p.toLowerCase() + ' cần chú ý!';
+                    s.className = 'ds-status ds-danger';
+                } else if (maxSugar >= thr.warn) {
+                    s.textContent = '⚡ Cần chú ý — đường hơi cao, theo dõi thêm nhé';
+                    s.className = 'ds-status ds-warn';
+                } else {
+                    s.textContent = '✅ Sức khỏe ổn định — ' + p.toLowerCase() + ' đang làm rất tốt!';
+                    s.className = 'ds-status ds-safe';
+                }
+            }
+
+            function buildChart(data) {
+                const dayMap = {};
+                data.forEach(x => {
+                    const d = x.mealDate || x.logDate || today();
+                    if (!dayMap[d])
+                        dayMap[d] = {sugar: 0, cnt: 0};
+                    const s = Number(x.sugarEstimation || 0);
+                    if (s > 0) {
+                        dayMap[d].sugar += s;
+                        dayMap[d].cnt++;
+                    }
+                });
+                const sorted = Object.keys(dayMap).sort().slice(-7);
+                const labels = sorted.map(d => {
+                    const[y, m, day] = d.split('-');
+                    return day + '/' + m;
+                });
+                const sugarData = sorted.map(d => dayMap[d].cnt ? +(dayMap[d].sugar / dayMap[d].cnt).toFixed(1) : 0);
+                const len = sorted.length;
+                if (len >= 2) {
+                    const ts = sugarData[len - 1], ys = sugarData[len - 2];
+                    const c = document.getElementById('cmpSugar');
+                    if (ts > ys) {
+                        c.textContent = 'Đường tăng ▲';
+                        c.className = 'cmp up';
+                    } else if (ts < ys) {
+                        c.textContent = 'Đường giảm ▼';
+                        c.className = 'cmp down';
+                    } else {
+                        c.textContent = 'Bằng hôm qua';
+                        c.className = 'cmp same';
+                    }
+                }
+                if (chartInstance)
+                    chartInstance.destroy();
+                chartInstance = new Chart(document.getElementById('myChart').getContext('2d'), {
+                    type: 'line',
+                    data: {labels, datasets: [{
+                                label: 'Đường huyết ước tính TB (mmol/L)',
+                                data: sugarData,
+                                borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,.1)',
+                                borderWidth: 2.5, pointBackgroundColor: '#d97706', pointRadius: 6, tension: .35, fill: true
+                            }]},
+                    options: {responsive: true, maintainAspectRatio: false,
+                        plugins: {legend: {position: 'bottom', labels: {font: {family: 'Be Vietnam Pro', size: 13}, boxWidth: 14}}},
+                        scales: {
+                            x: {grid: {display: false}, ticks: {font: {family: 'Be Vietnam Pro', size: 13}}},
+                            y: {ticks: {font: {family: 'Be Vietnam Pro', size: 12}, callback: v => v + ' mmol/L'}, grid: {color: '#f1f5f9'}}
+                        }
+                    }
+                });
+            }
+
+            function showSuggestions() {
+                const q = document.getElementById('foodName').value.trim().toLowerCase();
+                const box = document.getElementById('suggestions');
+                if (!q) {
+                    box.style.display = 'none';
+                    return;
+                }
+                const dbMatch = FOOD_DB.filter(f => f.name.toLowerCase().includes(q)).slice(0, 4);
+                const seen = new Set(dbMatch.map(f => f.name.toLowerCase()));
+                const freqMap = new Map(computeFoodStats().map(f => [f.name.toLowerCase(), f.count]));
+                const pastNames = [...new Set(allData.map(x => x.foodName || ''))]
+                        .filter(n => {
+                            const l = n.toLowerCase();
+                            return l.includes(q) && !seen.has(l) && seen.add(l);
+                        })
+                        .sort((a, b) => (freqMap.get(b.toLowerCase()) || 0) - (freqMap.get(a.toLowerCase()) || 0))
+                        .slice(0, 2);
+                const all = [
+                    ...dbMatch.map(f => ({name: f.name, fromDB: true})),
+                    ...pastNames.map(n => ({name: n, fromDB: false}))
+                ];
+                if (!all.length) {
+                    box.style.display = 'none';
+                    return;
+                }
+                box.innerHTML = all.map(f => `<div class="suggestion-item" onclick="pickSuggestion('${f.name.replace(/'/g, "\\'")}')">
+            🍽️ ${f.name}
+            <span style="font-size:12px;color:var(--text-muted)">${f.fromDB ? 'Có dữ liệu dinh dưỡng' : 'Bữa trước'}</span>
+          </div>`).join('');
+                box.style.display = 'block';
+            }
+            function pickSuggestion(name) {
+                document.getElementById('foodName').value = name;
+                document.getElementById('suggestions').style.display = 'none';
+                calcSugar();
+            }
+            document.addEventListener('click', e => {
+                if (!e.target.closest('#foodName') && !e.target.closest('#suggestions'))
+                    document.getElementById('suggestions').style.display = 'none';
+            });
+
+            function renderTable(data) {
+                currentFiltered = data;
+                currentPage = 1;
+                renderPage();
+            }
+            function renderPage() {
+                const data = currentFiltered;
+                const container = document.getElementById('tableContainer');
+                if (!data.length) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">🍽️</div><p>Chưa có bữa ăn nào.<br>Hãy thêm bữa ăn đầu tiên!</p></div>';
+                    ['statTotal', 'statDanger'].forEach(id => document.getElementById(id).textContent = 0);
+                    document.getElementById('statSugar').textContent = '—';
+                    document.getElementById('countBadge').textContent = '0 bản ghi';
+                    return;
+                }
+                document.getElementById('countBadge').textContent = data.length + ' bản ghi';
+                const todayStr = today();
+                const todayRows = allData.filter(x => (x.mealDate || x.logDate || '') === todayStr);
+                const {condition: cond} = getProfile();
+                const thrStat = SUGAR_THRESHOLDS[cond] || SUGAR_THRESHOLDS['none'];
+                let danger = 0, sugarMax = 0;
+                todayRows.forEach(x => {
+                    const s = Number(x.sugarEstimation || 0);
+                    if (s >= thrStat.danger)
+                        danger++;
+                    if (s > sugarMax)
+                        sugarMax = s;
+                });
+                document.getElementById('statTotal').textContent = todayRows.length;
+                document.getElementById('statSugar').textContent = getSugarLabel(sugarMax, cond);
+                document.getElementById('statDanger').textContent = danger;
+
+                const totalPages = Math.ceil(data.length / PAGE_SIZE);
+                if (currentPage > totalPages)
+                    currentPage = Math.max(1, totalPages);
+                const start = (currentPage - 1) * PAGE_SIZE;
+                const pageData = data.slice(start, start + PAGE_SIZE);
+                let rows = '';
+                pageData.forEach((x, i) => {
+                    const sugar = Number(x.sugarEstimation || 0);
+                    const carb = Number(x.carbEstimation || 0);
+                    const meal = getMealInfo(x.mealType);
+                    const icon = FOOD_EMOJIS[(start + i) % FOOD_EMOJIS.length];
+                    const food = x.foodName || '';
+                    const qty = x.quantityText || x.weightGram || '—';
+                    const sCls = getSugarBadgeCls(sugar, cond);
+                    const sLabel = getSugarLabel(sugar, cond);
+                    const thr = SUGAR_THRESHOLDS[cond] || SUGAR_THRESHOLDS['none'];
+                    const dateStr = x.mealDate || x.logDate || '—';
+                    const rowCls = sugar >= thr.danger ? 'row-danger' : '';
+                    const matchedFood = food ? findFood(food) : null;
+                    const isEstimated = !!(matchedFood && matchedFood.estimated);
+                    const isUnrecognized = !!food && !matchedFood;
+                    const estBadge = isEstimated
+                            ? `<span class="est-tag" title="Món chưa có trong danh sách gợi ý — cả đường huyết lẫn carb đều là số liệu ước tính tương đối theo nhóm thực phẩm">🔶 Ước tính</span>`
+                            : isUnrecognized
+                            ? `<span class="est-tag" title="Không nhận diện được đây là món ăn hợp lệ — số liệu có thể không chính xác">❓ Chưa xác định</span>`
+                            : '';
+                    rows += `<tr class="${rowCls}">
+              <td><b>#${start + i + 1}</b></td>
+              <td><div class="food-cell"><div class="food-icon">${icon}</div><div>
+                <div class="food-name">${food}${estBadge}</div>
+                <div style="font-size:12px;color:var(--text-muted)">${qty}</div>
+              </div></div></td>
+              <td><span class="sugar-badge ${sCls}">${sLabel}</span></td>
+              <td>${carb ? carb.toFixed(1) + ' g' : '—'}</td>
+              <td><span class="meal-badge ${meal.cls}">${meal.label}</span></td>
+              <td>${dateStr}</td>
+              <td>${x.note || '—'}</td>
+              <td><div class="action-btns">
+                <button class="btn-sm btn-edit" onclick="editLog(${x.id})">✏️ Sửa</button>
+                <button class="btn-sm btn-del" onclick="deleteLog(${x.id})">🗑️ Xóa</button>
+              </div></td>
+            </tr>`;
+                });
+                let pageBtns = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+                for (let p = 1; p <= totalPages; p++)
+                    pageBtns += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+                pageBtns += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+                container.innerHTML = `
+            <table>
+              <thead><tr><th>STT</th><th>Tên món ăn</th><th>Đường ước tính</th><th>Carb ước tính</th><th>Bữa ăn</th><th>Ngày</th><th>Ghi chú</th><th>Thao tác</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="pagination">
+              <div class="page-info">Trang ${currentPage}/${totalPages} · ${data.length} bữa ăn · ${PAGE_SIZE}/trang</div>
+              <div class="page-btns">${pageBtns}</div>
+            </div>`;
+            }
+            function goPage(p) {
+                const tp = Math.ceil(currentFiltered.length / PAGE_SIZE);
+                if (p < 1 || p > tp)
+                    return;
+                currentPage = p;
+                renderPage();
+            }
+
+            function filterTable() {
+                const q = document.getElementById('searchInput').value.toLowerCase();
+                const d = document.getElementById('filterDate').value;
+                let f = allData;
+                if (d)
+                    f = f.filter(x => (x.mealDate || x.logDate || '') === d);
+                if (q)
+                    f = f.filter(x => (x.foodName??'').toLowerCase().includes(q));
+                renderTable(f);
+            }
+            function filterToday() {
+                document.getElementById('filterDate').value = today();
+                filterTable();
+            }
+            function clearDateFilter() {
+                document.getElementById('filterDate').value = '';
+                document.getElementById('searchInput').value = '';
+                renderTable(allData);
+            }
+
+            function exportCSV() {
+                const data = currentFiltered.length ? currentFiltered : allData;
+                const header = ['STT', 'Tên món ăn', 'Số lượng', 'Đường ước tính (mmol/L)', 'Carb ước tính (g)', 'Loại bữa ăn', 'Ngày', 'Ghi chú'];
+                const rows = data.map((x, i) => [i + 1, x.foodName, x.quantityText || '', x.sugarEstimation || 0, x.carbEstimation || 0, x.mealType, x.mealDate || x.logDate || '', x.note || ''].join(','));
+                const csv = [header.join(','), ...rows].join('\n');
+                const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'nhat-ky-bua-an-' + today() + '.csv';
+                a.click();
+                showToast('Đã xuất file CSV thành công!');
+            }
+
+            async function loadLogs() {
+                try {
+                    const patientId = Number(document.getElementById('profilePatientId').value) || 1;
+                    const res = await fetch(`${API}/patient/${patientId}`);
+                    allData = await res.json();
+                    renderTable(allData);
+                    buildChart(allData);
+                    calcStreak(allData);
+                    updateDailySummary(allData);
+                    checkRemind(allData);
+                    renderQuickPicks();
+                    renderRiskyFoods();
+                } catch {
+                    allData = [];
+                    renderTable(allData);
+                    buildChart(allData);
+                    calcStreak(allData);
+                    updateDailySummary(allData);
+                    renderQuickPicks();
+                    renderRiskyFoods();
+                    document.getElementById('tableContainer').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Không thể kết nối máy chủ.<br>Hãy chạy Spring Boot trước rồi thử lại!</p></div>';
+                }
+            }
+
+            async function doSave(payload, method, url) {
+                const res = await fetch(url, {method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+                if (!res.ok)
+                    throw new Error(await res.text());
+                clearForm();
+                loadLogs();
+                showToast(method === 'POST' ? 'Đã thêm bữa ăn thành công!' : 'Đã cập nhật thành công!');
+            }
+
+            // Bỏ tag ước tính cũ (nếu bản ghi này được lưu trước đây có kèm tag) khi lưu lại,
+            // KHÔNG tự thêm tag mới vào ghi chú nữa — lời giải thích ước tính chỉ hiển thị
+            // ở khung công thức lúc nhập liệu, tránh làm cột "Ghi chú" trong danh sách quá dài.
+            function buildNoteWithAutoTag() {
+                let userNote = document.getElementById('note').value.trim();
+                if (userNote.includes(AUTO_NOTE_TAG_PREFIX)) {
+                    userNote = userNote.split(AUTO_NOTE_TAG_PREFIX)[0].trim().replace(/\|\s*$/, '').trim();
+                }
+                return userNote;
+            }
+
+            async function addLog() {
+                const food = document.getElementById('foodName').value.trim();
+                const {gender, ageGroup} = getProfile();
+                const p = getPronoun(gender, ageGroup);
+                if (!food) {
+                    showToast(p + ' ơi, chưa nhập tên món ăn!', 'error');
+                    return;
+                }
+                const qty = document.getElementById('quantityInput').value.trim();
+                if (!qty) {
+                    showToast(p + ' ơi, chưa nhập số lượng!', 'error');
+                    return;
+                }
+                if (!findFood(food)) {
+                    showToast(p + ' ơi, tên món ăn này chưa được nhận diện. Hãy chọn món trong danh sách gợi ý hoặc mô tả rõ hơn (vd: tên món + nguyên liệu chính)!', 'error');
+                    return;
+                }
+                const estSugar = Number(document.getElementById('sugarEstimation').value) || 0;
+                try {
+                    const prof = getProfile();
+                    await doSave({
+                        patientId: Number(document.getElementById('profilePatientId').value) || 1,
+                        foodName: food,
+                        quantityText: qty,
+                        sugarEstimation: estSugar,
+                        carbEstimation: Number(document.getElementById('carbEstimation').value) || 0,
+                        mealType: document.getElementById('mealType').value,
+                        note: buildNoteWithAutoTag(),
+                        mealDate: document.getElementById('mealDate').value || today(),
+                        gender: prof.gender,
+                        ageGroup: prof.ageGroup,
+                        conditionType: prof.condition
+                    }, 'POST', API);
+                    const thr = SUGAR_THRESHOLDS[prof.condition];
+                    const p2 = getPronoun(prof.gender, prof.ageGroup);
+                    if (estSugar >= thr.danger)
+                        showToast('Đã lưu! 🚨 Đường ước tính rất cao với hồ sơ của ' + p2.toLowerCase() + ' — hãy nghỉ ngơi và theo dõi nhé!', 'error');
+                    else if (estSugar >= thr.warn)
+                        showToast('Đã lưu! 💡 Đường hơi cao — nên đi bộ nhẹ sau ăn!', 'warn');
+                } catch (e) {
+                    showToast('Có lỗi: ' + e.message, 'error');
+                }
+            }
+
+            function editLog(id) {
+                const x = allData.find(r => r.id === id);
+                if (!x) {
+                    showToast('Không tìm thấy bữa ăn này!', 'error');
+                    return;
+                }
+                document.getElementById('logId').value = id;
+                document.getElementById('foodName').value = x.foodName || '';
+                document.getElementById('quantityInput').value = x.quantityText || x.weightGram || '';
+                document.getElementById('mealType').value = x.mealType || 'Breakfast';
+                document.getElementById('note').value = x.note || '';
+                document.getElementById('mealDate').value = x.mealDate || x.logDate || today();
+                // Gọi calcSugar() trước để tính lại từ foodName+qty,
+                // sau đó mới set giá trị gốc từ DB (tránh bị ghi đè bởi calcSugar)
+                calcSugar();
+                // Nếu calcSugar không tìm thấy món trong DB → giữ nguyên giá trị đã lưu
+                if (!document.getElementById('sugarEstimation').value || Number(document.getElementById('sugarEstimation').value) === 0) {
+                    document.getElementById('sugarEstimation').value = x.sugarEstimation || 0;
+                }
+                if (!document.getElementById('carbEstimation').value || Number(document.getElementById('carbEstimation').value) === 0) {
+                    document.getElementById('carbEstimation').value = x.carbEstimation || 0;
+                    document.getElementById('carbEstVal').textContent = x.carbEstimation ? Number(x.carbEstimation).toFixed(1) + ' g' : '— g';
+                }
+                document.getElementById('formHeader').className = 'form-card-header edit-mode';
+                document.getElementById('formTitle').textContent = 'Chỉnh sửa bữa ăn';
+                document.getElementById('editBadge').className = 'edit-badge show';
+                document.getElementById('btnAdd').style.display = 'none';
+                document.getElementById('btnUpdate').className = 'btn btn-warning show';
+                window.scrollTo({top: 0, behavior: 'smooth'});
+                showToast('Đang chỉnh sửa — nhớ nhấn "Cập nhật" sau khi xong nhé!', 'warn');
+            }
+
+            async function updateLog() {
+                const id = document.getElementById('logId').value;
+                if (!id) {
+                    showToast('Chưa chọn bữa ăn cần sửa!', 'error');
+                    return;
+                }
+                const food = document.getElementById('foodName').value.trim();
+                if (!food) {
+                    showToast('Chưa nhập tên món ăn!', 'error');
+                    return;
+                }
+                const qty = document.getElementById('quantityInput').value.trim();
+                if (!qty) {
+                    showToast('Chưa nhập số lượng!', 'error');
+                    return;
+                }
+                if (!findFood(food)) {
+                    showToast('Tên món ăn này chưa được nhận diện. Hãy chọn món trong danh sách gợi ý hoặc mô tả rõ hơn!', 'error');
+                    return;
+                }
+                try {
+                    const prof2 = getProfile();
+                    await doSave({
+                        patientId: Number(document.getElementById('profilePatientId').value) || 1,
+                        foodName: food,
+                        quantityText: qty,
+                        sugarEstimation: Number(document.getElementById('sugarEstimation').value) || 0,
+                        carbEstimation: Number(document.getElementById('carbEstimation').value) || 0,
+                        mealType: document.getElementById('mealType').value,
+                        note: buildNoteWithAutoTag(),
+                        mealDate: document.getElementById('mealDate').value || today(),
+                        gender: prof2.gender,
+                        ageGroup: prof2.ageGroup,
+                        conditionType: prof2.condition
+                    }, 'PUT', `${API}/${id}`);
+                } catch (e) {
+                    showToast('Có lỗi: ' + e.message, 'error');
+                }
+            }
+
+            async function deleteLog(id) {
+                if (!confirm('Xác nhận xóa bữa ăn này?'))
+                    return;
+                try {
+                    const res = await fetch(`${API}/${id}`, {method: 'DELETE'});
+                    if (!res.ok)
+                        throw new Error(await res.text());
+                    loadLogs();
+                    showToast('Đã xóa thành công!');
+                } catch (e) {
+                    showToast('Có lỗi: ' + e.message, 'error');
+                }
+            }
+
+            function clearForm() {
+                ['logId', 'foodName', 'quantityInput', 'note'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('sugarEstimation').value = '0';
+                document.getElementById('carbEstimation').value = '0';
+                document.getElementById('mealType').value = 'Breakfast';
+                document.getElementById('mealDate').value = today();
+                document.getElementById('sugarEstBox').className = 'sugar-estimate';
+                document.getElementById('adviceBox').className = 'advice-box';
+                document.getElementById('sugarEstVal').textContent = '— mmol/L';
+                document.getElementById('carbEstVal').textContent = '— g';
+                document.getElementById('formulaBox').className = 'formula-box';
+                document.getElementById('formulaContent').innerHTML = '';
+                document.getElementById('suggestions').style.display = 'none';
+                document.getElementById('formHeader').className = 'form-card-header';
+                document.getElementById('formTitle').textContent = 'Ghi nhận bữa ăn';
+                document.getElementById('editBadge').className = 'edit-badge';
+                document.getElementById('btnAdd').style.display = '';
+                document.getElementById('btnUpdate').className = 'btn btn-warning';
+            }
+
+            document.getElementById('mealDate').value = today();
+            loadLogs();
+        </script>
+    </body>
+</html>
+>>>>>>> c609fe15c2adf12d4f6fbd628b23773040d3f6f7

@@ -1,0 +1,30 @@
+<!-- Shared layout fragments -->
+<div th:fragment="sidebar">
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2>GlucoTrackAlert</h2>
+            <span>Admin Portal</span>
+        </div>
+        <div class="sidebar-menu">
+            <a href="/admin/dashboard" class="menu-item">👤 Quản Lý Tài Khoản</a>
+            <a href="/admin/doctors" class="menu-item">🩺 Quản Lý Bác sĩ</a>
+            <a href="/admin/assignments" class="menu-item">📋 Phân Công Bác sĩ</a>
+            <a href="/admin/requests" class="menu-item">📁 Yêu cầu thay đổi</a>
+            <a href="/admin/banners" class="menu-item">🖼️ Quản Lý Banner</a>
+            <a href="/admin/feedbacks" class="menu-item">💬 Quản Lý Đánh Giá</a>
+            <a href="#" class="menu-item" onclick="openAdminPasswordModal()">⚙️ Đổi Mật Khẩu</a>
+        </div>
+    </div>
+</div>
+
+<!-- Topbar fragment with a title parameter -->
+<div th:fragment="topbar(title)">
+    <div class="topbar">
+        <div class="topbar-title" th:text="${title}">Title</div>
+        <div style="display: flex; gap: 10px;">
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="btn-logout" style="border:none; cursor:pointer;">Đăng xuất 🚪</button>
+            </form>
+        </div>
+    </div>
+</div>

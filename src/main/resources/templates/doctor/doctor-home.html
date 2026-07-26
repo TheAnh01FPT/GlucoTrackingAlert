@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Tổng quan – GlucoTrackAlert</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+        <script>
+            const WorkingHoursUtils = (function () {
+                let config = {startHour: 8, endHour: 17, workDays: [1, 2, 3, 4, 5]};
+                const DAY_VI = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+                function _within(d) {
+                    if (!config.workDays.includes(d.getDay()))
+                        return false;
+                    const m = d.getHours() * 60 + d.getMinutes();
+                    return m >= config.startHour * 60 && m < config.endHour * 60;
+                }
+                return {
+                    setConfig(o) {
+                        config = Object.assign({}, config, o);
+                    },
+                    isWithinWorkingHours() {
+                        return _within(new Date());
+                    },
+                    isDateWithin(v) {
+                        return _within(v instanceof Date ? v : new Date(v));
+                    },
+                    filterAlerts(arr, fn) {
+                        return Array.isArray(arr) ? arr.filter(i => {
+                            try {
+                                return this.isDateWithin(fn(i));
+                            } catch {
+                                return false;
+                            }
+                        }) : [];
+                    },
+                    getScheduleLabel() {
+                        return config.workDays.map(d => DAY_VI[d]).join(', ') +
+                                ' \u00b7 ' + String(config.startHour).padStart(2, '0') + ':00 \u2013 ' +
+                                String(config.endHour).padStart(2, '0') + ':00';
+                    },
+                    renderBell(id, alerts, getDate, opts = {}) {
+                        const el = document.getElementById(id);
+                        if (!el)
+                            return;
+                        const filtered = this.filterAlerts(alerts, getDate);
+                        const getTitle = opts.getTitle || (i => i.title || 'Thông báo');
+                        const getTime = opts.getTime || (i => {
+                            try {
+                                return new Date(getDate(i)).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+                            } catch {
+                                return '';
+                            }
+                        });
+                        const empty = opts.emptyText || 'Không có thông báo trong giờ làm việc';
+                        const dropId = id + '_drop', bellId = id + '_btn';
+                        if (!this.isWithinWorkingHours()) {
+                            el.innerHTML = '<div title="Ngoài giờ làm việc (' + this.getScheduleLabel() + ')"><i class="bi bi-bell-slash" style="font-size:1.2rem;color:rgba(255,255,255,.4)"></i></div>';
+                            return;
+                        }
+                        const badge = filtered.length ? '<span style="position:absolute;top:-4px;right:-6px;background:#e53935;color:#fff;font-size:.62rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px">' + (filtered.length > 99 ? '99+' : filtered.length) + '</span>' : '';
+                        const items = filtered.length
+                                ? filtered.slice(0, 10).map(i => '<div style="padding:10px 16px;border-bottom:1px solid #f0f4f8;display:flex;gap:10px"><i class="bi bi-exclamation-circle-fill" style="color:#f57f17;flex-shrink:0;margin-top:2px"></i><div><div style="font-size:.83rem;font-weight:600;color:#1a1a2e">' + getTitle(i) + '</div><div style="font-size:.75rem;color:#6c757d">' + getTime(i) + '</div></div></div>').join('')
+                                : '<div style="padding:12px 16px;text-align:center;color:#6c757d;font-size:.82rem">' + empty + '</div>';
+                        el.innerHTML = '<div style="position:relative;display:inline-block"><button id="' + bellId + '" onclick="document.getElementById(\'' + dropId + '\').classList.toggle(\'d-none\')" style="background:none;border:none;cursor:pointer;padding:0;position:relative"><i class="bi bi-bell-fill" style="font-size:1.2rem;color:rgba(255,255,255,.85)"></i>' + badge + '</button><div id="' + dropId + '" class="d-none" style="position:absolute;top:calc(100% + 10px);right:0;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);min-width:280px;max-width:320px;border:1px solid #e3eaf5;z-index:9999;overflow:hidden"><div style="padding:12px 16px;border-bottom:1px solid #f0f4f8;display:flex;align-items:center;justify-content:space-between"><span style="font-weight:700;font-size:.875rem;color:#1a1a2e"><i class="bi bi-bell-fill me-1" style="color:#f57f17"></i>Thông báo</span><span style="font-size:.75rem;color:#6c757d">' + this.getScheduleLabel() + '</span></div>' + items + (filtered.length > 10 ? '<div style="padding:8px 16px;text-align:center;font-size:.78rem;color:#1565c0">+' + (filtered.length - 10) + ' thông báo khác</div>' : '') + '</div></div>';
+                        document.addEventListener('click', function h(e) {
+                            const drop = document.getElementById(dropId), btn = document.getElementById(bellId);
+                            if (drop && btn && !btn.contains(e.target) && !drop.contains(e.target))
+                                drop.classList.add('d-none');
+                        }, {capture: true});
+                    }
+                };
+            })();
+        </script>
+        <style>
+            :root {
+                --primary: #1565c0;
+                --primary-light: #e3f2fd;
+                --primary-dark: #0d47a1;
+                --accent: #42a5f5;
+                --sidebar-w: 240px;
+                --font: 'Be Vietnam Pro', sans-serif;
+            }
+            * {
+                font-family: var(--font);
+            }
+            body {
+                background: #f0f4f8;
+            }
+
+            /* Sidebar */
+            .sidebar {
+                width:var(--sidebar-w);
+                min-height:100vh;
+                background:var(--primary-dark);
+                position:fixed;
+                top:0;
+                left:0;
+                display:flex;
+                flex-direction:column;
+                z-index:100;
+            }
+            .sidebar-logo {
+                padding:24px 20px 16px;
+                border-bottom:1px solid rgba(255,255,255,.1);
+            }
+            .sidebar-logo span {
+                color:#fff;
+                font-weight:700;
+                font-size:1.1rem;
+            }
+            .sidebar-logo small {
+                color:rgba(255,255,255,.5);
+                font-size:.7rem;
+                display:block;
+            }
+            .sidebar-nav {
+                padding:12px 0;
+                flex:1;
+            }
+            .nav-item-link {
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding:10px 20px;
+                color:rgba(255,255,255,.7);
+                text-decoration:none;
+                font-size:.875rem;
+                transition:all .2s;
+            }
+            .nav-item-link:hover, .nav-item-link.active {
+                color:#fff;
+                background:rgba(255,255,255,.1);
+                border-left:3px solid var(--accent);
+                padding-left:17px;
+            }
+            .nav-item-link i {
+                font-size:1rem;
+                width:20px;
+            }
+            .sidebar-footer {
+                padding:16px 20px;
+                border-top:1px solid rgba(255,255,255,.1);
+            }
+
+            .main {
+                margin-left:var(--sidebar-w);
+                padding:28px 32px;
+            }
+
+            /* Hero banner */
+            .hero-banner {
+                background: linear-gradient(135deg, var(--primary-dark) 0%, #1976d2 60%, #42a5f5 100%);
+                border-radius: 20px;
+                padding: 32px 36px;
+                color: #fff;
+                margin-bottom: 28px;
+                display: flex;
+                align-items: center;
+                gap: 28px;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 8px 32px rgba(13,71,161,.25);
+            }
+            .hero-banner::before {
+                content: '';
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                width: 200px;
+                height: 200px;
+                border-radius: 50%;
+                background: rgba(255,255,255,.06);
+            }
+            .hero-banner::after {
+                content: '';
+                position: absolute;
+                bottom: -60px;
+                right: 120px;
+                width: 160px;
+                height: 160px;
+                border-radius: 50%;
+                background: rgba(255,255,255,.04);
+            }
+            .hero-avatar {
+                width: 72px;
+                height: 72px;
+                border-radius: 50%;
+                background: rgba(255,255,255,.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2rem;
+                font-weight: 700;
+                flex-shrink: 0;
+                border: 3px solid rgba(255,255,255,.3);
+            }
+            .hero-greeting {
+                font-size: .9rem;
+                opacity: .8;
+                margin-bottom: 4px;
+            }
+            .hero-name {
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+            .hero-meta {
+                opacity: .75;
+                font-size: .85rem;
+            }
+            .hero-right {
+                margin-left: auto;
+                text-align: right;
+                position: relative;
+                z-index: 1;
+            }
+            .hero-date {
+                opacity: .7;
+                font-size: .8rem;
+            }
+            .hero-time {
+                font-size: 1.8rem;
+                font-weight: 700;
+                line-height: 1;
+            }
+
+            /* Stat cards */
+            .stat-card {
+                background: #fff;
+                border-radius: 16px;
+                padding: 22px 24px;
+                box-shadow: 0 2px 8px rgba(0,0,0,.06);
+                border: 1px solid #e3eaf5;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                transition: transform .2s, box-shadow .2s;
+            }
+            .stat-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(21,101,192,.12);
+            }
+            .stat-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4rem;
+                flex-shrink: 0;
+            }
+            .stat-label {
+                font-size: .78rem;
+                color: #6c757d;
+                font-weight: 500;
+                margin-bottom: 2px;
+            }
+            .stat-val {
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #1a1a2e;
+                line-height: 1;
+            }
+            .stat-sub {
+                font-size: .75rem;
+                color: #aaa;
+                margin-top: 2px;
+            }
+
+            /* Quick actions */
+            .section-title {
+                font-size: 1rem;
+                font-weight: 700;
+                color: #1a1a2e;
+                margin-bottom: 14px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .section-title i {
+                color: var(--primary);
+            }
+
+            .quick-card {
+                background: #fff;
+                border-radius: 14px;
+                padding: 20px;
+                border: 1px solid #e3eaf5;
+                text-decoration: none;
+                color: inherit;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                transition: all .2s;
+                box-shadow: 0 1px 4px rgba(0,0,0,.05);
+            }
+            .quick-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(21,101,192,.12);
+                border-color: var(--accent);
+                color: inherit;
+            }
+            .quick-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.3rem;
+            }
+            .quick-title {
+                font-weight: 700;
+                font-size: .9rem;
+                color: #1a1a2e;
+            }
+            .quick-desc {
+                font-size: .78rem;
+                color: #6c757d;
+            }
+
+            /* Patient list */
+            .patient-item {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 14px 20px;
+                border-bottom: 1px solid #f0f4f8;
+                transition: background .15s;
+            }
+            .patient-item:last-child {
+                border-bottom: none;
+            }
+            .patient-item:hover {
+                background: #f8fafd;
+            }
+            .p-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: var(--primary-light);
+                color: var(--primary);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: .9rem;
+                flex-shrink: 0;
+            }
+            .p-name {
+                font-weight: 600;
+                font-size: .875rem;
+                color: #1a1a2e;
+            }
+            .p-info {
+                font-size: .78rem;
+                color: #6c757d;
+            }
+            .p-badge {
+                margin-left: auto;
+                padding: 3px 10px;
+                border-radius: 20px;
+                font-size: .72rem;
+                font-weight: 600;
+            }
+            .badge-active {
+                background: #d4edda;
+                color: #155724;
+            }
+            .badge-inactive {
+                background: #f8d7da;
+                color: #721c24;
+            }
+
+            .card-box {
+                background: #fff;
+                border-radius: 16px;
+                border: 1px solid #e3eaf5;
+                box-shadow: 0 1px 4px rgba(0,0,0,.06);
+                overflow: hidden;
+            }
+            .card-box-header {
+                padding: 16px 20px;
+                border-bottom: 1px solid #f0f4f8;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .card-box-header .title {
+                font-weight: 700;
+                font-size: .9rem;
+                color: #1a1a2e;
+            }
+            .card-box-header a {
+                font-size: .8rem;
+                color: var(--primary);
+                text-decoration: none;
+            }
+            .card-box-header a:hover {
+                text-decoration: underline;
+            }
+
+            /* Tips */
+            .tip-card {
+                background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
+                border-radius: 14px;
+                padding: 18px 20px;
+                border: 1px solid #b3d9f7;
+                display: flex;
+                gap: 14px;
+                align-items: flex-start;
+            }
+            .tip-icon {
+                font-size: 1.5rem;
+                flex-shrink: 0;
+            }
+            .tip-title {
+                font-weight: 700;
+                font-size: .875rem;
+                color: var(--primary-dark);
+                margin-bottom: 4px;
+            }
+            .tip-text {
+                font-size: .8rem;
+                color: #555;
+                line-height: 1.5;
+            }
+        </style>
+    </head>
+    <body>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <span><i class="bi bi-heart-pulse me-2" style="color:#42a5f5"></i>GlucoTrackAlert</span>
+                <small>Cổng bác sĩ</small>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/doctor/home" class="nav-item-link active"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+                <a href="/doctor/my-patients" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân của tôi</a>
+                <a href="/doctor/prescriptions" class="nav-item-link"><i class="bi bi-capsule"></i> Kê đơn thuốc</a>
+                <a href="/health-logs/doctor-view" class="nav-item-link"><i class="bi bi-graph-up"></i> Chỉ số Glucose</a>
+                <a href="/articles/manage" class="nav-item-link"><i class="bi bi-newspaper"></i> Quản lý tin tức</a>
+                <a href="/doctor/settings" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div style="color:rgba(255,255,255,.5); font-size:.75rem">Bác sĩ</div>
+                <div style="color:#fff; font-size:.85rem; font-weight:600" id="sidebarDrName">Đang tải...</div>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="main">
+
+            <!-- Hero -->
+            <div class="hero-banner">
+                <div class="hero-avatar" id="heroAvatar">?</div>
+                <div>
+                    <div class="hero-greeting">Xin chào,</div>
+                    <div class="hero-name" id="heroName">Bác sĩ</div>
+                    <div class="hero-meta" id="heroMeta">–</div>
+                </div>
+                <div class="hero-right">
+                    <div class="hero-date" id="heroDate">–</div>
+                    <div class="hero-time" id="heroTime">–</div>
+                </div>
+            </div>
+
+            <!-- Banner cảnh báo tài khoản bị ngừng hoạt động -->
+            <div id="inactiveBanner" style="display:none; background:#fde8e8; border:1px solid #e74c3c; border-radius:10px; padding:14px 18px; margin-bottom:20px; align-items:center; gap:12px; color:#922b21;">
+                <i class="bi bi-slash-circle-fill" style="font-size:1.4rem; flex-shrink:0;"></i>
+                <div>
+                    <strong>Tài khoản của bạn đã bị ngừng hoạt động.</strong>
+                    <div style="font-size:.85rem; margin-top:2px;">Bạn không còn được phân công bệnh nhân mới. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.</div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#e3f2fd; color:#1565c0"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <div class="stat-label">Bệnh nhân phụ trách</div>
+                            <div class="stat-val" id="statTotal">–</div>
+                            <div class="stat-sub">được phân công</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#d4edda; color:#155724"><i class="bi bi-person-check-fill"></i></div>
+                        <div>
+                            <div class="stat-label">Đang theo dõi</div>
+                            <div class="stat-val" id="statActive">–</div>
+                            <div class="stat-sub">bệnh nhân active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left column -->
+                <div class="col-md-8">
+
+                    <!-- Quick actions -->
+                    <div class="section-title mb-3"><i class="bi bi-lightning-fill"></i> Truy cập nhanh</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <a href="/doctor/my-patients" class="quick-card">
+                                <div class="quick-icon" style="background:#e3f2fd; color:#1565c0"><i class="bi bi-people-fill"></i></div>
+                                <div>
+                                    <div class="quick-title">Bệnh nhân của tôi</div>
+                                    <div class="quick-desc">Xem danh sách bệnh nhân được phân công</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/health-logs/doctor-view" class="quick-card">
+                                <div class="quick-icon" style="background:#e8f5e9; color:#2e7d32"><i class="bi bi-graph-up-arrow"></i></div>
+                                <div>
+                                    <div class="quick-title">Chỉ số Glucose</div>
+                                    <div class="quick-desc">Theo dõi xu hướng đường huyết</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/articles/manage" class="quick-card">
+                                <div class="quick-icon" style="background:#f3e5f5; color:#6a1b9a"><i class="bi bi-newspaper"></i></div>
+                                <div>
+                                    <div class="quick-title">Quản lý tin tức</div>
+                                    <div class="quick-desc">Đăng và quản lý bài viết sức khỏe</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/doctor/prescriptions" class="quick-card">
+                                <div class="quick-icon" style="background:#fdecea; color:#c62828"><i class="bi bi-capsule"></i></div>
+                                <div>
+                                    <div class="quick-title">Kê đơn thuốc</div>
+                                    <div class="quick-desc">Tạo và quản lý đơn thuốc cho bệnh nhân</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recent patients -->
+                    <div class="section-title"><i class="bi bi-clock-history"></i> Bệnh nhân phụ trách</div>
+                    <div class="card-box">
+                        <div class="card-box-header">
+                            <span class="title">Danh sách gần đây</span>
+                            <a href="/doctor/my-patients">Xem tất cả →</a>
+                        </div>
+                        <div id="patientList">
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-arrow-clockwise"></i> Đang tải...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column -->
+                <div class="col-md-4">
+                    <!-- Doctor profile -->
+                    <div class="section-title"><i class="bi bi-person-badge-fill"></i> Hồ sơ của tôi</div>
+                    <div class="card-box mb-4">
+                        <div style="padding:20px; text-align:center; border-bottom:1px solid #f0f4f8">
+                            <div style="width:64px; height:64px; border-radius:50%; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; margin:0 auto 12px;" id="profileAvatar">?</div>
+                            <div style="font-weight:700; font-size:1rem; color:#1a1a2e" id="profileName">–</div>
+                            <div style="font-size:.8rem; color:#6c757d; margin-top:4px" id="profileSpec">–</div>
+                        </div>
+                        <div style="padding:16px 20px">
+                            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f5f5f5; font-size:.85rem">
+                                <span style="color:#6c757d">Học vị</span>
+                                <span style="font-weight:600" id="profileDegree">–</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f5f5f5; font-size:.85rem">
+                                <span style="color:#6c757d">Kinh nghiệm</span>
+                                <span style="font-weight:600" id="profileExp">–</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:.85rem">
+                                <span style="color:#6c757d">Điện thoại</span>
+                                <span style="font-weight:600" id="profilePhone">–</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:.85rem">
+                                <span style="color:#6c757d">Nơi công tác</span>
+                                <span style="font-weight:600" id="profileWorkplace">–</span>
+                            </div>
+                            <div style="padding:8px 0; font-size:.85rem">
+                                <span style="color:#6c757d">Giới thiệu</span>
+                                <div style="margin-top:4px; color:#1a1a2e; line-height:1.5" id="profileIntro">–</div>
+                            </div>
+                        </div>
+                        <div style="padding:12px 20px; border-top:1px solid #f0f4f8">
+                            <a href="/doctor/settings" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-gear me-1"></i> Cài đặt tài khoản
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Tips -->
+                    <div class="section-title"><i class="bi bi-lightbulb-fill"></i> Lưu ý</div>
+                    <div class="tip-card mb-3">
+                        <div class="tip-icon">💡</div>
+                        <div>
+                            <div class="tip-title">Ngưỡng đường huyết an toàn</div>
+                            <div class="tip-text">Đường huyết lúc đói: 70–100 mg/dL. Sau ăn 2h: dưới 140 mg/dL.</div>
+                        </div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">⚠️</div>
+                        <div>
+                            <div class="tip-title">Cảnh báo khẩn</div>
+                            <div class="tip-text">Trên 300 mg/dL hoặc dưới 54 mg/dL cần xử lý ngay lập tức.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Xác thực lại doctorId với server (đồng bộ) trước khi dùng, để tránh
+            // localStorage đang giữ doctorId cũ/sai từ 1 session trước đó.
+            (function syncDoctorIdFromServer() {
+                try {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', '/api/doctors/me', false);
+                    xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+                    xhr.send();
+                    if (xhr.status === 200) {
+                        const doc = JSON.parse(xhr.responseText);
+                        if (doc && doc.id) {
+                            localStorage.setItem('doctorId', doc.id);
+                        }
+                    } else if (xhr.status === 401 || xhr.status === 403) {
+                        localStorage.clear();
+                        document.cookie = 'jwt=; path=/; max-age=0';
+                        window.location.href = '/login';
+                    }
+                } catch {
+                    // Server không phản hồi được -> tạm dùng giá trị cũ trong localStorage
+                }
+            })();
+
+            const DOCTOR_ID = parseInt(localStorage.getItem('doctorId'));
+            if (!DOCTOR_ID) { window.location.href = '/login'; }
+
+            // Clock
+            function updateClock() {
+                const now = new Date();
+                document.getElementById('heroTime').textContent = now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+                document.getElementById('heroDate').textContent = now.toLocaleDateString('vi-VN', {weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric'});
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            function getInitials(name) {
+                if (!name)
+                    return '?';
+                return name.trim().split(' ').pop()[0].toUpperCase();
+            }
+
+            async function loadDoctorInfo() {
+                try {
+                    const doc = await fetch(`/api/doctors/${DOCTOR_ID}`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
+                    const ini = getInitials(doc.fullName);
+                    document.getElementById('heroAvatar').textContent = ini;
+                    document.getElementById('heroName').textContent = (doc.degree ? doc.degree + '. ' : '') + (doc.fullName || '');
+                    document.getElementById('heroMeta').textContent = [doc.specialization, doc.workplace].filter(Boolean).join(' · ');
+                    document.getElementById('sidebarDrName').textContent = doc.fullName;
+
+                    // Hiển thị banner nếu bác sĩ bị ngừng hoạt động
+                    if (doc.status === 'inactive') {
+                        const banner = document.getElementById('inactiveBanner');
+                        banner.style.display = 'flex';
+                    }
+
+                    // Profile card
+                    document.getElementById('profileAvatar').textContent = ini;
+                    document.getElementById('profileName').textContent = doc.fullName || '–';
+                    document.getElementById('profileSpec').textContent = doc.specialization || '–';
+                    document.getElementById('profileDegree').textContent = doc.degree || '–';
+                    document.getElementById('profileExp').textContent = doc.experienceYears ? doc.experienceYears + ' năm' : '–';
+                    document.getElementById('profilePhone').textContent = doc.phone || '–';
+                    document.getElementById('profileWorkplace').textContent = doc.workplace || '–';
+                    document.getElementById('profileIntro').textContent = doc.introduction || '–';
+                } catch {
+                    console.error('Không tải được thông tin bác sĩ');
+                }
+            }
+
+            async function loadPatients() {
+                try {
+                    const list = await fetch(`/api/doctor/${DOCTOR_ID}/patients`, {headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}}).then(r => r.json());
+                    document.getElementById('statTotal').textContent = list.length;
+                    document.getElementById('statActive').textContent = list.filter(p => p.status !== 'inactive').length;
+
+                    const display = list.slice(0, 5);
+                    const el = document.getElementById('patientList');
+                    if (!display.length) {
+                        el.innerHTML = '<div class="text-center text-muted py-4">Chưa có bệnh nhân</div>';
+                        return;
+                    }
+                    el.innerHTML = display.map(p => `
+                    <div class="patient-item">
+                        <div class="p-avatar">${getInitials(p.fullName)}</div>
+                        <div>
+                            <div class="p-name">${p.fullName || '–'}</div>
+                            <div class="p-info">${p.phone || 'Chưa có SĐT'}</div>
+                        </div>
+                        <span class="p-badge ${p.status === 'inactive' ? 'badge-inactive' : 'badge-active'}">
+                            ${p.status === 'inactive' ? 'Ngừng HĐ' : 'Theo dõi'}
+                        </span>
+                    </div>
+                `).join('');
+                } catch {
+                    console.error('Không tải được bệnh nhân');
+                }
+            }
+
+            loadDoctorInfo();
+            loadPatients();
+
+
+            function handleAuthError(status) {
+                if (status === 401 || status === 403) {
+                    localStorage.clear();
+                    document.cookie = 'jwt=; path=/; max-age=0';
+                    window.location.href = '/login';
+                    return true;
+                }
+                return false;
+            }
+
+            function showToast(msg, type = 'success') {
+                const colors = {success: '#1b5e20', danger: '#b71c1c', info: '#0d47a1'};
+                const icons = {success: 'bi-check-circle-fill', danger: 'bi-x-circle-fill', info: 'bi-info-circle-fill'};
+                const t = document.createElement('div');
+                t.style.cssText = `background:${colors[type]};color:#fff;padding:12px 18px;border-radius:10px;margin-top:8px;
+                font-size:.85rem;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.2);
+                animation:fadeIn .2s ease`;
+                t.innerHTML = `<i class="bi ${icons[type]}"></i>${msg}`;
+                document.getElementById('toast-container').appendChild(t);
+                setTimeout(() => t.remove(), 3000);
+            }
+
+            function openEditModal() {
+                // Điền sẵn giá trị hiện tại vào form
+                document.getElementById('editPhone').value = document.getElementById('profilePhone').textContent.replace('–', '').trim();
+                document.getElementById('editWorkplace').value = document.getElementById('profileWorkplace').textContent.replace('–', '').trim();
+                document.getElementById('editIntroduction').value = document.getElementById('profileIntro').textContent.replace('–', '').trim();
+                document.getElementById('editAvatarUrl').value = '';
+                new bootstrap.Modal(document.getElementById('editProfileModal')).show();
+            }
+
+            async function saveProfile() {
+                const body = {
+                    phone: document.getElementById('editPhone').value.trim() || null,
+                    workplace: document.getElementById('editWorkplace').value.trim() || null,
+                    introduction: document.getElementById('editIntroduction').value.trim() || null,
+                    avatarUrl: document.getElementById('editAvatarUrl').value.trim() || null,
+                };
+                try {
+                    const res = await fetch(`/api/doctors/${DOCTOR_ID}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
+                        body: JSON.stringify(body)
+                    });
+                    if (!res.ok)
+                        throw new Error(await res.text());
+                    const doc = await res.json();
+                    // Cập nhật lại UI ngay không cần reload
+                    document.getElementById('profilePhone').textContent = doc.phone || '–';
+                    document.getElementById('profileWorkplace').textContent = doc.workplace || '–';
+                    document.getElementById('profileIntro').textContent = doc.introduction || '–';
+                    document.getElementById('heroMeta').textContent = [doc.specialization, doc.workplace].filter(Boolean).join(' · ');
+                    bootstrap.Modal.getInstance(document.getElementById('editProfileModal')).hide();
+                    showToast('Cập nhật thông tin thành công!');
+                } catch (e) {
+                    showToast('Lỗi: ' + e.message, 'danger');
+                }
+            }
+
+        </script>
+
+        <!-- Modal chỉnh sửa thông tin bác sĩ -->
+        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius:16px; border:none; box-shadow:0 8px 32px rgba(0,0,0,.15)">
+                    <div class="modal-header" style="border-bottom:1px solid #f0f4f8; padding:20px 24px">
+                        <h5 class="modal-title" style="font-weight:700; color:#1a1a2e">
+                            <i class="bi bi-pencil-square me-2" style="color:var(--primary)"></i>Cập nhật thông tin cá nhân
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="padding:24px">
+                        <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size:.82rem; border-radius:10px">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>Họ tên, chuyên khoa, học vị do admin quản lý. Bạn chỉ có thể cập nhật thông tin liên lạc và giới thiệu.</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-600" style="font-size:.875rem; font-weight:600">Điện thoại</label>
+                            <input type="text" class="form-control" id="editPhone" placeholder="Số điện thoại liên lạc">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size:.875rem; font-weight:600">Nơi công tác</label>
+                            <input type="text" class="form-control" id="editWorkplace" placeholder="Bệnh viện / Phòng khám">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" style="font-size:.875rem; font-weight:600">Giới thiệu bản thân</label>
+                            <textarea class="form-control" id="editIntroduction" rows="3" placeholder="Mô tả ngắn về kinh nghiệm và chuyên môn..."></textarea>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label" style="font-size:.875rem; font-weight:600">URL ảnh đại diện</label>
+                            <input type="text" class="form-control" id="editAvatarUrl" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #f0f4f8; padding:16px 24px; gap:8px">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:8px">Hủy</button>
+                        <button type="button" class="btn btn-primary" onclick="saveProfile()" style="border-radius:8px; min-width:120px">
+                            <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999"></div>
+    </body>
+</html>
