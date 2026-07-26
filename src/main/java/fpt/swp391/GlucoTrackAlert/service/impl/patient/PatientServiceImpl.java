@@ -78,12 +78,19 @@ public class PatientServiceImpl implements PatientService {
         String smokeStatus = request.getSmokingStatus();
         int autoSmokeBit = ("smokes".equalsIgnoreCase(smokeStatus) || "formerly smoked".equalsIgnoreCase(smokeStatus)) ? 1 : 0;
 
+        String fullName = (request.getFullName() != null && !request.getFullName().trim().isEmpty())
+                ? request.getFullName().trim()
+                : user.getFullName();
+        String phone = (request.getPhone() != null && !request.getPhone().trim().isEmpty())
+                ? request.getPhone().trim()
+                : user.getPhone();
+
         Patient patient = Patient.builder()
                 .user(user)
-                .fullName(request.getFullName())
+                .fullName(fullName)
                 .dateOfBirth(request.getDateOfBirth())
                 .gender(request.getGender())
-                .phone(request.getPhone())
+                .phone(phone)
                 .address(request.getAddress())
                 .heightCm(request.getHeightCm())
                 .weightKg(request.getWeightKg())
@@ -120,10 +127,17 @@ public class PatientServiceImpl implements PatientService {
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Patient profile not found for user ID: " + userId));
 
-        patient.setFullName(request.getFullName());
+        String fullName = (request.getFullName() != null && !request.getFullName().trim().isEmpty())
+                ? request.getFullName().trim()
+                : (patient.getUser() != null ? patient.getUser().getFullName() : null);
+        String phone = (request.getPhone() != null && !request.getPhone().trim().isEmpty())
+                ? request.getPhone().trim()
+                : (patient.getUser() != null ? patient.getUser().getPhone() : null);
+
+        patient.setFullName(fullName);
         patient.setDateOfBirth(request.getDateOfBirth());
         patient.setGender(request.getGender());
-        patient.setPhone(request.getPhone());
+        patient.setPhone(phone);
         patient.setAddress(request.getAddress());
         patient.setHeightCm(request.getHeightCm());
         patient.setWeightKg(request.getWeightKg());
