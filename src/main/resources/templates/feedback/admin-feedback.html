@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Đánh Giá</title>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
           rel="stylesheet">
@@ -344,14 +345,16 @@
             background: #f8fafc;
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}"/>
 </head>
 
-<body>
-<div class="container">
-    <div class="header-section">
-        <h2><i class="fa-solid fa-star-half-stroke text-blue-500"></i> Quản Lý Đánh Giá Từ Bệnh Nhân</h2>
-        <a href="/admin/dashboard" class="back-link"><i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard</a>
-    </div>
+<body class="admin-layout-body">
+<div th:replace="~{fragments/layout :: sidebar('feedbacks')}"></div>
+
+<div class="main-content">
+    <div th:replace="~{fragments/layout :: topbar('Quản Lý Đánh Giá Từ Bệnh Nhân')}"></div>
+
+    <div class="container">
 
     <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
@@ -526,6 +529,7 @@
         </div>
     </div>
 
+</div>
 </div>
 </body>
 

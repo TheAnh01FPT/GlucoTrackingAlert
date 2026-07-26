@@ -6,9 +6,9 @@ import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
-import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
+import fpt.swp391.GlucoTrackAlert.repository.healthlog.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.risk.WeeklyHealthReportRepository;
-import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
 import fpt.swp391.GlucoTrackAlert.model.risk.WeeklyHealthReport;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,7 +174,7 @@ public class PatientServiceImpl implements PatientService {
 
         patient.setCholesterol(request.getCholesterol() != null ? request.getCholesterol() : 1);
         patient.setAlco(request.getAlco() != null ? request.getAlco() : 0);
-        patient.setActive(request.getActive() != null ? request.getActive() : 1);
+        patient.setActive(request.getActive() != null ? request.getActive() : (patient.getActive() != null ? patient.getActive() : 1));
 
         calculateAgeAndBmi(patient);
         patient.setPatientType(determinePatientType(patient));

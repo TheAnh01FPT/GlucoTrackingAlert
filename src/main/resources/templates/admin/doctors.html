@@ -8,6 +8,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+        <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}"/>
         <style>
             :root {
                 --primary: #1a6b5a;
@@ -26,80 +27,6 @@
                 background: #f4f7f6;
             }
 
-            /* Sidebar */
-            .sidebar {
-                width: var(--sidebar-w);
-                min-height: 100vh;
-                background: var(--primary-dark);
-                position: fixed;
-                top: 0;
-                left: 0;
-                display: flex;
-                flex-direction: column;
-                z-index: 100;
-            }
-            .sidebar-logo {
-                padding: 24px 20px 16px;
-                border-bottom: 1px solid rgba(255,255,255,.1);
-            }
-            .sidebar-logo span {
-                color: #fff;
-                font-weight: 700;
-                font-size: 1.1rem;
-                letter-spacing: -.3px;
-            }
-            .sidebar-logo small {
-                color: rgba(255,255,255,.5);
-                font-size: .7rem;
-                display: block;
-            }
-            .sidebar-nav {
-                padding: 12px 0;
-                flex: 1;
-            }
-            .nav-item-link {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 20px;
-                color: rgba(255,255,255,.7);
-                text-decoration: none;
-                font-size: .875rem;
-                transition: all .2s;
-            }
-            .nav-item-link:hover, .nav-item-link.active {
-                color: #fff;
-                background: rgba(255,255,255,.1);
-                border-left: 3px solid var(--accent);
-                padding-left: 17px;
-            }
-            .nav-item-link i {
-                font-size: 1rem;
-                width: 20px;
-            }
-
-            /* Main */
-            .main {
-                margin-left: var(--sidebar-w);
-                padding: 28px 32px;
-            }
-
-            /* Topbar */
-            .topbar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 24px;
-            }
-            .topbar h4 {
-                font-weight: 700;
-                color: #1a1a2e;
-                margin: 0;
-            }
-            .topbar-sub {
-                color: #6c757d;
-                font-size: .85rem;
-            }
 
             /* Stats */
             .stat-card {
@@ -410,34 +337,15 @@
 
         </style>
     </head>
-    <body>
+    <body class="admin-layout-body">
 
         <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-logo">
-                <span><i class="bi bi-droplet-half me-2" style="color:#27ae60"></i>GlucoTrackAlert</span>
-                <small>Hệ thống quản trị</small>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/admin/dashboard" class="nav-item-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
-                <a href="/admin/doctors" class="nav-item-link active"><i class="bi bi-person-badge"></i> Quản lý Bác sĩ</a>
-                <a href="/admin/assignments" class="nav-item-link"><i class="bi bi-diagram-3"></i> Phân công Bác sĩ</a>
-                <a href="/admin/requests" class="nav-item-link"><i class="bi bi-file-earmark-medical"></i> Yêu cầu thay đổi</a>
-                <a href="/admin/contact-requests" class="nav-item-link"><i class="bi bi-envelope"></i> Yêu cầu liên hệ</a>
-                <a href="#" class="nav-item-link"><i class="bi bi-people"></i> Bệnh nhân</a>
-                <a href="/admin/thresholds" class="nav-item-link"><i class="bi bi-gear"></i> Cài đặt</a>
-            </nav>
-        </div>
+        <div th:replace="~{fragments/layout :: sidebar('doctors')}"></div>
 
 
         <!-- Main -->
         <div class="main">
-            <!-- Topbar -->
-            <div class="topbar">
-                <div>
-                    <h4><i class="bi bi-person-badge me-2" style="color:var(--primary)"></i>Quản lý Bác sĩ</h4>
-                </div>
-            </div>
+            <div th:replace="~{fragments/layout :: topbar('Quản lý Bác sĩ')}"></div>
 
             <!-- Stats -->
             <div class="row g-3 mb-4">
@@ -845,9 +753,13 @@
 
                                 function updateStats(doctors) {
                                     document.getElementById('totalDoctors').textContent = doctors.length;
-                                    const active = doctors.filter(d => d.status !== 'inactive').length;
+                                    // Đếm đúng theo từng trạng thái — trước đây "Đang hoạt động" được tính
+                                    // bằng "khác inactive", nên vô tình gộp luôn cả bác sĩ đang
+                                    // pending_verification/pending_approval/rejected vào ô này.
+                                    const active = doctors.filter(d => d.status === 'active').length;
+                                    const inactive = doctors.filter(d => d.status === 'inactive').length;
                                     document.getElementById('activeDoctors').textContent = active;
-                                    document.getElementById('inactiveDoctors').textContent = doctors.length - active;
+                                    document.getElementById('inactiveDoctors').textContent = inactive;
                                     const specs = new Set(doctors.map(d => d.specialization).filter(Boolean));
                                     document.getElementById('specialCount').textContent = specs.size;
                                 }
@@ -1003,6 +915,22 @@
                                     doctorModal.show();
                                 }
 
+                                // GlobalExceptionHandler trả lỗi dạng JSON { message: "..." }, không phải text thô.
+                                async function extractErrorMessage(res) {
+                                    try {
+                                        const data = await res.json();
+                                        return data.message || 'Thao tác thất bại!';
+                                    } catch {
+                                        return 'Thao tác thất bại!';
+                                    }
+                                }
+
+                                // Cùng quy tắc với backend (@Pattern trong AdminCreateDoctorRequest / DoctorRequest):
+                                // chỉ chữ cái (kể cả có dấu) + '.', '-', ''' xen giữa; KHÔNG cho khoảng trắng
+                                // đầu/cuối hoặc khoảng trắng liên tiếp (chặn case chỉ toàn dấu cách).
+                                const NAME_PATTERN = /^\p{L}+(?:[ .'-]\p{L}+)*$/u;
+                                const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
                                 async function saveDoctor() {
                                     const id = document.getElementById('doctorId').value;
                                     const fullName = document.getElementById('fullName').value.trim();
@@ -1012,12 +940,28 @@
                                         showToast('Vui lòng điền đầy đủ họ tên và chuyên khoa!', 'danger');
                                         return;
                                     }
+                                    if (fullName.length < 2) {
+                                        showToast('Họ tên phải từ 2 ký tự trở lên!', 'danger');
+                                        return;
+                                    }
+                                    if (!NAME_PATTERN.test(fullName)) {
+                                        showToast('Họ tên chỉ được chứa chữ cái và khoảng trắng, không được là số/ký tự đặc biệt!', 'danger');
+                                        return;
+                                    }
+                                    if (!NAME_PATTERN.test(specialization)) {
+                                        showToast('Chuyên khoa chỉ được chứa chữ cái và khoảng trắng, không được là số/ký tự đặc biệt!', 'danger');
+                                        return;
+                                    }
 
                                     if (!id) {
                                         // Tạo mới: dùng admin-create, gửi email
                                         const email = document.getElementById('userEmailLookup').value.trim();
                                         if (!email) {
                                             showToast('Vui lòng nhập email bác sĩ!', 'danger');
+                                            return;
+                                        }
+                                        if (!EMAIL_PATTERN.test(email)) {
+                                            showToast('Email không đúng định dạng!', 'danger');
                                             return;
                                         }
                                         const payload = {
@@ -1037,7 +981,7 @@
                                                 body: JSON.stringify(payload)
                                             });
                                             if (!res.ok) {
-                                                showToast('❌ ' + (await res.text() || 'Tạo thất bại!'), 'danger');
+                                                showToast('❌ ' + (await extractErrorMessage(res)), 'danger');
                                                 return;
                                             }
                                             doctorModal.hide();
@@ -1065,7 +1009,7 @@
                                                 body: JSON.stringify(payload)
                                             });
                                             if (!res.ok) {
-                                                showToast('❌ ' + (await res.text() || 'Cập nhật thất bại!'), 'danger');
+                                                showToast('❌ ' + (await extractErrorMessage(res)), 'danger');
                                                 return;
                                             }
                                             doctorModal.hide();

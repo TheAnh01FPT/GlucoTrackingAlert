@@ -1,0 +1,290 @@
+/* admin-sidebar.css - Unified Admin Sidebar Styles */
+:root {
+    --primary: #1a6b5a;
+    --primary-light: #e8f5f1;
+    --primary-dark: #134d40;
+    --accent: #27ae60;
+    --sidebar-width: 250px;
+    --font: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+}
+
+.sidebar {
+    width: var(--sidebar-width) !important;
+    height: 100vh !important;
+    background-color: var(--primary-dark) !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    color: #ffffff !important;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05) !important;
+    z-index: 1000 !important;
+    font-family: var(--font) !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+}
+
+.sidebar-logo {
+    padding: 24px 20px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar-logo h2 {
+    color: #ffffff !important;
+    margin: 0 !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    font-family: var(--font) !important;
+    line-height: 1.2 !important;
+}
+
+.sidebar-logo span {
+    font-size: 13px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-family: var(--font) !important;
+    display: block !important;
+    margin-top: 4px !important;
+}
+
+.sidebar-menu {
+    padding: 20px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    overflow-y: auto !important;
+}
+
+.menu-item {
+    padding: 12px 24px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    text-decoration: none !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    transition: all 0.25s ease-in-out !important;
+    display: flex !important;
+    align-items: center !important;
+    border-left: 4px solid transparent !important;
+    font-family: var(--font) !important;
+    box-sizing: border-box !important;
+    gap: 10px !important;
+}
+
+.menu-item:hover, .menu-item.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    border-left-color: var(--accent) !important;
+}
+
+.menu-item:hover {
+    transform: translateX(4px) !important;
+}
+
+.sidebar-footer {
+    padding: 16px 20px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-sizing: border-box !important;
+    font-family: var(--font) !important;
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.sidebar-footer-role {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 0.75rem !important;
+}
+
+.sidebar-footer-name {
+    color: #ffffff !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    margin-top: 2px !important;
+}
+
+/* Layout wrappers alignment */
+.main-content, .main {
+    margin-left: var(--sidebar-width) !important;
+    padding: 30px !important;
+    min-height: 100vh !important;
+    box-sizing: border-box !important;
+    flex: 1 !important;
+}
+
+/* Ensure proper flex layout on body when sidebar is used */
+body.admin-layout-body {
+    display: flex !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #f4f7f6 !important;
+    min-height: 100vh !important;
+}
+
+/* Profile Dropdown styling */
+.profile-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-info-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+    border-left: 1px solid #cbd5e1;
+    padding-left: 16px;
+    user-select: none;
+}
+
+.profile-info-block:hover {
+    background-color: #f1f5f9;
+}
+
+.profile-text {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
+.profile-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.profile-role {
+    font-size: 11.5px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #cbd5e1;
+    background-color: #f1f5f9;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-avatar i {
+    font-size: 28px;
+    color: #64748b;
+}
+
+.profile-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: #ffffff;
+    min-width: 220px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    z-index: 10000;
+    padding: 8px 0;
+    transform-origin: top right;
+    animation: dropdownFadeIn 0.2s ease-in-out;
+}
+
+.profile-dropdown-menu.show {
+    display: block;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    color: #334155 !important;
+    text-decoration: none !important;
+    font-size: 14.5px;
+    font-weight: 500;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f5f9;
+    color: #1a6b5a !important;
+}
+
+.dropdown-item svg {
+    color: #64748b;
+    transition: all 0.15s ease-in-out;
+}
+
+.dropdown-item:hover svg {
+    color: #1a6b5a;
+}
+
+.dropdown-item.text-danger {
+    color: #dc2626 !important;
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: #fef2f2;
+    color: #b91c1c !important;
+}
+
+.dropdown-item.text-danger svg {
+    color: #dc2626;
+}
+
+.dropdown-item.text-danger:hover svg {
+    color: #b91c1c;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #e2e8f0;
+    margin: 6px 0;
+}
+
+/* --- Shared TOPBAR styles --- */
+.topbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    background: #ffffff !important;
+    padding: 16px 24px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
+    margin-bottom: 24px !important;
+    border: 1px solid #cbd5e1 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.topbar-title {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--primary-dark) !important;
+}

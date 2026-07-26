@@ -1,8 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.service.cardioai;
 
-import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
+import fpt.swp391.GlucoTrackAlert.repository.healthlog.DailyHealthLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -88,9 +88,13 @@ public class WeeklyCardioAiService {
                 .filter(l -> l.getPhysicalActivity() != null && l.getPhysicalActivity() == 1)
                 .count();
 
-        // Logic: Nếu trong tuần có ít nhất 1 ngày tích chọn vận động thể chất,
-        // hệ thống sẽ gửi trạng thái active = 1 sang Flask AI, ngược lại là 0.
-        int calculatedActive = (activeDaysCount >= 1) ? 1 : 0;
+        // Tính số ngày không vận động trong tuần
+        long totalDaysCount = logs.size();
+        long inactiveDaysCount = totalDaysCount - activeDaysCount;
+
+        // Logic nhóm trưởng: nếu số ngày vận động lớn hơn số ngày không vận động thì
+        // tuần đó được xem là "vận động" (active = 1), ngược lại là "không vận động" (active = 0).
+        int calculatedActive = (activeDaysCount > inactiveDaysCount) ? 1 : 0;
         payload.put("active", calculatedActive);
         // --- KẾT THÚC ĐOẠN SỬA ĐỔI ---
 
@@ -106,13 +110,33 @@ public class WeeklyCardioAiService {
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                log.info("Dự đoán tim mạch thành công cho bệnh nhân {}: {}", patient.getId(), response.getBody());
-                return response.getBody();
+                Map<String, Object> body = response.getBody();
+                normalizeAiResponseKeys(body);
+                log.info("Dự đoán tim mạch thành công cho bệnh nhân {}: {}", patient.getId(), body);
+                return body;
             }
         } catch (Exception e) {
             log.error("Lỗi khi kết nối tới ML Service dự đoán tim mạch tuần: {}", e.getMessage());
         }
 
         return Collections.emptyMap();
+    }
+
+    private void normalizeAiResponseKeys(Map<String, Object> body) {
+        if (body == null) {
+            return;
+        }
+        if (body.containsKey("riskPercentage") && !body.containsKey("risk_percentage")) {
+            body.put("risk_percentage", body.get("riskPercentage"));
+        }
+        if (body.containsKey("riskLevel") && !body.containsKey("risk_level")) {
+            body.put("risk_level", body.get("riskLevel"));
+        }
+        if (body.containsKey("risk_percentage") && !body.containsKey("riskPercentage")) {
+            body.put("riskPercentage", body.get("risk_percentage"));
+        }
+        if (body.containsKey("risk_level") && !body.containsKey("riskLevel")) {
+            body.put("riskLevel", body.get("risk_level"));
+        }
     }
 }
