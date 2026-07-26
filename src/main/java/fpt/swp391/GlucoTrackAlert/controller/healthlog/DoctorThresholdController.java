@@ -54,7 +54,8 @@ public class DoctorThresholdController {
         Long currentUserId = getCurrentUserId();
         fpt.swp391.GlucoTrackAlert.model.doctor.Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
         if (doctor == null) return false;
-        return assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId).isPresent();
+        java.util.Optional<fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment> assignment = assignmentRepository.findByDoctorIdAndPatientId(doctor.getId(), patientId);
+        return assignment.isPresent() && "active".equalsIgnoreCase(assignment.get().getStatus());
     }
 
     // Xem ngưỡng của 1 bệnh nhân
