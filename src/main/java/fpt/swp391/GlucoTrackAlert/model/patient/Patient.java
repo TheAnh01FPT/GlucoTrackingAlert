@@ -56,6 +56,9 @@ public class Patient {
     @Builder.Default
     private String status = "active";
 
+    @Column(length = 500)
+    private String avatar;
+
     @Column(name = "patient_type", length = 20)
     private String patientType;
 
