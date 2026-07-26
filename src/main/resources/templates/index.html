@@ -176,7 +176,6 @@
                     <li class="nav-item"><a class="nav-link" href="#features">Dịch vụ</a></li>
                     <li class="nav-item"><a class="nav-link" href="#doctors">Đội ngũ bác sĩ</a></li>
                     <li class="nav-item"><a class="nav-link" th:href="@{/articles}">Tin tức</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#testimonials">Đánh giá</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contact">Liên hệ</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
@@ -329,34 +328,7 @@
         </div>
     </section>
 
-    <!-- Nhận xét bệnh nhân (Thymeleaf Fragment Placeholder cho Trần Bình Minh) -->
-    <section id="testimonials" class="section-padding">
-        <div class="container">
-            <div class="text-center">
-                <h2 class="section-title justify-content-center">Cảm Nhận Của Bệnh Nhân</h2>
-                <p class="section-subtitle">Sự hài lòng và sức khỏe của bệnh nhân là niềm tự hào của chúng tôi</p>
-            </div>
-            <!-- Khi Trần Bình Minh làm xong, fragment này sẽ được hiển thị động -->
-            <div th:replace="~{fragments/testimonials :: testimonial-carousel}">
-                <!-- Giao diện Tĩnh mẫu -->
-                <div class="row justify-content-center">
-                    <div class="col-lg-8">
-                        <div class="card border-0 bg-light p-5 text-center shadow-sm">
-                            <i class="bi bi-quote fs-1 text-success opacity-50 mb-3"></i>
-                            <p class="lead italic text-muted">"Hệ thống giúp tôi dễ dàng ghi chép chỉ số đường huyết mỗi sáng. Con trai tôi ở xa cũng yên tâm hơn vì có email thông báo tức thời mỗi khi chỉ số của tôi không tốt."</p>
-                            <h5 class="fw-bold mt-4 mb-1">Bác Nguyễn Văn Hùng</h5>
-                            <small class="text-muted">Bệnh nhân tiểu đường type 2 (Hà Nội)</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center mt-5">
-                    <a th:if="${isAuthenticated and userRole == 'ROLE_PATIENT'}" href="/patient/feedbacks" class="btn btn-primary-custom btn-lg">Viết đánh giá của bạn</a>
-                    <a th:if="${!isAuthenticated}" href="/login" class="btn btn-outline-custom btn-lg">Đăng nhập để gửi đánh giá</a>
-                </div>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Liên hệ & Form Yêu cầu liên hệ (Nghiệp vụ 2 của Hà Thế Anh) -->
     <section id="contact" class="section-padding contact-section">

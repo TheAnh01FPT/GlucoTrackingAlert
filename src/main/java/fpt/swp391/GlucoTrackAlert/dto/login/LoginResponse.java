@@ -14,4 +14,5 @@ public class LoginResponse {
     private String role;
     private String message;
     private Long doctorId;
+    private boolean requiresOtp;
 }

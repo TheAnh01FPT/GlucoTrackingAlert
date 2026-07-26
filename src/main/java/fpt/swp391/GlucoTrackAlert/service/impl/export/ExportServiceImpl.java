@@ -1,8 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.service.impl.export;
 
-import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
+import fpt.swp391.GlucoTrackAlert.repository.healthlog.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.export.ExportService;
 import lombok.RequiredArgsConstructor;

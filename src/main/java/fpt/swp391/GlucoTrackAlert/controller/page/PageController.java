@@ -3,7 +3,6 @@ package fpt.swp391.GlucoTrackAlert.controller.page;
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
 import fpt.swp391.GlucoTrackAlert.dto.relative.RelativeResponse;
 import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
-import fpt.swp391.GlucoTrackAlert.model.doctor.DoctorIntroduction;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
@@ -27,14 +26,14 @@ public class PageController {
     private final UserRepository userRepository;
     private final RelativeService relativeService;
     private final DoctorRepository doctorRepository;
-    private final fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository;
+    private final fpt.swp391.GlucoTrackAlert.repository.banner.BannerRepository bannerRepository;
 
     @Autowired
     public PageController(PatientService patientService,
             UserRepository userRepository,
             RelativeService relativeService,
             DoctorRepository doctorRepository,
-            fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
+            fpt.swp391.GlucoTrackAlert.repository.banner.BannerRepository bannerRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;
@@ -52,12 +51,11 @@ public class PageController {
     @GetMapping("/")
     public String indexPage(Model model) {
         try {
-            List<DoctorIntroduction> doctors = doctorRepository.findByStatus("active").stream()
+            List<Doctor> doctors = doctorRepository.findByStatus("active").stream()
                     .sorted((a, b) -> Integer.compare(
                     b.getExperienceYears() == null ? 0 : b.getExperienceYears(),
                     a.getExperienceYears() == null ? 0 : a.getExperienceYears()))
                     .limit(MAX_FEATURED_DOCTORS)
-                    .map(this::toShowcaseCard)
                     .toList();
             model.addAttribute("doctors", doctors);
         } catch (Exception e) {
@@ -76,30 +74,9 @@ public class PageController {
         return "index";
     }
 
-    private DoctorIntroduction toShowcaseCard(Doctor d) {
-        DoctorIntroduction card = new DoctorIntroduction();
-        card.setDoctorId(d.getId());
-        card.setDisplayName(d.getFullName());
-        card.setTitle(d.getDegree());
-        card.setSpecialization(d.getSpecialization());
-        card.setIntroduction(d.getIntroduction());
-        card.setAvatarUrl(d.getAvatarUrl());
-        return card;
-    }
-
     @GetMapping("/login")
     public String loginPage() {
         return "login/login";
-    }
-
-    @GetMapping("/oauth2/success")
-    public String oauth2Success(Model model, @RequestParam("token") String token,
-            @RequestParam("email") String email,
-            @RequestParam("role") String role) {
-        model.addAttribute("token", token);
-        model.addAttribute("email", email);
-        model.addAttribute("role", role);
-        return "login/oauth2-success";
     }
 
     @GetMapping("/register")

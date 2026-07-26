@@ -14,9 +14,9 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import fpt.swp391.GlucoTrackAlert.service.DailyHealthLogService;
-import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
-import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
+import fpt.swp391.GlucoTrackAlert.service.healthlog.DailyHealthLogService;
+import fpt.swp391.GlucoTrackAlert.repository.healthlog.DailyHealthLogRepository;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,7 +35,6 @@ import java.util.HashMap;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.temporal.TemporalAdjusters;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
@@ -304,15 +303,13 @@ public class DailyHealthLogController {
             if (!riskList.isEmpty()) {
                 Map<String, Object> raw = riskList.get(0);
                 latestRisk = new HashMap<>();
-                latestRisk.put("id", raw.get("id"));
-
                 Object pct = raw.get("risk_percentage");
                 if (pct instanceof java.math.BigDecimal) {
-                    latestRisk.put("riskPercentage", String.format("%.2f", ((java.math.BigDecimal) pct).doubleValue()));
+                    latestRisk.put("riskPercentage", ((java.math.BigDecimal) pct).setScale(2, java.math.RoundingMode.HALF_UP));
                 } else if (pct instanceof Number) {
-                    latestRisk.put("riskPercentage", String.format("%.2f", ((Number) pct).doubleValue()));
+                    latestRisk.put("riskPercentage", java.math.BigDecimal.valueOf(((Number) pct).doubleValue()).setScale(2, java.math.RoundingMode.HALF_UP));
                 } else {
-                    latestRisk.put("riskPercentage", pct != null ? pct.toString() : "0.00");
+                    latestRisk.put("riskPercentage", java.math.BigDecimal.ZERO);
                 }
 
                 latestRisk.put("riskLevel", raw.get("risk_level"));
@@ -333,6 +330,7 @@ public class DailyHealthLogController {
                 }
             }
             model.addAttribute("latestRisk", latestRisk);
+        model.addAttribute("latestAssessment", latestRisk);
 
             Pageable pageable = PageRequest.of(page, size);
             Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(selectedPatientId, pageable);
@@ -363,6 +361,7 @@ public class DailyHealthLogController {
     public String getMyLogs(@RequestParam Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            RedirectAttributes redirectAttributes,
             Model model) {
         // If caller is not admin/doctor and the requested userId is not their own,
         // redirect to login to prevent tampering with the `userId` query parameter.
@@ -376,6 +375,14 @@ public class DailyHealthLogController {
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             return "redirect:/login"; // hoặc trang lỗi
+        }
+
+        // Doctor không được đi vòng qua màn "của bệnh nhân" để xem log của
+        // bệnh nhân không do mình phụ trách. Chặn cứng, hướng họ về doctor-view
+        // (nơi đã có check assignment đúng).
+        if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này.");
+            return "redirect:/health-logs/doctor-view";
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<DailyHealthLogResponse> logsPage = dailyHealthLogService.getLogs(patientId, pageable);
@@ -708,10 +715,23 @@ public class DailyHealthLogController {
     public String getChart(@RequestParam(required = false) Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            RedirectAttributes redirectAttributes,
             Model model) {
-        List<Patient> patients = patientRepository.findAllByStatus("active");
-        if (patients.isEmpty()) {
-            patients = patientRepository.findAll();
+        List<Patient> patients;
+        if (hasRole("ROLE_DOCTOR") && !hasRole("ROLE_ADMIN")) {
+            // Bác sĩ chỉ được thấy/xem bệnh nhân do mình phụ trách, không phải toàn bộ hệ thống.
+            Long currentUserId = getCurrentUserId();
+            Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
+            patients = doctor == null ? Collections.emptyList()
+                    : assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active").stream()
+                            .map(fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment::getPatient)
+                            .filter(java.util.Objects::nonNull)
+                            .toList();
+        } else {
+            patients = patientRepository.findAllByStatus("active");
+            if (patients.isEmpty()) {
+                patients = patientRepository.findAll();
+            }
         }
         model.addAttribute("patients", patients);
 
@@ -726,6 +746,13 @@ public class DailyHealthLogController {
         Long selectedPatientId = resolvePatientId(userId);
         if (selectedPatientId == null && !patients.isEmpty()) {
             selectedPatientId = patients.get(0).getId();
+        }
+
+        // Bác sĩ không được xem chart của bệnh nhân không do mình phụ trách,
+        // kể cả nếu họ tự sửa tham số userId trên URL.
+        if (hasRole("ROLE_DOCTOR") && selectedPatientId != null && !isDoctorAssignedToPatient(selectedPatientId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này.");
+            return "redirect:/health-logs/doctor-view";
         }
 
         LocalDate endDate = to != null ? to : LocalDate.now();
@@ -752,6 +779,7 @@ public class DailyHealthLogController {
     public String getMyChart(@RequestParam Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            RedirectAttributes redirectAttributes,
             Model model) {
         // Prevent IDOR: non-admin/doctor users may only view their own chart,
         // regardless of what userId is passed in the request.
@@ -765,6 +793,12 @@ public class DailyHealthLogController {
         Long patientId = resolvePatientId(userId);
         if (patientId == null) {
             patientId = userId;
+        }
+
+        // Doctor không được xem chart của bệnh nhân không do mình phụ trách.
+        if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này.");
+            return "redirect:/health-logs/doctor-view";
         }
 
         LocalDate endDate = to != null ? to : LocalDate.now();
@@ -1224,29 +1258,37 @@ public class DailyHealthLogController {
 
         boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
 
-        // 1. Phân giải PatientId từ userId hoặc ngược lại
-        if (patientId == null && userId != null) {
-            Optional<Patient> pOpt = patientRepository.findByUserId(userId);
-            if (pOpt.isPresent()) {
-                patientId = pOpt.get().getId();
-            } else if (patientRepository.existsById(userId)) {
-                patientId = userId;
+        if (patientId == null) {
+            if (userId != null) {
+                Optional<Patient> pOpt = patientRepository.findByUserId(userId);
+                if (pOpt.isPresent()) {
+                    patientId = pOpt.get().getId();
+                } else if (patientRepository.existsById(userId)) {
+                    patientId = userId;
+                }
             }
         }
+
         if (patientId == null) {
-            patientId = isDoctorOrAdminCaller ? null : resolvePatientId(curUserId);
-        }
-        if (patientId == null) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
-            return isDoctorOrAdminCaller ? "redirect:/health-logs/doctor-view" : "redirect:/";
+            if (isDoctorOrAdminCaller) {
+                redirectAttributes.addFlashAttribute("error", "Thiếu thông tin bệnh nhân cần xem.");
+                return "redirect:/health-logs/doctor-view";
+            } else {
+                patientId = resolvePatientId(curUserId);
+            }
         }
 
-        // 2. Kiểm tra quyền truy cập (Access Control)
+        if (patientId == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
+        }
+
         Patient patient = patientRepository.findById(patientId).orElse(null);
         if (patient == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
             return "redirect:/";
         }
+
         if (!isDoctorOrAdminCaller) {
             Long ownPatientId = resolvePatientId(curUserId);
             if (ownPatientId == null || !ownPatientId.equals(patientId)) {
@@ -1259,59 +1301,222 @@ public class DailyHealthLogController {
             }
         }
 
-        // 3. Xử lý khoảng ngày đo dữ liệu (Mặc định 14 ngày gần nhất để phân tích tim mạch tốt hơn)
-        LocalDate toDate = to;
-        LocalDate fromDate = from;
-        if (toDate == null || fromDate == null) {
-            toDate = LocalDate.now();
-            fromDate = toDate.minusDays(14); // Thu thập dữ liệu trong 14 ngày
-        }
-        if (fromDate.isAfter(toDate)) {
-            LocalDate temp = fromDate;
-            fromDate = toDate;
-            toDate = temp;
-        }
+        boolean isDoctorView = isDoctorOrAdminCaller
+                && userId != null
+                && !userId.equals(curUserId);
 
-        // 4. Gọi Python AI thông qua Service xử lý động
-        Map<String, Object> heartRiskData = dailyHealthLogService.calculateDynamicHeartRisk(patientId, fromDate, toDate);
+        final Long finalPatientId = patientId;
+        List<WeeklyHealthReport> dbReports = weeklyHealthReportRepository.findByPatientIdOrderByWeekStartDesc(patientId);
+        List<Map<String, Object>> reports = dbReports.stream().map(r -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", r.getId());
+            map.put("weekStart", r.getWeekStart());
+            map.put("weekEnd", r.getWeekEnd());
+            map.put("averageBloodSugar", r.getAverageBloodSugar());
+            map.put("averageSystolic", r.getAverageSystolic());
+            map.put("averageDiastolic", r.getAverageDiastolic());
+            map.put("createdAt", r.getCreatedAt());
 
-        // 5. Bổ sung dữ liệu hiển thị thời gian phân tích 'assessedAtStr' cho phù hợp cấu trúc giao diện ai-report-heart.html
-        if (heartRiskData != null && !heartRiskData.containsKey("error") && !heartRiskData.containsKey("message")) {
-            java.time.LocalDateTime now = java.time.LocalDateTime.now();
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            heartRiskData.put("assessedAtStr", now.format(formatter));
-
-            // Ép key từ gạch dưới của Flask thành CamelCase để khớp với `ai-report-heart.html` cũ
-            if (heartRiskData.containsKey("risk_percentage")) {
-                heartRiskData.put("riskPercentage", formatDecimal(heartRiskData.get("risk_percentage")));
+            List<DailyHealthLog> weekLogsForActivity = dailyHealthLogRepository.findByPatientIdAndLogDateBetweenOrderByLogDate(finalPatientId, r.getWeekStart(), r.getWeekEnd());
+            long activeDays = weekLogsForActivity.stream().filter(l -> l.getPhysicalActivity() != null && l.getPhysicalActivity() == 1).count();
+            int totalDays = weekLogsForActivity.size();
+            map.put("activeDays", activeDays);
+            map.put("totalDays", totalDays);
+            String activeWeekLabel = "--";
+            if (totalDays > 0) {
+                long inactiveDays = totalDays - activeDays;
+                activeWeekLabel = activeDays > inactiveDays ? "Có" : "Không";
             }
-            if (heartRiskData.containsKey("risk_level")) {
-                heartRiskData.put("riskLevel", heartRiskData.get("risk_level"));
+            map.put("activeWeek", activeWeekLabel);
+
+            Optional<RiskAssessment> heartAss = riskAssessmentRepository.findByWeeklyReportIdAndAssessmentType(r.getId(), "WEEKLY_HEART_RISK");
+            if (heartAss.isPresent()) {
+                RiskAssessment ass = heartAss.get();
+                if (ass.getRiskPercentage() == null || BigDecimal.ZERO.compareTo(ass.getRiskPercentage()) == 0) {
+                    try {
+                        Map<String, Object> aiHeartResult = dailyHealthLogService.calculateDynamicHeartRisk(finalPatientId, r.getWeekStart(), r.getWeekEnd());
+                        if (aiHeartResult != null && !aiHeartResult.isEmpty() && !aiHeartResult.containsKey("error") && !aiHeartResult.containsKey("message")) {
+                            Object heartRiskValue = aiHeartResult.containsKey("risk_percentage") ? aiHeartResult.get("risk_percentage") : aiHeartResult.get("riskPercentage");
+                            Double riskPercentage = heartRiskValue != null ? Double.parseDouble(heartRiskValue.toString()) : null;
+                            String rawRiskLevel = (String) aiHeartResult.get("risk_level");
+
+                            String mappedLevel = "LOW";
+                            String heartAdvice = "Chỉ số sức khỏe của bạn ở mức an toàn, nguy cơ tim mạch thấp.";
+                            if (rawRiskLevel != null) {
+                                String lowerLevel = rawRiskLevel.toLowerCase();
+                                if (lowerLevel.contains("critical") || (riskPercentage != null && riskPercentage >= 75)) {
+                                    mappedLevel = "CRITICAL";
+                                    heartAdvice = "🚨 Nguy cơ tim mạch rất cao (Nguy hiểm)! Cần tham vấn bác sĩ ngay để kiểm soát huyết áp, đường huyết và các chỉ số sức khỏe.";
+                                } else if (lowerLevel.contains("high") || (riskPercentage != null && riskPercentage >= 50)) {
+                                    mappedLevel = "HIGH";
+                                    heartAdvice = "⚠️ Nguy cơ tim mạch cao! Bạn nên điều chỉnh chế độ sinh hoạt, hạn chế các chất kích thích và theo dõi tim mạch thường xuyên.";
+                                } else if (lowerLevel.contains("medium") || lowerLevel.contains("moderate") || (riskPercentage != null && riskPercentage >= 25)) {
+                                    mappedLevel = "MEDIUM";
+                                    heartAdvice = "⚡ Nguy cơ tim mạch ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
+                                }
+                            }
+
+                            BigDecimal finalPct = BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP);
+                            ass.setRiskLevel(mappedLevel);
+                            ass.setRiskPercentage(finalPct);
+                            ass.setRecommendation(heartAdvice);
+                            ass.setAiSummary("");
+                            ass.setAssessedAt(LocalDateTime.now());
+                            riskAssessmentRepository.save(ass);
+                        }
+                    } catch (Exception ex) {
+                        log.warn("Không thể cập nhật lại WEEKLY_HEART_RISK từ AI động: {}", ex.getMessage());
+                    }
+                }
+
+                map.put("healthStatus", ass.getRiskLevel());
+                map.put("riskPercentage", ass.getRiskPercentage());
+                map.put("recommendation", ass.getRecommendation());
+                map.put("lowConfidence", ass.getLowConfidence());
+                map.put("aiSummary", ass.getAiSummary());
+            } else {
+                try {
+                    Map<String, Object> aiHeartResult = dailyHealthLogService.calculateDynamicHeartRisk(finalPatientId, r.getWeekStart(), r.getWeekEnd());
+                    if (aiHeartResult != null && !aiHeartResult.isEmpty() && !aiHeartResult.containsKey("error") && !aiHeartResult.containsKey("message")) {
+                        Object heartRiskValue = aiHeartResult.containsKey("risk_percentage") ? aiHeartResult.get("risk_percentage") : aiHeartResult.get("riskPercentage");
+                        Double riskPercentage = heartRiskValue != null ? Double.parseDouble(heartRiskValue.toString()) : null;
+                        String rawRiskLevel = (String) aiHeartResult.get("risk_level");
+
+                        String mappedLevel = "LOW";
+                        String heartAdvice = "Chỉ số sức khỏe của bạn ở mức an toàn, nguy cơ tim mạch thấp.";
+
+                        if (rawRiskLevel != null) {
+                            String lowerLevel = rawRiskLevel.toLowerCase();
+                            if (lowerLevel.contains("critical") || (riskPercentage != null && riskPercentage >= 75)) {
+                                mappedLevel = "CRITICAL";
+                                heartAdvice = "🚨 Nguy cơ tim mạch rất cao (Nguy hiểm)! Cần tham vấn bác sĩ ngay để kiểm soát huyết áp, đường huyết và các chỉ số sức khỏe.";
+                            } else if (lowerLevel.contains("high") || (riskPercentage != null && riskPercentage >= 50)) {
+                                mappedLevel = "HIGH";
+                                heartAdvice = "⚠️ Nguy cơ tim mạch cao! Bạn nên điều chỉnh chế độ sinh hoạt, hạn chế các chất kích thích và theo dõi tim mạch thường xuyên.";
+                            } else if (lowerLevel.contains("medium") || lowerLevel.contains("moderate") || (riskPercentage != null && riskPercentage >= 25)) {
+                                mappedLevel = "MEDIUM";
+                                heartAdvice = "⚡ Nguy cơ tim mạch ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
+                            }
+                        }
+
+                        BigDecimal finalPct = BigDecimal.valueOf(riskPercentage != null ? riskPercentage : 0.0).setScale(2, RoundingMode.HALF_UP);
+                        
+                        RiskAssessment newAss = RiskAssessment.builder()
+                                .patient(patient)
+                                .weeklyReportId(r.getId())
+                                .assessmentType("WEEKLY_HEART_RISK")
+                                .riskLevel(mappedLevel)
+                                .riskPercentage(finalPct)
+                                .recommendation(heartAdvice)
+                                .assessedAt(LocalDateTime.now())
+                                .lowConfidence(r.getAverageBloodSugar() == null)
+                                .build();
+                        newAss = riskAssessmentRepository.save(newAss);
+
+                        if (!"LOW".equalsIgnoreCase(mappedLevel)) {
+                            RiskWarning warning = RiskWarning.builder()
+                                    .patient(patient)
+                                    .riskAssessmentId(newAss.getId())
+                                    .riskType("WEEKLY_HEART_RISK")
+                                    .status("new")
+                                    .notified(false)
+                                    .createdAt(LocalDateTime.now())
+                                    .riskLevel(mappedLevel)
+                                    .riskPercentage(finalPct)
+                                    .message("Cảnh báo nguy cơ tim mạch tuần: " + mappedLevel + "\nKhuyến nghị:\n• " + heartAdvice)
+                                    .build();
+                            riskWarningRepository.save(warning);
+                        }
+
+                        map.put("healthStatus", mappedLevel);
+                        map.put("riskPercentage", finalPct);
+                        map.put("recommendation", heartAdvice);
+                        map.put("lowConfidence", newAss.getLowConfidence());
+                        map.put("aiSummary", "");
+                    } else {
+                        map.put("healthStatus", "LOW");
+                        map.put("riskPercentage", BigDecimal.ZERO);
+                        map.put("recommendation", "Chưa có dữ liệu đánh giá tim mạch cho tuần này.");
+                        map.put("lowConfidence", true);
+                        map.put("aiSummary", "");
+                    }
+                } catch (Exception ex) {
+                    map.put("healthStatus", "LOW");
+                    map.put("riskPercentage", BigDecimal.ZERO);
+                    map.put("recommendation", "Chưa có dữ liệu đánh giá tim mạch cho tuần này.");
+                    map.put("lowConfidence", true);
+                    map.put("aiSummary", "");
+                }
             }
+            return map;
+        }).collect(Collectors.toList());
 
-            model.addAttribute("latestRisk", heartRiskData);
-            model.addAttribute("hasRiskData", true);
-        } else {
-            model.addAttribute("hasRiskData", false);
-            if (heartRiskData != null && heartRiskData.containsKey("message")) {
-                model.addAttribute("aiMessage", heartRiskData.get("message"));
-            }
-        }
-
-        // 6. Đổ danh sách log trong khoảng ngày ra bảng giải trình dữ liệu
-        List<DailyHealthLog> rangeLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, fromDate, toDate);
-        rangeLogs.sort(java.util.Comparator.comparing(DailyHealthLog::getLogDate).reversed());
-
-        model.addAttribute("isDoctorOrAdmin", isDoctorOrAdminCaller);
+        model.addAttribute("reports", reports);
+        model.addAttribute("isDoctorView", isDoctorView);
         model.addAttribute("patient", patient);
         Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;
         model.addAttribute("userId", targetUserId != null ? targetUserId : curUserId);
         model.addAttribute("patientId", patientId);
-        model.addAttribute("from", fromDate);
-        model.addAttribute("to", toDate);
-        model.addAttribute("rangeLogs", rangeLogs);
+        model.addAttribute("patientName", patient.getFullName());
 
-        return "healthlog/ai-report-heart"; // Render file HTML tim mạch của bạn
+        if (!reports.isEmpty()) {
+            model.addAttribute("latestAssessment", reports.get(0));
+            Map<String, Object> previous = reports.size() > 1 ? reports.get(1) : null;
+            model.addAttribute("previousAssessment", previous);
+        }
+
+        // Custom range calculation
+        if (from != null && to != null) {
+            LocalDate fromDate = from;
+            LocalDate toDate = to;
+            if (fromDate.isAfter(toDate)) {
+                LocalDate temp = fromDate;
+                fromDate = toDate;
+                toDate = temp;
+            }
+
+            Map<String, Object> latestRisk = dailyHealthLogService.calculateDynamicHeartRisk(patientId, fromDate, toDate);
+            List<DailyHealthLog> rangeLogs = dailyHealthLogRepository.findByPatientIdAndLogDateBetween(patientId, fromDate, toDate);
+
+            if (latestRisk != null && !latestRisk.containsKey("error") && !latestRisk.containsKey("message")) {
+                Map<String, Object> customRangeResult = new HashMap<>();
+                customRangeResult.put("fromDate", fromDate);
+                customRangeResult.put("toDate", toDate);
+                customRangeResult.put("logCount", rangeLogs.size());
+
+                String rawLevel = (String) latestRisk.get("risk_level");
+                String mappedLevel = "LOW";
+                String heartAdvice = "Chỉ số sức khỏe của bạn ở mức an toàn, nguy cơ tim mạch thấp.";
+                if (rawLevel != null) {
+                    String lower = rawLevel.toLowerCase();
+                    if (lower.contains("critical")) {
+                        mappedLevel = "CRITICAL";
+                        heartAdvice = "🚨 Nguy cơ tim mạch rất cao (Nguy hiểm)! Cần tham vấn bác sĩ ngay để kiểm soát các chỉ số sức khỏe.";
+                    } else if (lower.contains("high")) {
+                        mappedLevel = "HIGH";
+                        heartAdvice = "⚠️ Nguy cơ tim mạch cao! Bạn nên điều chỉnh chế độ sinh hoạt và theo dõi tim mạch thường xuyên.";
+                    } else if (lower.contains("medium") || lower.contains("moderate")) {
+                        mappedLevel = "MEDIUM";
+                        heartAdvice = "⚡ Nguy cơ tim mạch ở mức trung bình. Hãy chú ý giữ thói quen rèn luyện thể thao đều đặn.";
+                    }
+                }
+
+                customRangeResult.put("riskLevel", mappedLevel);
+                Object percentageValue = latestRisk.containsKey("risk_percentage") ? latestRisk.get("risk_percentage") : latestRisk.get("riskPercentage");
+                Double riskPct = percentageValue != null ? Double.parseDouble(percentageValue.toString()) : 0.0;
+                customRangeResult.put("riskPercentage", BigDecimal.valueOf(riskPct).setScale(2, RoundingMode.HALF_UP));
+                customRangeResult.put("lowConfidence", rangeLogs.size() < 7);
+                customRangeResult.put("recommendation", heartAdvice);
+
+                model.addAttribute("customRangeResult", customRangeResult);
+            } else if (latestRisk != null && latestRisk.containsKey("message")) {
+                model.addAttribute("customRangeError", latestRisk.get("message"));
+            }
+            model.addAttribute("from", fromDate);
+            model.addAttribute("to", toDate);
+        }
+
+        return "healthlog/ai-report-heart";
     }
 
     private String formatDecimal(Object obj) {

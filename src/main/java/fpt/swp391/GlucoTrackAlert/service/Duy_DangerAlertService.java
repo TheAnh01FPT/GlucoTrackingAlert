@@ -1,7 +1,9 @@
 package fpt.swp391.GlucoTrackAlert.service;
 
+import fpt.swp391.GlucoTrackAlert.service.healthlog.HealthThresholdService;
+
 import fpt.swp391.GlucoTrackAlert.enums.MetricType;
-import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
 import fpt.swp391.GlucoTrackAlert.model.relative.Relative;
 import fpt.swp391.GlucoTrackAlert.repository.notification.NotificationLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.relative.RelativeRepository;

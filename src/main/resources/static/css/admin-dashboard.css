@@ -309,6 +309,17 @@ body {
     align-items: center;
 }
 
+.filter-action-btn {
+    min-width: 100px;
+    height: 42px;
+    box-sizing: border-box;
+    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
 .btn {
     height: 42px;
     padding: 0 20px;
@@ -478,6 +489,8 @@ tr:hover td {
     font-weight: 600;
     transition: all 0.25s ease-in-out;
     display: inline-block;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-edit {
@@ -490,4 +503,16 @@ tr:hover td {
     color: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+.btn-warning {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.btn-warning:hover {
+    background-color: #f97316;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(249, 115, 22, 0.18);
 }

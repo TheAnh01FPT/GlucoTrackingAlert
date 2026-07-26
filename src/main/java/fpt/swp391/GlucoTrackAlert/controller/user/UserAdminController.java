@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -34,7 +35,7 @@ public class UserAdminController {
             User user = userAdminService.getUserById(id);
             return ResponseEntity.ok(user);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -44,7 +45,7 @@ public class UserAdminController {
             User createdUser = userAdminService.createUserByAdmin(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -54,7 +55,42 @@ public class UserAdminController {
             User updatedUser = userAdminService.updateUserByAdmin(id, request);
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        try {
+            String status = payload.get("status");
+            User updatedUser = userAdminService.updateUserStatusByAdmin(id, status);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Cập nhật trạng thái tài khoản thành công.",
+                    "user", updatedUser
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<?> resetPatientPassword(@PathVariable Long id) {
+        try {
+            User updatedUser = userAdminService.resetPatientPasswordByAdmin(id);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Mật khẩu mới đã được gửi tới email bệnh nhân.",
+                    "user", updatedUser
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
         }
     }
 

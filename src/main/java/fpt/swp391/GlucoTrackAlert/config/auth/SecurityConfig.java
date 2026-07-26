@@ -17,14 +17,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // 1. Các đường dẫn công khai (Public)
                         .requestMatchers(
                                 "/", "/api/auth/**", "/login", "/register", "/forgot-password", "/error",
-                                "/css/**", "/js/**", "/images/**", "/oauth2/**", "/api/contact-requests"
+                                "/css/**", "/js/**", "/images/**", "/api/contact-requests",
+                                "/articles", "/articles/{slug}"
                         ).permitAll()
 
                         // Ảnh avatar bác sĩ: công khai để bệnh nhân có thể xem
@@ -82,10 +83,6 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .formLogin(form -> form.disable())
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")
-                        .successHandler(oAuth2LoginSuccessHandler)
-                )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")

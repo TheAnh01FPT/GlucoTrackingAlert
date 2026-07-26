@@ -1,12 +1,12 @@
 package fpt.swp391.GlucoTrackAlert.service.impl;
 
 import fpt.swp391.GlucoTrackAlert.enums.RiskLevel;
-import fpt.swp391.GlucoTrackAlert.model.DailyHealthLog;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.model.risk.AiAnalysisLog;
 import fpt.swp391.GlucoTrackAlert.model.risk.RiskAssessment;
 import fpt.swp391.GlucoTrackAlert.model.risk.RiskWarning;
-import fpt.swp391.GlucoTrackAlert.repository.DailyHealthLogRepository;
+import fpt.swp391.GlucoTrackAlert.repository.healthlog.DailyHealthLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.risk.AiAnalysisLogRepository;
 import fpt.swp391.GlucoTrackAlert.repository.risk.RiskAssessmentRepository;

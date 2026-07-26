@@ -3,7 +3,7 @@ package fpt.swp391.GlucoTrackAlert.util;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import fpt.swp391.GlucoTrackAlert.GlucoTrackAlertApplication;
-import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
+import fpt.swp391.GlucoTrackAlert.service.healthlog.WeeklyReportService;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 

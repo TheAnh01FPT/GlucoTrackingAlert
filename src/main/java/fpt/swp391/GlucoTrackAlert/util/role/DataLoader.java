@@ -24,7 +24,7 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        String[] defaultRoles = {"ADMIN","GUEST","PATIENT","DOCTOR"};
+        String[] defaultRoles = {"ADMIN", "PATIENT", "DOCTOR"};
         for (String r : defaultRoles) {
             roleRepository.findByName(r).orElseGet(() -> roleRepository.save(Role.builder().name(r).description(r.toLowerCase()).build()));
         }

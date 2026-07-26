@@ -425,11 +425,27 @@
                 max-width: 150px;
             }
         }
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
     </style>
+    <th:block th:if="${isAdmin}">
+        <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}"/>
+    </th:block>
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg">
+<body th:classappend="${isAdmin} ? 'admin-layout-body' : ''">
+    <!-- Sidebar for Admin -->
+    <div th:if="${isAdmin}" th:replace="~{fragments/layout :: sidebar('articles')}"></div>
+
+    <div th:class="${isAdmin} ? 'main-content' : ''">
+        <div th:if="${isAdmin}" th:replace="~{fragments/layout :: topbar('Quản lý Bài viết')}"></div>
+
+        <!-- Navigation -->
+        <nav th:if="${!isAdmin}" class="navbar navbar-expand-lg">
         <div class="container-fluid px-4">
             <a class="navbar-brand" href="/">
                 <i class="bi bi-heart-pulse"></i> GlucoTrackAlert
@@ -516,7 +532,7 @@
                         </td>
                         <td>
                             <div class="action-buttons" style="justify-content: center;">
-                                <a th:href="'/articles/' + ${article.slug}" class="btn-icon btn-view" title="Xem bài viết">
+                                <a th:if="${!isAdmin}" th:href="'/articles/' + ${article.slug}" class="btn-icon btn-view" title="Xem bài viết">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <a th:if="${isAdmin} or ${article.createdBy.id} == ${currentUserId}"
@@ -532,7 +548,7 @@
                                         th:attr="data-reason=${article.rejectionReason}">
                                     <i class="bi bi-chat-square-text"></i>
                                 </button>
-                                <form th:if="${isAdmin and article.status != null and article.status.value == 'pending_review'}" method="post" th:action="'/articles/manage/' + ${article.id} + '/approve'" style="display: inline; margin: 0;">
+                                <form th:if="${isAdmin and article.status != null and article.status.value == 'pending_review'}" method="post" th:action="'/articles/manage/' + ${article.id} + '/approve'" style="display: inline; margin: 0;" onsubmit="return confirm('Bạn chắc chắn muốn duyệt bài viết này?');">
                                     <button type="submit" class="btn-icon btn-view" title="Duyệt bài viết">
                                         <i class="bi bi-check2-circle"></i>
                                     </button>
@@ -637,6 +653,7 @@
                 </form>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -23,7 +23,7 @@ public class Duy_ReminderResponse {
     private boolean synced; // true nếu đã có google_calendar_event_id
 
     // ==================== STATIC FACTORY ====================
-    public static Duy_ReminderResponse from(fpt.swp391.GlucoTrackAlert.model.Duy_HealthReminder r) {
+    public static Duy_ReminderResponse from(fpt.swp391.GlucoTrackAlert.model.reminder.Duy_HealthReminder r) {
         Duy_ReminderResponse res = new Duy_ReminderResponse();
         res.id = r.getId();
         res.patientId = r.getPatientId();

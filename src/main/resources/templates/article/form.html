@@ -408,7 +408,7 @@
                 </div>
 
                 <!-- Status Section -->
-                <div class="form-section">
+                <div class="form-section" th:unless="${isAdmin}">
                     <h4 class="form-section-title">
                         <i class="bi bi-toggle-on"></i> Trạng thái & Xuất bản
                     </h4>
@@ -518,6 +518,19 @@
                 });
             }
         });
+        
+        /*
+         * Fallback: nếu server trả về view với flash `successMessage` (ví dụ do controller
+         * không redirect), tự động chuyển hướng client về trang quản lý để tránh ở lại trang edit.
+         */
+        /* Thymeleaf sẽ render khối này chỉ khi có successMessage trong model */
+    </script>
+    <div th:if="${successMessage}" th:remove="all">
+        <script>
+            // Nếu server trả về thông báo thành công trên cùng view, chuyển về trang manage
+            window.location.href = '/articles/manage';
+        </script>
+    </div>
 
         // Initialize TinyMCE
         tinymce.init({

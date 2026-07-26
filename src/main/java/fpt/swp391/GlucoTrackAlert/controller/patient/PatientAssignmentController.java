@@ -1,6 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.controller.patient;
 
 import fpt.swp391.GlucoTrackAlert.dto.doctor.AssignmentResponse;
+import fpt.swp391.GlucoTrackAlert.dto.doctor.PublicDoctorResponse;
 import fpt.swp391.GlucoTrackAlert.dto.doctor.DoctorResponse;
 import fpt.swp391.GlucoTrackAlert.dto.ProposeAssignmentRequest;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
@@ -47,13 +48,13 @@ public class PatientAssignmentController {
      * tạo đề xuất cho một bác sĩ chắc chắn sẽ bị admin từ chối vì hết chỗ.
      */
     @GetMapping("/doctors")
-    public ResponseEntity<List<DoctorResponse>> getActiveDoctors() {
+    public ResponseEntity<List<PublicDoctorResponse>> getActiveDoctors() {
         return ResponseEntity.ok(
                 doctorRepository.findByStatus("active")
                         .stream()
                         .filter(d -> assignmentRepository.countByDoctorIdAndStatus(
                                 d.getId(), "active") < DoctorPatientAssignmentService.MAX_PATIENTS_PER_DOCTOR)
-                        .map(DoctorResponse::from)
+                        .map(PublicDoctorResponse::from)
                         .toList()
         );
     }

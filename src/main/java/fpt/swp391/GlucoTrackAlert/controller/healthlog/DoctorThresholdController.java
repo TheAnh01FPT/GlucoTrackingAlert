@@ -1,9 +1,9 @@
 package fpt.swp391.GlucoTrackAlert.controller.healthlog;
 
-import fpt.swp391.GlucoTrackAlert.model.HealthThreshold;
+import fpt.swp391.GlucoTrackAlert.model.healthlog.HealthThreshold;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
-import fpt.swp391.GlucoTrackAlert.service.HealthThresholdService;
+import fpt.swp391.GlucoTrackAlert.service.healthlog.HealthThresholdService;
 import fpt.swp391.GlucoTrackAlert.enums.MetricType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -32,7 +32,7 @@ public class DoctorThresholdController {
     @Autowired
     private fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorPatientAssignmentRepository assignmentRepository;
     @Autowired
-    private fpt.swp391.GlucoTrackAlert.repository.HealthThresholdHistoryRepository thresholdHistoryRepository;
+    private fpt.swp391.GlucoTrackAlert.repository.healthlog.HealthThresholdHistoryRepository thresholdHistoryRepository;
 
     private Long getCurrentUserId() {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
@@ -181,7 +181,7 @@ public class DoctorThresholdController {
         }
         Patient patient = patientRepository.findById(patientId).orElse(null);
         org.springframework.data.domain.PageRequest pr = org.springframework.data.domain.PageRequest.of(Math.max(0, page), 4, org.springframework.data.domain.Sort.by("changedAt").descending());
-        org.springframework.data.domain.Page<fpt.swp391.GlucoTrackAlert.model.HealthThresholdHistory> historyPage = thresholdHistoryRepository.findByPatientIdAndMetricTypeOrderByChangedAtDesc(patientId, mt, pr);
+        org.springframework.data.domain.Page<fpt.swp391.GlucoTrackAlert.model.healthlog.HealthThresholdHistory> historyPage = thresholdHistoryRepository.findByPatientIdAndMetricTypeOrderByChangedAtDesc(patientId, mt, pr);
 
         model.addAttribute("patient", patient);
         model.addAttribute("metricType", mt);

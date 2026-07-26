@@ -1,12 +1,11 @@
 package fpt.swp391.GlucoTrackAlert.service.impl.user_impl;
 
 import fpt.swp391.GlucoTrackAlert.dto.user.UserAdminRequest;
-import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
-import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.role.RoleRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
+import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import fpt.swp391.GlucoTrackAlert.service.user.UserAdminService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,16 +25,16 @@ public class UserAdminServiceImpl implements UserAdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final DoctorRepository doctorRepository;
+    private final EmailService emailService;
 
     public UserAdminServiceImpl(UserRepository userRepository,
                                 RoleRepository roleRepository,
                                 BCryptPasswordEncoder passwordEncoder,
-                                DoctorRepository doctorRepository) {
+                                EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.doctorRepository = doctorRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -60,8 +60,7 @@ public class UserAdminServiceImpl implements UserAdminService {
     public Page<User> searchAndFilterUsersPaged(String email, String roleName, String status, int page, int size) {
         List<User> filtered = userRepository.searchAndFilterUsers(email, roleName, status).stream()
                 .filter(u -> u.getRole() != null &&
-                        (u.getRole().getName().equalsIgnoreCase("PATIENT") ||
-                                u.getRole().getName().equalsIgnoreCase("ADMIN")))
+                        u.getRole().getName().equalsIgnoreCase("PATIENT"))
                 .collect(Collectors.toList());
 
         int start = page * size;
@@ -79,6 +78,21 @@ public class UserAdminServiceImpl implements UserAdminService {
     @Override
     public long getPatientCount() {
         return userRepository.countByRole_Name("PATIENT");
+    }
+
+    @Override
+    public long getActivePatientCount() {
+        return userRepository.countByRole_NameAndStatus("PATIENT", "active");
+    }
+
+    @Override
+    public long getPendingPatientCount() {
+        return userRepository.countByRole_NameAndStatus("PATIENT", "pending_verification");
+    }
+
+    @Override
+    public long getBannedPatientCount() {
+        return userRepository.countByRole_NameAndStatus("PATIENT", "banned");
     }
 
     @Override
@@ -123,21 +137,21 @@ public class UserAdminServiceImpl implements UserAdminService {
             throw new Exception("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
         }
 
+        String normalizedStatus = (request.getStatus() == null || request.getStatus().trim().isEmpty())
+                ? "active"
+                : request.getStatus().trim().toLowerCase();
+
         User user = User.builder()
                 .email(email)
                 .passwordHash(passwordEncoder.encode(password))
-                .status(request.getStatus())
+                .status(normalizedStatus)
                 .emailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : true)
                 .role(role)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        User savedUser = userRepository.save(user);
-
-
-
-        return savedUser;
+        return userRepository.save(user);
     }
 
     @Override
@@ -146,47 +160,88 @@ public class UserAdminServiceImpl implements UserAdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("Không tìm thấy dữ liệu người dùng cần cập nhật."));
 
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            throw new Exception("Email không được để trống");
-        }
-        String email = request.getEmail().trim();
-        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
-            throw new Exception("Định dạng Email không hợp lệ");
+        if (user.getRole() == null || !"PATIENT".equalsIgnoreCase(user.getRole().getName())) {
+            throw new Exception("Chỉ được quản lý tài khoản bệnh nhân bằng tính năng trạng thái và reset mật khẩu.");
         }
 
-        if (!user.getEmail().equalsIgnoreCase(email) &&
-                userRepository.existsByEmail(email)) {
-            throw new Exception("Email mới '" + email + "' đã được sử dụng bởi một tài khoản khác.");
+        if (request.getStatus() == null || request.getStatus().trim().isEmpty()) {
+            throw new Exception("Trạng thái tài khoản không được bỏ trống");
         }
 
-        String inputRole = "PATIENT";
+        String normalizedStatus = request.getStatus().trim().toLowerCase();
+        if (!"active".equals(normalizedStatus) && !"pending_verification".equals(normalizedStatus) && !"banned".equals(normalizedStatus)) {
+            throw new Exception("Trạng thái không hợp lệ. Chỉ chấp nhận: active, pending_verification, banned");
+        }
 
-        Role role = roleRepository.findByName(inputRole)
-                .orElseThrow(() -> new Exception("Không tồn tại quyền vai trò hệ thống: " + inputRole));
-
-        String oldRole = user.getRole() != null ? user.getRole().getName() : "";
-
-        user.setEmail(email);
-        user.setStatus(request.getStatus());
-        user.setEmailVerified(request.getEmailVerified() != null ? request.getEmailVerified() : false);
-        user.setRole(role);
+        user.setStatus(normalizedStatus);
         user.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(user);
+    }
 
-        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
-            String password = request.getPassword().trim();
-            if (password.length() < 6 || password.length() > 32) {
-                throw new Exception("Mật khẩu phải từ 6 đến 32 ký tự");
-            }
-            if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$")) {
-                throw new Exception("Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
-            }
-            user.setPasswordHash(passwordEncoder.encode(password));
+    @Override
+    @Transactional
+    public User updateUserStatusByAdmin(Long id, String status) throws Exception {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new Exception("Không tìm thấy dữ liệu người dùng cần cập nhật."));
+
+        if (user.getRole() == null || !"PATIENT".equalsIgnoreCase(user.getRole().getName())) {
+            throw new Exception("Chỉ quản lý được trạng thái tài khoản bệnh nhân.");
         }
 
-        User savedUser = userRepository.save(user);
+        if (status == null || status.trim().isEmpty()) {
+            throw new Exception("Trạng thái tài khoản không được bỏ trống");
+        }
 
+        String normalizedStatus = status.trim().toLowerCase();
+        if (!"active".equals(normalizedStatus) && !"pending_verification".equals(normalizedStatus) && !"banned".equals(normalizedStatus)) {
+            throw new Exception("Trạng thái không hợp lệ. Chỉ chấp nhận: active, pending_verification, banned");
+        }
 
+        user.setStatus(normalizedStatus);
+        if ("active".equals(normalizedStatus)) {
+            user.setEmailVerified(true);
+        } else if ("pending_verification".equals(normalizedStatus)) {
+            user.setEmailVerified(false);
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(user);
+    }
 
-        return savedUser;
+    @Override
+    @Transactional
+    public User resetPatientPasswordByAdmin(Long id) throws Exception {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new Exception("Không tìm thấy bệnh nhân cần cấp lại mật khẩu."));
+
+        if (user.getRole() == null || !"PATIENT".equalsIgnoreCase(user.getRole().getName())) {
+            throw new Exception("Chỉ hỗ trợ cấp lại mật khẩu cho tài khoản bệnh nhân.");
+        }
+
+        String newPassword = generatePassword();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        String subject = "[GlucoTrackAlert] Mật khẩu mới đã được cấp lại";
+        String body = "Xin chào bệnh nhân,\n\n"
+                + "Admin đã cấp lại mật khẩu cho tài khoản GlucoTrackAlert của bạn.\n\n"
+                + "Email đăng nhập: " + user.getEmail() + "\n"
+                + "Mật khẩu mới: " + newPassword + "\n\n"
+                + "Vui lòng đăng nhập và đổi mật khẩu ngay sau khi đăng nhập thành công.\n\n"
+                + "Trân trọng,\n"
+                + "GlucoTrackAlert";
+
+        emailService.sendSimpleMessageAsync(user.getEmail(), subject, body);
+        return user;
+    }
+
+    private String generatePassword() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+        SecureRandom rnd = new SecureRandom();
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 }

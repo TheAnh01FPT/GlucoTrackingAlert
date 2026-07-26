@@ -8,7 +8,7 @@ import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
 import fpt.swp391.GlucoTrackAlert.repository.medication.*;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
-import fpt.swp391.GlucoTrackAlert.service.Duy_ReminderService;
+import fpt.swp391.GlucoTrackAlert.service.reminder.Duy_ReminderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
