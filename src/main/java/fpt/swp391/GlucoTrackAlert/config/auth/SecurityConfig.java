@@ -5,20 +5,39 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+<<<<<<< HEAD
+=======
 @EnableWebSecurity
 @EnableMethodSecurity
+>>>>>>> c609fe15c2adf12d4f6fbd628b23773040d3f6f7
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
+<<<<<<< HEAD
+            .csrf(csrf -> csrf.disable())
+
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/auth/**", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+                    .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/patient/**", "/api/patient/**").hasRole("PATIENT")
+                    .requestMatchers("/doctor/**", "/api/doctor/**").hasRole("DOCTOR")
+                    .anyRequest().authenticated()
+            )
+
+            .formLogin(form -> form.disable())
+
+            // Cho phép hiển thị H2 Console trong thẻ iframe
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+
+            // Thêm filter kiểm tra JWT trước filter xác thực mật khẩu
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+=======
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // 1. Các đường dẫn công khai (Public)
@@ -92,12 +111,8 @@ public class SecurityConfig {
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+>>>>>>> c609fe15c2adf12d4f6fbd628b23773040d3f6f7
 
         return http.build();
-    }
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }
