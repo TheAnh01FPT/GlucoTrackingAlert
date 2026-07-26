@@ -571,10 +571,6 @@ ALTER TABLE risk_warnings
 ALTER TABLE risk_warnings
   ADD CONSTRAINT fk_risk_warnings_daily_health_log_id FOREIGN KEY (daily_health_log_id) REFERENCES daily_health_logs(id);
 
--- Ref: threshold_rules.created_by > users.id
-ALTER TABLE threshold_rules
-  ADD CONSTRAINT fk_threshold_rules_created_by FOREIGN KEY (created_by) REFERENCES users(id);
-
 -- Ref: weekly_health_reports.patient_id > patients.id
 ALTER TABLE weekly_health_reports
   ADD CONSTRAINT fk_weekly_health_reports_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id);
