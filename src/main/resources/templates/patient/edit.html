@@ -55,7 +55,7 @@
 
                 <div class="form-group">
                     <label class="form-label" for="dateOfBirth">Ngày tháng năm sinh</label>
-                    <input type="date" id="dateOfBirth" name="dateOfBirth" th:value="${profileForm.dateOfBirth != null ? #temporals.format(profileForm.dateOfBirth, 'yyyy-MM-dd') : ''}" class="form-input">
+                    <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" class="form-input">
                     <span class="error-text" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}">Lỗi ngày sinh</span>
                 </div>
 

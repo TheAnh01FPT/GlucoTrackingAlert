@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Getter
 @Setter
@@ -15,11 +16,11 @@ public class PatientProfileRequest {
     @NotNull(message = "User ID không được trống")
     private Long userId;
 
-    @NotBlank(message = "Họ và tên không được để trống")
     @Size(max = 150, message = "Họ và tên không được vượt quá 150 ký tự")
     private String fullName;
 
     @Past(message = "Ngày sinh phải là một ngày trong quá khứ")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 
     @Size(max = 20, message = "Giới tính không vượt quá 20 ký tự")
