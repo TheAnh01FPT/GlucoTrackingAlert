@@ -7,7 +7,7 @@ import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.risk.WeeklyHealthReportRepository;
-import fpt.swp391.GlucoTrackAlert.service.WeeklyReportService;
+import fpt.swp391.GlucoTrackAlert.service.healthlog.WeeklyReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;

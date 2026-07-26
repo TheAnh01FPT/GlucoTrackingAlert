@@ -1,12 +1,12 @@
 package fpt.swp391.GlucoTrackAlert.controller.feedback;
 
-import fpt.swp391.GlucoTrackAlert.model.Feedback;
+import fpt.swp391.GlucoTrackAlert.model.feedback.Feedback;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import fpt.swp391.GlucoTrackAlert.model.user.User;
 import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRecommendationRepository;
 import fpt.swp391.GlucoTrackAlert.model.doctor.Doctor;
 import fpt.swp391.GlucoTrackAlert.repository.doctor.DoctorRepository;
-import fpt.swp391.GlucoTrackAlert.repository.FeedbackRepository;
+import fpt.swp391.GlucoTrackAlert.repository.feedback.FeedbackRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
