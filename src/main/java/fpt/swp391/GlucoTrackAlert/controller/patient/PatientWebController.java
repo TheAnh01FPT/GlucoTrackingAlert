@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import fpt.swp391.GlucoTrackAlert.service.CloudinaryService;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Page;
+import java.util.List;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/patient")
@@ -150,8 +152,8 @@ public class PatientWebController {
     @PostMapping("/profile/save")
     public String saveProfile(@Valid @ModelAttribute("profileForm") PatientProfileRequest request,
                               BindingResult result,
-                              @RequestParam(name = "identityCardFile", required = false) MultipartFile identityCardFile,
-                              @RequestParam(name = "insuranceNumberFile", required = false) MultipartFile insuranceNumberFile,
+                              @RequestParam(name = "identityCardFiles", required = false) List<MultipartFile> identityCardFiles,
+                              @RequestParam(name = "insuranceNumberFiles", required = false) List<MultipartFile> insuranceNumberFiles,
                               @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
                               @RequestParam(name = "isNew", defaultValue = "false") boolean isNewParam,
                               Model model) {
@@ -176,11 +178,11 @@ public class PatientWebController {
                     request.setHeartDisease(true);
                 }
                 // Retain existing image URLs if no new files uploaded
-                if ((identityCardFile == null || identityCardFile.isEmpty()) && request.getIdentityCardImage() == null) {
+                if ((identityCardFiles == null || identityCardFiles.isEmpty() || identityCardFiles.get(0).isEmpty()) && request.getIdentityCardImage() == null) {
                     request.setIdentityCardImage(currentProfile.getIdentityCardImage());
                     request.setIdentityCardStatus(currentProfile.getIdentityCardStatus());
                 }
-                if ((insuranceNumberFile == null || insuranceNumberFile.isEmpty()) && request.getInsuranceNumberImage() == null) {
+                if ((insuranceNumberFiles == null || insuranceNumberFiles.isEmpty() || insuranceNumberFiles.get(0).isEmpty()) && request.getInsuranceNumberImage() == null) {
                     request.setInsuranceNumberImage(currentProfile.getInsuranceNumberImage());
                     request.setInsuranceCardStatus(currentProfile.getInsuranceCardStatus());
                 }
@@ -190,23 +192,37 @@ public class PatientWebController {
             } catch (Exception ignored) {}
         }
 
-        // Upload identity card image if provided
-        if (identityCardFile != null && !identityCardFile.isEmpty()) {
+        // Upload identity card images if provided
+        if (identityCardFiles != null && !identityCardFiles.isEmpty() && !identityCardFiles.get(0).isEmpty()) {
             try {
-                String cardUrl = cloudinaryService.uploadFile(identityCardFile, "patient_identity_cards");
-                request.setIdentityCardImage(cardUrl);
-                request.setIdentityCardStatus("UNVERIFIED");
+                List<String> urls = new ArrayList<>();
+                for (MultipartFile file : identityCardFiles) {
+                    if (file != null && !file.isEmpty()) {
+                        urls.add(cloudinaryService.uploadFile(file, "patient_identity_cards"));
+                    }
+                }
+                if (!urls.isEmpty()) {
+                    request.setIdentityCardImage(String.join(",", urls));
+                    request.setIdentityCardStatus("UNVERIFIED");
+                }
             } catch (Exception e) {
                 System.err.println("⚠️ Lỗi upload ảnh CCCD: " + e.getMessage());
             }
         }
 
-        // Upload health insurance image if provided
-        if (insuranceNumberFile != null && !insuranceNumberFile.isEmpty()) {
+        // Upload health insurance images if provided
+        if (insuranceNumberFiles != null && !insuranceNumberFiles.isEmpty() && !insuranceNumberFiles.get(0).isEmpty()) {
             try {
-                String insUrl = cloudinaryService.uploadFile(insuranceNumberFile, "patient_insurance_cards");
-                request.setInsuranceNumberImage(insUrl);
-                request.setInsuranceCardStatus("UNVERIFIED");
+                List<String> urls = new ArrayList<>();
+                for (MultipartFile file : insuranceNumberFiles) {
+                    if (file != null && !file.isEmpty()) {
+                        urls.add(cloudinaryService.uploadFile(file, "patient_insurance_cards"));
+                    }
+                }
+                if (!urls.isEmpty()) {
+                    request.setInsuranceNumberImage(String.join(",", urls));
+                    request.setInsuranceCardStatus("UNVERIFIED");
+                }
             } catch (Exception e) {
                 System.err.println("⚠️ Lỗi upload ảnh BHYT: " + e.getMessage());
             }
