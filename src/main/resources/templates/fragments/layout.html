@@ -13,13 +13,12 @@
             <a href="/admin/card-verifications" th:classappend="${activePage == 'card-verifications'} ? 'active' : ''" class="menu-item">🪪 Đối Soát CCCD/BHYT</a>
             <a href="/admin/contact-requests" th:classappend="${activePage == 'contact-requests'} ? 'active' : ''" class="menu-item">✉️ Yêu Cầu Liên Hệ</a>
             <a href="/admin/banners" th:classappend="${activePage == 'banners'} ? 'active' : ''" class="menu-item">🖼️ Quản Lý Banner</a>
-            <a href="/admin/doctor-introductions" th:classappend="${activePage == 'doctor-introductions'} ? 'active' : ''" class="menu-item">⭐ Giới Thiệu Bác Sĩ</a>
             <a href="/admin/feedbacks" th:classappend="${activePage == 'feedbacks'} ? 'active' : ''" class="menu-item">💬 Quản Lý Đánh Giá</a>
             <a href="/articles/manage" th:classappend="${activePage == 'articles'} ? 'active' : ''" class="menu-item">📰 Quản Lý Tin Tức</a>
         </div>
         <div class="sidebar-footer">
             <div class="sidebar-footer-role">Admin</div>
-            <div class="sidebar-footer-name">Nguyễn Quang</div>
+            <div class="sidebar-footer-name" th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.substringBefore(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), '@') : 'Admin'}">Admin</div>
         </div>
     </div>
 </div>
@@ -33,11 +32,11 @@
         <div class="profile-dropdown-container">
             <div class="profile-info-block" onclick="toggleProfileDropdown(event)">
                 <div class="profile-text">
-                    <span class="profile-name">Nguyễn Quang</span>
+                    <span class="profile-name" th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.substringBefore(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), '@') : 'Admin'}">Admin</span>
                     <span class="profile-role">Quản trị viên</span>
                 </div>
                 <div class="profile-avatar">
-                    <span style="font-weight: 700; color: #1a6b5a; font-size: 15px;">NQ</span>
+                    <span style="font-weight: 700; color: #1a6b5a; font-size: 15px;" th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.toUpperCase(#strings.substring(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), 0, 2)) : 'AD'}">AD</span>
                 </div>
             </div>
 
