@@ -3,41 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlucoTrackAlert - Quản Trị Người Dùng</title>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
           rel="stylesheet">
     <!-- Đường dẫn tới file CSS riêng vừa tạo -->
     <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
 
-<body>
+<body class="admin-layout-body">
 <!-- SIDEBAR -->
-<div class="sidebar">
-    <div class="sidebar-logo">
-        <h2>GlucoTrackAlert</h2>
-        <span>Admin Portal</span>
-    </div>
-    <div class="sidebar-menu">
-        <a href="/admin/dashboard" class="menu-item active">👤 Quản Lý Tài Khoản</a>
-        <a href="/articles/manage" class="menu-item">📰 Quản Lý Tin Tức</a>
-        <a href="/admin/doctors" class="menu-item">🩺 Quản Lý Bác Sĩ</a>
-        <a href="/admin/assignments" class="menu-item">📋 Phân Công Bác Sĩ</a>
-        <a href="/admin/requests" class="menu-item">📁 Yêu Cầu Thay Đổi</a>
-        <a href="/admin/banners" class="menu-item">🖼️ Quản Lý Banner</a>
-        <a href="/admin/feedbacks" class="menu-item">💬 Quản Lý Đánh Giá</a>
-        <a href="javascript:void(0)" onclick="openAdminPasswordModal()" class="menu-item">🔑 Đổi Mật Khẩu Admin</a>
-    </div>
-</div>
+<div th:replace="~{fragments/layout :: sidebar('dashboard')}"></div>
 
 <!-- MAIN CONTENT -->
 <div class="main-content">
     <!-- TOPBAR -->
-    <div class="topbar">
-        <div class="topbar-title">Hệ Thống Quản Trị Hệ Thống (Phân Hệ Đối Tượng Y Tế)</div>
-        <a href="/logout" class="btn-logout">Đăng xuất 🚪</a>
-        <a href="/articles/manage" class="btn btn-blue" style="background-color: #0f766e;">📰 Quản Lý Tin Tức</a>
-        <a href="/admin/contact-requests" class="btn btn-blue" style="background-color: #ec4899;">✉️ Yêu Cầu Liên Hệ</a>
-    </div>
+    <div th:replace="~{fragments/layout :: topbar('Hệ Thống Quản Trị Hệ Thống (Phân Hệ Đối Tượng Y Tế)')}"></div>
+
 
     <!-- STAT CARDS -->
     <div class="stat-cards"
@@ -61,6 +44,8 @@
                  th:text="${pendingPatientCount != null ? pendingPatientCount : 0}">0
             </div>
         </div>
+    </div>
+
         <div class="stat-card"
              style="background: linear-gradient(135deg, #fef2f2, #ffffff); border-left: 4px solid #dc2626;">
             <div class="stat-title">TÀI KHOẢN ĐÃ KHÓA</div>
@@ -844,6 +829,7 @@
             </form>
         </div>
     </div>
+
 </div>
 </body>
 
