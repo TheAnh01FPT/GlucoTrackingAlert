@@ -185,7 +185,6 @@ CREATE TABLE meal_logs (
 CREATE TABLE weekly_health_reports (
   id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
-  baseline_id INT,
   previous_report_id INT,
   week_start DATE NOT NULL,
   week_end DATE NOT NULL,
@@ -212,26 +211,6 @@ CREATE TABLE weekly_health_reports (
   created_at DATETIME,
   UNIQUE KEY idx_patient_week (patient_id, week_start, week_end)
 ) COMMENT = 'Lưu báo cáo sức khỏe theo tuần. Hệ thống tổng hợp daily_health_logs, so sánh với tuần trước hoặc baseline, rồi lưu xu hướng Improved/Stable/Worse.';
-
--- Table: health_baselines
-CREATE TABLE health_baselines (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  patient_id INT NOT NULL,
-  source_health_log_id INT,
-  baseline_date DATE NOT NULL,
-  baseline_type VARCHAR(50),
-  blood_sugar DECIMAL(6,2),
-  systolic INT,
-  diastolic INT,
-  sleep_hours DECIMAL(4,2),
-  water_ml INT,
-  sugar_consumption_level VARCHAR(20),
-  weight_kg DECIMAL(5,2),
-  bmi DECIMAL(5,2),
-  note TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at DATETIME
-) COMMENT = 'Lưu mốc sức khỏe dùng để so sánh. Mốc có thể lấy từ daily_health_logs ngày đầu, trung bình tuần đầu hoặc do bác sĩ/admin chọn lại.';
 
 -- Table: risk_assessments
 CREATE TABLE risk_assessments (
@@ -266,21 +245,6 @@ CREATE TABLE risk_warnings (
   acknowledged_at DATETIME,
   resolved_at DATETIME
 ) COMMENT = 'Lưu cảnh báo cụ thể khi chỉ số vượt ngưỡng, ví dụ đường huyết cao, huyết áp cao, ngủ quá ít. Bảng này dùng để gửi email cho bệnh nhân/người thân và hiển thị warning history.';
-
--- Table: threshold_rules
-CREATE TABLE threshold_rules (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  metric_code VARCHAR(50) NOT NULL,
-  metric_name VARCHAR(100) NOT NULL,
-  operator VARCHAR(20) NOT NULL,
-  threshold_value DECIMAL(8,2) NOT NULL,
-  risk_level VARCHAR(30) NOT NULL,
-  message_template TEXT,
-  status VARCHAR(30) DEFAULT 'active',
-  created_by INT,
-  created_at DATETIME,
-  updated_at DATETIME
-) COMMENT = 'Lưu cấu hình ngưỡng cảnh báo do Admin quản lý, ví dụ blood_sugar > 180 thì High Risk. Giúp hệ thống không hard-code điều kiện cảnh báo.';
 
 -- Table: health_thresholds
 CREATE TABLE health_thresholds (
@@ -343,21 +307,6 @@ CREATE TABLE health_reminders (
   updated_at DATETIME
 ) COMMENT = 'Lưu nhắc nhở sức khỏe cho bệnh nhân như nhập chỉ số, kiểm tra đường huyết, uống nước, xem báo cáo tuần. Nếu kết nối Google Calendar, bảng này lưu thêm event_id.';
 
--- Table: google_integrations
-CREATE TABLE google_integrations (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  google_email VARCHAR(150),
-  access_token TEXT,
-  refresh_token TEXT,
-  token_expired_at DATETIME,
-  calendar_connected BOOLEAN DEFAULT FALSE,
-  gmail_connected BOOLEAN DEFAULT FALSE,
-  status VARCHAR(30) DEFAULT 'active',
-  created_at DATETIME,
-  updated_at DATETIME
-) COMMENT = 'Lưu thông tin kết nối Google của người dùng. Dùng cho chức năng đồng bộ nhắc nhở sang Google Calendar và gửi email qua Gmail nếu hệ thống tích hợp OAuth.';
-
 -- Table: notification_logs
 CREATE TABLE notification_logs (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -406,20 +355,6 @@ CREATE TABLE ai_analysis_logs (
   risk_level VARCHAR(30),
   created_at DATETIME
 ) COMMENT = 'Lưu lịch sử AI phân tích dữ liệu. Dùng để debug, giải thích kết quả AI, audit nhẹ và hỗ trợ bác sĩ xem AI đã phân tích dựa trên dữ liệu nào.';
-
--- Table: notifications
-CREATE TABLE notifications (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  title VARCHAR(150),
-  message TEXT,
-  notification_type VARCHAR(50),
-  is_read BOOLEAN DEFAULT FALSE,
-  related_warning_id INT,
-  related_report_id INT,
-  created_at DATETIME,
-  read_at DATETIME
-) COMMENT = 'Lưu thông báo hiển thị trong website như notification bell. Khác với notification_logs là bảng này phục vụ hiển thị trong hệ thống, còn notification_logs phục vụ lịch sử gửi email.';
 
 -- Table: banners
 CREATE TABLE banners (
@@ -479,19 +414,6 @@ CREATE TABLE contact_requests (
   handled_by INT,
   reply_content TEXT COMMENT 'Nội dung thư phản hồi chi tiết do Admin gửi cho khách vãng lai'
 ) COMMENT = 'Lưu yêu cầu liên hệ từ Guest trên website. Admin có thể xem và xử lý các contact request.';
-
--- Table: export_requests
-CREATE TABLE export_requests (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  requested_by INT NOT NULL,
-  export_type VARCHAR(50) NOT NULL,
-  patient_id INT,
-  weekly_report_id INT,
-  file_url VARCHAR(255),
-  status VARCHAR(30) DEFAULT 'pending',
-  created_at DATETIME,
-  completed_at DATETIME
-) COMMENT = 'Lưu yêu cầu xuất báo cáo như patient health report, weekly report, warning report. Dùng cho chức năng Report & Export.';
 
 -- Table: profile_change_requests
 CREATE TABLE profile_change_requests (
@@ -625,14 +547,6 @@ ALTER TABLE meal_logs
   ADD CONSTRAINT fk_meal_logs_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id);
 
 
--- Ref: health_baselines.patient_id > patients.id
-ALTER TABLE health_baselines
-  ADD CONSTRAINT fk_health_baselines_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id);
-
--- Ref: health_baselines.source_health_log_id > daily_health_logs.id
-ALTER TABLE health_baselines
-  ADD CONSTRAINT fk_health_baselines_source_health_log_id FOREIGN KEY (source_health_log_id) REFERENCES daily_health_logs(id);
-
 -- Ref: risk_assessments.patient_id > patients.id
 ALTER TABLE risk_assessments
   ADD CONSTRAINT fk_risk_assessments_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id);
@@ -665,10 +579,6 @@ ALTER TABLE threshold_rules
 ALTER TABLE weekly_health_reports
   ADD CONSTRAINT fk_weekly_health_reports_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id);
 
--- Ref: weekly_health_reports.baseline_id > health_baselines.id
-ALTER TABLE weekly_health_reports
-  ADD CONSTRAINT fk_weekly_health_reports_baseline_id FOREIGN KEY (baseline_id) REFERENCES health_baselines(id);
-
 -- Ref: weekly_health_reports.previous_report_id > weekly_health_reports.id
 ALTER TABLE weekly_health_reports
   ADD CONSTRAINT fk_weekly_reports_prev_id FOREIGN KEY (previous_report_id) REFERENCES weekly_health_reports(id);
@@ -680,10 +590,6 @@ ALTER TABLE weekly_health_reports
 -- Ref: health_reminders.patient_id > patients.id
 ALTER TABLE health_reminders
   ADD CONSTRAINT fk_health_reminders_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id);
-
--- Ref: google_integrations.user_id > users.id
-ALTER TABLE google_integrations
-  ADD CONSTRAINT fk_google_integrations_user_id FOREIGN KEY (user_id) REFERENCES users(id);
 
 -- Ref: notification_logs.patient_id > patients.id
 ALTER TABLE notification_logs
@@ -737,18 +643,6 @@ ALTER TABLE ai_analysis_logs
 ALTER TABLE ai_analysis_logs
   ADD CONSTRAINT fk_ai_analysis_logs_weekly_report_id FOREIGN KEY (weekly_report_id) REFERENCES weekly_health_reports(id);
 
--- Ref: notifications.user_id > users.id
-ALTER TABLE notifications
-  ADD CONSTRAINT fk_notifications_user_id FOREIGN KEY (user_id) REFERENCES users(id);
-
--- Ref: notifications.related_warning_id > risk_warnings.id
-ALTER TABLE notifications
-  ADD CONSTRAINT fk_notifications_related_warning_id FOREIGN KEY (related_warning_id) REFERENCES risk_warnings(id);
-
--- Ref: notifications.related_report_id > weekly_health_reports.id
-ALTER TABLE notifications
-  ADD CONSTRAINT fk_notifications_related_report_id FOREIGN KEY (related_report_id) REFERENCES weekly_health_reports(id);
-
 -- Ref: health_articles.created_by > users.id
 ALTER TABLE health_articles
   ADD CONSTRAINT fk_health_articles_created_by FOREIGN KEY (created_by) REFERENCES users(id);
@@ -757,18 +651,6 @@ ALTER TABLE health_articles
 -- Ref: contact_requests.handled_by > users.id
 ALTER TABLE contact_requests
   ADD CONSTRAINT fk_contact_requests_handled_by FOREIGN KEY (handled_by) REFERENCES users(id);
-
--- Ref: export_requests.requested_by > users.id
-ALTER TABLE export_requests
-  ADD CONSTRAINT fk_export_requests_requested_by FOREIGN KEY (requested_by) REFERENCES users(id);
-
--- Ref: export_requests.patient_id > patients.id
-ALTER TABLE export_requests
-  ADD CONSTRAINT fk_export_requests_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id);
-
--- Ref: export_requests.weekly_report_id > weekly_health_reports.id
-ALTER TABLE export_requests
-  ADD CONSTRAINT fk_export_requests_weekly_report_id FOREIGN KEY (weekly_report_id) REFERENCES weekly_health_reports(id);
 
 -- Ref: health_thresholds.patient_id > patients.id
 ALTER TABLE health_thresholds
