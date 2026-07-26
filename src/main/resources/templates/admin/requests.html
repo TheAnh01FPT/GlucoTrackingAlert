@@ -145,6 +145,42 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination Bar -->
+            <div class="d-flex justify-content-between align-items-center mt-4" th:if="${totalPages > 0}">
+                <div class="text-muted" style="font-size: 0.85rem;">
+                    Hiển thị 
+                    <strong th:text="${currentPage * pageSize + 1}">1</strong> - 
+                    <strong th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong> 
+                    trong tổng số <strong th:text="${totalElements}">100</strong> yêu cầu
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2" style="font-size: 0.85rem;">
+                        <label for="pageSizeSelect" class="text-muted mb-0">Hiển thị:</label>
+                        <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize()">
+                            <option value="5" th:selected="${pageSize == 5}">5</option>
+                            <option value="10" th:selected="${pageSize == 10}">10</option>
+                            <option value="20" th:selected="${pageSize == 20}">20</option>
+                            <option value="50" th:selected="${pageSize == 50}">50</option>
+                        </select>
+                    </div>
+
+                    <nav th:if="${totalPages > 1}">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/requests(page=${currentPage - 1}, size=${pageSize})}">Trước</a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${currentPage == i} ? 'active'">
+                                <a class="page-link" th:href="@{/admin/requests(page=${i}, size=${pageSize})}" th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/requests(page=${currentPage + 1}, size=${pageSize})}">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -182,6 +218,11 @@
             document.getElementById('rejectForm').action = '/admin/requests/' + id + '/reject';
             document.getElementById('rejectionReasonInput').value = '';
             rejectModal.show();
+        }
+
+        function changePageSize() {
+            var size = document.getElementById('pageSizeSelect').value;
+            window.location.href = '/admin/requests?page=0&size=' + size;
         }
     </script>
 </body>

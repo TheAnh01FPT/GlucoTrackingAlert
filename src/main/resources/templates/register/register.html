@@ -366,9 +366,9 @@
         const confirmPassword = document.getElementById('confirmPassword').value;
         const messageBox = document.getElementById('messageBox');
 
-        const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỨỬỮỰYÝỲỸỶYÝỲỸỶỹỳýỵỷ\s]{2,50}$/;
+        const nameRegex = /^[\p{L}\s]{2,50}$/u;
         if (!nameRegex.test(fullName)) {
-            showError(messageBox, "Họ và tên hợp lệ dài từ 2-50 ký tự và không chứa ký tự đặc biệt!");
+            showError(messageBox, "Họ và tên hợp lệ dài từ 2-50 ký tự và không chứa số hoặc ký tự đặc biệt!");
             return;
         }
 

@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 @Controller
@@ -24,10 +25,17 @@ public class AdminCardVerificationController {
     }
 
     @GetMapping
-    public String viewCardVerifications(Model model) {
+    public String viewCardVerifications(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            Model model) {
         try {
-            List<PatientProfileResponse> patients = patientService.getAllPatients();
-            model.addAttribute("patients", patients);
+            Page<PatientProfileResponse> patientsPage = patientService.getAllPatientsPaged(page, size);
+            model.addAttribute("patients", patientsPage.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", patientsPage.getTotalPages());
+            model.addAttribute("totalElements", patientsPage.getTotalElements());
+            model.addAttribute("pageSize", size);
             return "admin/card-verifications";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi tải danh sách thẻ bệnh nhân: " + e.getMessage());

@@ -113,6 +113,13 @@ public class ProfileChangeRequestServiceImpl implements ProfileChangeRequestServ
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<ProfileChangeRequest> getAllRequestsPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return requestRepository.findAll(pageable);
+    }
+
+    @Override
     @Transactional
     public ProfileChangeRequest approveRequest(Long requestId, Long adminUserId) {
         ProfileChangeRequest request = requestRepository.findById(requestId)
