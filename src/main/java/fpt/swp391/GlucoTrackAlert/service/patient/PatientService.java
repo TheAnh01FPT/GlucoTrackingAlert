@@ -2,6 +2,7 @@ package fpt.swp391.GlucoTrackAlert.service.patient;
 
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileRequest;
 import fpt.swp391.GlucoTrackAlert.dto.patient.PatientProfileResponse;
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface PatientService {
@@ -10,6 +11,7 @@ public interface PatientService {
     PatientProfileResponse createProfile(PatientProfileRequest request);
     PatientProfileResponse updateProfile(Long userId, PatientProfileRequest request);
     List<PatientProfileResponse> getAllPatients();
+    Page<PatientProfileResponse> getAllPatientsPaged(int page, int size);
     PatientProfileResponse verifyIdentityCard(Long patientId, String status);
     PatientProfileResponse verifyInsuranceCard(Long patientId, String status);
 }
