@@ -439,10 +439,14 @@
 </head>
 <body th:classappend="${isAdmin} ? 'admin-layout-body' : ''">
     <!-- Sidebar for Admin -->
-    <div th:if="${isAdmin}" th:replace="~{fragments/layout :: sidebar('articles')}"></div>
+    <th:block th:if="${isAdmin}">
+        <div th:replace="~{fragments/layout :: sidebar('articles')}"></div>
+    </th:block>
 
     <div th:class="${isAdmin} ? 'main-content' : ''">
-        <div th:if="${isAdmin}" th:replace="~{fragments/layout :: topbar('Quản lý Bài viết')}"></div>
+        <th:block th:if="${isAdmin}">
+            <div th:replace="~{fragments/layout :: topbar('Quản lý Bài viết')}"></div>
+        </th:block>
 
         <!-- Navigation -->
         <nav th:if="${!isAdmin}" class="navbar navbar-expand-lg">
