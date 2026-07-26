@@ -136,6 +136,8 @@ public class PatientWebController {
         } else {
             PatientProfileRequest request = PatientProfileRequest.builder()
                     .userId(userId)
+                    .fullName(loggedInUser.getFullName())
+                    .phone(loggedInUser.getPhone())
                     .build();
             model.addAttribute("profileForm", request);
             model.addAttribute("isNew", true);

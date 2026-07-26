@@ -339,6 +339,9 @@ CREATE TABLE doctor_recommendations (
   title VARCHAR(150),
   recommendation TEXT NOT NULL,
   status VARCHAR(30) DEFAULT 'active',
+  priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
+  category VARCHAR(30) NOT NULL DEFAULT 'OTHER',
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
   created_at DATETIME,
   updated_at DATETIME
 ) COMMENT = 'Lưu khuyến nghị theo dõi của bác sĩ dành cho bệnh nhân. Không phải chẩn đoán hoặc điều trị chính thức, chỉ là nhận xét và hướng theo dõi sức khỏe.';

@@ -20,7 +20,7 @@ public class WeeklyCardioAiService {
     private final RestTemplate restTemplate;
     private final DailyHealthLogRepository dailyHealthLogRepository;
 
-    private static final String ML_HEART_URL = "http://localhost:5000/predict-cardio";
+    private static final String ML_HEART_URL = "http://localhost:6000/predict-cardio";
 
     /**
      * Hàm tính toán trung bình cộng chỉ số trong tuần của bệnh nhân và gọi AI dự đoán bệnh tim
