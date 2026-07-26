@@ -46,6 +46,7 @@ public class Duy_PatientNotificationLogController {
 
         model.addAttribute("fromDate", fromDate);
         model.addAttribute("toDate", toDate);
+        model.addAttribute("userId", getCurrentUserId());
 
         if (patientId == null) {
             model.addAttribute("logs", Page.empty());
@@ -85,5 +86,19 @@ public class Duy_PatientNotificationLogController {
         }
         Optional<Patient> patientOpt = patientRepository.findByUserId(user.getId());
         return patientOpt.map(Patient::getId).orElse(null);
+    }
+
+    /**
+     * Lấy userId (User.id) của người đang đăng nhập, dùng để build link sang
+     * /health-logs/my-logs (nơi yêu cầu userId chứ không phải patientId).
+     */
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return null;
+        }
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        return user != null ? user.getId() : null;
     }
 }

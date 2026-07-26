@@ -17,7 +17,75 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
 
     @Override
     public Duy_Meal_Logs save(Duy_Meal_Logs log) {
+        validateFoodName(log.getFoodName());
+        validateQuantityText(log.getQuantityText());
+        validateSugarEstimation(log.getSugarEstimation());
+        validateCarbEstimation(log.getCarbEstimation());
         return repo.save(log);
+    }
+
+    // FIX: trước đây các validate này chỉ tồn tại ở JavaScript phía form
+    // (meal-logs.html) — ai gọi thẳng API (Postman, sửa request bằng
+    // DevTools...) thì bỏ qua được hết, lưu thoải mái foodName rỗng,
+    // quantityText/sugarEstimation âm hoặc rác. Validate lại ở đây để
+    // không phụ thuộc hoàn toàn vào client.
+    private void validateFoodName(String foodName) {
+        if (foodName == null || foodName.isBlank()) {
+            throw new IllegalArgumentException("Ten mon an khong duoc de trong");
+        }
+    }
+
+    // FIX: form meal-logs.html dùng 1 ô nhập tự do duy nhất cho "số lượng + đơn vị"
+    // (vd "2 bát", "150g") — validate lại đúng logic này ở backend để không ai gọi
+    // thẳng API mà né được: lấy token số đầu tiên trong chuỗi, số đó phải là số
+    // nguyên dương thuần túy (không âm, không thập phân, không chữ/ký tự đặc biệt
+    // lẫn vào phần số), và phần còn lại sau khi bỏ số đi (đơn vị) bắt buộc phải có,
+    // không giới hạn danh sách vì người dùng được tự nhập (vd "phần", "tô lớn"...).
+    private void validateQuantityText(String quantityText) {
+        if (quantityText == null || quantityText.isBlank()) {
+            throw new IllegalArgumentException("So luong khong duoc de trong");
+        }
+        String trimmed = quantityText.trim();
+        var numMatcher = java.util.regex.Pattern.compile("(-?\\d+\\.?\\d*)").matcher(trimmed);
+        if (!numMatcher.find()) {
+            throw new IllegalArgumentException("So luong phai co chua so luong, vi du '2 bat'");
+        }
+        String numToken = numMatcher.group(1);
+        if (!numToken.matches("\\d+")) {
+            throw new IllegalArgumentException(
+                    "So luong chi duoc nhap so nguyen duong, khong duoc so am hoac so thap phan");
+        }
+        long n = Long.parseLong(numToken);
+        if (n <= 0) {
+            throw new IllegalArgumentException("So luong phai lon hon 0");
+        }
+        String unit = trimmed.replaceFirst(java.util.regex.Pattern.quote(numToken), "")
+                .replaceAll("^[\\s,./-]+|[\\s,./-]+$", "").trim();
+        if (unit.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Phai nhap don vi (vi du 'bat', 'mieng', 'thia'...), khong duoc de trong");
+        }
+    }
+
+    private void validateSugarEstimation(String sugarEstimation) {
+        if (sugarEstimation == null || sugarEstimation.isBlank()) {
+            return;
+        }
+        try {
+            if (Double.parseDouble(sugarEstimation.trim()) < 0) {
+                throw new IllegalArgumentException("Duong huyet uoc tinh khong duoc am");
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Duong huyet uoc tinh khong hop le");
+        }
+    }
+
+    // FIX: carbEstimation < 0 vẫn lọt qua được ở cả save() lẫn updateLog(),
+    // vì trước đó chỉ check != null chứ không check giá trị âm.
+    private void validateCarbEstimation(Double carbEstimation) {
+        if (carbEstimation != null && carbEstimation < 0) {
+            throw new IllegalArgumentException("carbEstimation khong duoc am");
+        }
     }
 
     @Override
@@ -35,18 +103,22 @@ public class Duy_MealLogServiceImpl implements Duy_MealLogService {
         return repo.findById(id)
                 .map(existing -> {
                     if (log.getFoodName() != null) {
+                        validateFoodName(log.getFoodName());
                         existing.setFoodName(log.getFoodName());
                     }
                     if (log.getMealType() != null) {
                         existing.setMealType(log.getMealType());
                     }
                     if (log.getQuantityText() != null) {
+                        validateQuantityText(log.getQuantityText());
                         existing.setQuantityText(log.getQuantityText());
                     }
                     if (log.getSugarEstimation() != null) {
+                        validateSugarEstimation(log.getSugarEstimation());
                         existing.setSugarEstimation(log.getSugarEstimation());
                     }
                     if (log.getCarbEstimation() != null) {
+                        validateCarbEstimation(log.getCarbEstimation());
                         existing.setCarbEstimation(log.getCarbEstimation());
                     }
                     if (log.getNote() != null) {

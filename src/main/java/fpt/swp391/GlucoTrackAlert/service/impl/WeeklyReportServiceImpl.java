@@ -22,6 +22,7 @@ import fpt.swp391.GlucoTrackAlert.service.cardioai.WeeklyCardioAiService;
 import fpt.swp391.GlucoTrackAlert.service.strokeai.WeeklyStrokeAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -278,17 +279,28 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
     // caller) thì bất kỳ lỗi nào ở đây (thiếu cột DB, lỗi tính toán báo cáo tuần...)
     // sẽ đánh dấu rollback-only cho cả transaction lưu DailyHealthLog, gây
     // UnexpectedRollbackException dù exception đã được catch ở tầng trên.
+    // CHẠY NỀN (@Async): trước đây DailyHealthLogServiceImpl chờ đồng bộ
+    // báo cáo tuần xong mới trả kết quả cho người dùng, làm trang sửa nhật
+    // ký bị chậm. Việc này an toàn để chạy nền vì bản ghi DailyHealthLog
+    // đã được lưu (commit) trước khi hàm này được gọi.
+    // Vì @Async nên tự try/catch ở đây, exception không còn bay ngược lên
+    // được cho caller bắt như trước.
     @Override
+    @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void syncWeeklyReport(Long patientId, LocalDate weekStart) {
-        if (weeklyHealthReportRepository.existsByPatientIdAndWeekStart(patientId, weekStart)) {
-            recalculateIfExists(patientId, weekStart);
-            return;
-        }
+        try {
+            if (weeklyHealthReportRepository.existsByPatientIdAndWeekStart(patientId, weekStart)) {
+                recalculateIfExists(patientId, weekStart);
+                return;
+            }
 
-        long logCount = dailyHealthLogRepository.countByPatientIdAndLogDateBetween(patientId, weekStart, weekStart.plusDays(6));
-        if (logCount >= 3) {
-            generateWeeklyReport(patientId, weekStart);
+            long logCount = dailyHealthLogRepository.countByPatientIdAndLogDateBetween(patientId, weekStart, weekStart.plusDays(6));
+            if (logCount >= 3) {
+                generateWeeklyReport(patientId, weekStart);
+            }
+        } catch (Exception e) {
+            log.error("[WeeklyReport] Đồng bộ báo cáo tuần thất bại cho patientId={}: {}", patientId, e.getMessage(), e);
         }
     }
 

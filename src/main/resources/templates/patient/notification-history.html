@@ -17,7 +17,7 @@
             <nav class="topbar-nav">
                 <a th:href="@{/patient/homepage}" class="nav-btn">🏠 Trang chủ</a>
                 <a th:href="@{/patient/relatives}" class="nav-btn">👪 Người thân</a>
-                <a th:href="@{/health-logs/my-logs}" class="nav-btn">📋 Nhật ký</a>
+                <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="nav-btn">📋 Nhật ký</a>
             </nav>
         </div>
 

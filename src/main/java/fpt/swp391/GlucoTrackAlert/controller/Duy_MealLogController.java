@@ -22,8 +22,12 @@ public class Duy_MealLogController {
         if (log.getPatientId() == null) {
             return ResponseEntity.badRequest().body("Error: patientId is required!");
         }
-        Duy_Meal_Logs savedLog = mealLogService.save(log);
-        return ResponseEntity.ok(savedLog);
+        try {
+            Duy_Meal_Logs savedLog = mealLogService.save(log);
+            return ResponseEntity.ok(savedLog);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     // READ ALL - chỉ dành cho ADMIN
@@ -50,12 +54,16 @@ public class Duy_MealLogController {
     // UPDATE
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id,
-                                    @RequestBody Duy_Meal_Logs log) {
-        Duy_Meal_Logs updated = mealLogService.updateLog(id, log);
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
+            @RequestBody Duy_Meal_Logs log) {
+        try {
+            Duy_Meal_Logs updated = mealLogService.updateLog(id, log);
+            if (updated == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
-        return ResponseEntity.ok(updated);
     }
 
     // DELETE

@@ -15,6 +15,7 @@ import fpt.swp391.GlucoTrackAlert.service.ComplicationRiskService;
 import fpt.swp391.GlucoTrackAlert.service.RiskModelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,9 +49,25 @@ public class ComplicationRiskServiceImpl implements ComplicationRiskService {
     // này lỗi (vd. thiếu cột DB như 'hypertension_score' từng gặp), nó chỉ
     // tự rollback phần của nó, không kéo theo rollback transaction chính đang
     // lưu DailyHealthLog ở DailyHealthLogServiceImpl.createLog()/updateLog().
+    // CHẠY NỀN (@Async): đây là phần CHẬM NHẤT trong luồng sửa/tạo nhật ký
+    // sức khỏe, vì gọi HTTP đồng bộ sang microservice Python để dự đoán
+    // nguy cơ đột quỵ (connect timeout 3s + read timeout 8s, xem
+    // WebMvcConfig). An toàn để chạy nền vì bản ghi DailyHealthLog đã được
+    // lưu (commit) trước khi hàm này được gọi.
+    // Vì @Async nên tự try/catch bọc toàn bộ thân hàm, exception không còn
+    // bay ngược lên được cho DailyHealthLogServiceImpl bắt như trước.
     @Override
+    @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void assessPatient(Long patientId, Long dailyHealthLogId) {
+        try {
+            doAssessPatient(patientId, dailyHealthLogId);
+        } catch (Exception e) {
+            log.error("[ComplicationRisk] Đánh giá biến chứng thất bại cho patientId={}: {}", patientId, e.getMessage(), e);
+        }
+    }
+
+    private void doAssessPatient(Long patientId, Long dailyHealthLogId) {
         Patient patient = patientRepository.findById(patientId).orElse(null);
         if (patient == null) {
             return;

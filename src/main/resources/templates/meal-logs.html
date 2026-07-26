@@ -1343,8 +1343,8 @@
                         </div>
 
                         <div class="form-group">
-                            <div class="step-label"><span class="step-num">3</span> Số lượng bữa ăn</div>
-                            <input type="text" id="quantityInput" placeholder="Vd: 1 bát, 2 miếng, nửa tô, 1 đĩa..." oninput="calcSugar()">
+                            <div class="step-label"><span class="step-num">3</span> Số lượng món ăn</div>
+                            <input type="text" id="quantityInput" placeholder="Vd: 1 bát, 2 miếng, 3 thìa, nửa tô, 150g..." oninput="calcSugar()">
 
                             <!-- SUGAR ESTIMATE -->
                             <div class="sugar-estimate" id="sugarEstBox">
@@ -1412,6 +1412,20 @@
         <script>
             const API = "http://localhost:8081/api/meal-logs";
             const PAGE_SIZE = 6;
+
+            // Chống XSS: mọi dữ liệu do người dùng nhập (foodName, note, quantityText...)
+            // PHẢI đi qua hàm này trước khi chèn vào innerHTML, vì backend hiện không
+            // lọc nội dung — nếu không escape, ai đó gửi thẳng API với nội dung kiểu
+            // "<img src=x onerror=...>" sẽ được lưu vào DB và tự chạy mỗi khi trang
+            // này render lại (stored XSS).
+            function escapeHtml(str) {
+                return String(str ?? '')
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+            }
             const FOOD_EMOJIS = ['🍚', '🍜', '🍲', '🥗', '🥩', '🍱', '🥘', '🌮', '🍛', '🫕'];
             const MEAL_LABELS = {
                 Breakfast: {label: 'Bữa sáng', cls: 'meal-breakfast'},
@@ -1549,8 +1563,13 @@
                 if (!input)
                     return 0;
                 const s = input.toLowerCase().trim();
-                const numMatch = s.match(/(\d+\.?\d*)/);
+                // Bắt cả dấu trừ (số âm) chứ không chỉ chữ số, để không bị
+                // âm thầm mất dấu và tính nhầm số lượng âm thành số dương.
+                const numMatch = s.match(/(-?\d+\.?\d*)/);
                 const qty = numMatch ? parseFloat(numMatch[1]) : 1;
+                // Số lượng âm hoặc bằng 0 là vô nghĩa (không thể ăn -2 bát) -> coi là không hợp lệ.
+                if (qty <= 0)
+                    return -1;
                 const half = s.includes('nửa') || s.includes('1/2') ? 0.5 : 1;
                 const multiplier = half < 1 ? half : qty;
 
@@ -1581,10 +1600,40 @@
                     return multiplier * 250;
                 if (s.includes('muỗng') || s.includes('thìa'))
                     return multiplier * 15;
+                if (s.includes('muôi'))
+                    return multiplier * 45;
                 if (s.includes('gói') || s.includes('hộp'))
                     return multiplier * 200;
                 if (s.includes('lon'))
                     return multiplier * 330;
+                if (s.includes('chai'))
+                    return multiplier * 500;
+                if (s.includes('hũ'))
+                    return multiplier * 100;
+                if (s.includes('bịch') || s.includes('túi'))
+                    return multiplier * 200;
+                if (s.includes('phần') || s.includes('suất'))
+                    return multiplier * 300;
+                if (s.includes('lát lớn'))
+                    return multiplier * 35;
+                if (s.includes('lát'))
+                    return multiplier * 20;
+                if (s.includes('viên'))
+                    return multiplier * 25;
+                if (s.includes('que'))
+                    return multiplier * 50;
+                if (s.includes('ổ'))
+                    return multiplier * 150;
+                if (s.includes('xâu') || s.includes('xiên'))
+                    return multiplier * 40;
+                if (s.includes('vắt'))
+                    return multiplier * 75;
+                if (s.includes('nắm'))
+                    return multiplier * 100;
+                if (s.includes('khúc'))
+                    return multiplier * 100;
+                if (s.includes('cái'))
+                    return multiplier * 100;
 
                 // Nếu chỉ là số → coi là gram
                 if (s.match(/^\d+\.?\d*\s*(g|gram|gr)?$/))
@@ -1711,9 +1760,41 @@
             let lastFoodRecognized = true;
             const AUTO_NOTE_TAG_PREFIX = '⚠️ Món chưa có trong danh sách gợi ý';
 
+            // ============================================================
+            // Kiểm tra chuỗi "số lượng + đơn vị" nhập trong 1 ô duy nhất (vd "2 bát").
+            // - Số lượng: CHỈ chấp nhận số nguyên dương (không âm, không thập phân,
+            //   không ký tự đặc biệt/chữ cái) — lấy token số đầu tiên trong chuỗi rồi
+            //   kiểm tra chặt bằng regex ^\d+$.
+            // - Đơn vị: BẮT BUỘC phải có (phần chữ còn lại sau khi bỏ số đi) thì mới
+            //   tính được carb/đường — không cho để trống hay chỉ nhập mỗi số.
+            function getQuantityStatus() {
+                const raw = document.getElementById('quantityInput').value.trim();
+
+                if (!raw)
+                    return {text: '', error: null}; // chưa nhập gì cả -> coi như "chưa điền", không báo lỗi riêng
+
+                const numMatch = raw.match(/(-?\d+\.?\d*)/);
+                if (!numMatch)
+                    return {text: '', error: 'missing_number'};
+
+                const numToken = numMatch[1];
+                // Chỉ chấp nhận số nguyên dương thuần túy: không dấu trừ, không dấu chấm
+                // (vd: -2, 1.5, 1e5 đều bị chặn)
+                if (!/^\d+$/.test(numToken) || Number(numToken) <= 0)
+                    return {text: '', error: 'invalid_number'};
+
+                // Phần còn lại sau khi bỏ số đi chính là đơn vị -> bắt buộc phải có
+                const unit = raw.replace(numToken, '').replace(/^[\s,./-]+|[\s,./-]+$/g, '').trim();
+                if (!unit)
+                    return {text: '', error: 'missing_unit'};
+
+                return {text: raw, error: null};
+            }
+
             function calcSugar() {
                 const foodName = document.getElementById('foodName').value.trim();
-                const qty = document.getElementById('quantityInput').value.trim();
+                const qtyStatus = getQuantityStatus();
+                const qty = qtyStatus.text;
                 const food = findFood(foodName);
                 const box = document.getElementById('sugarEstBox');
                 const advice = document.getElementById('adviceBox');
@@ -1742,6 +1823,21 @@
                         advice.innerHTML = '';
                         advice.className = 'advice-box';
                     }
+                    // Đã nhập số lượng/đơn vị nhưng chưa hợp lệ -> báo rõ lý do, không tính carb/đường
+                    if (food && qtyStatus.error) {
+                        box.className = 'sugar-estimate show warn';
+                        document.getElementById('sugarEstVal').textContent = '❓ Chưa đủ thông tin';
+                        let msg = '';
+                        if (qtyStatus.error === 'missing_unit')
+                            msg = '⚠️ Vui lòng nhập đơn vị (bát, tô, đĩa, miếng...) thì mới tính được carb và đường.';
+                        else if (qtyStatus.error === 'invalid_number')
+                            msg = '⚠️ Số lượng chỉ được nhập số nguyên dương (không số âm, không số thập phân, không chữ và ký tự đặc biệt).';
+                        else if (qtyStatus.error === 'missing_number')
+                            msg = '⚠️ Vui lòng nhập số lượng.';
+                        document.getElementById('sugarEstNote').innerHTML = msg;
+                        advice.innerHTML = '';
+                        advice.className = 'advice-box';
+                    }
                     return;
                 }
 
@@ -1751,6 +1847,21 @@
                 const thresholds = SUGAR_THRESHOLDS[condition];
 
                 const gramBase = estimateGram(qty, foodName);
+                if (gramBase < 0) {
+                    box.className = 'sugar-estimate show warn';
+                    document.getElementById('sugarEstVal').textContent = '❓ Số lượng không hợp lệ';
+                    document.getElementById('sugarEstNote').innerHTML =
+                            '⚠️ Số lượng phải lớn hơn 0 (không thể nhập số âm hoặc 0). Vui lòng nhập lại, vd: "1 bát", "2 miếng".';
+                    advice.innerHTML = '';
+                    advice.className = 'advice-box';
+                    formulaBox.className = 'formula-box';
+                    if (!document.getElementById('logId').value) {
+                        document.getElementById('sugarEstimation').value = 0;
+                        document.getElementById('carbEstimation').value = 0;
+                        document.getElementById('carbEstVal').textContent = '— g';
+                    }
+                    return;
+                }
                 const gram = Math.round(gramBase * factor);
                 const carbGram = (food.carb * gram) / 100;
                 const gi = food.gi;
@@ -1904,7 +2015,13 @@
                     return;
                 }
                 box.innerHTML = '<div style="width:100%;font-size:12px;color:var(--text-muted);margin-bottom:2px">🕒 Món bạn hay ăn — bấm để điền nhanh:</div>' +
-                        top.map(f => `<span class="quick-pick-chip" onclick="pickSuggestion('${f.name.replace(/'/g, "\\'")}')">🍽️ ${f.name} <span class="qp-count">×${f.count}</span></span>`).join('');
+                        top.map(f => `<span class="quick-pick-chip" data-name="${escapeHtml(f.name)}">🍽️ ${escapeHtml(f.name)} <span class="qp-count">×${f.count}</span></span>`).join('');
+                // Dùng data-attribute + addEventListener thay vì onclick="...('${name}')" trực tiếp:
+                // tên món đi qua onclick nối chuỗi vẫn có thể phá vỡ cú pháp JS dù đã escape HTML
+                // (trình duyệt giải mã HTML entity trong thuộc tính TRƯỚC khi coi nó là mã JS).
+                box.querySelectorAll('.quick-pick-chip').forEach(el => {
+                    el.addEventListener('click', () => pickSuggestion(el.dataset.name));
+                });
             }
 
             // Card "món hay gây tăng đường": chỉ xét món đã ăn >= 2 lần (đủ dữ liệu để tin cậy hơn 1 lần đo),
@@ -1926,7 +2043,7 @@
                 body.innerHTML = candidates.map(f => {
                     const cls = f.avgSugar >= thr.danger ? 'sugar-danger' : f.avgSugar >= thr.warn ? 'sugar-warn' : 'sugar-ok';
                     return `<div class="risk-food-row">
-                <div><div class="risk-food-name">🍽️ ${f.name}</div>
+                <div><div class="risk-food-name">🍽️ ${escapeHtml(f.name)}</div>
                 <div class="risk-food-meta">Đã ăn ${f.count} lần · lần gần nhất ${f.lastDate || '—'}</div></div>
                 <span class="sugar-badge ${cls}">${f.avgSugar.toFixed(1)} mmol/L (TB)</span>
             </div>`;
@@ -2114,10 +2231,13 @@
                     box.style.display = 'none';
                     return;
                 }
-                box.innerHTML = all.map(f => `<div class="suggestion-item" onclick="pickSuggestion('${f.name.replace(/'/g, "\\'")}')">
-            🍽️ ${f.name}
+                box.innerHTML = all.map(f => `<div class="suggestion-item" data-name="${escapeHtml(f.name)}">
+            🍽️ ${escapeHtml(f.name)}
             <span style="font-size:12px;color:var(--text-muted)">${f.fromDB ? 'Có dữ liệu dinh dưỡng' : 'Bữa trước'}</span>
           </div>`).join('');
+                box.querySelectorAll('.suggestion-item').forEach(el => {
+                    el.addEventListener('click', () => pickSuggestion(el.dataset.name));
+                });
                 box.style.display = 'block';
             }
             function pickSuggestion(name) {
@@ -2191,14 +2311,14 @@
                     rows += `<tr class="${rowCls}">
               <td><b>#${start + i + 1}</b></td>
               <td><div class="food-cell"><div class="food-icon">${icon}</div><div>
-                <div class="food-name">${food}${estBadge}</div>
-                <div style="font-size:12px;color:var(--text-muted)">${qty}</div>
+                <div class="food-name">${escapeHtml(food)}${estBadge}</div>
+                <div style="font-size:12px;color:var(--text-muted)">${escapeHtml(qty)}</div>
               </div></div></td>
               <td><span class="sugar-badge ${sCls}">${sLabel}</span></td>
               <td>${carb ? carb.toFixed(1) + ' g' : '—'}</td>
               <td><span class="meal-badge ${meal.cls}">${meal.label}</span></td>
               <td>${dateStr}</td>
-              <td>${x.note || '—'}</td>
+              <td>${escapeHtml(x.note) || '—'}</td>
               <td><div class="action-btns">
                 <button class="btn-sm btn-edit" onclick="editLog(${x.id})">✏️ Sửa</button>
                 <button class="btn-sm btn-del" onclick="deleteLog(${x.id})">🗑️ Xóa</button>
@@ -2312,11 +2432,20 @@
                     showToast(p + ' ơi, chưa nhập tên món ăn!', 'error');
                     return;
                 }
-                const qty = document.getElementById('quantityInput').value.trim();
-                if (!qty) {
+                const qtyStatus = getQuantityStatus();
+                if (qtyStatus.error === 'missing_number' || (!qtyStatus.text && !qtyStatus.error)) {
                     showToast(p + ' ơi, chưa nhập số lượng!', 'error');
                     return;
                 }
+                if (qtyStatus.error === 'invalid_number') {
+                    showToast(p + ' ơi, số lượng chỉ được nhập số nguyên dương, không được nhập số âm, số thập phân, chữ hoặc ký tự đặc biệt!', 'error');
+                    return;
+                }
+                if (qtyStatus.error === 'missing_unit') {
+                    showToast(p + ' ơi, chưa nhập đơn vị! Phải nhập đơn vị thì mới tính được carb và đường.', 'error');
+                    return;
+                }
+                const qty = qtyStatus.text;
                 if (!findFood(food)) {
                     showToast(p + ' ơi, tên món ăn này chưa được nhận diện. Hãy chọn món trong danh sách gợi ý hoặc mô tả rõ hơn (vd: tên món + nguyên liệu chính)!', 'error');
                     return;
@@ -2391,11 +2520,20 @@
                     showToast('Chưa nhập tên món ăn!', 'error');
                     return;
                 }
-                const qty = document.getElementById('quantityInput').value.trim();
-                if (!qty) {
+                const qtyStatus = getQuantityStatus();
+                if (qtyStatus.error === 'missing_number' || (!qtyStatus.text && !qtyStatus.error)) {
                     showToast('Chưa nhập số lượng!', 'error');
                     return;
                 }
+                if (qtyStatus.error === 'invalid_number') {
+                    showToast('Số lượng chỉ được nhập số nguyên dương, không được nhập số âm, số thập phân, chữ hoặc ký tự đặc biệt!', 'error');
+                    return;
+                }
+                if (qtyStatus.error === 'missing_unit') {
+                    showToast('Chưa nhập đơn vị! Phải nhập đơn vị thì mới tính được carb và đường.', 'error');
+                    return;
+                }
+                const qty = qtyStatus.text;
                 if (!findFood(food)) {
                     showToast('Tên món ăn này chưa được nhận diện. Hãy chọn món trong danh sách gợi ý hoặc mô tả rõ hơn!', 'error');
                     return;

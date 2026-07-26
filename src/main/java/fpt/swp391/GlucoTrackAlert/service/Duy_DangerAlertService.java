@@ -9,6 +9,7 @@ import fpt.swp391.GlucoTrackAlert.service.notification.Duy_NotificationLogServic
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,12 +64,27 @@ public class Duy_DangerAlertService {
      * rollback (không gửi được cảnh báo lần đó), transaction chính lưu nhật ký
      * sức khỏe vẫn commit bình thường.
      */
+    // CHẠY NỀN (@Async): việc gửi mail cảnh báo không cần chặn request
+    // sửa/tạo nhật ký sức khỏe của người dùng — DailyHealthLogServiceImpl
+    // gọi hàm này SAU KHI đã lưu DB xong, nên có chạy nền hay không cũng
+    // không ảnh hưởng gì tới dữ liệu đã lưu. Nhờ vậy trang sửa nhật ký trả
+    // kết quả ngay, còn email/log cảnh báo hoàn tất sau đó vài giây.
+    // Vì @Async nên exception ở đây không còn bay ngược lên được cho
+    // DailyHealthLogServiceImpl bắt như trước — tự try/catch và log ở đây.
+    @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkAndAlertRelatives(DailyHealthLog healthLog) {
         if (healthLog == null || healthLog.getPatient() == null) {
             return;
         }
+        try {
+            doCheckAndAlertRelatives(healthLog);
+        } catch (Exception e) {
+            log.warn("[DangerAlert] Không thể kiểm tra/gửi cảnh báo cho log id={}: {}", healthLog.getId(), e.getMessage());
+        }
+    }
 
+    private void doCheckAndAlertRelatives(DailyHealthLog healthLog) {
         Long patientId = healthLog.getPatient().getId();
         String patientType = healthLog.getPatient().getPatientType();
 
