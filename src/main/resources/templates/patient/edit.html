@@ -47,6 +47,17 @@
                     👤 Thông tin cá nhân hành chính
                 </h3>
 
+                <div class="form-group" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px;">
+                     <div id="avatarPreviewContainer" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary-light); background: #f1f5f9; display: flex; align-items: center; justify-content: center; position: relative;">
+                         <img id="avatarPreview" th:src="${profileForm.avatar != null && !profileForm.avatar.isEmpty() ? profileForm.avatar : 'https://res.cloudinary.com/dy1j8lall/image/upload/v1722000000/default-avatar.png'}" style="width: 100%; height: 100%; object-fit: cover;">
+                     </div>
+                     <label class="action-btn btn-secondary" style="font-size: 13px; padding: 6px 12px; cursor: pointer; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                         📸 Chọn ảnh đại diện
+                         <input type="file" id="avatarFile" name="avatarFile" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
+                     </label>
+                     <input type="hidden" th:field="*{avatar}">
+                 </div>
+
                 <div class="form-group">
                     <label class="form-label" for="fullName">Họ và tên bệnh nhân *</label>
                     <input type="text" id="fullName" th:field="*{fullName}" class="form-input" placeholder="Nhập họ và tên đầy đủ">
@@ -90,13 +101,15 @@
                     <input type="text" id="identityCard" th:field="*{identityCard}" class="form-input" placeholder="Nhập số CCCD">
                     <span class="error-text" th:if="${#fields.hasErrors('identityCard')}" th:errors="*{identityCard}">Lỗi CCCD</span>
                     <div style="margin-top: 8px;">
-                        <label class="form-label" style="font-size: 13px; color: #4b5563;">📸 Ảnh chụp CCCD (Tùy chọn đính kèm)</label>
-                        <input type="file" id="identityCardFile" name="identityCardFile" accept="image/*" class="form-input" onchange="previewCardImage(this, 'idCardPreview')">
+                        <label class="form-label" style="font-size: 13px; color: #4b5563;">📸 Ảnh chụp CCCD (Tùy chọn đính kèm, có thể chọn nhiều ảnh)</label>
+                        <input type="file" id="identityCardFiles" name="identityCardFiles" accept="image/*" class="form-input" multiple onchange="previewCardImage(this, 'idCardPreview')">
                         <p style="font-size: 11px; color: #d97706; margin-top: 4px; font-style: italic;">
                             📌 Lưu ý: Vui lòng đảm bảo số CCCD gõ tay trùng khớp 100% với thông tin trên ảnh chụp đính kèm.
                         </p>
-                        <div id="idCardPreview" style="margin-top: 8px;">
-                            <img th:if="${profileForm.identityCardImage != null && !profileForm.identityCardImage.isEmpty()}" th:src="${profileForm.identityCardImage}" style="max-width: 150px; max-height: 100px; border-radius: 6px; border: 1px solid #ddd;">
+                        <div id="idCardPreview" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                            <th:block th:if="${profileForm.identityCardImage != null && !profileForm.identityCardImage.isEmpty()}">
+                                <img th:each="imgUrl : ${#strings.arraySplit(profileForm.identityCardImage, ',')}" th:src="${imgUrl}" style="max-width: 150px; max-height: 100px; border-radius: 6px; border: 1px solid #ddd;">
+                            </th:block>
                         </div>
                     </div>
                 </div>
@@ -106,13 +119,15 @@
                     <input type="text" id="insuranceNumber" th:field="*{insuranceNumber}" class="form-input" placeholder="Nhập mã số BHYT">
                     <span class="error-text" th:if="${#fields.hasErrors('insuranceNumber')}" th:errors="*{insuranceNumber}">Lỗi BHYT</span>
                     <div style="margin-top: 8px;">
-                        <label class="form-label" style="font-size: 13px; color: #4b5563;">📸 Ảnh chụp thẻ BHYT (Tùy chọn đính kèm)</label>
-                        <input type="file" id="insuranceNumberFile" name="insuranceNumberFile" accept="image/*" class="form-input" onchange="previewCardImage(this, 'insCardPreview')">
+                        <label class="form-label" style="font-size: 13px; color: #4b5563;">📸 Ảnh chụp thẻ BHYT (Tùy chọn đính kèm, có thể chọn nhiều ảnh)</label>
+                        <input type="file" id="insuranceNumberFiles" name="insuranceNumberFiles" accept="image/*" class="form-input" multiple onchange="previewCardImage(this, 'insCardPreview')">
                         <p style="font-size: 11px; color: #d97706; margin-top: 4px; font-style: italic;">
                             📌 Lưu ý: Vui lòng đảm bảo mã BHYT gõ tay trùng khớp 100% với thông tin trên ảnh chụp đính kèm.
                         </p>
-                        <div id="insCardPreview" style="margin-top: 8px;">
-                            <img th:if="${profileForm.insuranceNumberImage != null && !profileForm.insuranceNumberImage.isEmpty()}" th:src="${profileForm.insuranceNumberImage}" style="max-width: 150px; max-height: 100px; border-radius: 6px; border: 1px solid #ddd;">
+                        <div id="insCardPreview" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                            <th:block th:if="${profileForm.insuranceNumberImage != null && !profileForm.insuranceNumberImage.isEmpty()}">
+                                <img th:each="imgUrl : ${#strings.arraySplit(profileForm.insuranceNumberImage, ',')}" th:src="${imgUrl}" style="max-width: 150px; max-height: 100px; border-radius: 6px; border: 1px solid #ddd;">
+                            </th:block>
                         </div>
                     </div>
                 </div>
@@ -240,22 +255,51 @@
 </div>
 
 <script>
+    function previewAvatar(input) {
+        var container = document.getElementById('avatarPreviewContainer');
+        var preview = document.getElementById('avatarPreview');
+        var placeholder = document.getElementById('avatarPlaceholder');
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (!preview) {
+                    preview = document.createElement('img');
+                    preview.id = 'avatarPreview';
+                    preview.style.width = '100%';
+                    preview.style.height = '100%';
+                    preview.style.objectFit = 'cover';
+                    container.appendChild(preview);
+                }
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                if (placeholder) {
+                    placeholder.style.display = 'none';
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     function previewCardImage(input, previewId) {
         var container = document.getElementById(previewId);
         if (!container) return;
         container.innerHTML = "";
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var img = document.createElement("img");
-                img.src = e.target.result;
-                img.style.maxWidth = "150px";
-                img.style.maxHeight = "100px";
-                img.style.borderRadius = "6px";
-                img.style.border = "1px solid #ddd";
-                container.appendChild(img);
+        if (input.files && input.files.length > 0) {
+            for (let i = 0; i < input.files.length; i++) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.style.maxWidth = "150px";
+                    img.style.maxHeight = "100px";
+                    img.style.borderRadius = "6px";
+                    img.style.border = "1px solid #ddd";
+                    img.style.marginRight = "8px";
+                    img.style.marginBottom = "8px";
+                    container.appendChild(img);
+                }
+                reader.readAsDataURL(input.files[i]);
             }
-            reader.readAsDataURL(input.files[0]);
         }
     }
 

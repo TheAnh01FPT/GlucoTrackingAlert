@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Long> {
@@ -21,4 +23,8 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     // truy cập patient.getUser().getEmail() ngoài transaction open-session
     @Query("SELECT p FROM Patient p JOIN FETCH p.user WHERE p.id = :id")
     Optional<Patient> findByIdWithUser(@Param("id") Long id);
+
+    // Chỉ lấy bệnh nhân đã tải lên ít nhất 1 ảnh (CCCD hoặc BHYT) — dùng cho trang đối soát Admin
+    @Query("SELECT p FROM Patient p WHERE (p.identityCardImage IS NOT NULL AND p.identityCardImage <> '') OR (p.insuranceNumberImage IS NOT NULL AND p.insuranceNumberImage <> '')")
+    Page<Patient> findPatientsWithCardImages(Pageable pageable);
 }

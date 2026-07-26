@@ -30,6 +30,7 @@ public class PatientProfileResponse {
     private String insuranceNumber;
     private String insuranceNumberImage;
     private String insuranceCardStatus;
+    private String avatar;
     private String patientType;
     private Boolean isPregnant;
     private Boolean hypertension;

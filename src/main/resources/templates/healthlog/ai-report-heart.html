@@ -551,8 +551,9 @@
       <div class="dashboard-grid">
         <aside class="profile-sidebar">
           <div class="profile-header">
-            <div class="profile-avatar">
-              <i class="ti ti-heart-broken" style="font-size: 36px; color: var(--primary);"></i>
+            <div class="profile-avatar" style="overflow: hidden; border: 2px solid var(--border);">
+              <img th:if="${patient != null && patient.avatar != null && !patient.avatar.isEmpty()}" th:src="${patient.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px;">
+              <i th:unless="${patient != null && patient.avatar != null && !patient.avatar.isEmpty()}" class="ti ti-heart-broken" style="font-size: 36px; color: var(--primary);"></i>
             </div>
             <h2 class="profile-name" th:text="${patientName != null ? patientName : 'Bệnh nhân'}">Bệnh nhân</h2>
             <span class="profile-type">Theo dõi tim mạch</span>
@@ -583,15 +584,15 @@
             </div>
             <div class="info-item">
               <span class="info-label">Hút thuốc</span>
-              <span class="info-value" th:text="${patient != null && patient.smokingStatus != null ? patient.smokingStatus : '--'}">--</span>
+              <span class="info-value" th:text="${patient != null && patient.smokingStatus != null ? (patient.smokingStatus == 'never smoked' ? 'Chưa từng hút thuốc' : (patient.smokingStatus == 'formerly smoked' ? 'Đã từng hút thuốc' : (patient.smokingStatus == 'smokes' ? 'Đang hút thuốc' : 'Không rõ'))) : '--'}">--</span>
             </div>
             <div class="info-item">
               <span class="info-label">Công việc</span>
-              <span class="info-value" th:text="${patient != null && patient.workType != null ? patient.workType : '--'}">--</span>
+              <span class="info-value" th:text="${patient != null && patient.workType != null ? (patient.workType == 'Private' ? 'Tư nhân' : (patient.workType == 'Self-employed' ? 'Tự kinh doanh' : (patient.workType == 'Govt_job' ? 'Công chức' : (patient.workType == 'children' ? 'Trẻ em' : (patient.workType == 'Never_worked' ? 'Chưa từng đi làm' : 'Chưa cập nhật'))))) : '--'}">--</span>
             </div>
             <div class="info-item">
               <span class="info-label">Nơi ở</span>
-              <span class="info-value" th:text="${patient != null && patient.residenceType != null ? patient.residenceType : '--'}">--</span>
+              <span class="info-value" th:text="${patient != null && patient.residenceType != null ? (patient.residenceType == 'Urban' ? 'Thành thị' : (patient.residenceType == 'Rural' ? 'Nông thôn' : 'Chưa cập nhật')) : '--'}">--</span>
             </div>
           </div>
 

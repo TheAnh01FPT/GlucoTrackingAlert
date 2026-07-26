@@ -25,7 +25,7 @@ public class RegisterRequest {
     @NotBlank(message = "Họ và tên không được để trống")
     @Size(min = 2, max = 50, message = "Họ và tên phải từ 2 đến 50 ký tự")
     @Pattern(
-            regexp = "^[a-zA-ZĐđAÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬEÈÉẺẼẸÊỀẾỂỄỆIÌÍỈĨỊOÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢUÙÚỦŨỤƯỪỨỬỮỰYỲÝỶỸỴaàáảãạăằắẳẵặâầấẩẫậeèéẻẽẹêềếểễệiìíỉĩịoòóỏõọôồốổỗộơờớởỡợuùúủũụưừứửữựyỳýỷỹỵ\\s]+$",
+            regexp = "^[\\p{L}\\s]+$",
             message = "Họ và tên không được chứa số hoặc ký tự đặc biệt"
     )
     private String fullName;
