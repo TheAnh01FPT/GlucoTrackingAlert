@@ -26,14 +26,14 @@ public class PageController {
     private final UserRepository userRepository;
     private final RelativeService relativeService;
     private final DoctorRepository doctorRepository;
-    private final fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository;
+    private final fpt.swp391.GlucoTrackAlert.repository.banner.BannerRepository bannerRepository;
 
     @Autowired
     public PageController(PatientService patientService,
             UserRepository userRepository,
             RelativeService relativeService,
             DoctorRepository doctorRepository,
-            fpt.swp391.GlucoTrackAlert.repository.BannerRepository bannerRepository) {
+            fpt.swp391.GlucoTrackAlert.repository.banner.BannerRepository bannerRepository) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.relativeService = relativeService;

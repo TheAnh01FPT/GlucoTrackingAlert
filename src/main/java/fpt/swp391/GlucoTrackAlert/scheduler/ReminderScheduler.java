@@ -1,8 +1,8 @@
 package fpt.swp391.GlucoTrackAlert.scheduler;
 
-import fpt.swp391.GlucoTrackAlert.model.Duy_HealthReminder;
+import fpt.swp391.GlucoTrackAlert.model.reminder.Duy_HealthReminder;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
-import fpt.swp391.GlucoTrackAlert.repository.Duy_ReminderRepository;
+import fpt.swp391.GlucoTrackAlert.repository.reminder.Duy_ReminderRepository;
 import fpt.swp391.GlucoTrackAlert.repository.patient.PatientRepository;
 import fpt.swp391.GlucoTrackAlert.service.register.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;

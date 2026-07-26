@@ -1,7 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.service;
 
 import fpt.swp391.GlucoTrackAlert.dto.healthlog.DailyHealthLogResponse;
-import fpt.swp391.GlucoTrackAlert.model.Duy_Meal_Logs;
+import fpt.swp391.GlucoTrackAlert.model.meallog.Duy_Meal_Logs;
 import fpt.swp391.GlucoTrackAlert.model.patient.Patient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

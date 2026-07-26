@@ -1,7 +1,7 @@
 package fpt.swp391.GlucoTrackAlert.controller.admin;
 
-import fpt.swp391.GlucoTrackAlert.model.Banner;
-import fpt.swp391.GlucoTrackAlert.repository.BannerRepository;
+import fpt.swp391.GlucoTrackAlert.model.banner.Banner;
+import fpt.swp391.GlucoTrackAlert.repository.banner.BannerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -2,7 +2,7 @@ package fpt.swp391.GlucoTrackAlert.controller.reminder;
 
 import fpt.swp391.GlucoTrackAlert.dto.reminder.Duy_ReminderRequest;
 import fpt.swp391.GlucoTrackAlert.dto.reminder.Duy_ReminderResponse;
-import fpt.swp391.GlucoTrackAlert.service.Duy_ReminderService;
+import fpt.swp391.GlucoTrackAlert.service.reminder.Duy_ReminderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
