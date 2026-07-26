@@ -444,15 +444,16 @@ CREATE TABLE doctor_introductions (
 -- Table: patient_testimonials
 CREATE TABLE patient_testimonials (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  patient_name VARCHAR(150) NOT NULL,
-  avatar_url VARCHAR(255),
-  content TEXT NOT NULL,
-  rating INT,
-  display_order INT,
-  status VARCHAR(30) DEFAULT 'active',
-  created_at DATETIME,
-  updated_at DATETIME
-) COMMENT = 'Lưu đánh giá/cảm nhận của bệnh nhân cũ để hiển thị trên homepage. Đây là nội dung quảng bá công khai, không gắn trực tiếp với dữ liệu y tế nhạy cảm.';
+  patient_id INT NOT NULL COMMENT 'Liên kết tới bảng patients',
+  content TEXT NOT NULL COMMENT 'Nội dung bệnh nhân đánh giá/góp ý',
+  rating INT NULL COMMENT 'Số sao đánh giá (Ví dụ: 1 đến 5)',
+  status VARCHAR(30) NOT NULL DEFAULT 'unread' COMMENT 'Trạng thái đọc của Admin (unread, read)',
+  created_at DATETIME NOT NULL COMMENT 'Thời gian tạo feedback',
+  updated_at DATETIME NULL COMMENT 'Thời gian lần cuối chỉnh sửa feedback',
+
+  -- Khai báo các ràng buộc khóa ngoại
+  CONSTRAINT fk_testimonials_patient_id FOREIGN KEY (patient_id) REFERENCES patients(id)
+) COMMENT = 'Lưu phản hồi/đánh giá của bệnh nhân gửi hệ thống. Không hiển thị công khai ra bên ngoài.';
 
 -- Table: contact_requests
 CREATE TABLE contact_requests (
