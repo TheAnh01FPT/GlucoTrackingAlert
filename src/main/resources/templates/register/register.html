@@ -414,13 +414,16 @@
                     otpMessageBox.innerText = "Mã xác nhận đã gửi đến " + email;
                     startResendCountdown();
                 } else {
+                    let errorMessage = text || "Đăng ký thất bại.";
                     try {
-                        const errData = await response.json();
-                        showError(messageBox, errData.message || "Đăng ký thất bại.");
-                    } catch (err) {
-                        const text = await response.text();
-                        showError(messageBox, text || "Đăng ký thất bại.");
+                        const errData = JSON.parse(text);
+                        if (errData && errData.message) {
+                            errorMessage = errData.message;
+                        }
+                    } catch (e) {
+                        // Keep text as plain message
                     }
+                    showError(messageBox, errorMessage);
                 }
             })
             .catch(() => {
