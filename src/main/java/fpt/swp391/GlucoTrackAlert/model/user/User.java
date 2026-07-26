@@ -3,6 +3,7 @@ package fpt.swp391.GlucoTrackAlert.model.user;
 import fpt.swp391.GlucoTrackAlert.model.role.Role;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
