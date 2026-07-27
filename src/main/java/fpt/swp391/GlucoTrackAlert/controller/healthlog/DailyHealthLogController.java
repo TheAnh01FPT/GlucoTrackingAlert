@@ -715,65 +715,14 @@ public class DailyHealthLogController {
     @GetMapping("/chart")
     public String getChart(@RequestParam(required = false) Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            RedirectAttributes redirectAttributes,
-            Model model) {
-        List<Patient> patients;
-        if (hasRole("ROLE_DOCTOR") && !hasRole("ROLE_ADMIN")) {
-            // Bác sĩ chỉ được thấy/xem bệnh nhân do mình phụ trách, không phải toàn bộ hệ thống.
-            Long currentUserId = getCurrentUserId();
-            Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
-            patients = doctor == null ? Collections.emptyList()
-                    : assignmentRepository.findByDoctorIdAndStatus(doctor.getId(), "active").stream()
-                            .map(fpt.swp391.GlucoTrackAlert.model.doctor.DoctorPatientAssignment::getPatient)
-                            .filter(java.util.Objects::nonNull)
-                            .toList();
-        } else {
-            patients = patientRepository.findAllByStatus("active");
-            if (patients.isEmpty()) {
-                patients = patientRepository.findAll();
-            }
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
+            String redirectUrl = "redirect:/health-logs/doctor-chart";
+            if (userId != null) redirectUrl += "?userId=" + userId;
+            return redirectUrl;
         }
-        model.addAttribute("patients", patients);
-
-        // Non-admin/doctor cannot change which patient's chart they view.
-        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
-            Long cur = getCurrentUserId();
-            if (cur != null) {
-                userId = cur;
-            }
-        }
-
-        Long selectedPatientId = resolvePatientId(userId);
-        if (selectedPatientId == null && !patients.isEmpty()) {
-            selectedPatientId = patients.get(0).getId();
-        }
-
-        // Bác sĩ không được xem chart của bệnh nhân không do mình phụ trách,
-        // kể cả nếu họ tự sửa tham số userId trên URL.
-        if (hasRole("ROLE_DOCTOR") && selectedPatientId != null && !isDoctorAssignedToPatient(selectedPatientId)) {
-            redirectAttributes.addFlashAttribute("error", "Bạn không được phân công cho bệnh nhân này.");
-            return "redirect:/health-logs/doctor-view";
-        }
-
-        LocalDate endDate = to != null ? to : LocalDate.now();
-        LocalDate startDate = from != null ? from : endDate.minusDays(30);
-
-        if (selectedPatientId != null) {
-            List<DailyHealthLogResponse> chartData = dailyHealthLogService.getChartData(selectedPatientId, startDate,
-                    endDate);
-            model.addAttribute("chartData", chartData);
-            model.addAttribute("selectedUserId", selectedPatientId);
-            model.addAttribute("selectedPatientId", selectedPatientId);
-        } else {
-            model.addAttribute("chartData", Collections.emptyList());
-            model.addAttribute("selectedUserId", null);
-            model.addAttribute("selectedPatientId", null);
-        }
-
-        model.addAttribute("from", startDate);
-        model.addAttribute("to", endDate);
-        return "healthlog/chart";
+        Long curUserId = getCurrentUserId();
+        return "redirect:/health-logs/my-chart?userId=" + (curUserId != null ? curUserId : "");
     }
 
     @GetMapping("/my-chart")

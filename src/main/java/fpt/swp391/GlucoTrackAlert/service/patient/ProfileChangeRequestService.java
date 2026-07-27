@@ -10,6 +10,7 @@ public interface ProfileChangeRequestService {
     List<ProfileChangeRequest> getRequestsByPatient(Long patientId);
     Page<ProfileChangeRequest> getRequestsByPatientPaged(Long patientId, int page, int size);
     List<ProfileChangeRequest> getAllRequests();
+    Page<ProfileChangeRequest> getAllRequestsPaged(int page, int size);
     ProfileChangeRequest approveRequest(Long requestId, Long adminUserId);
     ProfileChangeRequest rejectRequest(Long requestId, Long adminUserId, String rejectionReason);
     boolean hasPendingRequest(Long patientId, String fieldName);

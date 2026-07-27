@@ -12,6 +12,9 @@ import fpt.swp391.GlucoTrackAlert.model.healthlog.DailyHealthLog;
 import fpt.swp391.GlucoTrackAlert.model.risk.WeeklyHealthReport;
 import fpt.swp391.GlucoTrackAlert.service.patient.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -102,6 +105,7 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceCardStatus(request.getInsuranceCardStatus() != null ? request.getInsuranceCardStatus() : "UNVERIFIED")
                 .isPregnant(isPregnantVal)
                 .status("active")
+                .avatar(request.getAvatar())
                 .hypertension(request.getHypertension() != null ? request.getHypertension() : false)
                 .heartDisease(request.getHeartDisease() != null ? request.getHeartDisease() : false)
                 .everMarried(request.getEverMarried() != null ? request.getEverMarried() : "No")
@@ -150,6 +154,9 @@ public class PatientServiceImpl implements PatientService {
         if (request.getInsuranceNumberImage() != null && !request.getInsuranceNumberImage().isEmpty()) {
             patient.setInsuranceNumberImage(request.getInsuranceNumberImage());
             patient.setInsuranceCardStatus("UNVERIFIED");
+        }
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            patient.setAvatar(request.getAvatar());
         }
 
         boolean isPregnantVal = false;
@@ -205,6 +212,13 @@ public class PatientServiceImpl implements PatientService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PatientProfileResponse> getAllPatientsPaged(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return patientRepository.findPatientsWithCardImages(pageable).map(this::mapToSimpleResponse);
+    }
+
     private void calculateAgeAndBmi(Patient patient) {
         if (patient.getDateOfBirth() != null) {
             patient.setAge(Period.between(patient.getDateOfBirth(), LocalDate.now()).getYears());
@@ -232,6 +246,41 @@ public class PatientServiceImpl implements PatientService {
             return "pregnant";
         }
         return "adult";
+    }
+
+    /**
+     * Lightweight mapping for list views (card verifications, etc.).
+     * Skips AI model calls for performance.
+     */
+    private PatientProfileResponse mapToSimpleResponse(Patient patient) {
+        return PatientProfileResponse.builder()
+                .id(patient.getId())
+                .userId(patient.getUser() != null ? patient.getUser().getId() : null)
+                .email(patient.getUser() != null ? patient.getUser().getEmail() : null)
+                .fullName(patient.getFullName())
+                .dateOfBirth(patient.getDateOfBirth())
+                .age(patient.getAge())
+                .gender(patient.getGender())
+                .phone(patient.getPhone())
+                .address(patient.getAddress())
+                .heightCm(patient.getHeightCm())
+                .weightKg(patient.getWeightKg())
+                .bmi(patient.getBmi())
+                .status(patient.getStatus())
+                .identityCard(patient.getIdentityCard())
+                .identityCardImage(patient.getIdentityCardImage())
+                .identityCardStatus(patient.getIdentityCardStatus() != null ? patient.getIdentityCardStatus() : "UNVERIFIED")
+                .insuranceNumber(patient.getInsuranceNumber())
+                .insuranceNumberImage(patient.getInsuranceNumberImage())
+                .insuranceCardStatus(patient.getInsuranceCardStatus() != null ? patient.getInsuranceCardStatus() : "UNVERIFIED")
+                .avatar(patient.getAvatar())
+                .patientType(patient.getPatientType())
+                .isPregnant(patient.getIsPregnant())
+                .hypertension(patient.getHypertension())
+                .heartDisease(patient.getHeartDisease())
+                .createdAt(patient.getCreatedAt())
+                .updatedAt(patient.getUpdatedAt())
+                .build();
     }
 
     private PatientProfileResponse mapToResponse(Patient patient) {
@@ -449,6 +498,7 @@ public class PatientServiceImpl implements PatientService {
                 .insuranceNumber(patient.getInsuranceNumber())
                 .insuranceNumberImage(patient.getInsuranceNumberImage())
                 .insuranceCardStatus(patient.getInsuranceCardStatus() != null ? patient.getInsuranceCardStatus() : "UNVERIFIED")
+                .avatar(patient.getAvatar())
                 .patientType(patient.getPatientType())
                 .isPregnant(patient.getIsPregnant())
                 .hypertension(patient.getHypertension())

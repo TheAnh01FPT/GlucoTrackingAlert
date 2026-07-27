@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 @Controller
@@ -48,10 +49,17 @@ public class ProfileChangeRequestController {
     }
 
     @GetMapping("/admin/requests")
-    public String viewAdminRequests(Model model) {
+    public String viewAdminRequests(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            Model model) {
         try {
-            List<ProfileChangeRequest> requests = requestService.getAllRequests();
-            model.addAttribute("requests", requests);
+            Page<ProfileChangeRequest> requestsPage = requestService.getAllRequestsPaged(page, size);
+            model.addAttribute("requests", requestsPage.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", requestsPage.getTotalPages());
+            model.addAttribute("totalElements", requestsPage.getTotalElements());
+            model.addAttribute("pageSize", size);
             return "admin/requests";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi tải danh sách yêu cầu: " + e.getMessage());

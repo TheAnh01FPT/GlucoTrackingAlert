@@ -126,6 +126,11 @@
     <div class="profile-grid">
 
         <div class="info-card">
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary-light); padding-bottom: 15px;">
+                <div style="width: 110px; height: 110px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary-light); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    <img th:src="${profile.avatar != null && !profile.avatar.isEmpty() ? profile.avatar : 'https://res.cloudinary.com/dy1j8lall/image/upload/v1722000000/default-avatar.png'}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+            </div>
             <h2 class="card-title">👤 Thông tin cá nhân</h2>
 
             <div class="detail-item">
@@ -162,11 +167,20 @@
                     <span class="detail-label">Số CCCD</span>
                     <span class="detail-value" th:text="${profile.identityCard != null && !profile.identityCard.isEmpty() ? profile.identityCard : 'Chưa cập nhật'}">Chưa cập nhật</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
-                    <span th:if="${profile.identityCardStatus == 'VERIFIED'}" style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟢 Đã xác minh</span>
-                    <span th:if="${profile.identityCardStatus == 'UNVERIFIED' && profile.identityCardImage != null && !profile.identityCardImage.isEmpty()}" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟡 Chờ đối soát</span>
-                    <span th:if="${profile.identityCardStatus == 'REJECTED'}" style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🔴 Báo sai lệch</span>
-                    <a th:if="${profile.identityCardImage != null && !profile.identityCardImage.isEmpty()}" th:href="${profile.identityCardImage}" target="_blank" style="font-size: 12px; color: #2563eb; text-decoration: underline; font-weight: 500;">📸 Xem ảnh CCCD</a>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span th:if="${profile.identityCardStatus == 'VERIFIED'}" style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟢 Đã xác minh</span>
+                        <span th:if="${profile.identityCardStatus == 'UNVERIFIED' && profile.identityCardImage != null && !profile.identityCardImage.isEmpty()}" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟡 Chờ đối soát</span>
+                        <span th:if="${profile.identityCardStatus == 'REJECTED'}" style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🔴 Báo sai lệch</span>
+                    </div>
+                    <div th:if="${profile.identityCardImage != null && !profile.identityCardImage.isEmpty()}" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+                        <div th:each="imgUrl, iter : ${#strings.arraySplit(profile.identityCardImage, ',')}" style="display: flex; flex-direction: column; align-items: center;">
+                            <a th:href="${imgUrl}" target="_blank">
+                                <img th:src="${imgUrl}" style="width: 70px; height: 50px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" title="Click để xem ảnh CCCD lớn">
+                            </a>
+                            <a th:href="${imgUrl}" target="_blank" style="font-size: 10px; color: #2563eb; margin-top: 2px; text-decoration: underline;" th:text="'Ảnh ' + ${iter.index + 1}">📸 Ảnh 1</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="detail-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
@@ -174,11 +188,20 @@
                     <span class="detail-label">Mã BHYT</span>
                     <span class="detail-value" th:text="${profile.insuranceNumber != null && !profile.insuranceNumber.isEmpty() ? profile.insuranceNumber : 'Chưa cập nhật'}">Chưa cập nhật</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
-                    <span th:if="${profile.insuranceCardStatus == 'VERIFIED'}" style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟢 Đã xác minh</span>
-                    <span th:if="${profile.insuranceCardStatus == 'UNVERIFIED' && profile.insuranceNumberImage != null && !profile.insuranceNumberImage.isEmpty()}" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟡 Chờ đối soát</span>
-                    <span th:if="${profile.insuranceCardStatus == 'REJECTED'}" style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🔴 Báo sai lệch</span>
-                    <a th:if="${profile.insuranceNumberImage != null && !profile.insuranceNumberImage.isEmpty()}" th:href="${profile.insuranceNumberImage}" target="_blank" style="font-size: 12px; color: #2563eb; text-decoration: underline; font-weight: 500;">📸 Xem ảnh BHYT</a>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span th:if="${profile.insuranceCardStatus == 'VERIFIED'}" style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟢 Đã xác minh</span>
+                        <span th:if="${profile.insuranceCardStatus == 'UNVERIFIED' && profile.insuranceNumberImage != null && !profile.insuranceNumberImage.isEmpty()}" style="font-size: 11px; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🟡 Chờ đối soát</span>
+                        <span th:if="${profile.insuranceCardStatus == 'REJECTED'}" style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🔴 Báo sai lệch</span>
+                    </div>
+                    <div th:if="${profile.insuranceNumberImage != null && !profile.insuranceNumberImage.isEmpty()}" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+                        <div th:each="imgUrl, iter : ${#strings.arraySplit(profile.insuranceNumberImage, ',')}" style="display: flex; flex-direction: column; align-items: center;">
+                            <a th:href="${imgUrl}" target="_blank">
+                                <img th:src="${imgUrl}" style="width: 70px; height: 50px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;" title="Click để xem ảnh BHYT lớn">
+                            </a>
+                            <a th:href="${imgUrl}" target="_blank" style="font-size: 10px; color: #2563eb; margin-top: 2px; text-decoration: underline;" th:text="'Ảnh ' + ${iter.index + 1}">📸 Ảnh 1</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="detail-item">

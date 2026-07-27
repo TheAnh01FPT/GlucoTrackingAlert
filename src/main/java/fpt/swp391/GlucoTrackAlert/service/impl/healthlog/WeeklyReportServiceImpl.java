@@ -119,16 +119,15 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
 
         // Tính điểm hypertension liên tục 0.0 - 1.0 theo logs và tiền sử
         double htnScore;
-        if (!logs.isEmpty() && logs.size() >= 4) {
-            // đủ dữ liệu tuần -> ưu tiên phản ánh mức kiểm soát thực tế
-            htnScore = (double) highBpDays / logs.size();
+        if (!logs.isEmpty()) {
+            double logRatio = (double) highBpDays / logs.size();
             if (Boolean.TRUE.equals(patient.getHypertension())) {
-                // có tiền sử THA -> đặt sàn tối thiểu
-                htnScore = Math.max(htnScore, 0.3);
+                htnScore = Math.max(logRatio, 0.3);
+            } else {
+                htnScore = logRatio;
             }
         } else {
-            // không đủ log -> dựa vào tiền sử nhưng giảm độ tin cậy (0.6 thay vì 1.0)
-            htnScore = Boolean.TRUE.equals(patient.getHypertension()) ? 0.6 : 0.0;
+            htnScore = Boolean.TRUE.equals(patient.getHypertension()) ? 0.5 : 0.0;
         }
 
         double age = patient.getAge() != null ? patient.getAge().doubleValue() : 50.0;
@@ -393,6 +392,9 @@ public class WeeklyReportServiceImpl implements WeeklyReportService {
                 Double riskPercentage = null;
                 if (aiStrokeResult.get("risk_percentage") != null) {
                     riskPercentage = Double.parseDouble(aiStrokeResult.get("risk_percentage").toString());
+                    if (riskPercentage != null && riskPercentage > 0 && riskPercentage <= 1.0) {
+                        riskPercentage = riskPercentage * 100.0;
+                    }
                 }
                 String rawRiskLevel = (String) aiStrokeResult.get("risk_level");
 

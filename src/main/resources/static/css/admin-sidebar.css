@@ -288,3 +288,47 @@ body.admin-layout-body {
     font-weight: 700 !important;
     color: var(--primary-dark) !important;
 }
+
+/* --- Back to Landing Page Button --- */
+.sidebar-back-home {
+    padding: 12px 16px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-sizing: border-box !important;
+}
+
+.btn-back-home {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding: 10px 14px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    font-family: var(--font) !important;
+    transition: all 0.25s ease-in-out !important;
+    box-sizing: border-box !important;
+    letter-spacing: 0.2px !important;
+}
+
+.btn-back-home:hover {
+    background: rgba(245, 158, 11, 0.25) !important;
+    border-color: rgba(245, 158, 11, 0.6) !important;
+    color: #fbbf24 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+}
+
+.btn-back-home svg {
+    flex-shrink: 0 !important;
+    transition: transform 0.25s ease-in-out !important;
+}
+
+.btn-back-home:hover svg {
+    transform: scale(1.15) !important;
+}
