@@ -249,13 +249,18 @@ public class UserServiceImpl implements UserService {
             doctorId = doctor.getId();
         }
 
+        boolean isFirstLogin = (user.getLastLoginAt() == null);
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+
         return LoginResponse.builder()
                 .token(token)
                 .email(user.getEmail())
                 .role(roleName)
                 .doctorId(doctorId)
                 .requiresOtp(false)
-                .message("Đăng nhập thành công.")
+                .mustChangePassword(isFirstLogin)
+                .message(isFirstLogin ? "Đăng nhập thành công. Vui lòng đổi mật khẩu ở lần đăng nhập đầu tiên." : "Đăng nhập thành công.")
                 .build();
     }
 
