@@ -232,7 +232,7 @@
                 <h3 class="patient-name" th:text="${patient.fullName}">Bệnh nhân</h3>
                 <div class="patient-meta">
                     <span><i class="bi bi-calendar me-1"></i>Tuổi: <strong th:text="${patient.age != null ? patient.age : '--'}">--</strong></span>
-                    <span><i class="bi bi-gender-ambiguous me-1"></i>Giới tính: <strong th:text="${patient.gender != null ? (patient.gender.equalsIgnoreCase('male') ? 'Nam' : 'Nữ') : '--'}">--</strong></span>
+                    <span><i class="bi bi-gender-ambiguous me-1"></i>Giới tính: <strong th:text="${patient.gender != null ? ((patient.gender.equalsIgnoreCase('male') || patient.gender.equalsIgnoreCase('nam')) ? 'Nam' : 'Nữ') : '--'}">--</strong></span>
                     <span>
                         <i class="bi bi-person-badge me-1"></i>Loại bệnh nhân: 
                         <span class="badge-type" th:text="${patient.patientType == 'adult' ? '🧑 Người trưởng thành' : (patient.patientType == 'elderly' ? '👴 Người cao tuổi' : (patient.patientType == 'pregnant' ? '🤰 Phụ nữ có thai' : (patient.patientType == 'child' ? '👶 Trẻ em' : 'Chưa phân loại')))}"></span>

@@ -301,8 +301,6 @@ public class DailyHealthLogServiceImpl implements DailyHealthLogService {
             jdbcTemplate.update("DELETE FROM ai_analysis_logs WHERE daily_health_log_id = ?", id);
             jdbcTemplate.update("DELETE FROM risk_warnings WHERE daily_health_log_id = ?", id);
             jdbcTemplate.update("DELETE FROM risk_assessments WHERE daily_health_log_id = ?", id);
-            jdbcTemplate.update("DELETE FROM meal_logs WHERE daily_health_log_id = ?", id);
-            jdbcTemplate.update("UPDATE health_baselines SET source_health_log_id = NULL WHERE source_health_log_id = ?", id);
 
             dailyHealthLogRepository.delete(log);
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
