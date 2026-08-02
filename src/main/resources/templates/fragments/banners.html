@@ -26,15 +26,15 @@
                 <div class="hero-section" style="background-color: var(--primary-light);">
                     <div class="container">
                         <div class="row align-items-center">
-                            <div class="col-lg-6">
+                            <div class="col-lg-5">
                                 <h1 class="display-5 fw-bold text-success mb-3" th:text="${banner.title}">Tiêu đề</h1>
                                 <p class="lead mb-4" th:text="${banner.subtitle}">Phụ đề</p>
                                 <div class="d-flex gap-3" th:if="${banner.redirectUrl != null && !banner.redirectUrl.isEmpty()}">
                                     <a th:href="${banner.redirectUrl}" class="btn btn-primary-custom btn-lg">Tìm hiểu thêm</a>
                                 </div>
                             </div>
-                            <div class="col-lg-6 d-none d-lg-block text-center">
-                                <img th:src="${banner.imageUrl}" alt="Banner Image" class="img-fluid rounded shadow" style="max-height: 350px; object-fit: cover;">
+                            <div class="col-lg-7 d-none d-lg-block text-center">
+                                <img th:src="${banner.imageUrl}" alt="Banner Image" class="img-fluid rounded-3 shadow-lg w-100" style="max-height: 480px; object-fit: cover;">
                             </div>
                         </div>
                     </div>
