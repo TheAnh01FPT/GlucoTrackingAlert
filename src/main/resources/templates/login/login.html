@@ -430,6 +430,22 @@
                         return;
                     }
 
+                    if (data.mustChangePassword) {
+                        showMessage('success', data.message || 'Đăng nhập lần đầu thành công! Vui lòng đổi mật khẩu mới để bảo mật tài khoản.');
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('email', data.email);
+                        localStorage.setItem('role', data.role);
+                        if (data.doctorId) localStorage.setItem('doctorId', data.doctorId);
+                        document.cookie = `jwt=${data.token}; path=/; max-age=86400; SameSite=Strict`;
+
+                        setTimeout(() => {
+                            if (data.role === 'PATIENT') window.location.href = '/patient/profile';
+                            else if (data.role === 'DOCTOR') window.location.href = '/doctor/settings';
+                            else window.location.href = '/admin/dashboard';
+                        }, 1500);
+                        return;
+                    }
+
                     showMessage('success', 'Đăng nhập thành công! Đang chuyển hướng...');
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('email', data.email);

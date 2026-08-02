@@ -17,6 +17,12 @@ public class UserAdminRequest {
     @Size(max = 150, message = "Email không vượt quá 150 ký tự")
     private String email;
 
+    @Size(max = 100, message = "Họ và tên không vượt quá 100 ký tự")
+    private String fullName;
+
+    @Size(max = 20, message = "Số điện thoại không vượt quá 20 ký tự")
+    private String phone;
+
     // Khi tạo mới bắt buộc nhập, khi cập nhật nếu để trống nghĩa là không thay đổi mật khẩu cũ
     private String password;
 

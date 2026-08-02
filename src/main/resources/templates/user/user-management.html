@@ -167,12 +167,27 @@
                     xác thực
                 </td>
                 <td>
-                    <button type="button"
-                            class="btn-sm btn-warning reset-password-btn"
-                            th:data-user-id="${user.id}"
-                            th:data-email="${user.email}">
-                        🔑 Reset
-                    </button>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button type="button"
+                                class="btn-sm btn-info view-detail-btn"
+                                style="background: #0284c7; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;"
+                                th:data-user-id="${user.id}"
+                                th:data-email="${user.email}"
+                                th:data-fullname="${user.fullName != null ? user.fullName : 'Chưa cập nhật'}"
+                                th:data-phone="${user.phone != null ? user.phone : 'Chưa cập nhật'}"
+                                th:data-role="${user.role != null ? user.role.name : 'PATIENT'}"
+                                th:data-status="${user.status}"
+                                th:data-verified="${user.emailVerified ? 'Đã xác thực ✔' : 'Chưa xác thực ❌'}"
+                                th:data-created="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">
+                            👁️ Chi tiết
+                        </button>
+                        <button type="button"
+                                class="btn-sm btn-warning reset-password-btn"
+                                th:data-user-id="${user.id}"
+                                th:data-email="${user.email}">
+                            🔑 Reset
+                        </button>
+                    </div>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(users)}">
@@ -278,14 +293,26 @@
                     <div>
                         <label for="newPatientEmail"
                                style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Email
-                            người dùng</label>
+                            người dùng *</label>
                         <input id="newPatientEmail" type="email" required placeholder="example@gmail.com"
+                               class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
+                    </div>
+                    <div>
+                        <label for="newPatientFullName"
+                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Họ và tên</label>
+                        <input id="newPatientFullName" type="text" placeholder="Nguyễn Văn A"
+                               class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
+                    </div>
+                    <div>
+                        <label for="newPatientPhone"
+                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Số điện thoại</label>
+                        <input id="newPatientPhone" type="text" placeholder="0912345678"
                                class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
                     </div>
                     <div>
                         <label for="newPatientPassword"
                                style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Mật
-                            khẩu khởi tạo</label>
+                            khẩu khởi tạo *</label>
                         <div style="position: relative;">
                             <input id="newPatientPassword" type="password" required placeholder="Nhập mật khẩu"
                                    class="form-control"
@@ -297,6 +324,14 @@
                             </button>
                         </div>
                     </div>
+                    <div>
+                        <label for="newPatientStatus"
+                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Trạng thái ban đầu (Initial Status)</label>
+                        <select id="newPatientStatus" class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
+                            <option value="active" selected>Active (Kích hoạt ngay)</option>
+                            <option value="pending_verification">Pending (Chờ xác minh)</option>
+                        </select>
+                    </div>
                     <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
                         <button type="button" class="cancel-edit" onclick="closeCreatePatientModal()"
                                 style="background: none; border: none; padding: 10px 15px;">Hủy
@@ -305,6 +340,56 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal View Patient Detail -->
+    <div id="patientDetailModal"
+         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+        <div style="background: #fff; padding: 24px; border-radius: 14px; width: 480px; max-width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+            <span onclick="closePatientDetailModal()"
+                  style="position: absolute; top: 14px; right: 18px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
+                  title="Đóng">&times;</span>
+            <h3 style="margin: 0 0 18px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                👁️ Chi Tiết Tài Khoản Bệnh Nhân
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: #334155;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Mã ID Tài Khoản:</span>
+                    <span id="detailUserId" style="font-weight: 700;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Họ và Tên:</span>
+                    <span id="detailUserFullName" style="font-weight: 700; color: #0f172a;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Email Đăng Nhập:</span>
+                    <span id="detailUserEmail" style="font-weight: 700; color: #2563eb;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Số Điện Thoại:</span>
+                    <span id="detailUserPhone"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Vai Trò (Role):</span>
+                    <span id="detailUserRole" class="badge badge-patient" style="font-weight: 700;">PATIENT</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Trạng Thái Tài Khoản:</span>
+                    <span id="detailUserStatus"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Xác Thực Email:</span>
+                    <span id="detailUserVerified"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 8px;">
+                    <span style="font-weight: 600; color: #64748b;">Ngày Tạo Tài Khoản:</span>
+                    <span id="detailUserCreated"></span>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+                <button type="button" class="btn btn-blue" onclick="closePatientDetailModal()" style="padding: 8px 20px;">Đóng</button>
+            </div>
         </div>
     </div>
 
@@ -525,11 +610,38 @@
             event.preventDefault();
             hideModalError('createPatientModalError');
             const email = document.getElementById('newPatientEmail').value.trim();
+            const fullNameInput = document.getElementById('newPatientFullName');
+            const phoneInput = document.getElementById('newPatientPhone');
+            const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+            const phone = phoneInput ? phoneInput.value.trim() : '';
             const password = document.getElementById('newPatientPassword').value.trim();
-            const status = 'active';
+            const statusSelect = document.getElementById('newPatientStatus');
+            const status = statusSelect ? statusSelect.value : 'active';
+            const isVerified = status === 'active';
 
             if (!email || !password) {
                 showModalError('createPatientModalError', 'Vui lòng nhập đầy đủ Email và mật khẩu khởi tạo.');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showModalError('createPatientModalError', 'Định dạng Email không hợp lệ.');
+                return;
+            }
+
+            if (phone && !/^[0-9]{10,11}$/.test(phone)) {
+                showModalError('createPatientModalError', 'Số điện thoại không hợp lệ (phải từ 10 đến 11 chữ số).');
+                return;
+            }
+
+            if (password.length < 6 || password.length > 32) {
+                showModalError('createPatientModalError', 'Mật khẩu khởi tạo phải có độ dài từ 6 đến 32 ký tự.');
+                return;
+            }
+
+            if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password)) {
+                showModalError('createPatientModalError', 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số.');
                 return;
             }
 
@@ -541,9 +653,11 @@
                     },
                     body: JSON.stringify({
                         email: email,
+                        fullName: fullName,
+                        phone: phone,
                         password: password,
                         status: status,
-                        emailVerified: true,
+                        emailVerified: isVerified,
                         roleName: 'PATIENT'
                     })
                 });
@@ -568,6 +682,40 @@
             } catch (error) {
                 showModalError('createPatientModalError', error.message || 'Không thể tạo tài khoản bệnh nhân mới.');
             }
+        });
+
+        function openPatientDetailModal(data) {
+            document.getElementById('detailUserId').textContent = '#' + data.userId;
+            document.getElementById('detailUserFullName').textContent = data.fullname;
+            document.getElementById('detailUserEmail').textContent = data.email;
+            document.getElementById('detailUserPhone').textContent = data.phone;
+            document.getElementById('detailUserRole').textContent = data.role;
+            document.getElementById('detailUserStatus').textContent = statusText(data.status);
+            document.getElementById('detailUserVerified').textContent = data.verified;
+            document.getElementById('detailUserCreated').textContent = data.created;
+            
+            document.body.classList.add('modal-open');
+            document.getElementById('patientDetailModal').style.display = 'flex';
+        }
+
+        function closePatientDetailModal() {
+            document.body.classList.remove('modal-open');
+            document.getElementById('patientDetailModal').style.display = 'none';
+        }
+
+        document.querySelectorAll('.view-detail-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                openPatientDetailModal({
+                    userId: this.dataset.userId,
+                    email: this.dataset.email,
+                    fullname: this.dataset.fullname,
+                    phone: this.dataset.phone,
+                    role: this.dataset.role,
+                    status: this.dataset.status,
+                    verified: this.dataset.verified,
+                    created: this.dataset.created
+                });
+            });
         });
 
         document.querySelectorAll('.status-select').forEach(select => {
