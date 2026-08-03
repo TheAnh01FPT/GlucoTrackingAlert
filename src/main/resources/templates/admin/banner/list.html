@@ -114,68 +114,71 @@
 
 <!-- ==================== CẤU TRÚC MODAL THÊM / SỬA BANNER ==================== -->
 <div class="modal fade" id="bannerModal" tabindex="-1" aria-labelledby="bannerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="bannerModalLabel" style="font-weight: 700; color: #1e293b;">🖼️ Cấu Hình
-                    Banner</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered modal-xl" style="max-width: 1100px; width: 95%;">
+        <div class="modal-content" style="border-radius: 14px; border: none; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); overflow: hidden;">
+            <div class="modal-header px-4 py-3" style="background: linear-gradient(135deg, #1a6b5a, #134d40); color: #ffffff;">
+                <h5 class="modal-title" id="bannerModalLabel" style="font-weight: 700; color: #ffffff; font-size: 1.25rem;">🖼️ Cấu Hình Banner</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form th:action="@{/admin/banners/save}" method="POST" enctype="multipart/form-data" id="bannerForm">
-                <div class="modal-body px-4">
+                <div class="modal-body p-4">
                     <input type="hidden" name="id" id="bannerId">
-
-                    <div class="mb-3">
-                        <label class="form-label">Tiêu đề chính:</label>
-                        <input type="text" name="title" id="bannerTitle" class="form-control" maxlength="150" required
-                               placeholder="Nhập tiêu đề banner...">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Phụ đề / Mô tả ngắn:</label>
-                        <textarea name="subtitle" id="bannerSubtitle" class="form-control" rows="3" maxlength="500"
-                                  placeholder="Nhập mô tả chi tiết..."></textarea>
-                    </div>
 
                     <div class="row">
                         <div class="col-md-8 mb-3">
-                            <label class="form-label">Đường dẫn khi click (Redirect URL):</label>
-                            <input type="text" name="redirectUrl" id="bannerRedirectUrl" class="form-control"
-                                   maxlength="2048" placeholder="https://example.com">
+                            <label class="form-label fw-bold" style="color: #334155;">Tiêu đề chính <span class="text-danger">*</span>:</label>
+                            <input type="text" name="title" id="bannerTitle" class="form-control form-control-lg" maxlength="150" required
+                                   placeholder="Nhập tiêu đề banner..." style="font-size: 15px; border-radius: 8px;">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Thứ tự hiển thị:</label>
-                            <input type="number" name="displayOrder" id="bannerDisplayOrder" class="form-control"
-                                   min="1" max="9999" required>
+                            <label class="form-label fw-bold" style="color: #334155;">Thứ tự hiển thị <span class="text-danger">*</span>:</label>
+                            <input type="number" name="displayOrder" id="bannerDisplayOrder" class="form-control form-control-lg"
+                                   min="1" max="9999" required style="font-size: 15px; border-radius: 8px;">
                         </div>
-                    </div>
-
-                    <div class="mb-3 form-check mt-2">
-                        <input type="checkbox" class="form-check-input" id="bannerStatus" name="status" value="true">
-                        <label class="form-check-label font-weight-500" for="bannerStatus" style="font-size: 13px;">Kích
-                            hoạt hiển thị (Active)</label>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" id="uploadLabel">Tải ảnh Banner:</label>
-                        <input type="file" name="imageFile" id="bannerImageFile" class="form-control"
-                               accept=".jpg,.jpeg,.png,.webp">
+                        <label class="form-label fw-bold" style="color: #334155;">Phụ đề / Mô tả ngắn:</label>
+                        <textarea name="subtitle" id="bannerSubtitle" class="form-control" rows="3" maxlength="500"
+                                  placeholder="Nhập mô tả chi tiết nội dung thông điệp banner..." style="font-size: 14px; border-radius: 8px;"></textarea>
+                    </div>
 
-                        <div id="currentImageWrapper" class="mt-3" style="display: none;">
-                            <p style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Ảnh hiện tại:</p>
-                            <img src="" id="previewImage" alt="Current Banner"
-                                 style="max-height: 100px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <div class="row align-items-center">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label fw-bold" style="color: #334155;">Đường dẫn chuyển hướng (Redirect URL):</label>
+                            <input type="text" name="redirectUrl" id="bannerRedirectUrl" class="form-control"
+                                   maxlength="2048" placeholder="https://example.com/khuyen-mai" style="font-size: 14px; border-radius: 8px;">
+                        </div>
+                        <div class="col-md-4 mb-3 pt-md-3">
+                            <div class="form-check p-2 rounded border" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">
+                                <input type="checkbox" class="form-check-input ms-1" id="bannerStatus" name="status" value="true" style="transform: scale(1.2); cursor: pointer;">
+                                <label class="form-check-label ms-2 fw-semibold" for="bannerStatus" style="font-size: 14px; cursor: pointer; color: #1e293b;">
+                                    Kích hoạt hiển thị (Active)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" id="uploadLabel" style="color: #334155;">Tải ảnh Banner mới (Khuyên dùng tỉ lệ 16:9 hoặc 21:9):</label>
+                        <input type="file" name="imageFile" id="bannerImageFile" class="form-control form-control-lg"
+                               accept=".jpg,.jpeg,.png,.webp" style="font-size: 14px; border-radius: 8px;">
+
+                        <div id="currentImageWrapper" class="mt-3 p-3 border rounded bg-light" style="display: none;">
+                            <p class="fw-bold mb-2" style="font-size: 13px; color: #475569;">🖼️ Xem trước ảnh hiện tại:</p>
+                            <div class="text-center bg-dark p-2 rounded" style="max-height: 240px; overflow: hidden; display: inline-block;">
+                                <img src="" id="previewImage" alt="Current Banner"
+                                     style="max-height: 220px; max-width: 100%; object-fit: contain; border-radius: 6px;">
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light"
-                     style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                            style="font-size: 13px; font-weight: 600;">Hủy Bỏ
+                <div class="modal-footer bg-light px-4 py-3" style="border-top: 1px solid #e2e8f0;">
+                    <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal"
+                            style="font-size: 14px; font-weight: 600; border-radius: 8px;">Hủy Bỏ
                     </button>
-                    <button type="submit" class="btn btn-primary"
-                            style="background-color: #1a6b5a; border: none; font-size: 13px; font-weight: 600;">💾 Lưu
-                        Banner
+                    <button type="submit" class="btn btn-primary px-4 py-2"
+                            style="background-color: #1a6b5a; border: none; font-size: 14px; font-weight: 600; border-radius: 8px;">💾 Lưu Banner
                     </button>
                 </div>
             </form>
