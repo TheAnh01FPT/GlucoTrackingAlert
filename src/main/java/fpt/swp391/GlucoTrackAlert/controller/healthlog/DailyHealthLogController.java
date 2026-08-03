@@ -984,9 +984,9 @@ public class DailyHealthLogController {
             return "redirect:/login";
         }
 
-        boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
+        boolean isDoctorCaller = hasRole("ROLE_DOCTOR");
 
-        if (!isDoctorOrAdminCaller) {
+        if (!isDoctorCaller) {
             patientId = resolvePatientId(curUserId);
         } else {
             if (patientId == null && userId != null) {
@@ -1008,7 +1008,7 @@ public class DailyHealthLogController {
             return "redirect:/";
         }
 
-        boolean isDoctorView = isDoctorOrAdminCaller
+        boolean isDoctorView = isDoctorCaller
                 && userId != null
                 && !userId.equals(curUserId);
 
