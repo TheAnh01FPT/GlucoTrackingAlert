@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${isNew ? 'Khởi tạo hồ sơ bệnh nhân' : 'Chỉnh sửa hồ sơ bệnh nhân'}">Cập nhật hồ sơ | GlucoTrack</title>
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
-<body>
+<body class="patient-layout-body">
+
+<div th:replace="~{fragments/layout :: patientSidebar('profile')}"></div>
 
 <div class="profile-wrapper">
     <div class="profile-header">

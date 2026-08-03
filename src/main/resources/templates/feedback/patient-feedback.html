@@ -264,9 +264,41 @@
         .back-link:hover {
             color: #059669;
         }
+
+        /* Patient Layout Body Styles (handles sidebar offset) */
+        body.patient-layout-body {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: var(--bg-primary) !important;
+            min-height: 100vh !important;
+        }
+        
+        .container {
+            margin-left: 270px !important; /* Sidebar width (250px) + 20px gap */
+            margin-right: 20px !important;
+            margin-top: 2rem !important;
+            margin-bottom: 2rem !important;
+            padding: 2rem !important;
+            box-sizing: border-box !important;
+            max-width: calc(100% - 290px) !important; /* Ensure it stays within bounds */
+        }
+
+        @media (max-width: 992px) {
+            body.patient-layout-body .container {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                max-width: 100% !important;
+                padding: 1rem !important;
+            }
+        }
     </style>
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
-<body>
+<body class="patient-layout-body">
+
+<div th:replace="~{fragments/layout :: patientSidebar('feedbacks')}"></div>
+
 <div class="container">
     <h2><i class="fa-solid fa-comments text-emerald-500"></i> Gửi Ý Kiến Phản Hồi / Đánh Giá</h2>
 

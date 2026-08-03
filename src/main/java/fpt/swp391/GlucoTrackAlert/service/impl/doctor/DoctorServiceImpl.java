@@ -181,6 +181,7 @@ public class DoctorServiceImpl implements DoctorService {
                     practiceLicense, practiceLicenseImageUrl);
             doctor.setPendingVerificationJson(json);
             // status giữ nguyên "active" — bác sĩ vẫn hành nghề bình thường
+            notifyAdminsNewVerification(doctor, true);
         } else if (hasNewImage) {
             // ── Case 1: chưa từng active, áp thẳng như cũ ──
             if (nationalId != null && !nationalId.isBlank()) {
@@ -196,11 +197,33 @@ public class DoctorServiceImpl implements DoctorService {
                 doctor.setPracticeLicenseImageUrl(practiceLicenseImageUrl);
             }
             doctor.setStatus("pending_approval");
+            notifyAdminsNewVerification(doctor, false);
         }
         // Nếu chỉ upload avatar (không có ảnh CCCD/chứng chỉ mới) thì không đụng gì
         // tới status/staging cả — đúng như comment gốc "không bắt duyệt lại".
 
         return DoctorResponse.from(doctorRepository.save(doctor));
+    }
+
+    // ── Gửi email cho tất cả Admin khi có hồ sơ verification mới cần duyệt ─────
+    // isResubmit = true: bác sĩ đang active nộp lại hồ sơ (staging)
+    // isResubmit = false: bác sĩ nộp lần đầu (pending_approval)
+    private void notifyAdminsNewVerification(Doctor doctor, boolean isResubmit) {
+        List<User> admins = userRepository.findByRole_Name("ADMIN");
+        String subject = isResubmit
+                ? "[GlucoTrackAlert] Bác sĩ resubmit hồ sơ xác minh"
+                : "[GlucoTrackAlert] Có hồ sơ bác sĩ mới chờ duyệt";
+        String body = "Xin chào Admin,\n\n"
+                + "Bác sĩ " + doctor.getFullName() + " ("
+                + doctor.getUser().getEmail() + ") "
+                + (isResubmit
+                    ? "vừa nộp lại hồ sơ xác minh (đang active, chờ duyệt bản cập nhật)."
+                    : "vừa nộp hồ sơ xác minh lần đầu, đang chờ duyệt.")
+                + "\nVui lòng vào mục Doctor Verification để xem chi tiết.\n\n"
+                + "Trân trọng,\nGlucoTrackAlert";
+        for (User admin : admins) {
+            emailService.sendSimpleMessageAsync(admin.getEmail(), subject, body);
+        }
     }
 
     /**

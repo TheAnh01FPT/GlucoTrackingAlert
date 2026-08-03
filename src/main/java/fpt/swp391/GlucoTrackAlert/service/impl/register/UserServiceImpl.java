@@ -249,7 +249,6 @@ public class UserServiceImpl implements UserService {
             doctorId = doctor.getId();
         }
 
-        boolean isFirstLogin = (user.getLastLoginAt() == null);
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
@@ -259,8 +258,8 @@ public class UserServiceImpl implements UserService {
                 .role(roleName)
                 .doctorId(doctorId)
                 .requiresOtp(false)
-                .mustChangePassword(isFirstLogin)
-                .message(isFirstLogin ? "Đăng nhập thành công. Vui lòng đổi mật khẩu ở lần đăng nhập đầu tiên." : "Đăng nhập thành công.")
+                .mustChangePassword(false)
+                .message("Đăng nhập thành công.")
                 .build();
     }
 

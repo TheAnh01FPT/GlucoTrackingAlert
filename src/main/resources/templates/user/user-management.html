@@ -281,62 +281,71 @@
     </div>
 
     <div id="createPatientModal"
-         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
-        <div style="background: #fff; padding: 24px; border-radius: 14px; width: 460px; max-width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box;">
+        <div style="background: #fff; padding: 44px 60px; border-radius: 20px; width: 90vw; max-width: 1400px; min-width: 650px; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.3); position: relative;">
             <span onclick="closeCreatePatientModal()"
-                  style="position: absolute; top: 14px; right: 18px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
+                  style="position: absolute; top: 24px; right: 32px; font-size: 32px; cursor: pointer; color: #64748b; line-height: 1;"
                   title="Đóng">&times;</span>
-            <h3 style="margin: 0 0 18px; color: #0f172a;">Thêm Tài Khoản Bệnh Nhân Mới</h3>
-            <div id="createPatientModalError" class="alert-error" style="display: none; margin-bottom: 14px; font-size: 13px; padding: 10px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;"></div>
+            <h3 style="margin: 0 0 28px; color: #0f172a; font-size: 24px; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                ➕ Thêm Tài Khoản Bệnh Nhân Mới
+            </h3>
+            <div id="createPatientModalError" class="alert-error" style="display: none; margin-bottom: 24px; font-size: 15px; padding: 14px 20px; border-radius: 10px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;"></div>
             <form id="createPatientForm" novalidate>
-                <div style="display: flex; flex-direction: column; gap: 14px;">
-                    <div>
-                        <label for="newPatientEmail"
-                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Email
-                            người dùng *</label>
-                        <input id="newPatientEmail" type="email" required placeholder="example@gmail.com"
-                               class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+                        <div>
+                            <label for="newPatientEmail"
+                                   style="display: block; font-size: 14.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">Email
+                                người dùng *</label>
+                            <input id="newPatientEmail" type="email" required placeholder="example@gmail.com"
+                                   class="form-control" style="width: 100%; box-sizing: border-box; height: 48px; font-size: 15px; padding: 0 16px;">
+                        </div>
+                        <div>
+                            <label for="newPatientFullName"
+                                   style="display: block; font-size: 14.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">Họ và tên</label>
+                            <input id="newPatientFullName" type="text" placeholder="Nguyễn Văn A"
+                                   class="form-control" style="width: 100%; box-sizing: border-box; height: 48px; font-size: 15px; padding: 0 16px;">
+                        </div>
                     </div>
-                    <div>
-                        <label for="newPatientFullName"
-                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Họ và tên</label>
-                        <input id="newPatientFullName" type="text" placeholder="Nguyễn Văn A"
-                               class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+                        <div>
+                            <label for="newPatientPhone"
+                                   style="display: block; font-size: 14.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">Số điện thoại</label>
+                            <input id="newPatientPhone" type="text" placeholder="0912345678"
+                                   class="form-control" style="width: 100%; box-sizing: border-box; height: 48px; font-size: 15px; padding: 0 16px;">
+                        </div>
+                        <div>
+                            <label for="newPatientStatus"
+                                   style="display: block; font-size: 14.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">Trạng thái ban đầu</label>
+                            <select id="newPatientStatus" class="form-control" style="width: 100%; box-sizing: border-box; height: 48px; font-size: 15px; padding: 0 16px;">
+                                <option value="active" selected>Active (Kích hoạt ngay)</option>
+                                <option value="pending_verification">Pending (Chờ xác minh)</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label for="newPatientPhone"
-                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Số điện thoại</label>
-                        <input id="newPatientPhone" type="text" placeholder="0912345678"
-                               class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
-                    </div>
+
                     <div>
                         <label for="newPatientPassword"
-                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Mật
+                               style="display: block; font-size: 14.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">Mật
                             khẩu khởi tạo *</label>
                         <div style="position: relative;">
-                            <input id="newPatientPassword" type="password" required placeholder="Nhập mật khẩu"
+                            <input id="newPatientPassword" type="password" required placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
                                    class="form-control"
-                                   style="width: 100%; box-sizing: border-box; height: 42px; padding-right: 44px;">
+                                   style="width: 100%; box-sizing: border-box; height: 48px; font-size: 15px; padding-left: 16px; padding-right: 52px;">
                             <button type="button" id="toggleNewPatientPassword"
                                     onclick="togglePasswordVisibility('newPatientPassword', this)"
-                                    style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer; font-size: 16px;">
+                                    style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer; font-size: 20px;">
                                 👁️
                             </button>
                         </div>
                     </div>
-                    <div>
-                        <label for="newPatientStatus"
-                               style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Trạng thái ban đầu (Initial Status)</label>
-                        <select id="newPatientStatus" class="form-control" style="width: 100%; box-sizing: border-box; height: 42px;">
-                            <option value="active" selected>Active (Kích hoạt ngay)</option>
-                            <option value="pending_verification">Pending (Chờ xác minh)</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+
+                    <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 16px; padding-top: 22px; border-top: 1px solid #f1f5f9;">
                         <button type="button" class="cancel-edit" onclick="closeCreatePatientModal()"
-                                style="background: none; border: none; padding: 10px 15px;">Hủy
+                                style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 28px; font-size: 15px; font-weight: 600; color: #475569; cursor: pointer;">Hủy
                         </button>
-                        <button type="submit" class="btn btn-blue" style="padding: 10px 20px;">Tạo Tài Khoản</button>
+                        <button type="submit" class="btn btn-blue" style="padding: 12px 36px; font-size: 15px; font-weight: 600; border-radius: 12px;">💾 Tạo Tài Khoản</button>
                     </div>
                 </div>
             </form>

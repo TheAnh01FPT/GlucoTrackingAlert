@@ -680,20 +680,19 @@
         padding: 0.35rem 0;
       }
     }
+
+
+    /* Patient layout background override */
+    body.patient-layout-body {
+        background-color: var(--bg) !important;
+    }
   </style>
+  <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
 
-<body>
-  <header class="navbar">
-    <a th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
+<body class="patient-layout-body">
 
-    <nav class="navbar-menu">
-      <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo
-        Cáo AI</a>
-      <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
-      <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
-    </nav>
-  </header>
+  <div th:replace="~{fragments/layout :: patientSidebar('ai-report')}"></div>
 
   <main class="main-container">
     <a class="btn-back" th:href="@{/health-logs/ai-report}">← Quay lại Dashboard AI</a>

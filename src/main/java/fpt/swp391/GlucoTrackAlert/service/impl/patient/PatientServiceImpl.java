@@ -53,7 +53,7 @@ public class PatientServiceImpl implements PatientService {
     public PatientProfileResponse getProfileByUserId(Long userId) {
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Patient profile not found for user ID: " + userId));
-        return mapToResponse(patient);
+        return mapToSimpleResponse(patient);
     }
 
     @Override
@@ -122,7 +122,7 @@ public class PatientServiceImpl implements PatientService {
         patient.setPatientType(determinePatientType(patient));
 
         Patient savedPatient = patientRepository.save(patient);
-        return mapToResponse(savedPatient);
+        return mapToSimpleResponse(savedPatient);
     }
 
     @Override
@@ -201,7 +201,7 @@ public class PatientServiceImpl implements PatientService {
         patient.setPatientType(determinePatientType(patient));
 
         Patient updatedPatient = patientRepository.save(patient);
-        return mapToResponse(updatedPatient);
+        return mapToSimpleResponse(updatedPatient);
     }
 
     @Override
@@ -278,6 +278,14 @@ public class PatientServiceImpl implements PatientService {
                 .isPregnant(patient.getIsPregnant())
                 .hypertension(patient.getHypertension())
                 .heartDisease(patient.getHeartDisease())
+                .everMarried(patient.getEverMarried())
+                .workType(patient.getWorkType())
+                .residenceType(patient.getResidenceType())
+                .smokingStatus(patient.getSmokingStatus())
+                .cholesterol(patient.getCholesterol())
+                .smoke(patient.getSmoke())
+                .alco(patient.getAlco())
+                .active(patient.getActive())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
                 .build();
@@ -537,7 +545,7 @@ public class PatientServiceImpl implements PatientService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin bệnh nhân với ID: " + patientId));
         patient.setIdentityCardStatus(status);
         Patient saved = patientRepository.save(patient);
-        return mapToResponse(saved);
+        return mapToSimpleResponse(saved);
     }
 
     @Override
@@ -547,7 +555,7 @@ public class PatientServiceImpl implements PatientService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin bệnh nhân với ID: " + patientId));
         patient.setInsuranceCardStatus(status);
         Patient saved = patientRepository.save(patient);
-        return mapToResponse(saved);
+        return mapToSimpleResponse(saved);
     }
 
     private boolean rawAvgDiacholicIsNull(Double rawAvgDiastolic) {

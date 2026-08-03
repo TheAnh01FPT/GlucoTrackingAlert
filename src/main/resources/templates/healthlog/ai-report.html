@@ -930,24 +930,30 @@
           padding-top: 1.5rem;
         }
       }
+
+      /* Patient layout background override for this page's color scheme */
+      body.patient-layout-body {
+        background-color: var(--bg-primary) !important;
+      }
   </style>
+  <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
 
-<body>
-  <!-- Header Navigation -->
-  <header class="navbar">
+<body th:classappend="${!isDoctorOrAdmin} ? 'patient-layout-body' : ''">
+
+  <div th:unless="${isDoctorOrAdmin}" th:replace="~{fragments/layout :: patientSidebar('ai-report')}"></div>
+
+  <!-- Header Navigation - only shown for Doctor/Admin; Patient uses sidebar -->
+  <header class="navbar" th:if="${isDoctorOrAdmin}">
     <!-- Brand Link -->
-    <a th:if="${isDoctorOrAdmin}" th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-brand">
-      🩸 GlucoTrackAlert
-    </a>
-    <a th:unless="${isDoctorOrAdmin}" th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+    <a th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-brand">
       🩸 GlucoTrackAlert
     </a>
 
     <!-- Menu Navigation -->
     <nav class="navbar-menu">
       <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
-      <a th:href="${isDoctorOrAdmin} ? @{/doctor/home} : @{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
+      <a th:href="@{/doctor/home}" class="navbar-link">🏠 Trang chủ</a>
     </nav>
   </header>
 

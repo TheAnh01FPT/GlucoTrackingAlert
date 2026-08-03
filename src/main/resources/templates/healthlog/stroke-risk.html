@@ -672,26 +672,66 @@
         border-bottom: none;
         padding: 0.35rem 0;
       }
+      
+      .date-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .date-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #e0f2fe;
+        color: #0284c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+      }
+      .recommendation-cell {
+        color: var(--muted);
+        line-height: 1.5;
+        max-width: 320px;
+      }
+
+      @media (max-width: 768px) {
+        table, thead, tbody, th, td, tr { display: block; }
+        thead { display: none; }
+        tbody tr {
+          margin-bottom: 1.25rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid var(--border);
+        }
+        tbody td {
+          border-bottom: none;
+          padding: 0.35rem 0;
+        }
+      }
     }
+
+      /* Patient layout background for this page's color scheme */
+      body.patient-layout-body {
+          background-color: var(--bg) !important;
+      }
   </style>
+  <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
   </head>
-  <body>
-    <header class="navbar">
-      <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
-      <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
+  <body th:classappend="${!isDoctorView} ? 'patient-layout-body' : ''">
+
+    <div th:unless="${isDoctorView}" th:replace="~{fragments/layout :: patientSidebar('ai-report')}"></div>
+
+    <!-- Header Navigation - only for Doctor view; Patient uses sidebar -->
+    <header class="navbar" th:if="${isDoctorView}">
+      <a href="/doctor/home" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
 
       <nav class="navbar-menu">
-        <th:block th:if="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
-          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Đột Quỵ Tuần</a>
-          <a href="/doctor/home" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
-        </th:block>
-
-        <th:block th:unless="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
-          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Đột Quỵ Tuần</a>
-          <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
-        </th:block>
+        <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
+        <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Đột Quỵ Tuần</a>
+        <a href="/doctor/home" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
       </nav>
     </header>
 

@@ -6,27 +6,39 @@
             <span>Admin Portal</span>
         </div>
         <div class="sidebar-menu">
-            <a href="/admin/dashboard" th:classappend="${activePage == 'dashboard'} ? 'active' : ''" class="menu-item">👤 Quản Lý Tài Khoản</a>
-            <a href="/admin/doctors" th:classappend="${activePage == 'doctors'} ? 'active' : ''" class="menu-item">🩺 Quản Lý Bác sĩ</a>
-            <a href="/admin/assignments" th:classappend="${activePage == 'assignments'} ? 'active' : ''" class="menu-item">📋 Phân Công Bác sĩ</a>
-            <a href="/admin/requests" th:classappend="${activePage == 'requests'} ? 'active' : ''" class="menu-item">📁 Yêu cầu thay đổi</a>
-            <a href="/admin/card-verifications" th:classappend="${activePage == 'card-verifications'} ? 'active' : ''" class="menu-item">🪪 Đối Soát CCCD/BHYT</a>
-            <a href="/admin/contact-requests" th:classappend="${activePage == 'contact-requests'} ? 'active' : ''" class="menu-item">✉️ Yêu Cầu Liên Hệ</a>
-            <a href="/admin/banners" th:classappend="${activePage == 'banners'} ? 'active' : ''" class="menu-item">🖼️ Quản Lý Banner</a>
-            <a href="/admin/feedbacks" th:classappend="${activePage == 'feedbacks'} ? 'active' : ''" class="menu-item">💬 Quản Lý Đánh Giá</a>
-            <a href="/articles/manage" th:classappend="${activePage == 'articles'} ? 'active' : ''" class="menu-item">📰 Quản Lý Tin Tức</a>
+            <a href="/admin/dashboard" th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
+                class="menu-item">👤 Quản Lý Tài Khoản</a>
+            <a href="/admin/doctors" th:classappend="${activePage == 'doctors'} ? 'active' : ''" class="menu-item">🩺
+                Quản Lý Bác sĩ</a>
+            <a href="/admin/assignments" th:classappend="${activePage == 'assignments'} ? 'active' : ''"
+                class="menu-item">📋 Phân Công Bác sĩ</a>
+            <a href="/admin/requests" th:classappend="${activePage == 'requests'} ? 'active' : ''" class="menu-item">📁
+                Yêu cầu thay đổi</a>
+            <a href="/admin/card-verifications" th:classappend="${activePage == 'card-verifications'} ? 'active' : ''"
+                class="menu-item">🪪 Đối Soát CCCD/BHYT</a>
+            <a href="/admin/contact-requests" th:classappend="${activePage == 'contact-requests'} ? 'active' : ''"
+                class="menu-item">✉️ Yêu Cầu Liên Hệ</a>
+            <a href="/admin/banners" th:classappend="${activePage == 'banners'} ? 'active' : ''" class="menu-item">🖼️
+                Quản Lý Banner</a>
+            <a href="/admin/feedbacks" th:classappend="${activePage == 'feedbacks'} ? 'active' : ''"
+                class="menu-item">💬 Quản Lý Đánh Giá</a>
+            <a href="/articles/manage" th:classappend="${activePage == 'articles'} ? 'active' : ''" class="menu-item">📰
+                Quản Lý Tin Tức</a>
         </div>
         <div class="sidebar-back-home">
             <a href="/" class="btn-back-home">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-4h3v4H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146z"/>
+                    <path
+                        d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-4h3v4H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146z" />
                 </svg>
                 Quay về Trang Chủ
             </a>
         </div>
         <div class="sidebar-footer">
             <div class="sidebar-footer-role">Admin</div>
-            <div class="sidebar-footer-name" th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.substringBefore(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), '@') : 'Admin'}">Admin</div>
+            <div class="sidebar-footer-name"
+                th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.substringBefore(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), '@') : 'Admin'}">
+                Admin</div>
         </div>
     </div>
 </div>
@@ -40,29 +52,38 @@
         <div class="profile-dropdown-container">
             <div class="profile-info-block" onclick="toggleProfileDropdown(event)">
                 <div class="profile-text">
-                    <span class="profile-name" th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.substringBefore(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), '@') : 'Admin'}">Admin</span>
+                    <span class="profile-name"
+                        th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.substringBefore(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), '@') : 'Admin'}">Admin</span>
                     <span class="profile-role">Quản trị viên</span>
                 </div>
                 <div class="profile-avatar">
-                    <span style="font-weight: 700; color: #1a6b5a; font-size: 15px;" th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.toUpperCase(#strings.substring(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), 0, 2)) : 'AD'}">AD</span>
+                    <span style="font-weight: 700; color: #1a6b5a; font-size: 15px;"
+                        th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null ? #strings.toUpperCase(#strings.substring(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName(), 0, 2)) : 'AD'}">AD</span>
                 </div>
             </div>
 
             <!-- Dropdown Menu -->
             <div class="profile-dropdown-menu" id="profileDropdownMenu">
-                <a href="#" onclick="openAdminPasswordModal(); closeProfileDropdown(); return false;" class="dropdown-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shield-lock" viewBox="0 0 16 16" style="width: 16px; height: 16px;">
-                        <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.117.773 7.537 2.527 9.275a.478.478 0 0 0 .529.088c.817-.396 1.824-.822 2.822-1.203.778-.297 1.58-.53 2.19-.697a.487.487 0 0 0 .358-.405c.004-.014.008-.027.012-.041.516-2.286.326-4.636-.593-6.52a.48.48 0 0 0-.41-.282 61.341 61.341 0 0 0-3.32-.405a.48.48 0 0 0-.34.137L5.337 1.59zM8 0c.935 0 1.83.178 2.68.513a.5.5 0 0 1 .287.447c.594 2.112.441 4.678-.17 6.883a.5.5 0 0 1-.365.348c-.615.168-1.42.4-2.2.697-.997.38-2.007.805-2.825 1.2a.5.5 0 0 1-.557-.091C2.88 7.99 1.51 4.382 2.083.078a.5.5 0 0 1 .34-.413A62.441 62.441 0 0 1 8 0z"/>
-                        <path d="M9.5 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-1.5.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                <a href="#" onclick="openAdminPasswordModal(); closeProfileDropdown(); return false;"
+                    class="dropdown-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-shield-lock" viewBox="0 0 16 16" style="width: 16px; height: 16px;">
+                        <path
+                            d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.117.773 7.537 2.527 9.275a.478.478 0 0 0 .529.088c.817-.396 1.824-.822 2.822-1.203.778-.297 1.58-.53 2.19-.697a.487.487 0 0 0 .358-.405c.004-.014.008-.027.012-.041.516-2.286.326-4.636-.593-6.52a.48.48 0 0 0-.41-.282 61.341 61.341 0 0 0-3.32-.405a.48.48 0 0 0-.34.137L5.337 1.59zM8 0c.935 0 1.83.178 2.68.513a.5.5 0 0 1 .287.447c.594 2.112.441 4.678-.17 6.883a.5.5 0 0 1-.365.348c-.615.168-1.42.4-2.2.697-.997.38-2.007.805-2.825 1.2a.5.5 0 0 1-.557-.091C2.88 7.99 1.51 4.382 2.083.078a.5.5 0 0 1 .34-.413A62.441 62.441 0 0 1 8 0z" />
+                        <path d="M9.5 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-1.5.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
                     </svg>
                     Đổi mật khẩu
                 </a>
                 <div class="dropdown-divider"></div>
                 <form th:action="@{/logout}" method="post" id="logoutForm" style="margin: 0;">
-                    <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item text-danger">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16" style="width: 16px; height: 16px;">
-                            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
-                            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                    <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;"
+                        class="dropdown-item text-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-box-arrow-right" viewBox="0 0 16 16" style="width: 16px; height: 16px;">
+                            <path fill-rule="evenodd"
+                                d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" />
+                            <path fill-rule="evenodd"
+                                d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
                         </svg>
                         Đăng xuất
                     </a>
@@ -73,33 +94,43 @@
 
     <!-- Đổi Mật Khẩu Modal dùng chung -->
     <div id="changePasswordModal"
-         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; font-family: 'Be Vietnam Pro', sans-serif;">
-        <div style="background: white; padding: 25px; border-radius: 12px; width: 400px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; color: #1e293b;">
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; font-family: 'Be Vietnam Pro', sans-serif;">
+        <div
+            style="background: white; padding: 25px; border-radius: 12px; width: 400px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; color: #1e293b;">
             <span onclick="closeAdminPasswordModal()"
-                  style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
-                  title="Đóng">&times;</span>
+                style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;"
+                title="Đóng">&times;</span>
             <h3 style="margin-top: 0; color: #1e293b; font-weight: 700; font-size: 18px;">Đổi Mật Khẩu Admin</h3>
             <form id="adminPasswordForm" onsubmit="submitAdminPasswordChange(event)">
                 <div style="margin-bottom: 15px; text-align: left;">
-                    <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Mật khẩu hiện tại</label>
+                    <label
+                        style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Mật
+                        khẩu hiện tại</label>
                     <input type="password" id="adminCurrentPassword" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                 </div>
                 <div style="margin-bottom: 15px; text-align: left;">
-                    <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Mật khẩu mới</label>
+                    <label
+                        style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Mật
+                        khẩu mới</label>
                     <input type="password" id="adminNewPassword" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                 </div>
                 <div style="margin-bottom: 20px; text-align: left;">
-                    <label style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Xác nhận mật khẩu mới</label>
+                    <label
+                        style="display: block; margin-bottom: 5px; color: #64748b; font-weight: 500; font-size: 13px;">Xác
+                        nhận mật khẩu mới</label>
                     <input type="password" id="adminConfirmPassword" required
-                           style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" style="background: none; border: none; padding: 10px 15px; cursor: pointer; color: #64748b;"
-                            onclick="closeAdminPasswordModal()">Hủy
+                    <button type="button"
+                        style="background: none; border: none; padding: 10px 15px; cursor: pointer; color: #64748b;"
+                        onclick="closeAdminPasswordModal()">Hủy
                     </button>
-                    <button type="submit" style="background-color: #1a6b5a; color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: 600;">Lưu Thay Đổi</button>
+                    <button type="submit"
+                        style="background-color: #1a6b5a; color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: 600;">Lưu
+                        Thay Đổi</button>
                 </div>
             </form>
         </div>
@@ -119,7 +150,7 @@
         }
 
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const container = document.querySelector('.profile-dropdown-container');
             if (container && !container.contains(event.target)) {
                 closeProfileDropdown();
@@ -172,4 +203,53 @@
             }
         }
     </script>
+</div>
+
+<!-- Patient Layout Sidebar fragment -->
+<div th:fragment="patientSidebar(activePage)">
+    <div class="sidebar patient-sidebar">
+        <div class="sidebar-logo">
+            <h2>GlucoTrack</h2>
+            <span>Patient Portal</span>
+        </div>
+        <div class="sidebar-menu">
+            <a th:href="@{/patient/homepage}" th:classappend="${activePage == 'home'} ? 'active' : ''"
+                class="menu-item">Trang Chủ</a>
+            <a th:href="@{/patient/profile}" th:classappend="${activePage == 'profile'} ? 'active' : ''"
+                class="menu-item">Hồ Sơ Sức Khỏe</a>
+            <a th:href="@{/patient/relatives}" th:classappend="${activePage == 'relatives'} ? 'active' : ''"
+                class="menu-item">Quản Lý Người Thân</a>
+            <a th:href="@{/patient/choose-doctor}" th:classappend="${activePage == 'choose-doctor'} ? 'active' : ''"
+                class="menu-item">Chọn Bác Sĩ</a>
+            <a th:href="@{/patient/profile/my-logs}" th:classappend="${activePage == 'health-logs'} ? 'active' : ''"
+                class="menu-item">Nhật Ký Sức Khỏe</a>
+            <a th:href="@{/meal-logs}" th:classappend="${activePage == 'meal-logs'} ? 'active' : ''"
+                class="menu-item">Nhật Ký Dinh Dưỡng</a>
+            <a th:href="@{/health-reminders}" th:classappend="${activePage == 'reminders'} ? 'active' : ''"
+                class="menu-item">Nhắc Nhở Sức Khỏe</a>
+            <a th:href="@{/patient/notification-history}"
+                th:classappend="${activePage == 'notifications'} ? 'active' : ''" class="menu-item">Lịch Sử Thông Báo</a>
+            <a th:href="@{/health-logs/ai-report}" th:classappend="${activePage == 'ai-report'} ? 'active' : ''"
+                class="menu-item">Báo Cáo AI</a>
+            <a th:href="@{/patient/feedbacks}" th:classappend="${activePage == 'feedbacks'} ? 'active' : ''"
+                class="menu-item">Gửi Phản Hồi</a>
+            <a th:href="@{/patient/profile/requests}" th:classappend="${activePage == 'requests'} ? 'active' : ''"
+                class="menu-item">Yêu cầu thay đổi Bệnh Lý</a>
+        </div>
+        <div class="sidebar-back-home">
+            <a href="/" class="btn-back-home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-4h3v4H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146z" />
+                </svg>
+                Quay về Landing Page
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-role">Bệnh nhân</div>
+            <div class="sidebar-footer-name"
+                th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null && @userRepository.findByEmail(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()).isPresent() ? @userRepository.findByEmail(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()).get().fullName : 'Bệnh nhân'}">
+                Bệnh nhân</div>
+        </div>
+    </div>
 </div>

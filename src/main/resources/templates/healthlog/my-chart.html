@@ -253,25 +253,56 @@
             margin-bottom: 1rem;
             display: block;
         }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-heading {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+
+        /* Patient layout background override */
+        body.patient-layout-body {
+            background-color: var(--bg-primary) !important;
+        }
     </style>
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
 
-<body>
+<body class="patient-layout-body">
 
-    <!-- Header Navigation -->
-    <header class="navbar">
-        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
-            🩸 GlucoTrackAlert
-        </a>
-        <nav class="navbar-menu">
-            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link">Nhật Ký Đo</a>
-            <a href="#" class="navbar-link active">Biểu Đồ Xu Hướng</a>
-            <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
-            
-        </nav>
-    </header>
+    <div th:replace="~{fragments/layout :: patientSidebar('health-logs')}"></div>
 
     <main class="main-container">
+
+        <!-- Action Bar -->
+        <section class="action-bar">
+            <div class="page-heading">
+                📊 Biểu Đồ Xu Hướng Chỉ Số
+            </div>
+            <div class="actions" style="display: flex; gap: 0.75rem;">
+                <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="btn" style="background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                    📋 Xem Danh Sách Nhật Ký
+                </a>
+            </div>
+        </section>
 
         <!-- Time Range & Patient Filter Form -->
         <section class="filter-panel">

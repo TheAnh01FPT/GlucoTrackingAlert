@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${isNew ? 'Thêm người thân mới' : 'Chỉnh sửa thông tin người thân'}">Người thân | GlucoTrack</title>
     <link rel="stylesheet" th:href="@{/css/relatives.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
 </head>
-<body>
+<body class="patient-layout-body">
+
+    <div th:replace="~{fragments/layout :: patientSidebar('relatives')}"></div>
 
     <div class="relatives-container">
         <!-- Header -->
