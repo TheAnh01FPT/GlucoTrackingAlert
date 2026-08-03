@@ -26,20 +26,20 @@
 
         .page-container {
             display: flex;
-            width: 900px;
-            max-width: 95%;
+            width: 90vw;
+            max-width: 1400px;
             background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            min-height: 550px;
+            min-height: 700px;
         }
 
         .illustration-side {
             flex: 1;
             background: linear-gradient(135deg, #1a6b5a 0%, #27ae60 100%);
             color: white;
-            padding: 40px;
+            padding: 60px 50px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -48,26 +48,26 @@
         }
 
         .illustration-side i {
-            font-size: 80px;
-            margin-bottom: 20px;
+            font-size: 100px;
+            margin-bottom: 25px;
             text-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .illustration-side h2 {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
         .illustration-side p {
-            font-size: 15px;
-            line-height: 1.6;
-            opacity: 0.9;
+            font-size: 16px;
+            line-height: 1.7;
+            opacity: 0.95;
         }
 
         .form-side {
-            flex: 1;
-            padding: 50px 40px;
+            flex: 1.2;
+            padding: 60px 75px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -75,22 +75,22 @@
         }
 
         .form-side h2 {
-            font-size: 24px;
+            font-size: 30px;
             font-weight: 700;
             color: #1a6b5a;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-align: center;
         }
 
         .form-side p.subtitle {
             text-align: center;
             color: #7f8c8d;
-            margin-bottom: 30px;
-            font-size: 14px;
+            margin-bottom: 35px;
+            font-size: 15.5px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             position: relative;
         }
 
@@ -98,16 +98,17 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14.5px;
             color: #34495e;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px 15px 12px 40px;
+            padding: 14px 18px 14px 45px;
             border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            height: 52px;
             font-family: inherit;
             transition: all 0.3s ease;
         }
@@ -427,22 +428,6 @@
                         pendingLoginPassword = password;
                         showOtpSection(data.email || email);
                         showMessage('success', data.message || 'Tài khoản đang chờ xác thực. Một mã OTP mới đã được gửi tới email của bạn.');
-                        return;
-                    }
-
-                    if (data.mustChangePassword) {
-                        showMessage('success', data.message || 'Đăng nhập lần đầu thành công! Vui lòng đổi mật khẩu mới để bảo mật tài khoản.');
-                        localStorage.setItem('token', data.token);
-                        localStorage.setItem('email', data.email);
-                        localStorage.setItem('role', data.role);
-                        if (data.doctorId) localStorage.setItem('doctorId', data.doctorId);
-                        document.cookie = `jwt=${data.token}; path=/; max-age=86400; SameSite=Strict`;
-
-                        setTimeout(() => {
-                            if (data.role === 'PATIENT') window.location.href = '/patient/profile';
-                            else if (data.role === 'DOCTOR') window.location.href = '/doctor/settings';
-                            else window.location.href = '/admin/dashboard';
-                        }, 1500);
                         return;
                     }
 
