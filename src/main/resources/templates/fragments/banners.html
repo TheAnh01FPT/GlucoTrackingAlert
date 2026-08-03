@@ -1,55 +1,171 @@
 <div th:fragment="banner-slider" xmlns:th="http://www.thymeleaf.org">
+    <!-- CSS Tùy chỉnh hiệu ứng Banner Full Đè Chữ & Nút Bấm -->
+    <style>
+        .full-hero-banner {
+            position: relative;
+            width: 100%;
+            min-height: 440px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            border-radius: 0;
+        }
+        .full-hero-banner img.banner-bg-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            transition: transform 0.5s ease;
+        }
+        .full-hero-banner:hover img.banner-bg-img {
+            transform: scale(1.02);
+        }
+        .full-hero-banner .banner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.55) 55%, rgba(15, 23, 42, 0.15) 100%);
+            z-index: 2;
+        }
+        .full-hero-banner .banner-content {
+            position: relative;
+            z-index: 3;
+            padding: 60px 15px;
+            max-width: 720px;
+            color: #ffffff;
+        }
+        .banner-badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 18px;
+            background: rgba(39, 174, 96, 0.9);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(4px);
+        }
+        .banner-title-text {
+            font-size: 38px;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #ffffff;
+            margin-bottom: 14px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        .banner-subtitle-text {
+            font-size: 16.5px;
+            line-height: 1.65;
+            color: #f1f5f9;
+            margin-bottom: 28px;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+        }
+        .btn-banner-redirect {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #27ae60, #1a6b5a);
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 15px;
+            border-radius: 12px;
+            text-decoration: none !important;
+            box-shadow: 0 8px 22px rgba(39, 174, 96, 0.45);
+            transition: all 0.3s ease;
+        }
+        .btn-banner-redirect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(39, 174, 96, 0.65);
+            background: linear-gradient(135deg, #2ecc71, #134d40);
+        }
+    </style>
+
     <!-- Hiển thị mặc định nếu chưa có dữ liệu banner trong DB -->
-    <div th:if="${banners == null || banners.empty}" class="hero-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="display-5 fw-bold text-success mb-3">Theo Dõi Sức Khỏe, Chủ Động Phòng Ngừa Tiểu Đường</h1>
-                    <p class="lead mb-4">Hệ thống theo dõi chỉ số đường huyết hàng ngày, đưa ra cảnh báo tức thời cho người thân và hỗ trợ phân tích biến chứng chuyên nghiệp từ bác sĩ.</p>
-                    <div class="d-flex gap-3">
-                        <a href="/register" class="btn btn-primary-custom btn-lg">Trải nghiệm ngay</a>
-                        <a href="#features" class="btn btn-outline-dark btn-lg">Tìm hiểu thêm</a>
+    <div th:if="${banners == null || banners.empty}" class="container-fluid px-0 mb-4">
+        <div class="full-hero-banner" style="background-color: #1a6b5a;">
+            <div class="banner-overlay"></div>
+            <div class="container position-relative" style="z-index: 3;">
+                <div class="banner-content px-0">
+                    <div class="banner-badge-tag">🩺 HỆ THỐNG Y TẾ THÔNG MINH</div>
+                    <h1 class="banner-title-text">Theo Dõi Sức Khỏe, Chủ Động Phòng Ngừa Bệnh Lý</h1>
+                    <p class="banner-subtitle-text">Hệ thống tự động phân tích chỉ số đường huyết, huyết áp hàng ngày, gửi cảnh báo khẩn cấp cho người thân và phân tích nguy cơ biến chứng bằng trí tuệ nhân tạo (AI).</p>
+                    <div>
+                        <a href="/register" class="btn-banner-redirect">🚀 Trải nghiệm ngay &rarr;</a>
                     </div>
-                </div>
-                <div class="col-lg-6 d-none d-lg-block text-center">
-                    <i class="bi bi-shield-plus text-success" style="font-size: 15rem; opacity: 0.85;"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Hiển thị danh sách banner động lấy từ cơ sở dữ liệu -->
-    <div th:if="${banners != null && !banners.empty}" id="heroBannerCarousel" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            <div th:each="banner, iterStat : ${banners}" 
-                 th:class="${iterStat.index == 0} ? 'carousel-item active' : 'carousel-item'">
-                <div class="hero-section" style="background-color: var(--primary-light);">
-                    <div class="container">
-                        <div class="row align-items-center">
-                            <div class="col-lg-5">
-                                <h1 class="display-5 fw-bold text-success mb-3" th:text="${banner.title}">Tiêu đề</h1>
-                                <p class="lead mb-4" th:text="${banner.subtitle}">Phụ đề</p>
-                                <div class="d-flex gap-3" th:if="${banner.redirectUrl != null && !banner.redirectUrl.isEmpty()}">
-                                    <a th:href="${banner.redirectUrl}" class="btn btn-primary-custom btn-lg">Tìm hiểu thêm</a>
+    <!-- Hiển thị danh sách banner động lấy từ cơ sở dữ liệu (Full Width Image với Text Overlay đè lên ảnh) -->
+    <div th:if="${banners != null && !banners.empty}" class="container-fluid px-0 mb-4">
+        <div id="heroBannerCarousel" class="carousel slide" data-bs-ride="carousel">
+            <!-- Indicators chấm tròn phân trang -->
+            <div th:if="${banners.size() > 1}" class="carousel-indicators mb-3" style="z-index: 5;">
+                <button th:each="banner, iterStat : ${banners}"
+                        type="button"
+                        data-bs-target="#heroBannerCarousel"
+                        th:data-bs-slide-to="${iterStat.index}"
+                        th:class="${iterStat.index == 0} ? 'active' : ''"
+                        th:aria-current="${iterStat.index == 0} ? 'true' : 'false'"
+                        th:aria-label="'Slide ' + ${iterStat.index + 1}"
+                        style="width: 12px; height: 12px; border-radius: 50%; background-color: #ffffff; opacity: 0.85; margin: 0 5px;"></button>
+            </div>
+
+            <div class="carousel-inner" style="border-radius: 0; overflow: hidden;">
+                <div th:each="banner, iterStat : ${banners}" 
+                     th:class="${iterStat.index == 0} ? 'carousel-item active' : 'carousel-item'">
+                    
+                    <div class="full-hero-banner" style="background-color: #1a6b5a;">
+                        <!-- Ảnh nền Banner trải rộng toàn bộ khung -->
+                        <img th:src="${banner.imageUrl}" alt="Banner Image" class="banner-bg-img">
+                        
+                        <!-- Lớp phủ mờ (Dark Overlay) giúp chữ và nút bấm đè lên ảnh cực kỳ rõ nét -->
+                        <div class="banner-overlay"></div>
+
+                        <!-- Khối Tiêu đề, Nội dung & Đường link NÚT BẤM ĐỀ NỔI TRÊN ẢNH BANNER -->
+                        <div class="container position-relative" style="z-index: 3;">
+                            <div class="banner-content px-0">
+                                <div class="banner-badge-tag">🩺 THÔNG TIN NỔI BẬT</div>
+                                
+                                <!-- Tiêu đề đè lên ảnh -->
+                                <h1 class="banner-title-text" th:text="${banner.title}">Tiêu đề Banner</h1>
+                                
+                                <!-- Nội dung mô tả đè lên ảnh -->
+                                <p class="banner-subtitle-text" th:text="${banner.subtitle}">Nội dung mô tả thông điệp Banner...</p>
+                                
+                                <!-- Đường link / Nút Tìm Hiểu Thêm đè lên ảnh -->
+                                <div th:if="${banner.redirectUrl != null && !banner.redirectUrl.isEmpty()}">
+                                    <a th:href="${banner.redirectUrl}" class="btn-banner-redirect">
+                                        🩺 Tìm hiểu thêm &rarr;
+                                    </a>
                                 </div>
-                            </div>
-                            <div class="col-lg-7 d-none d-lg-block text-center">
-                                <img th:src="${banner.imageUrl}" alt="Banner Image" class="img-fluid rounded-3 shadow-lg w-100" style="max-height: 480px; object-fit: cover;">
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
+            
+            <!-- Controls nút chuyển slide -->
+            <button th:if="${banners.size() > 1}" class="carousel-control-prev" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="prev" style="width: 6%; z-index: 4;">
+                <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; padding: 1.4rem; background-size: 50%;"></span>
+                <span class="visually-hidden">Trước</span>
+            </button>
+            <button th:if="${banners.size() > 1}" class="carousel-control-next" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="next" style="width: 6%; z-index: 4;">
+                <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; padding: 1.4rem; background-size: 50%;"></span>
+                <span class="visually-hidden">Sau</span>
+            </button>
         </div>
-        
-        <!-- Controls -->
-        <button th:if="${banners.size() > 1}" class="carousel-control-prev" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(26,107,90,0.5); border-radius: 50%; padding: 1.5rem;"></span>
-            <span class="visually-hidden">Trước</span>
-        </button>
-        <button th:if="${banners.size() > 1}" class="carousel-control-next" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(26,107,90,0.5); border-radius: 50%; padding: 1.5rem;"></span>
-            <span class="visually-hidden">Sau</span>
-        </button>
     </div>
 </div>
