@@ -519,10 +519,42 @@
           padding: 0.35rem 0;
         }
       }
+
+      /* Patient Layout Body Styles (handles sidebar offset) */
+      body.patient-layout-body {
+          display: block !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background-color: var(--bg) !important;
+          min-height: 100vh !important;
+      }
+      
+      body.patient-layout-body .main-container {
+          margin-left: 270px !important; /* Sidebar width (250px) + 20px gap */
+          margin-right: 20px !important;
+          margin-top: 2rem !important;
+          margin-bottom: 2rem !important;
+          padding: 0 1.5rem !important;
+          box-sizing: border-box !important;
+          max-width: calc(100% - 290px) !important; /* Ensure it stays within bounds */
+      }
+
+      @media (max-width: 992px) {
+          body.patient-layout-body .main-container {
+              margin-left: 0 !important;
+              margin-right: 0 !important;
+              max-width: 100% !important;
+              padding: 1rem !important;
+          }
+      }
     </style>
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
   </head>
-  <body>
-    <header class="navbar">
+  <body th:classappend="${!isDoctorView} ? 'patient-layout-body' : ''">
+
+    <div th:unless="${isDoctorView}" th:replace="~{fragments/layout :: patientSidebar('ai-report')}"></div>
+
+    <header class="navbar" th:if="${isDoctorView}">
       <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand">🩸 GlucoTrackAlert</a>
       <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand">🩸 GlucoTrackAlert</a>
 

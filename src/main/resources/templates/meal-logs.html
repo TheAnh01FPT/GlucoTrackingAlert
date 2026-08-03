@@ -1170,8 +1170,11 @@
                 font-size:15px
             }
         </style>
+        <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
     </head>
-    <body>
+    <body class="admin-layout-body">
+
+        <div th:replace="~{fragments/layout :: patientSidebar('meal-logs')}"></div>
 
         <button class="sos-btn" onclick="toggleSOS()">🚨 Cần giúp đỡ?</button>
         <div class="sos-panel" id="sosPanel">
@@ -1190,24 +1193,6 @@
                 👤 Chưa có người thân nào — <a href="/patient/relatives">Thêm ngay</a>
             </div>
             <div style="margin-top:10px;font-size:13px;color:var(--text-muted)">💡 Nếu đường huyết rất cao, nghỉ ngơi ngay và gọi người thân!</div>
-        </div>
-
-        <div class="header">
-            <div class="header-left">
-                <div class="header-logo">🏥</div>
-                <div>
-                    <div class="header-title">GlucoTrack</div>
-                    <div class="header-sub">Hệ thống quản lý bệnh nhân tiểu đường</div>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="status-dot"></div>
-                Hệ thống hoạt động bình thường &nbsp;|&nbsp; Bệnh nhân #1
-            </div>
-        </div>
-
-        <div class="breadcrumb">
-            🏠 Trang chủ › Bệnh nhân › <span>Nhật Ký Bữa Ăn Hàng Ngày</span>
         </div>
 
         <div class="main">

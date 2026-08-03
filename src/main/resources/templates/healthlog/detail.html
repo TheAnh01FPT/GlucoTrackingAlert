@@ -580,7 +580,7 @@
               >✏️ Chỉnh Sửa Chỉ Số</a
             >
 
-            <form th:if="${!log.logDate.isBefore(T(java.time.LocalDate).now().minusDays(3))}"
+            <form th:if="${source != 'doctor-view' && !log.logDate.isBefore(T(java.time.LocalDate).now().minusDays(3))}"
                   th:action="${source == 'doctor-view' ? '/health-logs/' + log.id + '/delete?userId=' + log.patientId + '&source=doctor-view' : '/health-logs/' + log.id + '/delete?userId=' + log.userId + '&source=my-logs'}"
                   method="POST"
                   onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký sức khỏe này?');">

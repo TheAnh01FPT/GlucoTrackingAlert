@@ -610,8 +610,12 @@
             }
 
         </style>
-    </head>
-    <body>
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+</head>
+<body class="patient-layout-body">
+
+    <div th:replace="~{fragments/layout :: patientSidebar('choose-doctor')}"></div>
 
         <div class="page-wrapper">
             <div class="page-header">

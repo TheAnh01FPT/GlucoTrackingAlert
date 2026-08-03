@@ -35,7 +35,7 @@ body {
     min-height: 100vh;
     color: var(--text-main);
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     padding: 40px 20px;
     background-attachment: fixed;
@@ -44,7 +44,8 @@ body {
 /* Container for App */
 .profile-wrapper {
     width: 100%;
-    max-width: 900px;
+    max-width: 1200px;
+    margin: 0 auto;
     background: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -304,4 +305,21 @@ body {
     font-weight: 500;
     margin-top: 6px;
     display: block;
+}
+
+/* Patient Layout Body Styles (handles sidebar offset) */
+body.patient-layout-body {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    padding: 40px 40px 40px calc(var(--sidebar-width) + 40px) !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure responsiveness if sidebar is hidden on small screens */
+@media (max-width: 992px) {
+    body.patient-layout-body {
+        padding: 20px !important;
+    }
 }

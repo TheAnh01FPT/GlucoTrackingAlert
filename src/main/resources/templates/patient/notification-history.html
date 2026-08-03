@@ -5,20 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <title>Lịch sử cảnh báo | GlucoTrack</title>
         <link rel="stylesheet" th:href="@{/css/notification-history.css}"/>
+        <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}"/>
+        <link rel="stylesheet" th:href="@{/css/profile.css}"/>
     </head>
-    <body>
+    <body class="patient-layout-body">
 
-        <!-- Top bar -->
-        <div class="topbar">
-            <a th:href="@{/patient/homepage}" class="logo">
-                <div class="logo-icon">🩸</div>
-                GlucoTrack
-            </a>
-            <nav class="topbar-nav">
-                <a th:href="@{/patient/homepage}" class="nav-btn">🏠 Trang chủ</a>
-                <a th:href="@{/patient/relatives}" class="nav-btn">👪 Người thân</a>
-            </nav>
-        </div>
+        <div th:replace="~{fragments/layout :: patientSidebar('notifications')}"></div>
 
         <div class="page-wrap">
 
