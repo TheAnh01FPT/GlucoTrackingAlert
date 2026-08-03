@@ -986,47 +986,26 @@ public class DailyHealthLogController {
 
         boolean isDoctorOrAdminCaller = hasRole("ROLE_ADMIN") || hasRole("ROLE_DOCTOR");
 
-        if (patientId == null) {
-            if (userId != null) {
-                Optional<Patient> pOpt = patientRepository.findByUserId(userId);
-                if (pOpt.isPresent()) {
-                    patientId = pOpt.get().getId();
-                } else if (patientRepository.existsById(userId)) {
-                    patientId = userId;
-                }
+        if (!isDoctorOrAdminCaller) {
+            patientId = resolvePatientId(curUserId);
+        } else {
+            if (patientId == null && userId != null) {
+                patientId = patientRepository.findByUserId(userId).map(Patient::getId).orElse(null);
             }
-        }
-
-        if (patientId == null) {
-            if (isDoctorOrAdminCaller) {
+            if (patientId == null) {
                 redirectAttributes.addFlashAttribute("error", "Thiếu thông tin bệnh nhân cần xem.");
                 return "redirect:/health-logs/doctor-view";
-            } else {
-                patientId = resolvePatientId(curUserId);
             }
-        }
-
-        if (patientId == null) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
-            return "redirect:/";
-        }
-
-        Patient patient = patientRepository.findById(patientId).orElse(null);
-        if (patient == null) {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
-            return "redirect:/";
-        }
-
-        if (!isDoctorOrAdminCaller) {
-            Long ownPatientId = resolvePatientId(curUserId);
-            if (ownPatientId == null || !ownPatientId.equals(patientId)) {
-                return "redirect:/login";
-            }
-        } else {
             if (hasRole("ROLE_DOCTOR") && !isDoctorAssignedToPatient(patientId)) {
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem báo cáo của bệnh nhân này.");
                 return "redirect:/health-logs/doctor-view";
             }
+        }
+
+        Patient patient = (patientId != null) ? patientRepository.findById(patientId).orElse(null) : null;
+        if (patient == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy hồ sơ bệnh nhân.");
+            return "redirect:/";
         }
 
         boolean isDoctorView = isDoctorOrAdminCaller
