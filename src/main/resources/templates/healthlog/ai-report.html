@@ -1,32 +1,29 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-  <head>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GlucoTrackAlert - Báo Cáo Sức Khỏe AI</title>
-    <!-- Google Fonts: Inter -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --bg-primary: #f8fafc;
-        --card-bg: #ffffff;
-        --text-primary: #0f172a;
-        --text-secondary: #475569;
-        --primary: #4f46e5;
-        --primary-hover: #4338ca;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --border: #e2e8f0;
-        --shadow:
-          0 10px 15px -3px rgba(0, 0, 0, 0.05),
-          0 4px 6px -4px rgba(0, 0, 0, 0.05);
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
+
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GlucoTrackAlert - Báo Cáo Sức Khỏe AI</title>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --card-bg: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: #e2e8f0;
+      --shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.05),
+        0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       body {
         font-family: "Inter", sans-serif;
@@ -35,16 +32,19 @@
         margin: 0;
         padding: 0;
         min-height: 100vh;
+        width: 100%;
       }
 
       /* Navbar Layout */
       .navbar {
         background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-        padding: 1rem 2rem;
+        padding: 0.85rem 2rem;
         color: white;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         position: sticky;
         top: 0;
@@ -52,7 +52,7 @@
       }
 
       .navbar-brand {
-        font-size: 1.5rem;
+        font-size: 1.45rem;
         font-weight: 700;
         color: #ffffff;
         text-decoration: none;
@@ -63,17 +63,18 @@
 
       .navbar-menu {
         display: flex;
-        gap: 1.5rem;
+        gap: 1rem;
         align-items: center;
+        flex-wrap: wrap;
       }
 
       .navbar-link {
         color: #cbd5e1;
         text-decoration: none;
         font-weight: 500;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         transition: var(--transition);
-        padding: 0.5rem 1rem;
+        padding: 0.45rem 0.9rem;
         border-radius: 8px;
       }
 
@@ -90,10 +91,15 @@
 
       /* Container */
       .main-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 1.5rem;
+        width: min(100%, 1520px);
+        max-width: 1520px;
+        margin: 1.2rem auto 2.5rem;
+        padding: 0 1.25rem;
+        box-sizing: border-box;
         animation: fadeIn 0.5s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
       }
 
       @keyframes fadeIn {
@@ -101,6 +107,7 @@
           opacity: 0;
           transform: translateY(15px);
         }
+
         to {
           opacity: 1;
           transform: translateY(0);
@@ -108,51 +115,50 @@
       }
 
       .page-heading {
-        font-size: 1.75rem;
+        font-size: 1.45rem;
         font-weight: 700;
-        margin-bottom: 2rem;
+        margin: 0;
         display: flex;
         align-items: center;
         gap: 0.75rem;
         color: #1e1b4b;
       }
 
-      .monthly-overview {
+      .dashboard-grid {
         display: grid;
-        grid-template-columns: 1.2fr 0.8fr;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        align-items: start;
+        grid-template-columns: 280px 1fr 360px;
+        gap: 1.1rem;
+        align-items: stretch;
+        width: 100%;
       }
 
+      .profile-sidebar,
       .monthly-chart-card,
       .monthly-ai-card {
         background: var(--card-bg);
         border: 1px solid var(--border);
-        border-radius: 20px;
+        border-radius: 18px;
         box-shadow: var(--shadow);
-        padding: 1.5rem;
+        padding: 1.35rem 1.4rem;
+        display: flex;
+        flex-direction: column;
       }
 
       .monthly-chart-card {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+        gap: 0.95rem;
       }
 
       .monthly-ai-card {
         background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
         color: white;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
+        gap: 0.95rem;
       }
 
       .section-kicker {
-        margin: 0 0 0.25rem 0;
-        font-size: 0.75rem;
+        margin: 0 0 0.2rem 0;
+        font-size: 0.72rem;
         font-weight: 700;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
         color: var(--primary);
       }
@@ -164,24 +170,25 @@
       .monthly-card-header h3,
       .monthly-ai-card h3 {
         margin: 0;
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         font-weight: 700;
       }
 
       .month-selector {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
         background: #f8fafc;
         border: 1px solid var(--border);
         border-radius: 999px;
-        padding: 0.35rem 0.6rem 0.35rem 0.9rem;
+        padding: 0.25rem 0.5rem 0.25rem 0.75rem;
       }
 
       .month-selector select {
         border: none;
         background: transparent;
         font: inherit;
+        font-size: 0.85rem;
         color: var(--text-primary);
         outline: none;
         cursor: pointer;
@@ -189,7 +196,7 @@
 
       .chart-tabs {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.4rem;
         flex-wrap: wrap;
       }
 
@@ -198,8 +205,8 @@
         background: #f8fafc;
         color: var(--text-secondary);
         border-radius: 999px;
-        padding: 0.45rem 0.9rem;
-        font-size: 0.85rem;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.82rem;
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition);
@@ -212,108 +219,192 @@
       }
 
       .monthly-chart-card canvas {
-        width: 100%;
-        min-height: 280px;
+        width: 100% !important;
+        height: 380px !important;
+        max-height: 400px !important;
+      }
+
+      .reminder-banner {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px dashed rgba(255, 255, 255, 0.28);
+        border-radius: 12px;
+        padding: 0.8rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: auto;
+      }
+
+      .reminder-banner-icon {
+        font-size: 1.6rem;
+        line-height: 1;
+      }
+
+      .reminder-banner-text {
+        font-size: 0.83rem;
+        line-height: 1.4;
+        color: #e0e7ff;
+        margin: 0;
+      }
+
+      .reminder-banner-text strong {
+        color: #ffffff;
+        display: block;
+        margin-bottom: 0.15rem;
       }
 
       .stats-row {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.75rem;
+        gap: 0.65rem;
+        margin-top: auto;
+        padding-top: 0.5rem;
       }
 
       .stat-pill {
         background: #f8fafc;
         border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 0.75rem;
+        border-radius: 10px;
+        padding: 0.45rem 0.4rem;
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        align-items: center;
+        text-align: center;
+        gap: 0.1rem;
       }
 
       .stat-pill span {
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         font-weight: 700;
         color: var(--text-secondary);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.05em;
       }
 
       .stat-pill strong {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: var(--text-primary);
       }
-
 
       .monthly-metrics-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
+        gap: 0.6rem;
       }
 
       .metric-box {
         background: rgba(255, 255, 255, 0.11);
         border: 1px solid rgba(255, 255, 255, 0.16);
-        border-radius: 14px;
-        padding: 1.1rem 1rem;
+        border-radius: 12px;
+        padding: 0.65rem 0.6rem;
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
-      }
-      .metric-box strong {
-        font-size: 1.3rem;
+        gap: 0.2rem;
       }
 
       .metric-box span {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: rgba(255, 255, 255, 0.8);
       }
 
       .metric-box strong {
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
 
       .monthly-footnote {
-        margin: 0;
+        margin: 0.2rem 0;
         color: rgba(255, 255, 255, 0.7);
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         font-style: italic;
       }
 
+      .risk-summary-heading {
+        margin-top: 0.2rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #dbeafe;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
 
-      @media (max-width: 900px) {
-        .monthly-overview {
-          grid-template-columns: 1fr;
-        }
+      .risk-summary-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.45rem;
+      }
+
+      .risk-summary-item {
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 0.5rem 0.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        text-align: center;
+      }
+
+      .risk-summary-item span {
+        font-weight: 700;
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+      }
+
+      .risk-summary-item strong {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 0.82rem;
+        line-height: 1.2;
+      }
+
+      .risk-summary-item em {
+        font-style: italic;
+        opacity: 0.72;
+        color: var(--text-secondary);
+        font-size: 0.72rem;
+        line-height: 1.2;
+      }
+
+      .risk-summary-item.stroke {
+        border-color: #a7f3d0;
+        background: #f0fdf4;
+      }
+
+      .risk-summary-item.heart {
+        border-color: #fecdd3;
+        background: #fff1f2;
+      }
+
+      .risk-summary-item.kidney {
+        border-color: #c7d2fe;
+        background: #eef2ff;
+      }
+
+      @media (max-width: 1200px) {
         .dashboard-grid {
           grid-template-columns: 1fr;
         }
       }
 
       @media (max-width: 640px) {
+
         .stats-row,
-        .monthly-metrics-grid {
+        .monthly-metrics-grid,
+        .risk-summary-list {
           grid-template-columns: 1fr;
         }
-      }
-
-      /* Dashboard Grid Layout */
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: 350px 1fr;
-        gap: 2rem;
-        align-items: stretch;
       }
 
       /* Profile Sidebar Card */
       .profile-sidebar {
         background-color: var(--card-bg);
         border-radius: 20px;
-        padding: 2rem;
+        padding: 1.25rem;
         box-shadow: var(--shadow);
         border: 1px solid var(--border);
-        height: fit-content;
+        display: flex;
+        flex-direction: column;
       }
 
       .profile-header {
@@ -351,7 +442,11 @@
       .info-list {
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1rem;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 0.25rem;
       }
 
       .info-item {
@@ -391,7 +486,7 @@
       .btn-edit-profile {
         display: block;
         text-align: center;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
         padding: 0.65rem 1rem;
         background-color: #f1f5f9;
         color: var(--text-primary);
@@ -418,11 +513,14 @@
       .ai-card {
         background-color: var(--card-bg);
         border-radius: 24px;
-        padding: 2.5rem;
+        padding: 1.25rem 1.5rem;
         box-shadow: var(--shadow);
         border: 1px solid var(--border);
         position: relative;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin-top: 0.75rem;
+        flex-shrink: 0;
       }
 
       .ai-card-header {
@@ -476,12 +574,15 @@
       .risk-circle-low {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       }
+
       .risk-circle-medium {
         background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
       }
+
       .risk-circle-high {
         background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       }
+
       .risk-circle-critical {
         background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
       }
@@ -508,15 +609,19 @@
         font-weight: 700;
         margin: 0 0 0.5rem 0;
       }
+
       .color-low {
         color: #10b981;
       }
+
       .color-medium {
         color: #d97706;
       }
+
       .color-high {
         color: #ef4444;
       }
+
       .color-critical {
         color: #991b1b;
       }
@@ -817,384 +922,360 @@
         .dashboard-content-grid {
           grid-template-columns: 1fr !important;
         }
-        .dashboard-content-grid > div:last-child {
+
+        .dashboard-content-grid>div:last-child {
           border-left: none !important;
           padding-left: 0 !important;
           border-top: 1px solid var(--border);
           padding-top: 1.5rem;
         }
       }
-    </style>
-  </head>
-  <body>
-    <!-- Header Navigation -->
-    <header class="navbar">
-      <!-- Brand Link -->
-      <a
-        th:if="${isDoctorOrAdmin}"
-        th:href="@{/health-logs/doctor-view(userId=${patient.id})}"
-        class="navbar-brand"
-      >
-        🩸 GlucoTrackAlert
-      </a>
-      <a
-        th:unless="${isDoctorOrAdmin}"
-        th:href="@{/health-logs/my-logs(userId=${userId})}"
-        class="navbar-brand"
-      >
-        🩸 GlucoTrackAlert
-      </a>
+  </style>
+</head>
 
-      <!-- Menu Navigation -->
-      <nav class="navbar-menu">
-        <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
-        <a th:href="${isDoctorOrAdmin} ? @{/doctor/home} : @{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
-      </nav>
-    </header>
+<body>
+  <!-- Header Navigation -->
+  <header class="navbar">
+    <!-- Brand Link -->
+    <a th:if="${isDoctorOrAdmin}" th:href="@{/health-logs/doctor-view(userId=${patient.id})}" class="navbar-brand">
+      🩸 GlucoTrackAlert
+    </a>
+    <a th:unless="${isDoctorOrAdmin}" th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+      🩸 GlucoTrackAlert
+    </a>
 
-    <!-- Main Container -->
-    <main class="main-container">
-      <h1 class="page-heading">🤖 Dashboard Cảnh Báo Sức Khỏe AI</h1>
+    <!-- Menu Navigation -->
+    <nav class="navbar-menu">
+      <a href="#" class="navbar-link active">🤖 Báo Cáo AI</a>
+      <a th:href="${isDoctorOrAdmin} ? @{/doctor/home} : @{/patient/homepage}" class="navbar-link">🏠 Trang chủ</a>
+    </nav>
+  </header>
 
-      <div class="dashboard-grid">
-        <!-- Sidebar: Patient Info -->
-        <section class="profile-sidebar">
-          <div class="profile-header">
-            <div class="profile-avatar" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #e2e8f0; margin: 0 auto 0.5rem; border: 2px solid var(--border);">
-              <img th:if="${patient.avatar != null && !patient.avatar.isEmpty()}" th:src="${patient.avatar}" style="width: 100%; height: 100%; object-fit: cover;">
-              <span th:unless="${patient.avatar != null && !patient.avatar.isEmpty()}" style="font-size: 2.5rem; line-height: 1;">👤</span>
-            </div>
-            <h2 class="profile-name" th:text="${patient.fullName}">
-              Nguyễn Văn A
-            </h2>
-            <span
-              class="profile-type"
-              th:text="${patient.patientType != null ? 'Loại: ' + patient.patientType.toUpperCase() : 'Bệnh nhân'}"
-              >Loại: Adult</span
-            >
+  <!-- Main Container -->
+  <main class="main-container">
+    <h1 class="page-heading">🤖 Dashboard Cảnh Báo Sức Khỏe AI</h1>
+
+    <div class="dashboard-grid">
+      <!-- Sidebar: Patient Info -->
+      <section class="profile-sidebar">
+        <div class="profile-header">
+          <div class="profile-avatar"
+            style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #e2e8f0; margin: 0 auto 0.5rem; border: 2px solid var(--border);">
+            <img th:if="${patient.avatar != null && !patient.avatar.isEmpty()}" th:src="${patient.avatar}"
+              style="width: 100%; height: 100%; object-fit: cover;">
+            <span th:unless="${patient.avatar != null && !patient.avatar.isEmpty()}"
+              style="font-size: 2.5rem; line-height: 1;">👤</span>
           </div>
-
-          <div class="info-list">
-            <div class="info-item">
-              <span class="info-label">Tuổi</span>
-              <span
-                class="info-value"
-                th:text="${patient.age != null ? patient.age + ' tuổi' : '--'}"
-                >72 tuổi</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="info-label">Giới tính</span>
-              <span
-                class="info-value"
-                th:text="${patient.gender != null ? patient.gender : '--'}"
-                >Nam</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="info-label">Chỉ số BMI</span>
-              <span
-                class="info-value"
-                th:text="${patient.bmi != null ? patient.bmi : '--'}"
-                >28.4</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="info-label">Tăng huyết áp</span>
-              <span
-                th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
-                th:text="${patient.hypertension == true ? 'Có' : 'Không'}"
-                >Có</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="info-label">Bệnh tim mạch</span>
-              <span
-                th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
-                th:text="${patient.heartDisease == true ? 'Có' : 'Không'}"
-                >Có</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="info-label">Hút thuốc</span>
-              <span
-                class="info-value"
-                th:text="${patient.smokingStatus != null ? (patient.smokingStatus == 'never smoked' ? 'Chưa từng hút thuốc' : (patient.smokingStatus == 'formerly smoked' ? 'Đã từng hút thuốc' : (patient.smokingStatus == 'smokes' ? 'Đang hút thuốc' : 'Không rõ'))) : '--'}"
-                >Chưa từng hút thuốc</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="info-label">Công việc</span>
-              <span
-                class="info-value"
-                th:text="${patient.workType != null ? (patient.workType == 'Private' ? 'Tư nhân' : (patient.workType == 'Self-employed' ? 'Tự kinh doanh' : (patient.workType == 'Govt_job' ? 'Công chức' : (patient.workType == 'children' ? 'Trẻ em' : (patient.workType == 'Never_worked' ? 'Chưa từng đi làm' : 'Chưa cập nhật'))))) : '--'}"
-                >Tư nhân</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="info-label">Nơi ở</span>
-              <span
-                class="info-value"
-                th:text="${patient.residenceType != null ? (patient.residenceType == 'Urban' ? 'Thành thị' : (patient.residenceType == 'Rural' ? 'Nông thôn' : 'Chưa cập nhật')) : '--'}"
-                >Thành thị</span
-              >
-            </div>
-          </div>
-
-          <a
-            th:if="${!isDoctorOrAdmin}"
-            th:href="@{/patient/profile/edit}"
-            class="btn-edit-profile"
-            >✏️ Chỉnh Sửa Hồ Sơ</a
-          >
-        </section>
-
-        <!-- Right column: Monthly chart + Monthly average, same row as patient info -->
-        <section class="monthly-overview" style="margin-bottom: 0">
-          <div class="monthly-chart-card">
-            <div class="monthly-card-header">
-              <div>
-                <p class="section-kicker">Theo dõi tháng</p>
-                <h3>Biểu đồ sức khỏe theo tháng</h3>
-              </div>
-              <form
-                class="month-selector"
-                th:action="@{/health-logs/ai-report}"
-                method="get"
-              >
-                <input type="hidden" name="patientId" th:value="${patientId}" />
-                <span>📅</span>
-                <select name="chartMonth" onchange="this.form.submit()">
-                  <option
-                    th:each="option : ${monthOptions}"
-                    th:value="${option.value}"
-                    th:text="${option.label}"
-                    th:selected="${option.selected}"
-                  ></option>
-                </select>
-              </form>
-            </div>
-
-            <div class="chart-tabs">
-              <button type="button" class="chart-tab active" data-metric="sugar">
-                Đường Huyết
-              </button>
-              <button type="button" class="chart-tab" data-metric="systolic">
-                Huyết Áp
-              </button>
-              <button type="button" class="chart-tab" data-metric="sleep">
-                Giấc Ngủ
-              </button>
-              <button type="button" class="chart-tab" data-metric="water">
-                Nước Uống
-              </button>
-            </div>
-
-            <canvas id="monthlyHealthChart"></canvas>
-
-            <div class="stats-row">
-              <div class="stat-pill">
-                <span>TB</span><strong id="stat-avg">--</strong>
-              </div>
-              <div class="stat-pill">
-                <span>Cao nhất</span><strong id="stat-max">--</strong>
-              </div>
-              <div class="stat-pill">
-                <span>Thấp nhất</span><strong id="stat-min">--</strong>
-              </div>
-              <div class="stat-pill">
-                <span>Số ngày đo</span><strong id="stat-count">--</strong>
-              </div>
-            </div>
-          </div>
-
-          <div class="monthly-ai-card">
-              <p class="section-kicker">THEO DÕI THÁNG</p>
-              <h3>Trung bình chỉ số tháng</h3>
-
-            <div class="monthly-metrics-grid">
-              <div class="metric-box">
-                <span>Đường huyết</span>
-                <strong
-                  th:text="${monthlyAvgSugar != null ? monthlyAvgSugar + ' mmol/L' : '--'}"
-                  >--</strong
-                >
-              </div>
-              <div class="metric-box">
-                <span>Huyết áp</span>
-                <strong
-                  th:text="${monthlyAvgSystolic != null ? monthlyAvgSystolic + '/' + monthlyAvgDiastolic + ' mmHg' : '--'}"
-                  >--</strong
-                >
-              </div>
-              <div class="metric-box">
-                <span>Giấc ngủ</span>
-                <strong
-                  th:text="${monthlyAvgSleep != null ? monthlyAvgSleep + ' giờ' : '--'}"
-                  >--</strong
-                >
-              </div>
-              <div class="metric-box">
-                <span>Nước uống</span>
-                <strong
-                  th:text="${monthlyAvgWater != null ? monthlyAvgWater + ' ml' : '--'}"
-                  >--</strong
-                >
-              </div>
-            </div>
-            <p class="monthly-footnote" th:text="'Dựa trên ' + ${monthlyLogCount} + ' ngày có nhật ký trong tháng.'">Dựa trên 7 ngày có nhật ký trong tháng.</p>
-          </div>
-        </section>
-      </div>
-
-      <!-- Disease Modules Section: hàng ngang, full width -->
-      <section class="ai-card" style="margin-top: 2rem">
-        <div class="ai-card-header" style="margin-bottom: 1.5rem">
-          <h2 class="ai-card-title">🩺 Các Module Bệnh Lý Phân Tích</h2>
+          <h2 class="profile-name" th:text="${patient.fullName}">
+            Nguyễn Văn A
+          </h2>
+          <span class="profile-type"
+            th:text="${patient.patientType != null ? 'Loại: ' + patient.patientType.toUpperCase() : 'Bệnh nhân'}">Loại:
+            Adult</span>
         </div>
-        <div class="other-diseases-grid">
 
-          <a th:href="${isDoctorOrAdmin} ? @{/health-logs/stroke-risk(patientId=${patientId})} : @{/health-logs/stroke-risk}"
-             class="disease-card"
-             style="border-color: #a7f3d0;">
-            <div class="disease-icon" style="background-color: #ecfdf5;">🧠</div>
-            <div class="disease-info">
-              <span class="disease-name">Biến Chứng Đột Quỵ</span>
-              <span class="disease-status" style="background-color: #d1fae5; color: #065f46;">Đang hoạt động</span>
-            </div>
-            <span class="disease-arrow">→</span>
-          </a>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Tuổi</span>
+            <span class="info-value" th:text="${patient.age != null ? patient.age + ' tuổi' : '--'}">72 tuổi</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Giới tính</span>
+            <span class="info-value" th:text="${patient.gender != null ? patient.gender : '--'}">Nam</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Chỉ số BMI</span>
+            <span class="info-value" th:text="${patient.bmi != null ? patient.bmi : '--'}">28.4</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Tăng huyết áp</span>
+            <span th:class="${patient.hypertension == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
+              th:text="${patient.hypertension == true ? 'Có' : 'Không'}">Có</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Bệnh tim mạch</span>
+            <span th:class="${patient.heartDisease == true ? 'badge-status badge-yes' : 'badge-status badge-no'}"
+              th:text="${patient.heartDisease == true ? 'Có' : 'Không'}">Có</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Hút thuốc</span>
+            <span class="info-value"
+              th:text="${patient.smokingStatus != null ? (patient.smokingStatus == 'never smoked' ? 'Chưa từng hút thuốc' : (patient.smokingStatus == 'formerly smoked' ? 'Đã từng hút thuốc' : (patient.smokingStatus == 'smokes' ? 'Đang hút thuốc' : 'Không rõ'))) : '--'}">Chưa
+              từng hút thuốc</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Công việc</span>
+            <span class="info-value"
+              th:text="${patient.workType != null ? (patient.workType == 'Private' ? 'Tư nhân' : (patient.workType == 'Self-employed' ? 'Tự kinh doanh' : (patient.workType == 'Govt_job' ? 'Công chức' : (patient.workType == 'children' ? 'Trẻ em' : (patient.workType == 'Never_worked' ? 'Chưa từng đi làm' : 'Chưa cập nhật'))))) : '--'}">Tư
+              nhân</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Nơi ở</span>
+            <span class="info-value"
+              th:text="${patient.residenceType != null ? (patient.residenceType == 'Urban' ? 'Thành thị' : (patient.residenceType == 'Rural' ? 'Nông thôn' : 'Chưa cập nhật')) : '--'}">Thành
+              thị</span>
+          </div>
+        </div>
 
-          <a th:href="${isDoctorOrAdmin} ? @{/health-logs/heart-risk(patientId=${patientId})} : @{/health-logs/heart-risk}"
-             class="disease-card"
-             style="border-color: #fecdd3;">
-            <div class="disease-icon" style="background-color: #fff1f2;">🫀</div>
-            <div class="disease-info">
-              <span class="disease-name">Suy Tim &amp; Mạch Vành</span>
-              <span class="disease-status" style="background-color: #ffe4e6; color: #9f1239;">Đang hoạt động</span>
-            </div>
-            <span class="disease-arrow">→</span>
-          </a>
+        <a th:if="${!isDoctorOrAdmin}" th:href="@{/patient/profile/edit}" class="btn-edit-profile">✏️ Chỉnh Sửa Hồ
+          Sơ</a>
+      </section>
 
-          <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}"
-             class="disease-card"
-             style="border-color: #c7d2fe;">
-            <div class="disease-icon" style="background-color: #eef2ff;">🧪</div>
-            <div class="disease-info">
-              <span class="disease-name">Biến Chứng Suy Thận</span>
-              <span class="disease-status" style="background-color: #e0e7ff; color: #3730a3;">Đang hoạt động</span>
-            </div>
-            <span class="disease-arrow">→</span>
-          </a>
+      <section class="monthly-chart-card">
+        <div class="monthly-card-header">
+          <div>
+            <p class="section-kicker">Theo dõi tháng</p>
+            <h3>Biểu đồ sức khỏe theo tháng</h3>
+          </div>
+          <form class="month-selector" th:action="@{/health-logs/ai-report}" method="get">
+            <input type="hidden" name="patientId" th:value="${patientId}" />
+            <span>📅</span>
+            <select name="chartMonth" onchange="this.form.submit()">
+              <option th:each="option : ${monthOptions}" th:value="${option.value}" th:text="${option.label}"
+                th:selected="${option.selected}"></option>
+            </select>
+          </form>
+        </div>
 
+        <div class="chart-tabs">
+          <button type="button" class="chart-tab active" data-metric="sugar">
+            Đường Huyết
+          </button>
+          <button type="button" class="chart-tab" data-metric="systolic">
+            Huyết Áp
+          </button>
+          <button type="button" class="chart-tab" data-metric="sleep">
+            Giấc Ngủ
+          </button>
+          <button type="button" class="chart-tab" data-metric="water">
+            Nước Uống
+          </button>
+        </div>
+
+        <canvas id="monthlyHealthChart"></canvas>
+
+        <div class="stats-row">
+          <div class="stat-pill">
+            <span>TB</span><strong id="stat-avg">--</strong>
+          </div>
+          <div class="stat-pill">
+            <span>Cao nhất</span><strong id="stat-max">--</strong>
+          </div>
+          <div class="stat-pill">
+            <span>Thấp nhất</span><strong id="stat-min">--</strong>
+          </div>
+          <div class="stat-pill">
+            <span>Số ngày đo</span><strong id="stat-count">--</strong>
+          </div>
         </div>
       </section>
-    </main>
-    <script th:inline="javascript">
-      const chartDays = /*[[${chartDays}]]*/ [];
-      const chartSugar = /*[[${chartSugar}]]*/ [];
-      const chartSystolic = /*[[${chartSystolic}]]*/ [];
-      const chartDiastolic = /*[[${chartDiastolic}]]*/ [];
-      const chartSleep = /*[[${chartSleep}]]*/ [];
-      const chartWater = /*[[${chartWater}]]*/ [];
 
-      const datasets = {
-        sugar: {
-          label: "Đường huyết (mmol/L)",
-          data: chartSugar,
-          borderColor: "#f59e0b",
-          backgroundColor: "rgba(245,158,11,0.1)",
-        },
-        systolic: {
-          label: "Huyết áp tâm thu (mmHg)",
-          data: chartSystolic,
-          borderColor: "#ef4444",
-          backgroundColor: "rgba(239,68,68,0.1)",
-        },
-        sleep: {
-          label: "Giấc ngủ (giờ)",
-          data: chartSleep,
-          borderColor: "#8b5cf6",
-          backgroundColor: "rgba(139,92,246,0.1)",
-        },
-        water: {
-          label: "Nước uống (ml)",
-          data: chartWater,
-          borderColor: "#0ea5e9",
-          backgroundColor: "rgba(14,165,233,0.1)",
-        },
-      };
+      <section class="monthly-ai-card">
+        <p class="section-kicker">THEO DÕI THÁNG</p>
+        <h3>Trung bình chỉ số tháng</h3>
 
-      let currentMetric = "sugar";
-      let myChart = null;
+        <div class="monthly-metrics-grid">
+          <div class="metric-box">
+            <span>Đường huyết</span>
+            <strong th:text="${monthlyAvgSugar != null ? monthlyAvgSugar + ' mmol/L' : '--'}">--</strong>
+          </div>
+          <div class="metric-box">
+            <span>Huyết áp</span>
+            <strong
+              th:text="${monthlyAvgSystolic != null ? monthlyAvgSystolic + '/' + monthlyAvgDiastolic + ' mmHg' : '--'}">--</strong>
+          </div>
+          <div class="metric-box">
+            <span>Giấc ngủ</span>
+            <strong th:text="${monthlyAvgSleep != null ? monthlyAvgSleep + ' giờ' : '--'}">--</strong>
+          </div>
+          <div class="metric-box">
+            <span>Nước uống</span>
+            <strong th:text="${monthlyAvgWater != null ? monthlyAvgWater + ' ml' : '--'}">--</strong>
+          </div>
+        </div>
 
-      function renderChart(metric) {
-        const ctx = document
-          .getElementById("monthlyHealthChart")
-          .getContext("2d");
-        if (myChart) myChart.destroy();
-        const ds = datasets[metric];
-        myChart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: chartDays,
-            datasets: [
-              {
-                label: ds.label,
-                data: ds.data,
-                borderColor: ds.borderColor,
-                backgroundColor: ds.backgroundColor,
-                tension: 0.4,
-                spanGaps: true,
-                pointRadius: 3,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: {
-                ticks: {
-                  maxRotation: 0,
-                  minRotation: 0,
-                  autoSkip: true,
-                },
-              },
-              y: { beginAtZero: false },
+        <p class="monthly-footnote" th:text="'Dựa trên ' + ${monthlyLogCount} + ' ngày có nhật ký trong tháng.'">Dựa
+          trên 7 ngày có nhật ký trong tháng.</p>
+
+        <div class="risk-summary-heading">Kết quả sàng lọc gần nhất</div>
+
+        <div class="risk-summary-list">
+          <div class="risk-summary-item stroke">
+            <span>Đột quỵ</span>
+            <strong th:if="${strokeRiskLevel != null and strokeRiskPercentage != null}"
+              th:text="${strokeRiskLevel + ' (' + strokeRiskPercentage + '%)'}">--</strong>
+            <em th:unless="${strokeRiskLevel != null and strokeRiskPercentage != null}">Chưa có dữ liệu tuần</em>
+          </div>
+          <div class="risk-summary-item heart">
+            <span>Tim mạch</span>
+            <strong th:if="${heartRiskLevel != null and heartRiskPercentage != null}"
+              th:text="${heartRiskLevel + ' (' + heartRiskPercentage + '%)'}">--</strong>
+            <em th:unless="${heartRiskLevel != null and heartRiskPercentage != null}">Chưa có dữ liệu tuần</em>
+          </div>
+          <div class="risk-summary-item kidney">
+            <span>Thận</span>
+            <strong th:if="${kidneyRiskLevel != null and kidneyRiskPercentage != null}"
+              th:text="${kidneyRiskLevel + ' (' + kidneyRiskPercentage + '%)'}">--</strong>
+            <em th:unless="${kidneyRiskLevel != null and kidneyRiskPercentage != null}">Chưa có dữ liệu tuần</em>
+          </div>
+        </div>
+
+        <div class="reminder-banner">
+          <span class="reminder-banner-icon">💡</span>
+          <p class="reminder-banner-text">
+            <strong>Nhắc nhở sức khỏe</strong>
+            Bạn nhớ cập nhật chỉ số đo thường xuyên để AI phân tích chính xác nhất nhé!
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Disease Modules Section: hàng ngang, full width -->
+    <section class="ai-card" style="margin-top: 0; padding: 0.85rem 1.25rem;">
+      <div class="ai-card-header" style="margin-bottom: 0.6rem">
+        <h2 class="ai-card-title" style="font-size: 1.15rem;">🩺 Chi Tiết Sàng Lọc Bệnh Lý Liên Quan</h2>
+      </div>
+      <div class="other-diseases-grid">
+
+        <a th:href="${isDoctorOrAdmin} ? @{/health-logs/stroke-risk(patientId=${patientId})} : @{/health-logs/stroke-risk}"
+          class="disease-card" style="border-color: #a7f3d0;">
+          <div class="disease-icon" style="background-color: #ecfdf5;">🧠</div>
+          <div class="disease-info">
+            <span class="disease-name">Biến Chứng Đột Quỵ</span>
+            <span class="disease-status" style="background-color: #d1fae5; color: #065f46;">Đang hoạt động</span>
+          </div>
+          <span class="disease-arrow">→</span>
+        </a>
+
+        <a th:href="${isDoctorOrAdmin} ? @{/health-logs/heart-risk(patientId=${patientId})} : @{/health-logs/heart-risk}"
+          class="disease-card" style="border-color: #fecdd3;">
+          <div class="disease-icon" style="background-color: #fff1f2;">🫀</div>
+          <div class="disease-info">
+            <span class="disease-name">Suy Tim &amp; Mạch Vành</span>
+            <span class="disease-status" style="background-color: #ffe4e6; color: #9f1239;">Đang hoạt động</span>
+          </div>
+          <span class="disease-arrow">→</span>
+        </a>
+
+        <a th:href="@{/health-logs/kidney-risk/weekly(userId=${userId})}" class="disease-card"
+          style="border-color: #c7d2fe;">
+          <div class="disease-icon" style="background-color: #eef2ff;">🧪</div>
+          <div class="disease-info">
+            <span class="disease-name">Biến Chứng Suy Thận</span>
+            <span class="disease-status" style="background-color: #e0e7ff; color: #3730a3;">Đang hoạt động</span>
+          </div>
+          <span class="disease-arrow">→</span>
+        </a>
+
+      </div>
+    </section>
+  </main>
+  <script th:inline="javascript">
+    const chartDays = /*[[${chartDays}]]*/[];
+    const chartSugar = /*[[${chartSugar}]]*/[];
+    const chartSystolic = /*[[${chartSystolic}]]*/[];
+    const chartDiastolic = /*[[${chartDiastolic}]]*/[];
+    const chartSleep = /*[[${chartSleep}]]*/[];
+    const chartWater = /*[[${chartWater}]]*/[];
+
+    const datasets = {
+      sugar: {
+        label: "Đường huyết (mmol/L)",
+        data: chartSugar,
+        borderColor: "#f59e0b",
+        backgroundColor: "rgba(245,158,11,0.1)",
+      },
+      systolic: {
+        label: "Huyết áp tâm thu (mmHg)",
+        data: chartSystolic,
+        borderColor: "#ef4444",
+        backgroundColor: "rgba(239,68,68,0.1)",
+      },
+      sleep: {
+        label: "Giấc ngủ (giờ)",
+        data: chartSleep,
+        borderColor: "#8b5cf6",
+        backgroundColor: "rgba(139,92,246,0.1)",
+      },
+      water: {
+        label: "Nước uống (ml)",
+        data: chartWater,
+        borderColor: "#0ea5e9",
+        backgroundColor: "rgba(14,165,233,0.1)",
+      },
+    };
+
+    let currentMetric = "sugar";
+    let myChart = null;
+
+    function renderChart(metric) {
+      const ctx = document
+        .getElementById("monthlyHealthChart")
+        .getContext("2d");
+      if (myChart) myChart.destroy();
+      const ds = datasets[metric];
+      myChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: chartDays,
+          datasets: [
+            {
+              label: ds.label,
+              data: ds.data,
+              borderColor: ds.borderColor,
+              backgroundColor: ds.backgroundColor,
+              tension: 0.4,
+              spanGaps: true,
+              pointRadius: 3,
             },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              ticks: {
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: true,
+              },
+            },
+            y: { beginAtZero: false },
           },
-        });
-        updateStats(ds.data);
-      }
-
-      function updateStats(data) {
-        const valid = data.filter((v) => v != null);
-        document.getElementById("stat-avg").textContent = valid.length
-          ? (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1)
-          : "--";
-        document.getElementById("stat-max").textContent = valid.length
-          ? Math.max(...valid).toFixed(1)
-          : "--";
-        document.getElementById("stat-min").textContent = valid.length
-          ? Math.min(...valid).toFixed(1)
-          : "--";
-        document.getElementById("stat-count").textContent = valid.length;
-      }
-
-      document.querySelectorAll(".chart-tab").forEach((btn) => {
-        btn.addEventListener("click", function () {
-          document
-            .querySelectorAll(".chart-tab")
-            .forEach((b) => b.classList.remove("active"));
-          this.classList.add("active");
-          currentMetric = this.dataset.metric;
-          renderChart(currentMetric);
-        });
+        },
       });
+      updateStats(ds.data);
+    }
 
-      // Initial render
-      renderChart("sugar");
-    </script>
-  </body>
+    function updateStats(data) {
+      const valid = data.filter((v) => v != null);
+      document.getElementById("stat-avg").textContent = valid.length
+        ? (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1)
+        : "--";
+      document.getElementById("stat-max").textContent = valid.length
+        ? Math.max(...valid).toFixed(1)
+        : "--";
+      document.getElementById("stat-min").textContent = valid.length
+        ? Math.min(...valid).toFixed(1)
+        : "--";
+      document.getElementById("stat-count").textContent = valid.length;
+    }
+
+    document.querySelectorAll(".chart-tab").forEach((btn) => {
+      btn.addEventListener("click", function () {
+        document
+          .querySelectorAll(".chart-tab")
+          .forEach((b) => b.classList.remove("active"));
+        this.classList.add("active");
+        currentMetric = this.dataset.metric;
+        renderChart(currentMetric);
+      });
+    });
+
+    // Initial render
+    renderChart("sugar");
+  </script>
+</body>
+
 </html>

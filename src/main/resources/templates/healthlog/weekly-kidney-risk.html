@@ -32,12 +32,15 @@
       color: var(--text);
       margin: 0;
       padding: 0;
+      min-height: 100vh;
+      width: 100%;
     }
 
     .container {
-      max-width: 1100px;
+      width: min(100%, 1520px);
+      max-width: 1520px;
       margin: 0 auto;
-      padding: 2rem 1.5rem 3rem;
+      padding: 1.5rem 1.25rem 3rem;
     }
 
     .page-title {
@@ -441,9 +444,10 @@
     }
 
     .main-container {
-      max-width: 1200px;
+      width: min(100%, 1480px);
+      max-width: 1480px;
       margin: 2rem auto;
-      padding: 0 1.5rem 2rem;
+      padding: 0 1.25rem 2rem;
     }
 
     .btn-back {
@@ -474,17 +478,29 @@
 
     .dashboard-grid {
       display: grid;
-      grid-template-columns: minmax(320px, 360px) 1fr;
-      gap: 1.5rem;
+      grid-template-columns: 280px 1fr;
+      gap: 1.25rem;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 1.35rem 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
     }
 
     .profile-sidebar {
       background: var(--card);
-      border-radius: 24px;
-      padding: 1.5rem;
+      border-radius: 20px;
+      padding: 1.35rem 1.4rem;
       box-shadow: var(--shadow);
-      border: 1px solid #f1f5f9;
-      height: fit-content;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
     }
 
     .profile-header {
@@ -631,6 +647,11 @@
       .dashboard-grid {
         grid-template-columns: 1fr;
       }
+      .main-container,
+      .container {
+        padding-left: 0.9rem;
+        padding-right: 0.9rem;
+      }
     }
 
     @media (max-width: 700px) {
@@ -675,7 +696,7 @@
   </header>
 
   <main class="main-container">
-    <a class="btn-back" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
+    <a class="btn-back" th:href="@{/health-logs/ai-report}">← Quay lại Dashboard AI</a>
 
     <h1 class="page-heading"><i class="ti ti-droplet"></i> Sàng Lọc Yếu Tố Liên Quan Đến Thận</h1>
 
@@ -859,7 +880,7 @@
             <div th:if="${!#lists.isEmpty(reports)}" class="table-wrap">
               <p style="color: var(--muted); font-size: 0.85rem; margin: 0 0 0.75rem;">Sắp xếp: tuần gần nhất hiển thị
                 trước</p>
-              <table>
+              <table id="historyTable">
                 <thead>
                   <tr>
                     <th>Từ ngày</th>
@@ -899,6 +920,13 @@
                   </tr>
                 </tbody>
               </table>
+              <div class="table-pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                <span class="pagination-info" style="font-size: 0.85rem; color: var(--muted); font-weight: 600;"></span>
+                <div class="pagination-btns" style="display: flex; gap: 0.5rem;">
+                  <button class="btn-prev" style="padding: 0.4rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-weight: 700; cursor: pointer; font-size: 0.85rem;">← Trước</button>
+                  <button class="btn-next" style="padding: 0.4rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-weight: 700; cursor: pointer; font-size: 0.85rem;">Sau →</button>
+                </div>
+              </div>
             </div>
           </div>
         </details>
@@ -983,6 +1011,59 @@
           link.textContent = full.hidden ? 'Chi tiết' : 'Thu gọn';
         });
       });
+
+      // Pagination for history table (3 items per page)
+      const tableWrap = document.querySelector('.table-wrap');
+      if (tableWrap) {
+        const rows = Array.from(tableWrap.querySelectorAll('tbody tr'));
+        const pageSize = 3;
+        let currentPage = 1;
+        const totalPages = Math.ceil(rows.length / pageSize);
+
+        const infoSpan = tableWrap.querySelector('.pagination-info');
+        const prevBtn = tableWrap.querySelector('.btn-prev');
+        const nextBtn = tableWrap.querySelector('.btn-next');
+        const paginationDiv = tableWrap.querySelector('.table-pagination');
+
+        if (rows.length <= pageSize) {
+          if (paginationDiv) paginationDiv.style.display = 'none';
+        } else {
+          function renderPage(page) {
+            currentPage = page;
+            const start = (page - 1) * pageSize;
+            const end = start + pageSize;
+
+            rows.forEach((row, index) => {
+              row.style.display = (index >= start && index < end) ? '' : 'none';
+            });
+
+            if (infoSpan) infoSpan.textContent = `Trang ${currentPage} / ${totalPages} (Tổng ${rows.length} kết quả)`;
+            if (prevBtn) {
+              prevBtn.disabled = currentPage === 1;
+              prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+              prevBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+            }
+            if (nextBtn) {
+              nextBtn.disabled = currentPage === totalPages;
+              nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+              nextBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+            }
+          }
+
+          if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+              if (currentPage > 1) renderPage(currentPage - 1);
+            });
+          }
+          if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+              if (currentPage < totalPages) renderPage(currentPage + 1);
+            });
+          }
+
+          renderPage(1);
+        }
+      }
     });
   </script>
 </body>

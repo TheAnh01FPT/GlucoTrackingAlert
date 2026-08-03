@@ -114,9 +114,6 @@ public class DailyHealthLogController {
         if (currentPatientId != null && currentPatientId.equals(logPatientId)) {
             return true;
         }
-        if (hasRole("ROLE_ADMIN")) {
-            return true;
-        }
         if (hasRole("ROLE_DOCTOR")) {
             return isDoctorAssignedToPatient(logPatientId);
         }
@@ -141,7 +138,7 @@ public class DailyHealthLogController {
             @RequestParam(defaultValue = "10") int size,
             Model model) {
         // Redirect về đúng trang theo role, tránh để /health-logs là trang chung
-        if (hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN")) {
+        if (hasRole("ROLE_DOCTOR")) {
             return "redirect:/health-logs/doctor-view" + (userId != null ? "?userId=" + userId : "");
         }
         if (hasRole("ROLE_PATIENT")) {
@@ -209,20 +206,7 @@ public class DailyHealthLogController {
             RedirectAttributes redirectAttributes) {
         List<Patient> patients;
 
-        if (hasRole("ROLE_ADMIN")) {
-            // Admin xem tất cả
-            if (patientType != null && !patientType.isEmpty()) {
-                patients = patientRepository.findAllByStatusAndPatientType("active", patientType);
-                if (patients.isEmpty()) {
-                    patients = patientRepository.findAllByStatus("active");
-                }
-            } else {
-                patients = patientRepository.findAllByStatus("active");
-                if (patients.isEmpty()) {
-                    patients = patientRepository.findAll();
-                }
-            }
-        } else if (hasRole("ROLE_DOCTOR")) {
+        if (hasRole("ROLE_DOCTOR")) {
             Long currentUserId = getCurrentUserId();
             Doctor doctor = doctorRepository.findByUserId(currentUserId).orElse(null);
             if (doctor == null) {
@@ -257,8 +241,8 @@ public class DailyHealthLogController {
         model.addAttribute("patients", patients);
         model.addAttribute("patientType", patientType);
 
-        // Only allow passing arbitrary userId when caller is admin/doctor.
-        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+        // Only allow passing arbitrary userId when caller is a doctor.
+        if (!hasRole("ROLE_DOCTOR")) {
             Long cur = getCurrentUserId();
             if (cur != null) {
                 userId = cur;
@@ -363,9 +347,13 @@ public class DailyHealthLogController {
             @RequestParam(defaultValue = "10") int size,
             RedirectAttributes redirectAttributes,
             Model model) {
-        // If caller is not admin/doctor and the requested userId is not their own,
+        if (hasRole("ROLE_ADMIN")) {
+            return "redirect:/login";
+        }
+
+        // If caller is not a doctor and the requested userId is not their own,
         // redirect to login to prevent tampering with the `userId` query parameter.
-        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_DOCTOR")) {
+        if (!hasRole("ROLE_DOCTOR")) {
             Long curUserId = getCurrentUserId();
             if (curUserId == null || !curUserId.equals(userId)) {
                 return "redirect:/login";
@@ -439,13 +427,9 @@ public class DailyHealthLogController {
     }
 
     /**
-     * Kiểm tra doctor hiện tại có được phân công bệnh nhân này không. Admin
-     * luôn trả về true.
+     * Kiểm tra doctor hiện tại có được phân công bệnh nhân này không.
      */
     private boolean isDoctorAssignedToPatient(Long patientId) {
-        if (hasRole("ROLE_ADMIN")) {
-            return true;
-        }
         if (!hasRole("ROLE_DOCTOR")) {
             return false;
         }
@@ -470,11 +454,6 @@ public class DailyHealthLogController {
                 || msg.contains("quá 3 ngày"))) {
             return msg;
         }
-        if (msg != null && (msg.contains("Không tìm thấy")
-                || msg.contains("đã nhập nhật ký")
-                || msg.contains("không có quyền"))) {
-            return msg;
-        }
         return "Có lỗi xảy ra, vui lòng thử lại hoặc liên hệ quản trị viên.";
 
     }
@@ -484,16 +463,14 @@ public class DailyHealthLogController {
             @RequestParam(required = false) String source,
             Model model,
             RedirectAttributes redirectAttributes) {
-        if (!hasRole("ROLE_ADMIN")) {
-            Long curUserId = getCurrentUserId();
-            if (curUserId == null || !curUserId.equals(userId)) {
-                if (hasRole("ROLE_DOCTOR")) {
-                    redirectAttributes.addFlashAttribute("error", "Bác sĩ không có quyền tạo nhật ký hộ bệnh nhân.");
-                    return "redirect:/health-logs/doctor-view";
-                }
-                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
-                return "redirect:/login";
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null || !curUserId.equals(userId)) {
+            if (hasRole("ROLE_DOCTOR")) {
+                redirectAttributes.addFlashAttribute("error", "Chỉ bệnh nhân mới được phép tạo nhật ký cho chính mình.");
+                return "redirect:/health-logs/doctor-view";
             }
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
+            return "redirect:/login";
         }
 
         if (!model.containsAttribute("log")) {
@@ -513,16 +490,14 @@ public class DailyHealthLogController {
             @Valid @ModelAttribute("log") DailyHealthLogRequest request,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes) {
-        if (!hasRole("ROLE_ADMIN")) {
-            Long curUserId = getCurrentUserId();
-            if (curUserId == null || !curUserId.equals(userId)) {
-                if (hasRole("ROLE_DOCTOR")) {
-                    redirectAttributes.addFlashAttribute("error", "Bác sĩ không có quyền tạo nhật ký hộ bệnh nhân.");
-                    return "redirect:/health-logs/doctor-view";
-                }
-                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
-                return "redirect:/login";
+        Long curUserId = getCurrentUserId();
+        if (curUserId == null || !curUserId.equals(userId)) {
+            if (hasRole("ROLE_DOCTOR")) {
+                redirectAttributes.addFlashAttribute("error", "Chỉ bệnh nhân mới được phép tạo nhật ký cho chính mình.");
+                return "redirect:/health-logs/doctor-view";
             }
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo nhật ký cho người dùng khác.");
+            return "redirect:/login";
         }
 
         if (bindingResult.hasErrors()) {
@@ -947,6 +922,17 @@ public class DailyHealthLogController {
 
         boolean isDocOrAdmin = hasRole("ROLE_DOCTOR") || hasRole("ROLE_ADMIN");
         model.addAttribute("isDoctorOrAdmin", isDocOrAdmin);
+
+        RiskAssessment strokeLatestRisk = riskAssessmentRepository.findTopByPatient_IdAndAssessmentTypeOrderByAssessedAtDesc(patientId, "WEEKLY_STROKE_RISK").orElse(null);
+        RiskAssessment heartLatestRisk = riskAssessmentRepository.findTopByPatient_IdAndAssessmentTypeOrderByAssessedAtDesc(patientId, "WEEKLY_HEART_RISK").orElse(null);
+        RiskAssessment kidneyLatestRisk = riskAssessmentRepository.findTopByPatient_IdAndAssessmentTypeOrderByAssessedAtDesc(patientId, "NEPHROPATHY_WEEKLY").orElse(null);
+
+        model.addAttribute("strokeRiskLevel", strokeLatestRisk != null ? strokeLatestRisk.getRiskLevel() : null);
+        model.addAttribute("strokeRiskPercentage", strokeLatestRisk != null ? strokeLatestRisk.getRiskPercentage() : null);
+        model.addAttribute("heartRiskLevel", heartLatestRisk != null ? heartLatestRisk.getRiskLevel() : null);
+        model.addAttribute("heartRiskPercentage", heartLatestRisk != null ? heartLatestRisk.getRiskPercentage() : null);
+        model.addAttribute("kidneyRiskLevel", kidneyLatestRisk != null ? kidneyLatestRisk.getRiskLevel() : null);
+        model.addAttribute("kidneyRiskPercentage", kidneyLatestRisk != null ? kidneyLatestRisk.getRiskPercentage() : null);
 
         model.addAttribute("patient", patient);
         Long targetUserId = patient.getUser() != null ? patient.getUser().getId() : null;

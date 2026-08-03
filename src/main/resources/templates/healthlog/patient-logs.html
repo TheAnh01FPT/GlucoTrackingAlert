@@ -94,6 +94,7 @@
                 opacity: 0;
                 transform: translateY(15px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -464,323 +465,331 @@
 
 <body>
 
-<!-- Header Navigation -->
-<header class="navbar">
-    <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
-        🩸 GlucoTrackAlert
-    </a>
-    <nav class="navbar-menu">
-        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
-        <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
-        <a th:href="@{/health-logs/ai-report}" class="navbar-link">🤖 Phân Tích AI</a>
-        <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang Chủ</a>
-    </nav>
-</header>
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-brand">
+            🩸 GlucoTrackAlert
+        </a>
+        <nav class="navbar-menu">
+            <a th:href="@{/health-logs/my-logs(userId=${userId})}" class="navbar-link active">Nhật Ký Đo</a>
+            <a th:href="@{/health-logs/my-chart(userId=${userId})}" class="navbar-link">Biểu Đồ Xu Hướng</a>
+            <a th:href="@{/patient/homepage}" class="navbar-link">🏠 Trang Chủ</a>
+        </nav>
+    </header>
 
-<!-- Main Content -->
-<main class="main-container">
+    <!-- Main Content -->
+    <main class="main-container">
 
-    <!-- Action Bar -->
-    <section class="action-bar">
-        <div class="page-heading">
-            📋 Nhật Ký Sức Khỏe Của Tôi
-        </div>
-        <div class="actions" style="display: flex; gap: 0.75rem;">
-            <a th:href="@{/health-logs/ai-report}" class="btn" style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);">
-                🤖 Xem Phân Tích AI
-            </a>
-            <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}" class="btn btn-primary">
-                ➕ Ghi Nhật Ký Mới
-            </a>
-        </div>
-    </section>
+        <!-- Action Bar -->
+        <section class="action-bar">
+            <div class="page-heading">
+                📋 Nhật Ký Sức Khỏe Của Tôi
+            </div>
+            <div class="actions" style="display: flex; gap: 0.75rem;">
+                <a th:href="@{/health-logs/ai-report}" class="btn"
+                    style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);">
+                    🤖 Xem Phân Tích AI
+                </a>
+                <a th:href="@{/health-logs/create(userId=${userId}, source='my-logs')}" class="btn btn-primary">
+                    ➕ Ghi Nhật Ký Mới
+                </a>
+            </div>
+        </section>
 
-    <!-- Dynamic Statistics Row -->
-    <section class="stats-grid" th:if="${!#lists.isEmpty(logs)}">
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-blood">🩸</div>
-            <div class="stat-info">
-                <span class="stat-label">Số Lần Đo Gần Đây</span>
-                <span class="stat-value" th:text="${totalElements}">0</span>
+        <!-- Dynamic Statistics Row -->
+        <section class="stats-grid" th:if="${!#lists.isEmpty(logs)}">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-blood">🩸</div>
+                <div class="stat-info">
+                    <span class="stat-label">Số Lần Đo Gần Đây</span>
+                    <span class="stat-value" th:text="${totalElements}">0</span>
+                </div>
             </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-pressure">💖</div>
-            <div class="stat-info">
-                <span class="stat-label">Huyết Áp Gần Nhất</span>
-                <span class="stat-value"
-                      th:text="${latestLog != null && latestLog.systolic != null && latestLog.diastolic != null ? latestLog.systolic + '/' + latestLog.diastolic : '--'}">120/80</span>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-pressure">💖</div>
+                <div class="stat-info">
+                    <span class="stat-label">Huyết Áp Gần Nhất</span>
+                    <span class="stat-value"
+                        th:text="${latestLog != null && latestLog.systolic != null && latestLog.diastolic != null ? latestLog.systolic + '/' + latestLog.diastolic : '--'}">120/80</span>
+                </div>
             </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-sleep">🛌</div>
-            <div class="stat-info">
-                <span class="stat-label">Giờ Ngủ Gần Nhất</span>
-                <span class="stat-value"
-                      th:text="${latestLog != null && latestLog.sleepHours != null ? latestLog.sleepHours + ' giờ' : '--'}">8 giờ</span>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-sleep">🛌</div>
+                <div class="stat-info">
+                    <span class="stat-label">Giờ Ngủ Gần Nhất</span>
+                    <span class="stat-value"
+                        th:text="${latestLog != null && latestLog.sleepHours != null ? latestLog.sleepHours + ' giờ' : '--'}">8
+                        giờ</span>
+                </div>
             </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-water">🥛</div>
-            <div class="stat-info">
-                <span class="stat-label">Nước Uống Gần Nhất</span>
-                <span class="stat-value"
-                      th:text="${latestLog != null && latestLog.waterMl != null ? latestLog.waterMl + ' ml' : '--'}">1500 ml</span>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-water">🥛</div>
+                <div class="stat-info">
+                    <span class="stat-label">Nước Uống Gần Nhất</span>
+                    <span class="stat-value"
+                        th:text="${latestLog != null && latestLog.waterMl != null ? latestLog.waterMl + ' ml' : '--'}">1500
+                        ml</span>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
         <!-- Log List Card -->
         <section class="table-card">
             <div class="table-header">
                 <h2 class="table-title">📅 Lịch Sử Chỉ Số Sức Khỏe</h2>
-                <button onclick="exportExcel()" class="btn" style="background-color: #10b981; color: white; padding: 0.4rem 1rem; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                <button onclick="exportExcel()" class="btn"
+                    style="background-color: #10b981; color: white; padding: 0.4rem 1rem; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
                     📥 Xuất Excel
                 </button>
             </div>
 
-        <div class="table-responsive">
-            <table>
-                <thead>
-                <tr>
-                    <th>Ngày Ghi</th>
-                    <th>Đường Huyết (mmol/L)</th>
-                    <th>Huyết Áp (mmHg)</th>
-                    <th>Giờ Ngủ (giờ)</th>
-                    <th>Lượng Nước (ml)</th>
-                    <th>Mức Đường Tiêu Thụ</th>
-                    <th>VẬN ĐỘNG</th>
-                    <th>Triệu Chứng</th>
-                    <th>Ghi Chú</th>
-                    <th style="width: 120px;">Hành Động</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="log : ${logs}"
-                    th:class="${(log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' or (log.systolicStatus != null and (log.systolicStatus == 'LOW_DANGER' or log.systolicStatus == 'HIGH_DANGER')) or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_DANGER' or log.diastolicStatus == 'HIGH_DANGER'))) ? 'row-alert-danger' : ''}">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ngày Ghi</th>
+                            <th>Đường Huyết (mmol/L)</th>
+                            <th>Huyết Áp (mmHg)</th>
+                            <th>Giờ Ngủ (giờ)</th>
+                            <th>Lượng Nước (ml)</th>
+                            <th>Mức Đường Tiêu Thụ</th>
+                            <th>VẬN ĐỘNG</th>
+                            <th>Triệu Chứng</th>
+                            <th>Ghi Chú</th>
+                            <th style="width: 120px;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${logs}"
+                            th:class="${(log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' or (log.systolicStatus != null and (log.systolicStatus == 'LOW_DANGER' or log.systolicStatus == 'HIGH_DANGER')) or (log.diastolicStatus != null and (log.diastolicStatus == 'LOW_DANGER' or log.diastolicStatus == 'HIGH_DANGER'))) ? 'row-alert-danger' : ''}">
 
-                    <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">30/05/2026
-                    </td>
+                            <td th:text="${#temporals.format(log.logDate, 'dd/MM/yyyy')}" style="font-weight: 600;">
+                                30/05/2026
+                            </td>
 
-                    <td>
-                        <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
-                        <span th:if="${log.bloodSugar != null}"
-                              th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
-                              th:text="${log.bloodSugar}"
-                              th:title="${log.bloodSugarNormalMin != null ? 'Ngưỡng: normal ' + log.bloodSugarNormalMin + ' - ' + log.bloodSugarNormalMax + ' | warning ' + log.bloodSugarWarningMin + ' - ' + log.bloodSugarWarningMax : 'Ngưỡng không xác định'}">
+                            <td>
+                                <span th:if="${log.bloodSugar == null}" class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.bloodSugar != null}"
+                                    th:class="${log.bloodSugarStatus == 'NORMAL' ? 'value-badge badge-success' : (log.bloodSugarStatus == 'LOW_WARNING' or log.bloodSugarStatus == 'HIGH_WARNING' ? 'value-badge badge-warning' : (log.bloodSugarStatus == 'LOW_DANGER' or log.bloodSugarStatus == 'HIGH_DANGER' ? 'value-badge badge-danger' : 'value-badge badge-neutral'))}"
+                                    th:text="${log.bloodSugar}"
+                                    th:title="${log.bloodSugarNormalMin != null ? 'Ngưỡng: normal ' + log.bloodSugarNormalMin + ' - ' + log.bloodSugarNormalMax + ' | warning ' + log.bloodSugarWarningMin + ' - ' + log.bloodSugarWarningMax : 'Ngưỡng không xác định'}">
                                 </span>
-                    </td>
+                            </td>
 
-                    <td>
+                            <td>
                                 <span th:if="${log.systolic != null && log.diastolic != null}"
-                                      th:class="${( (log.systolicStatus != null and (log.systolicStatus.contains('DANGER'))) or (log.diastolicStatus != null and (log.diastolicStatus.contains('DANGER'))) ) ? 'value-badge badge-danger' : ( (log.systolicStatus != null and log.systolicStatus.contains('WARNING')) or (log.diastolicStatus != null and log.diastolicStatus.contains('WARNING')) ) ? 'value-badge badge-warning' : (log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : 'value-badge badge-neutral' }"
-                                      th:text="${log.systolic + '/' + log.diastolic}">
+                                    th:class="${( (log.systolicStatus != null and (log.systolicStatus.contains('DANGER'))) or (log.diastolicStatus != null and (log.diastolicStatus.contains('DANGER'))) ) ? 'value-badge badge-danger' : ( (log.systolicStatus != null and log.systolicStatus.contains('WARNING')) or (log.diastolicStatus != null and log.diastolicStatus.contains('WARNING')) ) ? 'value-badge badge-warning' : (log.systolicStatus == 'NORMAL' and log.diastolicStatus == 'NORMAL') ? 'value-badge badge-success' : 'value-badge badge-neutral' }"
+                                    th:text="${log.systolic + '/' + log.diastolic}">
                                     120/80
                                 </span>
-                        <span th:if="${log.systolic == null || log.diastolic == null}"
-                              class="value-badge badge-neutral">--</span>
-                    </td>
+                                <span th:if="${log.systolic == null || log.diastolic == null}"
+                                    class="value-badge badge-neutral">--</span>
+                            </td>
 
-                    <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">8.0</td>
-                    <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
+                            <td th:text="${log.sleepHours != null ? log.sleepHours : '--'}">8.0</td>
+                            <td th:text="${log.waterMl != null ? log.waterMl + ' ml' : '--'}">2000 ml</td>
 
-                    <td>
-                        <span th:if="${log.sugarConsumptionLevel == null}" class="value-badge badge-neutral">--</span>
-                        <span th:if="${log.sugarConsumptionLevel != null}"
-                              th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
-                              th:text="${log.sugarConsumptionLevel}">
+                            <td>
+                                <span th:if="${log.sugarConsumptionLevel == null}"
+                                    class="value-badge badge-neutral">--</span>
+                                <span th:if="${log.sugarConsumptionLevel != null}"
+                                    th:class="${log.sugarConsumptionLevel.equalsIgnoreCase('high') ? 'value-badge badge-danger' : (log.sugarConsumptionLevel.equalsIgnoreCase('medium') ? 'value-badge badge-warning' : 'value-badge badge-success')}"
+                                    th:text="${log.sugarConsumptionLevel}">
                                     low
                                 </span>
-                    </td>
-                    <td>
-    <span th:if="${log.physicalActivity == 1}" class="value-badge badge-success"
-          style="color: #10b981; font-weight: 600;">
-        Có
-    </span>
-                        <span th:unless="${log.physicalActivity == 1}" class="value-badge badge-neutral"
-                              style="color: #94a3b8;">
-         Không
-    </span>
-                    </td>
-                    <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
-                        style="color: var(--text-secondary); font-size: 0.85rem;">Triệu chứng...
-                    </td>
+                            </td>
+                            <td>
+                                <span th:if="${log.physicalActivity == 1}" class="value-badge badge-success"
+                                    style="color: #10b981; font-weight: 600;">
+                                    Có
+                                </span>
+                                <span th:unless="${log.physicalActivity == 1}" class="value-badge badge-neutral"
+                                    style="color: #94a3b8;">
+                                    Không
+                                </span>
+                            </td>
+                            <td th:text="${#strings.abbreviate(log.symptoms != null ? log.symptoms : '', 25)}"
+                                style="color: var(--text-secondary); font-size: 0.85rem;">Triệu chứng...
+                            </td>
 
-                    <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
-                        style="color: var(--text-secondary); font-size: 0.85rem;">Ghi chú...
-                    </td>
+                            <td th:text="${#strings.abbreviate(log.note != null ? log.note : '', 25)}"
+                                style="color: var(--text-secondary); font-size: 0.85rem;">Ghi chú...
+                            </td>
 
-                    <td>
-                        <div class="action-links">
-                            <a th:href="@{/health-logs/{id}(id=${log.id}, userId=${userId}, source='my-logs')}"
-                               class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
-                            <a th:if="${!log.logDate.isBefore(#temporals.createToday().minusDays(3))}"
-                               th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
-                               class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
-                            <form th:if="${!log.logDate.isBefore(#temporals.createToday().minusDays(3))}"
-                                  th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
-                                  method="POST" style="display: inline;"
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
-                                <button type="submit" class="btn-action btn-delete" title="Xóa Nhật Ký">🗑️</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
+                            <td>
+                                <div class="action-links">
+                                    <a th:href="@{/health-logs/{id}(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                        class="btn-action btn-view" title="Xem Chi Tiết">👁️</a>
+                                    <a th:if="${!log.logDate.isBefore(#temporals.createToday().minusDays(3))}"
+                                        th:href="@{/health-logs/{id}/edit(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                        class="btn-action btn-edit" title="Sửa Chỉ Số">✏️</a>
+                                    <form th:if="${!log.logDate.isBefore(#temporals.createToday().minusDays(3))}"
+                                        th:action="@{/health-logs/{id}/delete(id=${log.id}, userId=${userId}, source='my-logs')}"
+                                        method="POST" style="display: inline;"
+                                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký này không?');">
+                                        <button type="submit" class="btn-action btn-delete"
+                                            title="Xóa Nhật Ký">🗑️</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
 
-                <tr th:if="${#lists.isEmpty(logs)}">
-                    <td colspan="9">
-                        <div class="empty-state">
-                            <span class="empty-state-icon">📋</span>
-                            <h3>Chưa Có Nhật Ký Sức Khỏe Nào</h3>
-                            <p>Hãy bắt đầu thêm nhật ký đầu tiên để theo dõi sức khỏe tốt hơn.</p>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination Bar -->
-        <div class="pagination-container" th:if="${totalPages > 0}">
-            <div class="pagination-info">
-                Hiển thị
-                <strong th:text="${currentPage * pageSize + 1}">1</strong>-<strong
-                    th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong>
-                trong tổng <strong th:text="${totalElements}">100</strong> bản ghi
+                        <tr th:if="${#lists.isEmpty(logs)}">
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <span class="empty-state-icon">📋</span>
+                                    <h3>Chưa Có Nhật Ký Sức Khỏe Nào</h3>
+                                    <p>Hãy bắt đầu thêm nhật ký đầu tiên để theo dõi sức khỏe tốt hơn.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <div class="pagination-buttons" th:if="${totalPages > 1}">
-                <a th:href="@{/health-logs/my-logs(page=${currentPage - 1}, size=${pageSize}, userId=${userId})}"
-                   th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
-                    &laquo; Trước
-                </a>
-                <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                   th:href="@{/health-logs/my-logs(page=${i}, size=${pageSize}, userId=${userId})}"
-                   th:text="${i + 1}"
-                   th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">1</a>
-                <a th:href="@{/health-logs/my-logs(page=${currentPage + 1}, size=${pageSize}, userId=${userId})}"
-                   th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
-                    Sau &raquo;
-                </a>
+            <!-- Pagination Bar -->
+            <div class="pagination-container" th:if="${totalPages > 0}">
+                <div class="pagination-info">
+                    Hiển thị
+                    <strong th:text="${currentPage * pageSize + 1}">1</strong>-<strong
+                        th:text="${(currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize}">10</strong>
+                    trong tổng <strong th:text="${totalElements}">100</strong> bản ghi
+                </div>
+
+                <div class="pagination-buttons" th:if="${totalPages > 1}">
+                    <a th:href="@{/health-logs/my-logs(page=${currentPage - 1}, size=${pageSize}, userId=${userId})}"
+                        th:class="${currentPage == 0} ? 'pagination-btn disabled' : 'pagination-btn'">
+                        &laquo; Trước
+                    </a>
+                    <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:href="@{/health-logs/my-logs(page=${i}, size=${pageSize}, userId=${userId})}"
+                        th:text="${i + 1}"
+                        th:class="${currentPage == i} ? 'pagination-btn active' : 'pagination-btn'">1</a>
+                    <a th:href="@{/health-logs/my-logs(page=${currentPage + 1}, size=${pageSize}, userId=${userId})}"
+                        th:class="${currentPage + 1 == totalPages} ? 'pagination-btn disabled' : 'pagination-btn'">
+                        Sau &raquo;
+                    </a>
+                </div>
+
+                <div class="page-size-selector">
+                    <label for="pageSizeSelect">Hiển thị:</label>
+                    <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
+                        <option value="5" th:selected="${pageSize == 5}">5</option>
+                        <option value="10" th:selected="${pageSize == 10}">10</option>
+                        <option value="20" th:selected="${pageSize == 20}">20</option>
+                        <option value="50" th:selected="${pageSize == 50}">50</option>
+                    </select>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">/ trang</span>
+                </div>
             </div>
+        </section>
 
-            <div class="page-size-selector">
-                <label for="pageSizeSelect">Hiển thị:</label>
-                <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
-                    <option value="5" th:selected="${pageSize == 5}">5</option>
-                    <option value="10" th:selected="${pageSize == 10}">10</option>
-                    <option value="20" th:selected="${pageSize == 20}">20</option>
-                    <option value="50" th:selected="${pageSize == 50}">50</option>
-                </select>
-                <span style="font-size: 0.85rem; color: var(--text-secondary);">/ trang</span>
+        <!-- Khuyến Nghị Từ Bác Sĩ -->
+        <section class="table-card" style="margin-top: 2rem;">
+            <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 class="table-title">💊 Khuyến Nghị Từ Bác Sĩ</h2>
+                <label
+                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#64748b; cursor:pointer;">
+                    <input type="checkbox" id="showInactiveRec" onchange="loadPatientRecommendations()"
+                        style="cursor:pointer;" />
+                    Hiển thị đã thu hồi
+                </label>
             </div>
-        </div>
-    </section>
+            <div id="patientRecItems"
+                style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.75rem; padding: 0 1.5rem;">
+                <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
+            </div>
+            <div id="recPaginationContainer" class="pagination-container" style="display:none;">
+                <div class="pagination-info" id="recPaginationInfo"></div>
+                <div class="pagination-buttons" id="recPaginationButtons"></div>
+            </div>
+        </section>
 
-    <!-- Khuyến Nghị Từ Bác Sĩ -->
-    <section class="table-card" style="margin-top: 2rem;">
-        <div class="table-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 class="table-title">💊 Khuyến Nghị Từ Bác Sĩ</h2>
-            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#64748b; cursor:pointer;">
-                <input type="checkbox" id="showInactiveRec" onchange="loadPatientRecommendations()"
-                       style="cursor:pointer;"/>
-                Hiển thị đã thu hồi
-            </label>
-        </div>
-        <div id="patientRecItems"
-             style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.75rem; padding: 0 1.5rem;">
-            <p style="color:#94a3b8; font-size:0.9rem;">Đang tải...</p>
-        </div>
-        <div id="recPaginationContainer" class="pagination-container" style="display:none;">
-            <div class="pagination-info" id="recPaginationInfo"></div>
-            <div class="pagination-buttons" id="recPaginationButtons"></div>
-        </div>
-    </section>
+    </main>
 
-</main>
-
-<!-- Error Modal -->
-<div th:if="${error}">
-    <div id="errorModalOverlay"
-         style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000">
-        <div style="background:#fff;border-radius:12px;max-width:520px;width:90%;padding:1.5rem;box-shadow:0 8px 30px rgba(0,0,0,0.2);">
-            <div style="display:flex;gap:1rem;align-items:flex-start">
-                <div style="font-size:2rem;color:#dc2626">⚠️</div>
-                <div style="flex:1">
-                    <h3 style="margin:0 0 0.5rem 0;color:#111827">Lỗi khi xóa</h3>
-                    <p style="margin:0 0 1rem 0;color:#374151;font-size:0.95rem;white-space:pre-wrap;"
-                       th:text="${error}">Thông báo lỗi</p>
-                    <div style="text-align:right">
-                        <button id="closeErrorModal"
+    <!-- Error Modal -->
+    <div th:if="${error}">
+        <div id="errorModalOverlay"
+            style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000">
+            <div
+                style="background:#fff;border-radius:12px;max-width:520px;width:90%;padding:1.5rem;box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+                <div style="display:flex;gap:1rem;align-items:flex-start">
+                    <div style="font-size:2rem;color:#dc2626">⚠️</div>
+                    <div style="flex:1">
+                        <h3 style="margin:0 0 0.5rem 0;color:#111827">Lỗi khi xóa</h3>
+                        <p style="margin:0 0 1rem 0;color:#374151;font-size:0.95rem;white-space:pre-wrap;"
+                            th:text="${error}">Thông báo lỗi</p>
+                        <div style="text-align:right">
+                            <button id="closeErrorModal"
                                 style="background:#ef4444;color:#fff;border:none;padding:0.6rem 1rem;border-radius:8px;cursor:pointer">
-                            Đóng
-                        </button>
+                                Đóng
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            (function () {
+                var btn = document.getElementById('closeErrorModal');
+                if (btn) {
+                    btn.addEventListener('click', function () {
+                        var ov = document.getElementById('errorModalOverlay');
+                        if (ov) ov.style.display = 'none';
+                    });
+                }
+            })();
+            /*]]>*/
+        </script>
     </div>
+
     <script th:inline="javascript">
         /*<![CDATA[*/
-        (function () {
-            var btn = document.getElementById('closeErrorModal');
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    var ov = document.getElementById('errorModalOverlay');
-                    if (ov) ov.style.display = 'none';
-                });
+        const REC_PAGE_SIZE = 5;
+        let patientRecList = [];
+        let recCurrentPage = 0;
+
+        async function loadPatientRecommendations() {
+            const patientId = /*[[${patientId}]]*/ null;
+            if (!patientId) {
+                document.getElementById("patientRecItems").innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Không xác định được bệnh nhân.</p>";
+                document.getElementById("recPaginationContainer").style.display = "none";
+                return;
             }
-        })();
-        /*]]>*/
-    </script>
-</div>
-
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    const REC_PAGE_SIZE = 5;
-    let patientRecList = [];
-    let recCurrentPage = 0;
-
-    async function loadPatientRecommendations() {
-        const patientId = /*[[${patientId}]]*/ null;
-        if (!patientId) {
-            document.getElementById("patientRecItems").innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Không xác định được bệnh nhân.</p>";
-            document.getElementById("recPaginationContainer").style.display = "none";
-            return;
-        }
-        const showInactive = document.getElementById('showInactiveRec') && document.getElementById('showInactiveRec').checked;
-        const url = showInactive
-            ? `/api/recommendations/patient/${patientId}/all`
-            : `/api/recommendations/patient/${patientId}`;
-        const res = await fetch(url);
-        patientRecList = await res.json();
-        recCurrentPage = 0;
-        renderRecPage();
-    }
-
-    function renderRecPage() {
-        const container = document.getElementById("patientRecItems");
-        const paginationContainer = document.getElementById("recPaginationContainer");
-        const list = patientRecList;
-
-        if (!list.length) {
-            container.innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Chưa có khuyến nghị nào từ bác sĩ.</p>";
-            paginationContainer.style.display = "none";
-            return;
+            const showInactive = document.getElementById('showInactiveRec') && document.getElementById('showInactiveRec').checked;
+            const url = showInactive
+                ? `/api/recommendations/patient/${patientId}/all`
+                : `/api/recommendations/patient/${patientId}`;
+            const res = await fetch(url);
+            patientRecList = await res.json();
+            recCurrentPage = 0;
+            renderRecPage();
         }
 
-        const totalElements = list.length;
-        const totalPages = Math.max(1, Math.ceil(totalElements / REC_PAGE_SIZE));
-        if (recCurrentPage >= totalPages) recCurrentPage = totalPages - 1;
-        if (recCurrentPage < 0) recCurrentPage = 0;
+        function renderRecPage() {
+            const container = document.getElementById("patientRecItems");
+            const paginationContainer = document.getElementById("recPaginationContainer");
+            const list = patientRecList;
 
-        const start = recCurrentPage * REC_PAGE_SIZE;
-        const pageItems = list.slice(start, start + REC_PAGE_SIZE);
+            if (!list.length) {
+                container.innerHTML = "<p style=\"color:#94a3b8; font-size:0.9rem;\">Chưa có khuyến nghị nào từ bác sĩ.</p>";
+                paginationContainer.style.display = "none";
+                return;
+            }
 
-        container.innerHTML = pageItems.map(r => {
-            const isInactive = r.status === 'inactive';
-            if (isInactive) {
-                return `<div style="padding:1rem 1.25rem; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; opacity:0.6;">
+            const totalElements = list.length;
+            const totalPages = Math.max(1, Math.ceil(totalElements / REC_PAGE_SIZE));
+            if (recCurrentPage >= totalPages) recCurrentPage = totalPages - 1;
+            if (recCurrentPage < 0) recCurrentPage = 0;
+
+            const start = recCurrentPage * REC_PAGE_SIZE;
+            const pageItems = list.slice(start, start + REC_PAGE_SIZE);
+
+            container.innerHTML = pageItems.map(r => {
+                const isInactive = r.status === 'inactive';
+                if (isInactive) {
+                    return `<div style="padding:1rem 1.25rem; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; opacity:0.6;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong style="font-size:0.95rem; color:#94a3b8; text-decoration:line-through;">${r.title}</strong>
                             <span style="font-size:0.75rem; background:#f1f5f9; color:#94a3b8; padding:0.2rem 0.6rem; border-radius:6px;">Đã thu hồi</span>
@@ -788,19 +797,19 @@
                         <p style="margin-top:0.5rem; font-size:0.88rem; color:#94a3b8; text-decoration:line-through;">${r.recommendation}</p>
                         <span style="font-size:0.8rem; color:#cbd5e1;">👨‍⚕️ BS. ${r.doctorName}</span>
                     </div>`;
-            }
-            const priorityMap = {HIGH: ['#dc2626', '#fee2e2', 'High'], MEDIUM: ['#b45309', '#fef3c7', 'Medium'], LOW: ['#16a34a', '#dcfce7', 'Low']};
-            const categoryMap = {DIET: 'Chế độ ăn', EXERCISE: 'Luyện tập', GLUCOSE_MONITORING: 'Theo dõi đường huyết', MEDICATION: 'Thuốc (nhắc nhở)', OTHER: 'Khác'};
-            const p = priorityMap[r.priority] || priorityMap.MEDIUM;
-            const priorityBadge = `<span style="font-size:0.75rem; color:${p[0]}; background:${p[1]}; padding:0.2rem 0.6rem; border-radius:6px; font-weight:600;">${p[2]}</span>`;
-            const categoryBadge = `<span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:0.2rem 0.6rem; border-radius:6px;">${categoryMap[r.category] || 'Khác'}</span>`;
-            const confirmArea = r.read
+                }
+                const priorityMap = { HIGH: ['#dc2626', '#fee2e2', 'High'], MEDIUM: ['#b45309', '#fef3c7', 'Medium'], LOW: ['#16a34a', '#dcfce7', 'Low'] };
+                const categoryMap = { DIET: 'Chế độ ăn', EXERCISE: 'Luyện tập', GLUCOSE_MONITORING: 'Theo dõi đường huyết', MEDICATION: 'Thuốc (nhắc nhở)', OTHER: 'Khác' };
+                const p = priorityMap[r.priority] || priorityMap.MEDIUM;
+                const priorityBadge = `<span style="font-size:0.75rem; color:${p[0]}; background:${p[1]}; padding:0.2rem 0.6rem; border-radius:6px; font-weight:600;">${p[2]}</span>`;
+                const categoryBadge = `<span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:0.2rem 0.6rem; border-radius:6px;">${categoryMap[r.category] || 'Khác'}</span>`;
+                const confirmArea = r.read
                     ? `<span style="font-size:0.78rem; color:#0284c7; font-weight:600;">✓ Đã xác nhận đã đọc</span>`
                     : `<button onclick="confirmRecRead(${r.id}, this)"
                               style="background:#0ea5e9; color:#fff; border:none; padding:0.35rem 0.9rem; border-radius:7px; font-size:0.8rem; font-weight:600; cursor:pointer;">
                           ✅ Tôi đã đọc
                       </button>`;
-            return `<div style="padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
+                return `<div style="padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <strong style="font-size:0.95rem; color:#15803d;">${r.title}</strong>
                         <span style="font-size:0.78rem; color:#94a3b8;">${new Date(r.createdAt).toLocaleDateString("vi-VN")}</span>
@@ -812,51 +821,51 @@
                         ${confirmArea}
                     </div>
                 </div>`;
-        }).join("");
+            }).join("");
 
-        paginationContainer.style.display = "flex";
-        const from = start + 1;
-        const to = Math.min(start + REC_PAGE_SIZE, totalElements);
-        document.getElementById("recPaginationInfo").innerHTML =
-            `Hiển thị <strong>${from}</strong>-<strong>${to}</strong> trong tổng <strong>${totalElements}</strong> khuyến nghị`;
+            paginationContainer.style.display = "flex";
+            const from = start + 1;
+            const to = Math.min(start + REC_PAGE_SIZE, totalElements);
+            document.getElementById("recPaginationInfo").innerHTML =
+                `Hiển thị <strong>${from}</strong>-<strong>${to}</strong> trong tổng <strong>${totalElements}</strong> khuyến nghị`;
 
-        const buttonsEl = document.getElementById("recPaginationButtons");
-        if (totalPages <= 1) {
-            buttonsEl.innerHTML = "";
-            return;
-        }
-        let btnsHtml = `<button type="button" class="pagination-btn${recCurrentPage === 0 ? ' disabled' : ''}"
+            const buttonsEl = document.getElementById("recPaginationButtons");
+            if (totalPages <= 1) {
+                buttonsEl.innerHTML = "";
+                return;
+            }
+            let btnsHtml = `<button type="button" class="pagination-btn${recCurrentPage === 0 ? ' disabled' : ''}"
                 onclick="goToRecPage(${recCurrentPage - 1})">&laquo; Trước</button>`;
-        for (let i = 0; i < totalPages; i++) {
-            btnsHtml += `<button type="button" class="pagination-btn${recCurrentPage === i ? ' active' : ''}"
+            for (let i = 0; i < totalPages; i++) {
+                btnsHtml += `<button type="button" class="pagination-btn${recCurrentPage === i ? ' active' : ''}"
                     onclick="goToRecPage(${i})">${i + 1}</button>`;
-        }
-        btnsHtml += `<button type="button" class="pagination-btn${recCurrentPage === totalPages - 1 ? ' disabled' : ''}"
+            }
+            btnsHtml += `<button type="button" class="pagination-btn${recCurrentPage === totalPages - 1 ? ' disabled' : ''}"
                 onclick="goToRecPage(${recCurrentPage + 1})">Sau &raquo;</button>`;
-        buttonsEl.innerHTML = btnsHtml;
-    }
-
-    function goToRecPage(page) {
-        recCurrentPage = page;
-        renderRecPage();
-    }
-
-    async function confirmRecRead(id, btn) {
-        const patientId = /*[[${patientId}]]*/ null;
-        btn.disabled = true;
-        btn.textContent = "Đang xác nhận...";
-        try {
-            const res = await fetch(`/api/recommendations/patient/${patientId}/${id}/read`, {method: 'PATCH'});
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            loadPatientRecommendations();
-        } catch (err) {
-            btn.disabled = false;
-            btn.textContent = "✅ Tôi đã đọc";
-            alert("Không thể xác nhận, vui lòng thử lại. Lỗi: " + err.message);
+            buttonsEl.innerHTML = btnsHtml;
         }
-    }
 
-    window.onload = () => loadPatientRecommendations();
+        function goToRecPage(page) {
+            recCurrentPage = page;
+            renderRecPage();
+        }
+
+        async function confirmRecRead(id, btn) {
+            const patientId = /*[[${patientId}]]*/ null;
+            btn.disabled = true;
+            btn.textContent = "Đang xác nhận...";
+            try {
+                const res = await fetch(`/api/recommendations/patient/${patientId}/${id}/read`, { method: 'PATCH' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                loadPatientRecommendations();
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = "✅ Tôi đã đọc";
+                alert("Không thể xác nhận, vui lòng thử lại. Lỗi: " + err.message);
+            }
+        }
+
+        window.onload = () => loadPatientRecommendations();
 
         function changePageSize() {
             var size = document.getElementById('pageSizeSelect').value;
@@ -872,4 +881,5 @@
     </script>
 
 </body>
+
 </html>

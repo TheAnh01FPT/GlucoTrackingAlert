@@ -7,553 +7,706 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <style>
-      :root {
-        --bg: #f8fafc;
-        --card: #ffffff;
-        --text: #0f172a;
-        --muted: #64748b;
-        --primary: #6366f1;
-        --border: #e2e8f0;
-        --shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
-        
-        /* Risk level colors */
-        --low-bg: #d1fae5;
-        --low-text: #065f46;
-        --low-bar: #10b981;
-        
-        --medium-bg: #fef3c7;
-        --medium-text: #92400e;
-        --medium-bar: #f59e0b;
-        
-        --high-bg: #ffedd5;
-        --high-text: #9a3412;
-        --high-bar: #ea580c;
-        
-        --critical-bg: #fee2e2;
-        --critical-text: #991b1b;
-        --critical-bar: #ef4444;
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #4f46e5;
+      --border: #e2e8f0;
+      --orange: #f59e0b;
+      --orange-dark: #d97706;
+      --orange-bg: #fef3c7;
+      --orange-text: #b45309;
+      --shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    .container {
+      width: min(100%, 1520px);
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .page-title, .page-heading {
+      font-size: 1.9rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem;
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .patient-name {
+      margin: -0.5rem 0 1.5rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 1.35rem 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-collapsible {
+      padding: 1rem 1.25rem;
+    }
+
+    .card-collapsible summary {
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .card-collapsible summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .card-collapsible .card-header {
+      margin-bottom: 0;
+    }
+
+    .card-collapsible[open] .card-header {
+      margin-bottom: 1.25rem;
+    }
+
+    .card-collapsible .toggle-icon {
+      margin-left: auto;
+      transition: transform 0.15s;
+    }
+
+    .card-collapsible[open] .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-icon {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+
+    .card-icon-orange {
+      background: #fef3e2;
+    }
+
+    .card-icon-blue {
+      background: #e0f2fe;
+    }
+
+    .card-icon-purple {
+      background: #f5f3ff;
+      color: #7c3aed;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin: 0.4rem 0 0;
+      color: var(--text);
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-label {
+      font-weight: 700;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 1rem;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-LOW {
+      background: #d1fae5;
+      color: #047857;
+    }
+
+    .badge-MEDIUM {
+      background: var(--orange-bg);
+      color: var(--orange-text);
+    }
+
+    .badge-HIGH {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .badge-CRITICAL {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-sm {
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.01em;
+    }
+
+    .badge-data-warning {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 1rem;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+      background: #fef9c3;
+      color: #854d0e;
+      border: 1px dashed #eab308;
+    }
+
+    .badge-yes {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-no {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .progress-wrap {
+      display: block;
+      width: 100%;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 0 0 1rem 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box;
+      height: 38px;
+    }
+
+    .progress-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 0.45rem;
+    }
+
+    .risk-trend-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .progress-bar {
+      height: 100% !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1rem !important;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      border-radius: 9999px;
+      min-width: 70px;
+      transition: width 0.3s ease;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+
+    .risk-LOW {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .risk-MEDIUM {
+      background: linear-gradient(90deg, #fbbf24, var(--orange));
+    }
+
+    .risk-HIGH {
+      background: linear-gradient(90deg, #f97316, #ea580c);
+    }
+
+    .risk-CRITICAL {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .progress-wrap-sm {
+      max-width: 230px;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+      height: 32px;
+    }
+
+    .progress-bar-sm {
+      height: 100% !important;
+      font-size: 0.78rem;
+      padding: 0 0.75rem !important;
+      min-width: 72px;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    .recommendation-text {
+      color: var(--text);
+      font-size: 1.02rem;
+      line-height: 1.55;
+      margin: 0 0 1rem;
+    }
+
+    .disclaimer-compact {
+      background: #fff8e6;
+      border-left: 4px solid #f0ad4e;
+      padding: 0.9rem 1rem;
+      margin-top: 1rem;
+      border-radius: 0 8px 8px 0;
+      color: #7a5c00;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .disclaimer-compact .disclaimer-toggle-link {
+      margin-left: 0.5rem;
+      color: #1d4ed8;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .disclaimer-compact .disclaimer-toggle-link:hover {
+      text-decoration: underline;
+    }
+
+    .disclaimer-full {
+      margin-top: 0.75rem;
+      font-size: 0.92rem;
+    }
+
+    .assessed-at {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .assessed-at .clock-icon {
+      font-size: 1.05rem;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      font-size: 0.98rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0 0.75rem 0.9rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      padding: 1.1rem 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+      font-size: 0.98rem;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .date-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .date-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: #e0f2fe;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .recommendation-cell {
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 320px;
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      padding: 1rem 2rem;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #ffffff;
+      text-decoration: none;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .navbar-link {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .navbar-link:hover,
+    .navbar-link.active {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .main-container {
+      width: min(100%, 1480px);
+      max-width: 1480px;
+      margin: 2rem auto;
+      padding: 0 1.25rem 2rem;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .page-heading {
+      font-size: 1.9rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem;
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .page-subtitle {
+      color: #64748b;
+      margin: 0 0 1.5rem;
+      font-weight: 600;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.25rem;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .profile-sidebar {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 1.35rem 1.4rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eef2ff;
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .profile-name {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #1e1b4b;
+    }
+
+    .profile-type {
+      margin-top: 0.4rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.92rem;
+    }
+
+    .info-label {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .info-value {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .risk-summary {
+      margin-top: 1.25rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+    }
+
+    .risk-summary-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.7rem;
+    }
+
+    .risk-summary-text {
+      margin: 0.8rem 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    .content-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .card-subtitle {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .range-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .range-form input {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 180px;
+    }
+
+    .range-form button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .error-message {
+      margin-top: 1rem;
+      color: #b91c1c;
+      font-weight: 700;
+    }
+
+    .result-block {
+      margin-top: 1.5rem;
+    }
+
+    .meta-row-inline {
+      gap: 1.25rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
       }
-      * { box-sizing: border-box; }
-      body {
-        font-family: 'Inter', Arial, sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        margin: 0;
-        padding: 0;
+      .main-container,
+      .container {
+        padding-left: 0.9rem;
+        padding-right: 0.9rem;
       }
-      .main-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 1.5rem 2rem;
-      }
-      .page-title {
-        font-size: 1.85rem;
-        font-weight: 800;
-        margin: 0 0 1.5rem;
-        color: var(--text);
-      }
-      .patient-name {
-        margin: -0.5rem 0 1.5rem;
-        color: var(--muted);
-        font-size: 0.95rem;
-        font-weight: 600;
+    }
+
+    @media (max-width: 700px) {
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
       }
 
-      .card {
-        background: var(--card);
-        border-radius: 24px;
-        padding: 1.5rem 1.75rem;
-        margin-bottom: 1.75rem;
-        box-shadow: var(--shadow);
-        border: 1px solid #f1f5f9;
-      }
-
-      .card-collapsible {
-        padding: 1rem 1.25rem;
-      }
-      .card-collapsible summary {
-        list-style: none;
-        cursor: pointer;
-      }
-      .card-collapsible summary::-webkit-details-marker {
+      thead {
         display: none;
       }
-      .card-collapsible .card-header {
-        margin-bottom: 0;
-      }
-      .card-collapsible[open] .card-header {
+
+      tbody tr {
         margin-bottom: 1.25rem;
-      }
-      .card-collapsible .toggle-icon {
-        margin-left: auto;
-        transition: transform 0.15s;
-      }
-      .card-collapsible[open] .toggle-icon {
-        transform: rotate(180deg);
-      }
-
-      .card-header {
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-        margin-bottom: 1.5rem;
-      }
-      .card-icon {
-        flex-shrink: 0;
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.6rem;
-      }
-      .card-icon-purple { background: #f5f3ff; color: #7c3aed; }
-      .card-icon-blue { background: #e0f2fe; color: #0284c7; }
-      .card-title {
-        font-size: 1.4rem;
-        font-weight: 800;
-        margin: 0.4rem 0 0;
-        color: var(--text);
-      }
-
-      .meta-row {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
-        margin-bottom: 1.25rem;
-        flex-wrap: wrap;
-      }
-      .meta-label {
-        font-weight: 700;
-        color: var(--muted);
-        font-size: 1rem;
-      }
-
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.45rem 1rem;
-        border-radius: 9999px;
-        font-weight: 800;
-        font-size: 0.85rem;
-        letter-spacing: 0.02em;
-      }
-      .badge-LOW { background: #d1fae5; color: #047857; }
-      .badge-MEDIUM { background: #fef3c7; color: #b45309; }
-      .badge-HIGH { background: #ffedd5; color: #9a3412; }
-      .badge-CRITICAL { background: #fee2e2; color: #991b1b; }
-      .badge-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
-
-      .progress-wrap {
-        display: block;
-        width: 100%;
-        background: #e2e8f0;
-        border-radius: 9999px;
-        overflow: hidden;
-        margin: 0 0 1rem 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box;
-        height: 38px;
-      }
-      .progress-wrap-sm {
-        max-width: 230px;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-sizing: border-box;
-        height: 32px;
-      }
-      .progress-bar {
-        height: 100% !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 1rem !important;
-        color: #fff;
-        font-weight: 800;
-        font-size: 0.95rem;
-        border-radius: 9999px;
-        min-width: 70px;
-        transition: width 0.3s ease;
-        white-space: nowrap;
-        box-sizing: border-box;
-      }
-      .progress-bar-sm {
-        height: 100% !important;
-        font-size: 0.78rem;
-        padding: 0 0.75rem !important;
-        min-width: 72px;
-        justify-content: center;
-        box-sizing: border-box;
-      }
-      .risk-LOW { background: linear-gradient(90deg, #10b981, #059669); }
-      .risk-MEDIUM { background: linear-gradient(90deg, #fbbf24, #d97706); }
-      .risk-HIGH { background: linear-gradient(90deg, #f97316, #ea580c); }
-      .risk-CRITICAL { background: linear-gradient(90deg, #ef4444, #dc2626); }
-
-      .recommendation-text {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        color: #334155;
-        font-weight: 500;
-        margin: 1.25rem 0 0;
-        background: #f8fafc;
-        padding: 1.25rem 1.5rem;
-        border-radius: 16px;
-        border-left: 5px solid var(--primary);
-      }
-
-      /* Navbar Layout */
-      .navbar {
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-        padding: 1rem 2rem;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-      }
-      .navbar-brand {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #ffffff;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      .navbar-menu {
-        display: flex;
-        gap: 1.5rem;
-        align-items: center;
-      }
-      .navbar-link {
-        color: #cbd5e1;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: all 0.3s;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-      }
-      .navbar-link:hover {
-        color: white;
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-      .navbar-link.active {
-        color: white;
-        background-color: rgba(255, 255, 255, 0.2);
-        border: 1px solid #818cf8;
-      }
-
-      /* Sidebar & Content Layout */
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: minmax(320px, 360px) 1fr;
-        gap: 1.5rem;
-      }
-      @media (max-width: 900px) {
-        .dashboard-grid { grid-template-columns: 1fr; }
-      }
-      
-      .profile-sidebar {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 1.75rem;
-        box-shadow: var(--shadow);
-        height: fit-content;
-      }
-      .profile-header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 1.5rem;
-        margin-bottom: 1.5rem;
-      }
-      .profile-avatar {
-        width: 72px;
-        height: 72px;
-        border-radius: 20px;
-        background: #f5f3ff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-      }
-      .profile-name {
-        font-size: 1.25rem;
-        font-weight: 800;
-        margin: 0;
-        color: var(--text);
-      }
-      .profile-type {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--primary);
-        background: #f5f3ff;
-        padding: 0.3rem 0.8rem;
-        border-radius: 9999px;
-        margin-top: 0.5rem;
-      }
-
-      .info-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-      }
-      .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.9rem;
-      }
-      .info-label {
-        font-weight: 600;
-        color: var(--muted);
-      }
-      .info-value {
-        font-weight: 700;
-        color: var(--text);
-      }
-      .badge-status {
-        font-size: 0.8rem;
-        font-weight: 700;
-        padding: 0.2rem 0.6rem;
-        border-radius: 6px;
-      }
-      .badge-yes { background: #fee2e2; color: #ef4444; }
-      .badge-no { background: #d1fae5; color: #10b981; }
-
-      .risk-summary {
-        margin-top: 1.75rem;
-        border-top: 1px solid var(--border);
-        padding-top: 1.5rem;
-      }
-      .risk-summary-label {
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.75rem;
-      }
-      .risk-summary-text {
-        font-size: 0.95rem;
-        line-height: 1.5;
-        color: #475569;
-        margin: 0.75rem 0 0;
-      }
-
-      .content-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 1.75rem;
-      }
-
-      /* Buttons & Forms */
-      .btn-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        text-decoration: none;
-        color: var(--muted);
-        font-size: 0.9rem;
-        font-weight: 600;
-        transition: color 0.2s;
-        margin-bottom: 1.5rem;
-      }
-      .btn-back:hover { color: var(--primary); }
-
-      .range-form {
-        display: flex;
-        align-items: flex-end;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
-      }
-      .range-form div {
-        flex: 1;
-        min-width: 180px;
-      }
-      .range-form input {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        font-family: inherit;
-        font-size: 0.95rem;
-        font-weight: 500;
-        margin-top: 0.5rem;
-        outline: none;
-      }
-      .range-form input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-      }
-      .range-form button {
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 0.75rem 1.75rem;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: background 0.2s;
-        height: 46px;
-      }
-      .range-form button:hover {
-        background: #4f46e5;
-      }
-
-      .error-message {
-        background: #fee2e2;
-        color: #ef4444;
-        padding: 1rem 1.25rem;
-        border-radius: 12px;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        font-size: 0.9rem;
-      }
-
-      .result-block {
-        background: #f8fafc;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
-      }
-      .meta-row-inline {
-        margin: 1rem 0;
-      }
-      .meta-row-inline span {
-        margin-right: 1.5rem;
-      }
-
-      .empty {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: var(--muted);
-        font-weight: 500;
-        font-size: 1rem;
-        border: 2px dashed var(--border);
-        border-radius: 16px;
-      }
-
-      .assessed-at {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 1.25rem;
-        font-size: 0.85rem;
-        color: var(--muted);
-        font-weight: 500;
-      }
-
-      /* Tables */
-      .table-wrap {
-        overflow-x: auto;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      thead th {
-        text-align: left;
-        padding: 0 0.75rem 0.9rem;
-        color: var(--muted);
-        font-size: 0.85rem;
-        font-weight: 700;
+        padding-bottom: 1rem;
         border-bottom: 1px solid var(--border);
       }
+
       tbody td {
-        padding: 1.1rem 0.75rem;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-        font-size: 0.98rem;
-      }
-      tbody tr:last-child td {
         border-bottom: none;
+        padding: 0.35rem 0;
       }
-      .date-cell {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .date-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        background: #e0f2fe;
-        color: #0284c7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.95rem;
-        flex-shrink: 0;
-      }
-      .recommendation-cell {
-        color: var(--muted);
-        line-height: 1.5;
-        max-width: 320px;
-      }
-
-      @media (max-width: 768px) {
-        table, thead, tbody, th, td, tr { display: block; }
-        thead { display: none; }
-        tbody tr {
-          margin-bottom: 1.25rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid var(--border);
-        }
-        tbody td {
-          border-bottom: none;
-          padding: 0.35rem 0;
-        }
-      }
-    </style>
+    }
+  </style>
   </head>
   <body>
     <header class="navbar">
-      <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand">🩸 GlucoTrackAlert</a>
-      <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand">🩸 GlucoTrackAlert</a>
+      <a th:if="${isDoctorView}" href="/doctor/home" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
+      <a th:unless="${isDoctorView}" th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
 
       <nav class="navbar-menu">
         <th:block th:if="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link">🤖 Báo Cáo AI</a>
-          <a href="#" class="navbar-link active">📊 Lịch Sử Tim Mạch Tuần</a>
-          <a href="/doctor/home" class="navbar-link">🏠 Trang Chủ</a>
+          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
+          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Tim Mạch Tuần</a>
+          <a href="/doctor/home" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
         </th:block>
 
         <th:block th:unless="${isDoctorView}">
-          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link">🤖 Báo Cáo AI</a>
-          <a href="#" class="navbar-link active">📊 Lịch Sử Tim Mạch Tuần</a>
-          <a href="/patient/homepage" class="navbar-link">🏠 Trang chủ</a>
+          <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo Cáo AI</a>
+          <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Tim Mạch Tuần</a>
+          <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
         </th:block>
       </nav>
     </header>
 
     <main class="main-container">
-      <a class="btn-back" th:if="${isDoctorView}" href="/doctor/home">← Quay lại trang bác sĩ</a>
-      <a class="btn-back" th:unless="${isDoctorView}" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>
+      <a class="btn-back" th:if="${isDoctorView}" th:href="@{/health-logs/ai-report(patientId=${patientId})}">← Quay lại Dashboard AI</a>
+      <a class="btn-back" th:unless="${isDoctorView}" th:href="@{/health-logs/ai-report}">← Quay lại Dashboard AI</a>
 
-      <h1 class="page-title">🫀 Dự Báo Nguy Cơ Biến Chứng Tim Mạch</h1>
-      <p class="patient-name" th:if="${patientName}" th:text="'Bệnh nhân: ' + ${patientName}">Bệnh nhân</p>
+      <h1 class="page-heading"><i class="ti ti-heart-rate-monitor"></i> Dự Báo Nguy Cơ Biến Chứng Tim Mạch</h1>
 
       <div class="dashboard-grid">
         <aside class="profile-sidebar">
           <div class="profile-header">
             <div class="profile-avatar" style="overflow: hidden; border: 2px solid var(--border);">
               <img th:if="${patient != null && patient.avatar != null && !patient.avatar.isEmpty()}" th:src="${patient.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px;">
-              <i th:unless="${patient != null && patient.avatar != null && !patient.avatar.isEmpty()}" class="ti ti-heart-broken" style="font-size: 36px; color: var(--primary);"></i>
+              <i th:unless="${patient != null && patient.avatar != null && !patient.avatar.isEmpty()}" class="ti ti-user" style="font-size: 32px; color: #4B3FA0;"></i>
             </div>
             <h2 class="profile-name" th:text="${patientName != null ? patientName : 'Bệnh nhân'}">Bệnh nhân</h2>
             <span class="profile-type">Theo dõi tim mạch</span>
@@ -597,7 +750,7 @@
           </div>
 
           <div class="risk-summary" th:if="${latestAssessment != null}">
-            <div class="risk-summary-label">Đánh giá tuần này</div>
+            <div class="risk-summary-label">Đánh giá mới nhất</div>
             <div class="badge" th:classappend="' badge-' + ${latestAssessment.healthStatus}">
               <span th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
             </div>
@@ -609,41 +762,39 @@
           <!-- Latest Weekly Assessment Card -->
           <section class="card">
             <div class="card-header">
-              <div class="card-icon card-icon-purple">
-                <i class="ti ti-heart-rate-monitor" style="font-size: 28px;"></i>
+              <div class="card-icon card-icon-orange">
+                <i class="ti ti-activity-heartbeat" style="font-size:26px; color:#d97706;"></i>
               </div>
               <div>
-                <h2 class="card-title">Đánh giá tuần gần nhất</h2>
-                <p class="card-subtitle">Kết quả chẩn đoán nguy cơ tim mạch từ hệ thống AI của tuần gần đây nhất.</p>
+                <h2 class="card-title">Đánh giá gần nhất</h2>
+                <p class="card-subtitle">Kết quả sàng lọc gần đây nhất từ hệ thống AI.</p>
               </div>
             </div>
 
             <div th:if="${latestAssessment == null}" class="empty">
-              Chưa có dữ liệu đánh giá tuần. Vui lòng ghi chép nhật ký sức khỏe đầy đủ để nhận đánh giá.
+              Chưa có dữ liệu đánh giá. Hãy tạo nhật ký sức khỏe để nhận đánh giá.
             </div>
 
             <div th:if="${latestAssessment != null}">
               <div class="meta-row">
-                <span class="meta-label">Mức độ nguy cơ:</span>
-                <span th:class="'badge badge-' + ${latestAssessment.healthStatus}" th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Nguy hiểm'))">MEDIUM</span>
-                <span th:if="${latestAssessment.lowConfidence}" class="badge badge-MEDIUM">⚠️ Dữ liệu tuần chưa đủ</span>
+                <span class="meta-label">Mức độ (sàng lọc):</span>
+                <span th:class="'badge badge-' + ${latestAssessment.healthStatus}" th:text="${latestAssessment.healthStatus == 'LOW'} ? 'Thấp' : (${latestAssessment.healthStatus == 'MEDIUM'} ? 'Trung bình' : (${latestAssessment.healthStatus == 'HIGH'} ? 'Cao' : 'Cần chú ý'))">MEDIUM</span>
+                <span th:if="${latestAssessment.lowConfidence}" class="badge badge-data-warning">⚠️ Dữ liệu chưa đầy đủ</span>
               </div>
 
-              <div class="meta-row">
-                <span class="meta-label">Xác suất nguy cơ</span>
-              </div>
+              <span class="progress-label">Điểm sàng lọc</span>
               <div class="progress-wrap">
                 <div th:class="'progress-bar risk-' + ${latestAssessment.healthStatus}"
                      th:style="'width:' + ${#numbers.formatDecimal(latestAssessment.riskPercentage, 1, 2)} + '%'"
                      th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage, 1, 2)} + '%'">45.89%</div>
               </div>
 
-              <div class="risk-summary-text" th:if="${previousAssessment != null && latestAssessment.riskPercentage != null && previousAssessment.riskPercentage != null}" style="font-size: 0.9rem; color: var(--muted); font-weight: 500; margin-bottom: 1rem;">
+              <div class="risk-trend-note" th:if="${previousAssessment != null && latestAssessment.riskPercentage != null && previousAssessment.riskPercentage != null}">
                 <span th:if="${latestAssessment.riskPercentage > previousAssessment.riskPercentage}">
-                  ↑ Tăng <span th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage - previousAssessment.riskPercentage, 1, 2)}"></span>% so với tuần trước
+                  ↑ Tăng <span th:text="${#numbers.formatDecimal(latestAssessment.riskPercentage - previousAssessment.riskPercentage, 1, 1)}"></span> điểm % so với tuần trước
                 </span>
                 <span th:if="${latestAssessment.riskPercentage < previousAssessment.riskPercentage}">
-                  ↓ Giảm <span th:text="${#numbers.formatDecimal(previousAssessment.riskPercentage - latestAssessment.riskPercentage, 1, 2)}"></span>% so với tuần trước
+                  ↓ Giảm <span th:text="${#numbers.formatDecimal(previousAssessment.riskPercentage - latestAssessment.riskPercentage, 1, 1)}"></span> điểm % so với tuần trước
                 </span>
                 <span th:if="${latestAssessment.riskPercentage == previousAssessment.riskPercentage}">
                   → Không đổi so với tuần trước
@@ -652,8 +803,8 @@
 
               <p class="recommendation-text" th:text="${latestAssessment.recommendation}">Nguy cơ trung bình. Hãy duy trì lối sống lành mạnh.</p>
 
-              <div class="risk-factor-note" style="background: #f8fafc; border-radius: 12px; padding: 16px; margin: 1.5rem 0; font-size: 0.9rem; border: 1px solid var(--border);">
-                <div style="font-weight: 700; margin-bottom: 8px; color: var(--text);">Các trường đầu vào đóng góp cho mô hình dự báo tim mạch:</div>
+              <div class="risk-factor-note" style="background: var(--surface-1, #f5f5f5); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px;">
+                <div style="font-weight: 500; margin-bottom: 6px;">Yếu tố góp phần chính</div>
                 <div th:if="${patient != null and patient.age != null}">
                   • Tuổi: <strong th:text="${patient.age}">--</strong> tuổi
                 </div>
@@ -696,8 +847,12 @@
                 </div>
               </div>
 
-              <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; font-size: 0.85rem; color: #b45309; border-radius: 8px; line-height: 1.6; margin-top: 1.5rem;">
-                <strong>Lưu ý quan trọng:</strong> Đây là công cụ sàng lọc sơ bộ dựa trên mô hình AI Rừng ngẫu nhiên (Random Forest) được huấn luyện để ước tính mối liên quan lâm sàng. Kết quả mang tính chất tham khảo, giúp cảnh báo sớm nguy cơ để điều chỉnh sinh hoạt — hoàn toàn không có giá trị thay thế chẩn đoán y khoa chuyên sâu từ bác sĩ chuyên khoa hoặc các chẩn đoán hình ảnh như đo điện tâm đồ (ECG) / siêu âm tim.
+              <div class="disclaimer-compact" style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; font-size: 0.85rem; color: #b45309; border-radius: 8px; line-height: 1.6; margin-top: 1.5rem;">
+                <strong>Lưu ý quan trọng:</strong> Công cụ sàng lọc sơ bộ, không thay thế chẩn đoán y khoa.
+                <a href="#" class="disclaimer-toggle-link" style="color: #d97706; text-decoration: underline;">Chi tiết</a>
+                <div class="disclaimer-full" hidden style="margin-top: 8px;">
+                  Đây là công cụ sàng lọc sơ bộ dựa trên mô hình AI Rừng ngẫu nhiên (Random Forest) được huấn luyện để ước tính mối liên quan lâm sàng. Kết quả mang tính chất tham khảo, giúp cảnh báo sớm nguy cơ để điều chỉnh sinh hoạt — hoàn toàn không có giá trị thay thế chẩn đoán y khoa chuyên sâu từ bác sĩ chuyên khoa hoặc các chẩn đoán hình ảnh như đo điện tâm đồ (ECG) / siêu âm tim.
+                </div>
               </div>
 
               <div class="assessed-at">
@@ -756,8 +911,8 @@
                     <td>
                       <div class="progress-wrap progress-wrap-sm">
                         <div th:class="'progress-bar progress-bar-sm risk-' + ${r.healthStatus}"
-                             th:style="'width:' + ${r.riskPercentage} + '%'"
-                             th:text="${r.riskPercentage} + '%'">45.89%</div>
+                             th:style="'width:' + ${#numbers.formatDecimal(r.riskPercentage, 1, 2)} + '%'"
+                             th:text="${#numbers.formatDecimal(r.riskPercentage, 1, 2)} + '%'">45.89%</div>
                       </div>
                     </td>
                     <td>
@@ -767,6 +922,13 @@
                   </tr>
                 </tbody>
               </table>
+              <div class="table-pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                <span class="pagination-info" style="font-size: 0.85rem; color: var(--muted); font-weight: 600;"></span>
+                <div class="pagination-btns" style="display: flex; gap: 0.5rem;">
+                  <button class="btn-prev" style="padding: 0.4rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-weight: 700; cursor: pointer; font-size: 0.85rem;">← Trước</button>
+                  <button class="btn-next" style="padding: 0.4rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-weight: 700; cursor: pointer; font-size: 0.85rem;">Sau →</button>
+                </div>
+              </div>
             </div>
             </div>
           </details>
@@ -816,8 +978,8 @@
               </div>
               <div class="progress-wrap">
                 <div class="progress-bar" th:classappend=" ' risk-' + ${customRangeResult.riskLevel}"
-                     th:style="'width:' + ${customRangeResult.riskPercentage} + '%'"
-                     th:text="${customRangeResult.riskPercentage} + '%'">45.89%</div>
+                     th:style="'width:' + ${#numbers.formatDecimal(customRangeResult.riskPercentage, 1, 2)} + '%'"
+                     th:text="${#numbers.formatDecimal(customRangeResult.riskPercentage, 1, 2)} + '%'">45.89%</div>
               </div>
               <div class="meta-row meta-row-inline">
                 <span class="meta-label">Mức độ:</span>
@@ -835,5 +997,73 @@
         </div>
       </div>
     </main>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.disclaimer-toggle-link').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          var container = link.closest('.disclaimer-compact');
+          if (!container) return;
+          var full = container.querySelector('.disclaimer-full');
+          if (!full) return;
+          full.hidden = !full.hidden;
+          link.textContent = full.hidden ? 'Chi tiết' : 'Thu gọn';
+        });
+      });
+
+      // Pagination for history table (3 items per page)
+      const tableWrap = document.querySelector('.table-wrap');
+      if (tableWrap) {
+        const rows = Array.from(tableWrap.querySelectorAll('tbody tr'));
+        const pageSize = 3;
+        let currentPage = 1;
+        const totalPages = Math.ceil(rows.length / pageSize);
+
+        const infoSpan = tableWrap.querySelector('.pagination-info');
+        const prevBtn = tableWrap.querySelector('.btn-prev');
+        const nextBtn = tableWrap.querySelector('.btn-next');
+        const paginationDiv = tableWrap.querySelector('.table-pagination');
+
+        if (rows.length <= pageSize) {
+          if (paginationDiv) paginationDiv.style.display = 'none';
+        } else {
+          function renderPage(page) {
+            currentPage = page;
+            const start = (page - 1) * pageSize;
+            const end = start + pageSize;
+
+            rows.forEach((row, index) => {
+              row.style.display = (index >= start && index < end) ? '' : 'none';
+            });
+
+            if (infoSpan) infoSpan.textContent = `Trang ${currentPage} / ${totalPages} (Tổng ${rows.length} kết quả)`;
+            if (prevBtn) {
+              prevBtn.disabled = currentPage === 1;
+              prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+              prevBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+            }
+            if (nextBtn) {
+              nextBtn.disabled = currentPage === totalPages;
+              nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+              nextBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+            }
+          }
+
+          if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+              if (currentPage > 1) renderPage(currentPage - 1);
+            });
+          }
+          if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+              if (currentPage < totalPages) renderPage(currentPage + 1);
+            });
+          }
+
+          renderPage(1);
+        }
+      }
+    });
+  </script>
   </body>
 </html>
