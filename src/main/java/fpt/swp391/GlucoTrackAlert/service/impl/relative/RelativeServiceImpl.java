@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,9 +30,13 @@ public class RelativeServiceImpl implements RelativeService {
     @Override
     @Transactional(readOnly = true)
     public List<RelativeResponse> getRelativesByPatientId(Long patientId) {
-        return relativeRepository.findByPatientId(patientId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        List<Relative> relatives = relativeRepository.findByPatientId(patientId);
+        List<RelativeResponse> responseList = new ArrayList<>();
+        for (Relative rel : relatives) {
+            RelativeResponse dto = this.mapToResponse(rel);
+            responseList.add(dto);
+        }
+        return responseList;
     }
 
     @Override
