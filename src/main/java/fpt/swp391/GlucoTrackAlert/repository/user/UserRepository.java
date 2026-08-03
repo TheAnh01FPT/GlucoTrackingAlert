@@ -22,6 +22,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Count users by role name (e.g., DOCTOR, PATIENT)
     long countByRole_Name(String roleName);
 
+    // Lấy danh sách tài khoản theo role name (dùng để gửi email thông báo cho tất cả Admin)
+    List<User> findByRole_Name(String roleName);
+
     long countByRole_NameAndStatus(String roleName, String status);
 
     // Dùng khi cho phép 1 tài khoản pending_verification cập nhật lại SĐT của chính nó
