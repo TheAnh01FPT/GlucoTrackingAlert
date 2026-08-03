@@ -659,20 +659,41 @@
         padding: 0.35rem 0;
       }
     }
+
+    /* Patient Layout Body Styles (handles sidebar offset) */
+    body.patient-layout-body {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: var(--bg-primary) !important;
+        min-height: 100vh !important;
+    }
+    
+    body.patient-layout-body .main-container {
+        margin-left: 270px !important; /* Sidebar width (250px) + 20px gap */
+        margin-right: 20px !important;
+        margin-top: 2rem !important;
+        margin-bottom: 2rem !important;
+        padding: 0 1.5rem !important;
+        box-sizing: border-box !important;
+        max-width: calc(100% - 290px) !important; /* Ensure it stays within bounds */
+    }
+
+    @media (max-width: 992px) {
+        body.patient-layout-body .main-container {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            max-width: 100% !important;
+            padding: 1rem !important;
+        }
+    }
   </style>
+  <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
 </head>
 
-<body>
-  <header class="navbar">
-    <a th:href="@{/patient/homepage}" class="navbar-brand"><i class="ti ti-droplet"></i> GlucoTrackAlert</a>
+<body class="patient-layout-body">
 
-    <nav class="navbar-menu">
-      <a th:href="@{/health-logs/ai-report(patientId=${patientId})}" class="navbar-link"><i class="ti ti-robot"></i> Báo
-        Cáo AI</a>
-      <a href="#" class="navbar-link active"><i class="ti ti-chart-bar"></i> Lịch Sử Sàng Lọc Thận Tuần</a>
-      <a href="/patient/homepage" class="navbar-link"><i class="ti ti-home"></i> Trang Chủ</a>
-    </nav>
-  </header>
+  <div th:replace="~{fragments/layout :: patientSidebar('ai-report')}"></div>
 
   <main class="main-container">
     <a class="btn-back" th:href="@{/patient/homepage}">← Quay lại trang chủ</a>

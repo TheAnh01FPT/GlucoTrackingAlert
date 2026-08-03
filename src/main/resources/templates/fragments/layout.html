@@ -173,3 +173,38 @@
         }
     </script>
 </div>
+
+<!-- Patient Layout Sidebar fragment -->
+<div th:fragment="patientSidebar(activePage)">
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2>GlucoTrack</h2>
+            <span>Patient Portal</span>
+        </div>
+        <div class="sidebar-menu">
+            <a th:href="@{/patient/homepage}" th:classappend="${activePage == 'home'} ? 'active' : ''" class="menu-item">🏠 Trang Chủ</a>
+            <a th:href="@{/patient/profile}" th:classappend="${activePage == 'profile'} ? 'active' : ''" class="menu-item">👤 Hồ Sơ Sức Khỏe</a>
+            <a th:href="@{/patient/relatives}" th:classappend="${activePage == 'relatives'} ? 'active' : ''" class="menu-item">👪 Quản Lý Người Thân</a>
+            <a th:href="@{/patient/choose-doctor}" th:classappend="${activePage == 'choose-doctor'} ? 'active' : ''" class="menu-item">🩺 Chọn Bác Sĩ</a>
+            <a th:href="@{/patient/profile/my-logs}" th:classappend="${activePage == 'health-logs'} ? 'active' : ''" class="menu-item">📝 Nhật Ký Sức Khỏe</a>
+            <a th:href="@{/meal-logs}" th:classappend="${activePage == 'meal-logs'} ? 'active' : ''" class="menu-item">🍎 Nhật Ký Dinh Dưỡng</a>
+            <a th:href="@{/health-reminders}" th:classappend="${activePage == 'reminders'} ? 'active' : ''" class="menu-item">🔔 Nhắc Nhở Sức Khỏe</a>
+            <a th:href="@{/patient/notification-history}" th:classappend="${activePage == 'notifications'} ? 'active' : ''" class="menu-item">✉️ Lịch Sử Thông Báo</a>
+            <a th:href="@{/health-logs/ai-report}" th:classappend="${activePage == 'ai-report'} ? 'active' : ''" class="menu-item">📈 Báo Cáo AI</a>
+            <a th:href="@{/patient/feedbacks}" th:classappend="${activePage == 'feedbacks'} ? 'active' : ''" class="menu-item">💬 Gửi Phản Hồi</a>
+            <a th:href="@{/patient/profile/requests}" th:classappend="${activePage == 'requests'} ? 'active' : ''" class="menu-item">📁 Yêu cầu thay đổi Bệnh Lý</a>
+        </div>
+        <div class="sidebar-back-home">
+            <a href="/" class="btn-back-home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-4h3v4H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146z"/>
+                </svg>
+                Quay về Landing Page
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-role">Patient</div>
+            <div class="sidebar-footer-name" th:text="${T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication() != null && @userRepository.findByEmail(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()).isPresent() ? @userRepository.findByEmail(T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()).get().fullName : 'Bệnh nhân'}">Bệnh nhân</div>
+        </div>
+    </div>
+</div>

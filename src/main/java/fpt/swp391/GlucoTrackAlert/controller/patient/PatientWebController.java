@@ -258,4 +258,14 @@ public class PatientWebController {
             return "patient/edit";
         }
     }
+
+    @GetMapping("/profile/my-logs")
+    public String redirectToMyLogs() {
+        try {
+            User loggedInUser = getLoggedInUser();
+            return "redirect:/health-logs/my-logs?userId=" + loggedInUser.getId();
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+    }
 }

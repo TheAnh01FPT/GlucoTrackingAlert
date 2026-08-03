@@ -230,35 +230,51 @@ input.invalid,textarea.invalid{border-color:var(--danger) !important;background:
   .page-wrapper{padding:16px}
   .header{padding:0 16px}
 }
-</style>
-</head>
-<body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">
-    <div class="header-logo">🩺</div>
-    <div>
-      <div class="header-title">GlucoTrack</div>
-      <div class="header-sub">Quản lý nhắc nhở sức khoẻ</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="status-dot"></div>
-    <span th:text="${patientName != null ? patientName : 'Bệnh nhân'}">Bệnh nhân</span>
-    <button class="btn-google-connect" id="btnGoogleConnect" onclick="handleGoogleConnect()" title="Kết nối Google Calendar để tự động thêm nhắc nhở vào lịch của bạn">
+/* Patient Layout Body Styles (handles sidebar offset) */
+body.patient-layout-body {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: var(--bg-primary) !important;
+    min-height: 100vh !important;
+}
+
+.page-wrapper {
+    margin-left: 270px !important; /* Sidebar width (250px) + 20px gap */
+    margin-right: 20px !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+    padding: 0 1.5rem !important;
+    box-sizing: border-box !important;
+    max-width: calc(100% - 290px) !important; /* Ensure it stays within bounds */
+}
+
+@media (max-width: 992px) {
+    body.patient-layout-body .page-wrapper {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        max-width: 100% !important;
+        padding: 1rem !important;
+    }
+}
+</style>
+<link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
+</head>
+<body class="patient-layout-body">
+
+<div th:replace="~{fragments/layout :: patientSidebar('reminders')}"></div>
+
+<div class="page-wrapper">
+
+  <!-- Header Section with Google Connect -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+    <h1 style="font-family: 'Lexend', sans-serif; font-size: 24px; font-weight: 700; color: var(--text); margin: 0;">🔔 Nhắc Nhở Sức Khỏe</h1>
+    <button class="btn-google-connect" id="btnGoogleConnect" onclick="handleGoogleConnect()" title="Kết nối Google Calendar để tự động thêm nhắc nhở vào lịch của bạn" style="margin: 0;">
       <img src="https://www.google.com/favicon.ico" alt="Google">
       <span id="googleConnectLabel">Kết nối Google Calendar</span>
     </button>
   </div>
-</div>
-
-<!-- BREADCRUMB -->
-<div class="breadcrumb">
-  🏠 <a href="/patient/home">Trang chủ</a> › <span>Nhắc nhở sức khoẻ</span>
-</div>
-
-<div class="page-wrapper">
 
   <!-- STATS -->
   <div class="stats-row">

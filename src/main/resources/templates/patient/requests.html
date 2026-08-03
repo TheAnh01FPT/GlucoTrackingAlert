@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lịch sử yêu cầu thay đổi dữ liệu bệnh lý | GlucoTrack</title>
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-sidebar.css}">
     <style>
         .badge-pending-req {
             background-color: #fef3c7;
@@ -74,7 +75,9 @@
         }
     </style>
 </head>
-<body>
+<body class="patient-layout-body">
+
+    <div th:replace="~{fragments/layout :: patientSidebar('requests')}"></div>
 
     <div class="profile-wrapper" style="max-width: 950px;">
         <!-- Header -->
